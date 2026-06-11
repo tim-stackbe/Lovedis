@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  /* Lovedis color namespace */
+  --color-lv-blue: #2926e5;
+  --color-lv-blue-dark: #1f1cb8;
+  --color-lv-blue-soft: #eeedff;
+  --color-lv-orange: #ff5736;
+  --color-lv-orange-soft: #ffe7e1;
+  --color-lv-mint: #c0fcd8;
+  --color-lv-mint-deep: #0e7c4a;
+  --color-lv-pink: #ffdbf5;
+  --color-lv-yellow: #ffe9a8;
+  --color-lv-yellow-deep: #7a5a00;
+  --color-lv-surface: #f4f4f8;
+  --color-lv-border: #e5e5ee;
+  --color-lv-text: #0a0a0f;
+  --color-lv-secondary: #6b6b7b;
+
+  --radius-card: 16px;
+  --radius-button: 12px;
+
+  --shadow-card: 0 1px 2px rgba(10, 10, 15, 0.04),
+    0 8px 24px rgba(41, 38, 229, 0.04);
+
+  --background-image-lv-cover: linear-gradient(
+    135deg,
+    #2926e5 0%,
+    #4f46e5 55%,
+    #ff5736 130%
+  );
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-lv-text);
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-lv-blue);
+  color: #ffffff;
+}
+
+/* Wordmark treatment: uppercase, heavy, widely tracked */
+.lv-wordmark {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+/* Thin scrollbars for kanban lanes etc. */
+.lv-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.lv-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-lv-border);
+  border-radius: 9999px;
+}

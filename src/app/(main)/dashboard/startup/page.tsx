@@ -1,0 +1,203 @@
+import { CircleCheck, CircleDashed } from "lucide-react";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { ApplicationStatusBadge } from "@/components/shared/badges";
+import { Badge } from "@/components/ui/Badge";
+import { BannerStat, Card, ToneCard } from "@/components/ui/Card";
+import { HeroBanner } from "@/components/ui/HeroBanner";
+import { LinkButton } from "@/components/ui/Button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
+import { requireRole } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
+import { formatDate, truncate } from "@/lib/utils";
+
+export const metadata: Metadata = { title: "Startup dashboard" };
+
+export default async function StartupDashboard() {
+  const session = await requireRole(["STARTUP"]);
+
+  const [startup, openChallenges] = await Promise.all([
+    prisma.startup.findUnique({
+      where: { ownerUserId: session.user.id },
+      include: {
+        applications: {
+          include: {
+            challenge: { select: { id: true, title: true } },
+            poc: { select: { id: true, status: true } },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    }),
+    prisma.challenge.findMany({
+      where: { status: "OPEN" },
+      include: { createdBy: { select: { name: true, company: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 4,
+    }),
+  ]);
+
+  const applications = startup?.applications ?? [];
+  const accepted = applications.filter((a) => a.status === "ACCEPTED").length;
+  const pending = applications.filter((a) => a.status === "PENDING").length;
+
+  const profileChecks = [
+    { label: "Company profile created", done: Boolean(startup) },
+    { label: "Description added", done: (startup?.description?.length ?? 0) >= 10 },
+    { label: "Website linked", done: Boolean(startup?.website) },
+    { label: "Team size set", done: Boolean(startup?.teamSize) },
+  ];
+  const completeness = Math.round(
+    (profileChecks.filter((c) => c.done).length / profileChecks.length) * 100
+  );
+
+  return (
+    <>
+      <HeroBanner
+        kicker="Section 00 — Startup"
+        title={
+          startup ? `${startup.name}, welcome back` : "Let’s set up your profile"
+        }
+        subtitle="Browse corporate challenges, pitch your solution and track your applications."
+        actions={
+          <LinkButton href="/challenges" variant="white">
+            Browse challenges
+          </LinkButton>
+        }
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <BannerStat label="Profile" value={`${completeness}%`} />
+          <BannerStat label="Applications" value={applications.length} />
+          <BannerStat label="Accepted" value={accepted} />
+          <BannerStat label="Open challenges" value={openChallenges.length} />
+        </div>
+      </HeroBanner>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <SectionLabel number="01" label="Profile" title="Profile completeness" />
+          <Card className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-lv-surface">
+                <div
+                  className="h-full rounded-full bg-lv-blue transition-all"
+                  style={{ width: `${completeness}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold tabular-nums text-lv-blue">
+                {completeness}%
+              </span>
+            </div>
+            <ul className="mt-4 space-y-2 text-sm">
+              {profileChecks.map((c) => (
+                <li key={c.label} className="flex items-center gap-2">
+                  {c.done ? (
+                    <CircleCheck className="h-4 w-4 text-lv-mint-deep" />
+                  ) : (
+                    <CircleDashed className="h-4 w-4 text-lv-secondary" />
+                  )}
+                  <span className={c.done ? "" : "text-lv-secondary"}>
+                    {c.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <LinkButton
+              href="/profile"
+              variant="secondary"
+              size="sm"
+              className="mt-5"
+            >
+              Edit profile
+            </LinkButton>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <SectionLabel number="02" label="Status" title="Your applications" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ToneCard
+              tone={pending > 0 ? "attention" : "muted"}
+              label="Pending"
+              value={pending}
+              sub="awaiting review"
+            />
+            <ToneCard
+              tone="success"
+              label="Accepted"
+              value={accepted}
+              sub="PoCs in motion"
+            />
+          </div>
+          {applications.length > 0 && (
+            <TableCard>
+              <THead>
+                <tr>
+                  <Th>Challenge</Th>
+                  <Th>Submitted</Th>
+                  <Th className="text-right">Status</Th>
+                </tr>
+              </THead>
+              <tbody>
+                {applications.slice(0, 5).map((a) => (
+                  <Tr key={a.id}>
+                    <Td>
+                      <Link
+                        href={`/challenges/${a.challenge.id}`}
+                        className="font-semibold hover:text-lv-blue"
+                      >
+                        {a.challenge.title}
+                      </Link>
+                    </Td>
+                    <Td className="text-lv-secondary">
+                      {formatDate(a.createdAt)}
+                    </Td>
+                    <Td className="text-right">
+                      <ApplicationStatusBadge value={a.status} />
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </TableCard>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <SectionLabel
+          number="03"
+          label="Opportunities"
+          title="Open challenges for you"
+        />
+        {openChallenges.length === 0 ? (
+          <Card className="p-6 text-sm text-lv-secondary">
+            No open challenges right now — check back soon.
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {openChallenges.map((c) => (
+              <Card key={c.id} className="flex flex-col p-5">
+                <Link
+                  href={`/challenges/${c.id}`}
+                  className="text-base font-bold leading-snug hover:text-lv-blue"
+                >
+                  {c.title}
+                </Link>
+                <p className="mt-2 flex-1 text-sm text-lv-secondary">
+                  {truncate(c.description, 140)}
+                </p>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-xs text-lv-secondary">
+                    {c.createdBy.company ?? c.createdBy.name}
+                  </span>
+                  <Badge tone="mint">Open</Badge>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}

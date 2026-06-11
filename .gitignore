@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# env
+.env
+.env.local
+.env*.local
+
+# generated prisma client
+/src/generated/prisma/
+
+# local tooling & database
+/.tools/
+/.pgdata/
+/.architecture-tools/
+
+# internal reference material (contains infra/deployment details — keep out of the repo)
+/architecture-reference/
+/design-reference/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+*.tsbuildinfo

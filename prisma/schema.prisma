@@ -1,0 +1,321 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  BUSINESS_PARTNER
+  INVESTOR
+  STARTUP
+}
+
+enum StartupStage {
+  PRE_SEED
+  SEED
+  SERIES_A
+  SERIES_B
+  GROWTH
+}
+
+enum PipelineStage {
+  DISCOVERED
+  SCREENING
+  IN_EVALUATION
+  PILOT
+  PARTNERED
+  PASSED
+}
+
+enum RadarQuadrant {
+  AI_DATA
+  CLIMATE_ENERGY
+  HEALTH_BIO
+  INDUSTRY_40
+}
+
+enum RadarRing {
+  ADOPT
+  TRIAL
+  ASSESS
+  HOLD
+}
+
+enum ScoreDimension {
+  MARKET
+  PRODUCT
+  TRACTION
+  COMPETITIVE_POSITION
+  TEAM
+  BUSINESS_MODEL
+  STRATEGIC_FIT
+}
+
+enum Recommendation {
+  STRONG_YES
+  YES
+  MAYBE
+  NO
+  STRONG_NO
+}
+
+enum AttachmentType {
+  LINK
+  DOCUMENT
+  DECK
+  OTHER
+}
+
+enum ChallengeStatus {
+  DRAFT
+  OPEN
+  IN_REVIEW
+  CLOSED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PoCStatus {
+  PLANNED
+  RUNNING
+  COMPLETED
+  CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(MEMBER)
+  isActive     Boolean  @default(true)
+  company      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownedStartup       Startup?              @relation("StartupOwner")
+  evaluations        Evaluation[]          @relation("Evaluator")
+  challenges         Challenge[]           @relation("ChallengeCreator")
+  trackedPoCs        PoCPerformance[]      @relation("PoCTracker")
+  sharedScoringsIn   SharedScoring[]       @relation("ScoringRecipient")
+  sharedScoringsOut  SharedScoring[]       @relation("ScoringSharer")
+
+  @@index([role])
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// Venture Scout module
+// ---------------------------------------------------------------------------
+
+model ScoutingCampaign {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  startups Startup[]
+
+  @@index([name])
+}
+
+model Startup {
+  id            String         @id @default(cuid())
+  name          String
+  website       String?
+  description   String
+  industry      String
+  country       String?
+  city          String?
+  foundedYear   Int?
+  teamSize      Int?
+  stage         StartupStage   @default(SEED)
+  fundingRaised Float?         // in EUR millions
+  pipelineStage PipelineStage  @default(DISCOVERED)
+  radarQuadrant RadarQuadrant?
+  radarRing     RadarRing?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  campaignId String?
+  campaign   ScoutingCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  ownerUserId String? @unique
+  owner       User?   @relation("StartupOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  contacts     Contact[]
+  attachments  Attachment[]
+  evaluations  Evaluation[]
+  applications ChallengeApplication[]
+
+  @@index([name])
+  @@index([industry])
+  @@index([pipelineStage])
+  @@index([radarQuadrant, radarRing])
+  @@index([stage])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  startupId String
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  name      String
+  position  String?
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startupId])
+}
+
+model Attachment {
+  id        String         @id @default(cuid())
+  startupId String
+  startup   Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  type      AttachmentType @default(LINK)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([startupId])
+}
+
+model Evaluation {
+  id             String         @id @default(cuid())
+  startupId      String
+  startup        Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  evaluatorId    String
+  evaluator      User           @relation("Evaluator", fields: [evaluatorId], references: [id], onDelete: Cascade)
+  overallScore   Float          @default(0)
+  potential      Float          @default(0)
+  feasibility    Float          @default(0)
+  recommendation Recommendation @default(MAYBE)
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  scores  Score[]
+  sharing SharedScoring[]
+
+  @@index([startupId])
+  @@index([evaluatorId])
+  @@index([overallScore])
+}
+
+model Score {
+  id           String         @id @default(cuid())
+  evaluationId String
+  evaluation   Evaluation     @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  dimension    ScoreDimension
+  value        Int            @default(0) // 0–5
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([evaluationId, dimension])
+  @@index([evaluationId])
+}
+
+// ---------------------------------------------------------------------------
+// Challenge system
+// ---------------------------------------------------------------------------
+
+model Challenge {
+  id          String          @id @default(cuid())
+  title       String
+  description String
+  status      ChallengeStatus @default(DRAFT)
+  deadline    DateTime?
+  tags        String[]        @default([])
+  createdById String
+  createdBy   User            @relation("ChallengeCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  applications ChallengeApplication[]
+
+  @@index([status])
+  @@index([createdById])
+}
+
+model ChallengeApplication {
+  id          String            @id @default(cuid())
+  challengeId String
+  challenge   Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  startupId   String
+  startup     Startup           @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  pitch       String
+  status      ApplicationStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  poc PoCPerformance?
+
+  @@unique([challengeId, startupId])
+  @@index([challengeId])
+  @@index([startupId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Collaboration
+// ---------------------------------------------------------------------------
+
+model PoCPerformance {
+  id            String               @id @default(cuid())
+  applicationId String               @unique
+  application   ChallengeApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  status        PoCStatus            @default(PLANNED)
+  kpis          Json                 @default("[]") // [{ name, target, current, unit }]
+  milestones    Json                 @default("[]") // [{ title, dueDate, done }]
+  startDate     DateTime?
+  endDate       DateTime?
+  notes         String?
+  trackedById   String
+  trackedBy     User                 @relation("PoCTracker", fields: [trackedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([trackedById])
+  @@index([status])
+}
+
+model SharedScoring {
+  id           String     @id @default(cuid())
+  evaluationId String
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  recipientId  String
+  recipient    User       @relation("ScoringRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sharedById   String
+  sharedBy     User       @relation("ScoringSharer", fields: [sharedById], references: [id], onDelete: Cascade)
+  message      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([evaluationId, recipientId])
+  @@index([recipientId])
+  @@index([sharedById])
+}
