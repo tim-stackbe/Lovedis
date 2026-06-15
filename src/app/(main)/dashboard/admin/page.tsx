@@ -12,7 +12,7 @@ import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Admin dashboard" };
+export const metadata: Metadata = { title: "Admin-Dashboard" };
 
 export default async function AdminDashboard() {
   const session = await requireRole(["ADMIN"]);
@@ -56,69 +56,69 @@ export default async function AdminDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Section 00 — Admin"
-        title={`Welcome back, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Platform overview: scouting activity, challenges, collaborations and people."
+        kicker="Sektion 00 — Admin"
+        title={`Willkommen zurück, ${session.user.name?.split(" ")[0]}`}
+        subtitle="Plattform-Überblick: Scouting-Aktivität, Challenges, Kollaborationen und Menschen."
         actions={
           <LinkButton href="/users" variant="white">
-            Manage users
+            Nutzer verwalten
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <BannerStat label="Active users" value={userCount} />
+          <BannerStat label="Aktive Nutzer" value={userCount} />
           <BannerStat label="Startups" value={startupCount} />
-          <BannerStat label="Evaluations" value={evaluationCount} />
+          <BannerStat label="Bewertungen" value={evaluationCount} />
           <BannerStat label="Challenges" value={challengeCount} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Pulse" title="Needs attention" />
+        <SectionLabel number="01" label="Puls" title="Braucht Aufmerksamkeit" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <ToneCard
             tone="info"
-            label="Open challenges"
+            label="Offene Challenges"
             value={openChallenges}
-            sub="accepting applications"
+            sub="nehmen Bewerbungen an"
           />
           <ToneCard
             tone="attention"
-            label="Pending applications"
+            label="Ausstehende Bewerbungen"
             value={pendingApplications}
-            sub="waiting for a decision"
+            sub="warten auf eine Entscheidung"
           />
           <ToneCard
             tone="success"
-            label="Running PoCs"
+            label="Laufende PoCs"
             value={runningPoCs}
-            sub="in active pilots"
+            sub="in aktiven Piloten"
           />
           <ToneCard
             tone="muted"
-            label="Shared scorings"
+            label="Geteilte Scorings"
             value={shareCount}
-            sub="visible to partners"
+            sub="für Partner sichtbar"
           />
         </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <SectionLabel number="02" label="Funnel" title="Pipeline distribution" />
+          <SectionLabel number="02" label="Funnel" title="Pipeline-Verteilung" />
           <Card className="p-5">
             <DistributionChart data={pipelineData} />
           </Card>
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="03" label="Latest" title="Recent evaluations" />
+          <SectionLabel number="03" label="Aktuell" title="Neueste Bewertungen" />
           <TableCard>
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Evaluator</Th>
-                <Th>Updated</Th>
+                <Th>Bewertet von</Th>
+                <Th>Aktualisiert</Th>
                 <Th className="text-right">Score</Th>
               </tr>
             </THead>

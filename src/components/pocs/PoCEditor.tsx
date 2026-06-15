@@ -57,7 +57,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
 
       <Card className="space-y-5 p-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Title" htmlFor="poc-title">
+          <Field label="Titel" htmlFor="poc-title">
             <Input
               id="poc-title"
               name="title"
@@ -82,7 +82,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Start date" htmlFor="poc-start">
+          <Field label="Startdatum" htmlFor="poc-start">
             <Input
               id="poc-start"
               name="startDate"
@@ -91,7 +91,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
               disabled={readOnly}
             />
           </Field>
-          <Field label="End date" htmlFor="poc-end">
+          <Field label="Enddatum" htmlFor="poc-end">
             <Input
               id="poc-end"
               name="endDate"
@@ -101,12 +101,12 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
             />
           </Field>
         </div>
-        <Field label="Notes" htmlFor="poc-notes">
+        <Field label="Notizen" htmlFor="poc-notes">
           <Textarea
             id="poc-notes"
             name="notes"
             defaultValue={initial.notes}
-            placeholder="Status updates, blockers, learnings…"
+            placeholder="Status-Updates, Blocker, Learnings…"
             disabled={readOnly}
           />
         </Field>
@@ -127,13 +127,13 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
               className="inline-flex items-center gap-1 rounded-button bg-lv-blue-soft px-2.5 py-1.5 text-xs font-semibold text-lv-blue hover:bg-lv-blue hover:text-white transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add KPI
+              KPI hinzufügen
             </button>
           )}
         </div>
         <div className="mt-4 space-y-3">
           {kpis.length === 0 && (
-            <p className="text-sm text-lv-secondary">No KPIs defined yet.</p>
+            <p className="text-sm text-lv-secondary">Noch keine KPIs definiert.</p>
           )}
           {kpis.map((kpi, i) => {
             const progress = kpiProgress(kpi);
@@ -146,7 +146,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                   <Input
                     value={kpi.name}
                     onChange={(e) => setKpi(i, { name: e.target.value })}
-                    placeholder="KPI name"
+                    placeholder="KPI-Name"
                     disabled={readOnly}
                   />
                   <Input
@@ -155,7 +155,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                     onChange={(e) =>
                       setKpi(i, { current: Number(e.target.value) })
                     }
-                    placeholder="Current"
+                    placeholder="Aktuell"
                     disabled={readOnly}
                   />
                   <Input
@@ -164,13 +164,13 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                     onChange={(e) =>
                       setKpi(i, { target: Number(e.target.value) })
                     }
-                    placeholder="Target"
+                    placeholder="Ziel"
                     disabled={readOnly}
                   />
                   <Input
                     value={kpi.unit}
                     onChange={(e) => setKpi(i, { unit: e.target.value })}
-                    placeholder="Unit"
+                    placeholder="Einheit"
                     disabled={readOnly}
                   />
                   {!readOnly && (
@@ -180,7 +180,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                         setKpis((ks) => ks.filter((_, idx) => idx !== i))
                       }
                       className="rounded-button p-2 text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange transition-colors"
-                      aria-label="Remove KPI"
+                      aria-label="KPI entfernen"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -212,7 +212,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
 
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <Label className="mb-0">Milestones</Label>
+          <Label className="mb-0">Meilensteine</Label>
           {!readOnly && (
             <button
               type="button"
@@ -229,13 +229,13 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
               className="inline-flex items-center gap-1 rounded-button bg-lv-blue-soft px-2.5 py-1.5 text-xs font-semibold text-lv-blue hover:bg-lv-blue hover:text-white transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add milestone
+              Meilenstein hinzufügen
             </button>
           )}
         </div>
         <div className="mt-4 space-y-2">
           {milestones.length === 0 && (
-            <p className="text-sm text-lv-secondary">No milestones yet.</p>
+            <p className="text-sm text-lv-secondary">Noch keine Meilensteine.</p>
           )}
           {milestones.map((m, i) => (
             <div
@@ -252,7 +252,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
               <Input
                 value={m.title}
                 onChange={(e) => setMilestone(i, { title: e.target.value })}
-                placeholder="Milestone"
+                placeholder="Meilenstein"
                 className={cn(m.done && "line-through text-lv-secondary")}
                 disabled={readOnly}
               />
@@ -269,7 +269,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                     setMilestones((ms) => ms.filter((_, idx) => idx !== i))
                   }
                   className="rounded-button p-2 text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange transition-colors"
-                  aria-label="Remove milestone"
+                  aria-label="Meilenstein entfernen"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -285,7 +285,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
       {!readOnly && (
         <div className="flex justify-end">
           <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save PoC"}
+            {pending ? "Speichern…" : "PoC speichern"}
           </Button>
         </div>
       )}

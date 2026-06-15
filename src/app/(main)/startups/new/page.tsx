@@ -3,7 +3,7 @@ import { StartupForm } from "@/components/startups/StartupForm";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireScoutModule } from "@/lib/auth-guards";
 
-export const metadata: Metadata = { title: "New startup" };
+export const metadata: Metadata = { title: "Neues Startup" };
 
 export default async function NewStartupPage() {
   await requireScoutModule();
@@ -11,8 +11,8 @@ export default async function NewStartupPage() {
     <>
       <SectionLabel
         number="01"
-        label="Discover"
-        title="Add a startup to the universe"
+        label="Entdecken"
+        title="Startup zum Universum hinzufügen"
       />
       <StartupForm />
     </>

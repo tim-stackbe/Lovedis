@@ -70,8 +70,8 @@ export default async function ChallengeDetailPage({
             {challenge.title}
           </h1>
           <p className="mt-1 text-sm text-lv-secondary">
-            by {challenge.createdBy.company ?? challenge.createdBy.name}
-            {challenge.deadline && ` · deadline ${formatDate(challenge.deadline)}`}
+            von {challenge.createdBy.company ?? challenge.createdBy.name}
+            {challenge.deadline && ` · Frist ${formatDate(challenge.deadline)}`}
           </p>
         </div>
         <ChallengeStatusBadge value={challenge.status} />
@@ -94,12 +94,12 @@ export default async function ChallengeDetailPage({
 
       {role === "STARTUP" && (
         <section className="space-y-4">
-          <SectionLabel number="02" label="Apply" title="Your application" />
+          <SectionLabel number="02" label="Bewerben" title="Deine Bewerbung" />
           {myApplication ? (
             <Card className="p-6">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-sm font-semibold">
-                  Submitted {formatDate(myApplication.createdAt)}
+                  Eingereicht am {formatDate(myApplication.createdAt)}
                 </p>
                 <ApplicationStatusBadge value={myApplication.status} />
               </div>
@@ -113,7 +113,7 @@ export default async function ChallengeDetailPage({
             </Card>
           ) : (
             <Card className="p-6 text-sm text-lv-secondary">
-              This challenge is not accepting applications right now.
+              Diese Challenge nimmt gerade keine Bewerbungen an.
             </Card>
           )}
         </section>
@@ -124,13 +124,13 @@ export default async function ChallengeDetailPage({
           <section className="space-y-4">
             <SectionLabel
               number="02"
-              label="Review"
-              title={`Applications (${challenge.applications.length})`}
+              label="Prüfen"
+              title={`Bewerbungen (${challenge.applications.length})`}
             />
             {challenge.applications.length === 0 ? (
               <Card className="p-6 text-sm text-lv-secondary">
-                No applications yet. Open the challenge to start receiving
-                pitches.
+                Noch keine Bewerbungen. Öffne die Challenge, um Pitches zu
+                erhalten.
               </Card>
             ) : (
               <div className="space-y-3">
@@ -145,7 +145,7 @@ export default async function ChallengeDetailPage({
                           </span>
                         </p>
                         <p className="text-xs text-lv-secondary">
-                          Applied {formatDate(a.createdAt)}
+                          Beworben am {formatDate(a.createdAt)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export default async function ChallengeDetailPage({
                         >
                           <Button type="submit" size="sm">
                             <Check className="h-4 w-4" />
-                            Accept & spawn PoC
+                            Annehmen & PoC starten
                           </Button>
                         </form>
                         <form
@@ -185,7 +185,7 @@ export default async function ChallengeDetailPage({
                         >
                           <Button type="submit" variant="danger" size="sm">
                             <X className="h-4 w-4" />
-                            Reject
+                            Ablehnen
                           </Button>
                         </form>
                       </div>
@@ -197,13 +197,13 @@ export default async function ChallengeDetailPage({
           </section>
 
           <section className="space-y-4">
-            <SectionLabel number="03" label="Manage" title="Edit challenge" />
+            <SectionLabel number="03" label="Verwalten" title="Challenge bearbeiten" />
             <ChallengeForm challenge={challenge} />
             <div className="flex justify-end">
               <form action={deleteChallenge.bind(null, challenge.id)}>
                 <Button type="submit" variant="danger" size="sm">
                   <Trash2 className="h-4 w-4" />
-                  Delete challenge
+                  Challenge löschen
                 </Button>
               </form>
             </div>

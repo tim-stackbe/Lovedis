@@ -8,7 +8,7 @@ export function firstZodError(error: {
   issues: { message: string; path: PropertyKey[] }[];
 }): string {
   const issue = error.issues[0];
-  if (!issue) return "Invalid input.";
+  if (!issue) return "Ungültige Eingabe.";
   const path = issue.path.join(".");
   return path ? `${path}: ${issue.message}` : issue.message;
 }

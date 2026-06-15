@@ -35,13 +35,13 @@ export async function shareScoring(
       select: { role: true, isActive: true },
     }),
   ]);
-  if (!evaluation) return { error: "Evaluation not found." };
+  if (!evaluation) return { error: "Bewertung nicht gefunden." };
   if (
     !recipient ||
     !recipient.isActive ||
     !["BUSINESS_PARTNER", "INVESTOR"].includes(recipient.role)
   ) {
-    return { error: "Recipient must be an active partner or investor." };
+    return { error: "Empfänger muss ein aktiver Partner oder Investor sein." };
   }
 
   const existing = await prisma.sharedScoring.findUnique({
@@ -53,7 +53,7 @@ export async function shareScoring(
     },
   });
   if (existing) {
-    return { error: "This scoring is already shared with that recipient." };
+    return { error: "Dieses Scoring wurde bereits mit diesem Empfänger geteilt." };
   }
 
   await prisma.sharedScoring.create({
@@ -69,7 +69,7 @@ export async function shareScoring(
   revalidatePath("/scorings");
   revalidatePath("/dashboard/partner");
   revalidatePath("/dashboard/investor");
-  return { success: "Scoring shared." };
+  return { success: "Scoring geteilt." };
 }
 
 export async function revokeSharedScoring(sharingId: string): Promise<void> {

@@ -42,17 +42,17 @@ export default async function PipelinePage() {
     <>
       <HeroBanner
         kicker="Venture Scout"
-        title="Scouting pipeline"
-        subtitle="Drag startups through the funnel — from first discovery to a signed partnership."
+        title="Scouting-Pipeline"
+        subtitle="Zieh Startups durch den Funnel — von der ersten Entdeckung bis zur unterschriebenen Partnerschaft."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
-          <BannerStat label="In funnel" value={board.length} />
-          <BannerStat label="Evaluating" value={inEvaluation} />
-          <BannerStat label="Partnered" value={partnered} />
+          <BannerStat label="Im Funnel" value={board.length} />
+          <BannerStat label="In Bewertung" value={inEvaluation} />
+          <BannerStat label="Partnerschaften" value={partnered} />
         </div>
       </HeroBanner>
 
-      <SectionLabel number="04" label="Pipeline" title="Kanban board" />
+      <SectionLabel number="04" label="Pipeline" title="Kanban-Board" />
       <PipelineBoard startups={board} />
     </>
   );

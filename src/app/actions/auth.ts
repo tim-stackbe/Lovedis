@@ -10,8 +10,8 @@ import { firstZodError, type ActionState } from "@/lib/action-state";
 import { prisma } from "@/lib/prisma";
 
 const loginSchema = z.object({
-  email: z.email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
+  password: z.string().min(1, "Passwort ist erforderlich"),
 });
 
 export async function login(
@@ -38,7 +38,7 @@ export async function login(
   } catch (error) {
     if (isRedirectError(error)) throw error;
     if (error instanceof AuthError) {
-      return { error: "Invalid email or password." };
+      return { error: "Ungültige E-Mail oder ungültiges Passwort." };
     }
     throw error;
   }
@@ -49,9 +49,9 @@ export async function logout(): Promise<void> {
 }
 
 const signupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").max(120),
-  email: z.email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein").max(120),
+  email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
+  password: z.string().min(8, "Passwort muss mindestens 8 Zeichen lang sein"),
   company: z.string().max(160).optional(),
 });
 
@@ -69,7 +69,8 @@ async function signup(
 
   const email = parsed.data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return { error: "An account with this email already exists." };
+  if (existing)
+    return { error: "Ein Konto mit dieser E-Mail existiert bereits." };
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   await prisma.user.create({
@@ -91,7 +92,7 @@ async function signup(
     return {};
   } catch (error) {
     if (isRedirectError(error)) throw error;
-    return { success: "Account created. Please sign in." };
+    return { success: "Konto erstellt. Bitte melde dich an." };
   }
 }
 

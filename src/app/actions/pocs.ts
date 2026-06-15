@@ -48,7 +48,7 @@ export async function updatePoC(
   formData: FormData
 ): Promise<ActionState> {
   const poc = await getManagedPoC(pocId);
-  if (!poc) return { error: "PoC not found or not yours." };
+  if (!poc) return { error: "PoC nicht gefunden oder nicht deiner." };
 
   const parsed = pocUpdateSchema.safeParse({
     title: formData.get("title"),
@@ -67,13 +67,13 @@ export async function updatePoC(
     kpisJson = JSON.parse(parsed.data.kpis);
     milestonesJson = JSON.parse(parsed.data.milestones);
   } catch {
-    return { error: "Invalid KPI or milestone data." };
+    return { error: "Ungültige KPI- oder Meilenstein-Daten." };
   }
 
   const kpis = kpisSchema.safeParse(kpisJson);
-  if (!kpis.success) return { error: "Invalid KPI data." };
+  if (!kpis.success) return { error: "Ungültige KPI-Daten." };
   const milestones = milestonesSchema.safeParse(milestonesJson);
-  if (!milestones.success) return { error: "Invalid milestone data." };
+  if (!milestones.success) return { error: "Ungültige Meilenstein-Daten." };
 
   await prisma.poCPerformance.update({
     where: { id: pocId },
@@ -92,7 +92,7 @@ export async function updatePoC(
   revalidatePath(`/pocs/${pocId}`);
   revalidatePath("/dashboard/partner");
   revalidatePath("/dashboard/investor");
-  return { success: "PoC updated." };
+  return { success: "PoC aktualisiert." };
 }
 
 export async function assignPoCTracker(
@@ -109,7 +109,7 @@ export async function assignPoCTracker(
     !tracker.isActive ||
     !["BUSINESS_PARTNER", "INVESTOR"].includes(tracker.role)
   ) {
-    return { error: "Tracker must be an active partner or investor." };
+    return { error: "Tracker muss ein aktiver Partner oder Investor sein." };
   }
   await prisma.poCPerformance.update({
     where: { id: pocId },

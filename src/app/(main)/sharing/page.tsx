@@ -17,7 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLE_LABELS } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Shared scorings" };
+export const metadata: Metadata = { title: "Geteilte Scorings" };
 
 export default async function SharingPage() {
   await requireRole(["ADMIN"]);
@@ -61,13 +61,13 @@ export default async function SharingPage() {
   return (
     <>
       <HeroBanner
-        kicker="Platform"
-        title="Share scorings"
-        subtitle="Give partners and investors read-only access to selected evaluations."
+        kicker="Plattform"
+        title="Scorings teilen"
+        subtitle="Gib Partnern und Investoren Lesezugriff auf ausgewählte Bewertungen."
       />
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Share" title="New share" />
+        <SectionLabel number="01" label="Teilen" title="Neue Freigabe" />
         <Card className="p-6">
           <ShareForm
             evaluations={evaluationOptions}
@@ -79,25 +79,25 @@ export default async function SharingPage() {
       <section className="space-y-4">
         <SectionLabel
           number="02"
-          label="Active"
-          title={`Active shares (${shares.length})`}
+          label="Aktiv"
+          title={`Aktive Freigaben (${shares.length})`}
         />
         {shares.length === 0 ? (
           <EmptyState
             icon={Share2}
-            title="No shared scorings"
-            description="Share an evaluation above to give a partner or investor access."
+            title="Keine geteilten Scorings"
+            description="Teile oben eine Bewertung, um einem Partner oder Investor Zugriff zu geben."
           />
         ) : (
           <TableCard>
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Recipient</Th>
-                <Th>Shared by</Th>
-                <Th>Date</Th>
+                <Th>Empfänger</Th>
+                <Th>Geteilt von</Th>
+                <Th>Datum</Th>
                 <Th className="text-right">Score</Th>
-                <Th className="text-right">Revoke</Th>
+                <Th className="text-right">Entziehen</Th>
               </tr>
             </THead>
             <tbody>
@@ -120,7 +120,7 @@ export default async function SharingPage() {
                       <button
                         type="submit"
                         className="rounded-button p-1.5 text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange transition-colors"
-                        aria-label="Revoke share"
+                        aria-label="Freigabe entziehen"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

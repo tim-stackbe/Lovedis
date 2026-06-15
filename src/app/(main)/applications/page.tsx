@@ -11,7 +11,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate, truncate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "My applications" };
+export const metadata: Metadata = { title: "Meine Bewerbungen" };
 
 export default async function ApplicationsPage() {
   const session = await requireRole(["STARTUP"]);
@@ -41,24 +41,24 @@ export default async function ApplicationsPage() {
   return (
     <>
       <HeroBanner
-        kicker="Opportunities"
-        title="My applications"
-        subtitle={`${applications.length} submitted · ${accepted} accepted`}
+        kicker="Chancen"
+        title="Meine Bewerbungen"
+        subtitle={`${applications.length} eingereicht · ${accepted} angenommen`}
         actions={
           <LinkButton href="/challenges" variant="white">
-            Browse challenges
+            Challenges entdecken
           </LinkButton>
         }
       />
 
-      <SectionLabel number="01" label="Applications" title="Status overview" />
+      <SectionLabel number="01" label="Bewerbungen" title="Status-Überblick" />
 
       {applications.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="No applications yet"
-          description="Browse open challenges and submit your first pitch."
-          action={<LinkButton href="/challenges">Open challenges</LinkButton>}
+          title="Noch keine Bewerbungen"
+          description="Entdecke offene Challenges und reiche deinen ersten Pitch ein."
+          action={<LinkButton href="/challenges">Offene Challenges</LinkButton>}
         />
       ) : (
         <TableCard>
@@ -67,7 +67,7 @@ export default async function ApplicationsPage() {
               <Th>Challenge</Th>
               <Th>Partner</Th>
               <Th>Pitch</Th>
-              <Th>Submitted</Th>
+              <Th>Eingereicht</Th>
               <Th className="text-right">Status</Th>
             </tr>
           </THead>

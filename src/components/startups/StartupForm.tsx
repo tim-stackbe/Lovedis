@@ -125,7 +125,7 @@ export function StartupForm({ startup }: StartupFormProps) {
               placeholder="12"
             />
           </Field>
-          <Field label="Funding (Mio. €)" htmlFor="fundingRaised">
+          <Field label="Finanzierung (Mio. €)" htmlFor="fundingRaised">
             <Input
               id="fundingRaised"
               name="fundingRaised"
@@ -136,7 +136,7 @@ export function StartupForm({ startup }: StartupFormProps) {
               placeholder="2.5"
             />
           </Field>
-          <Field label="Stage" htmlFor="stage">
+          <Field label="Phase" htmlFor="stage">
             <Select id="stage" name="stage" defaultValue={startup?.stage ?? "SEED"}>
               {STARTUP_STAGES.map((s) => (
                 <option key={s} value={s}>

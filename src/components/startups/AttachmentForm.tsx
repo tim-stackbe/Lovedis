@@ -16,7 +16,7 @@ export function AttachmentForm({ startupId }: { startupId: string }) {
           <Input
             id="attachment-name"
             name="name"
-            placeholder="Pitch deck Q2"
+            placeholder="Pitch-Deck Q2"
             required
           />
         </Field>

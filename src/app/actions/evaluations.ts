@@ -67,12 +67,12 @@ export async function updateEvaluation(
     where: { id: evaluationId },
     select: { id: true, startupId: true, evaluatorId: true },
   });
-  if (!evaluation) return { error: "Evaluation not found." };
+  if (!evaluation) return { error: "Bewertung nicht gefunden." };
   if (
     session.user.role !== "ADMIN" &&
     evaluation.evaluatorId !== session.user.id
   ) {
-    return { error: "You can only edit your own evaluations." };
+    return { error: "Du kannst nur deine eigenen Bewertungen bearbeiten." };
   }
 
   const parsedScores = scoresSchema.safeParse(
@@ -118,7 +118,7 @@ export async function updateEvaluation(
   revalidatePath(`/startups/${evaluation.startupId}`);
   revalidatePath("/compare");
   revalidatePath("/reports");
-  return { success: "Evaluation saved." };
+  return { success: "Bewertung gespeichert." };
 }
 
 export async function deleteEvaluation(evaluationId: string): Promise<void> {

@@ -84,7 +84,7 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className="mx-auto w-full max-w-2xl"
           role="img"
-          aria-label="Technology radar"
+          aria-label="Technologie-Radar"
         >
           {/* Rings */}
           {RADAR_RINGS.map((ring, i) => {
@@ -196,7 +196,7 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
 
       <div className="space-y-4">
         <Card className="p-4">
-          <p className="lv-wordmark mb-3 text-[10px] text-lv-blue">Quadrants</p>
+          <p className="lv-wordmark mb-3 text-[10px] text-lv-blue">Quadranten</p>
           <div className="space-y-1">
             <button
               onClick={() => setActiveQuadrant(null)}
@@ -207,7 +207,7 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                   : "hover:bg-lv-surface"
               )}
             >
-              All quadrants ({startups.length})
+              Alle Quadranten ({startups.length})
             </button>
             {RADAR_QUADRANTS.map((q) => {
               const count = startups.filter((s) => s.quadrant === q).length;
@@ -238,7 +238,7 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
 
         <Card className="p-4">
           <p className="lv-wordmark mb-3 text-[10px] text-lv-blue">
-            {hoveredStartup ? "Selected" : "On the radar"}
+            {hoveredStartup ? "Ausgewählt" : "Im Radar"}
           </p>
           {hoveredStartup ? (
             <div>

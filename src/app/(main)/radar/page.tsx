@@ -39,24 +39,24 @@ export default async function RadarPage() {
     <>
       <HeroBanner
         kicker="Venture Scout"
-        title="Technology radar"
-        subtitle="Where every scouted startup sits — four thematic quadrants, four maturity rings."
+        title="Technologie-Radar"
+        subtitle="Wo jedes gescoutete Startup steht — vier thematische Quadranten, vier Reifegrad-Ringe."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
-          <BannerStat label="On radar" value={blips.length} />
-          <BannerStat label="Adopt ring" value={adopt} />
-          <BannerStat label="Quadrants" value={4} />
+          <BannerStat label="Im Radar" value={blips.length} />
+          <BannerStat label="Adopt-Ring" value={adopt} />
+          <BannerStat label="Quadranten" value={4} />
         </div>
       </HeroBanner>
 
-      <SectionLabel number="05" label="Radar" title="Quadrant × ring map" />
+      <SectionLabel number="05" label="Radar" title="Quadrant-×-Ring-Karte" />
 
       {blips.length === 0 ? (
         <EmptyState
           icon={Radar}
-          title="Nothing on the radar yet"
-          description="Assign a radar quadrant and ring on a startup profile to plot it here."
-          action={<LinkButton href="/startups">Browse startups</LinkButton>}
+          title="Noch nichts im Radar"
+          description="Weise einem Startup-Profil Quadrant und Ring zu, um es hier zu platzieren."
+          action={<LinkButton href="/startups">Startups durchsuchen</LinkButton>}
         />
       ) : (
         <RadarView startups={blips} />

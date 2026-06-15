@@ -9,18 +9,18 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lovedis — Startup Evaluation & Tech Scouting",
+    default: "Lovedis — Startup-Bewertung & Tech-Scouting",
     template: "%s · Lovedis",
   },
   description:
-    "Multi-role startup-scouting and evaluation platform for innovation engineers and venture scouts.",
+    "Die Startup-Scouting- und Bewertungsplattform für Innovation Engineers und Venture Scouts — mit Rollen für Partner, Investoren und Startups.",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="de" className={inter.variable}>
       <body className="font-sans">{children}</body>
     </html>
   );

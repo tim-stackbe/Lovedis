@@ -1,103 +1,106 @@
-# Lovedis — Startup Evaluation & Tech Scouting Platform
+# Lovedis — Plattform für Startup-Bewertung & Tech-Scouting
 
-**Lovedis** is a multi-role platform for venture scouts (discover → evaluate → pipeline →
-report) plus a two-sided collaboration layer (challenges, applications, PoC tracking,
-shared scorings), built with the Lovedis design system.
+**Lovedis** ist eine Multi-Rollen-Plattform für Venture Scouts (Entdecken → Bewerten →
+Pipeline → Berichten) plus eine zweiseitige Kollaborations-Ebene (Challenges, Bewerbungen,
+PoC-Tracking, geteilte Scorings), gebaut mit dem Lovedis-Designsystem.
 
-## Tech stack
+## Tech-Stack
 
 - **Next.js 16** (App Router, Turbopack, RSC + Server Actions), **React 19**, **TypeScript**
-- **NextAuth v5** (Credentials provider, JWT sessions, bcryptjs)
-- **PostgreSQL 17** via **Prisma 7** with the `@prisma/adapter-pg` driver adapter
-- **Tailwind CSS v4** with the custom Lovedis design tokens (`lv` namespace)
-- `lucide-react`, `cmdk`, `recharts`, `@dnd-kit`, Zustand (persisted), Zod
-- Exports: jsPDF + html2canvas (PDF), xlsx (Excel), papaparse (CSV)
+- **NextAuth v5** (Credentials-Provider, JWT-Sessions, bcryptjs)
+- **PostgreSQL 17** via **Prisma 7** mit dem `@prisma/adapter-pg`-Driver-Adapter
+- **Tailwind CSS v4** mit den eigenen Lovedis-Design-Tokens (`lv`-Namespace)
+- `lucide-react`, `cmdk`, `recharts`, `@dnd-kit`, Zustand (persistiert), Zod
+- Exporte: jsPDF + html2canvas (PDF), xlsx (Excel), papaparse (CSV)
 
-## Getting started
+## Loslegen
 
-### 1. Install dependencies
+### 1. Abhängigkeiten installieren
 
 ```bash
 npm install
 ```
 
-### 2. Configure environment
+### 2. Umgebung konfigurieren
 
 ```bash
 cp .env.example .env
 ```
 
-Set `DATABASE_URL`, `NEXTAUTH_SECRET` (e.g. `openssl rand -base64 32`) and `NEXTAUTH_URL`.
+Setze `DATABASE_URL`, `NEXTAUTH_SECRET` (z. B. `openssl rand -base64 32`) und `NEXTAUTH_URL`.
 
-### 3. Database
+### 3. Datenbank
 
-Either point `DATABASE_URL` at any PostgreSQL 17 instance, **or** use the bundled local dev
-database (PostgreSQL 17 binaries ship with the `embedded-postgres` dev dependency — no
-Docker or system install needed):
+Richte `DATABASE_URL` entweder auf eine beliebige PostgreSQL-17-Instanz **oder** nutze die
+mitgelieferte lokale Dev-Datenbank (PostgreSQL-17-Binaries kommen über die
+`embedded-postgres`-Dev-Dependency — kein Docker, keine Systeminstallation nötig):
 
 ```bash
-npm run db:start    # init (first run) + start Postgres 17 on localhost:5433
+npm run db:start    # Init (erster Lauf) + Start von Postgres 17 auf localhost:5433
 ```
 
-Then push the schema and seed demo data:
+Dann das Schema pushen und Demo-Daten seeden:
 
 ```bash
 npm run db:push
 npm run db:seed
 ```
 
-Or all three in one go: `npm run db:setup`. Stop the local database with `npm run db:stop`.
+Oder alle drei Schritte auf einmal: `npm run db:setup`. Die lokale Datenbank stoppst du mit
+`npm run db:stop`.
 
-### 4. Run
+### 4. Starten
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Öffne [http://localhost:3000](http://localhost:3000).
 
-## Demo accounts
+## Demo-Konten
 
-All seeded accounts use the password **`Lovedis2026!`**:
+Alle geseedeten Konten nutzen das Passwort **`Lovedis2026!`**:
 
-| Role | Email | Home |
+| Rolle | E-Mail | Startseite |
 |---|---|---|
 | Admin | `admin@lovedis.dev` | `/dashboard/admin` |
-| Member (Scout) | `member@lovedis.dev` | `/dashboard/member` |
+| Mitglied (Scout) | `member@lovedis.dev` | `/dashboard/member` |
 | Business Partner | `partner@lovedis.dev` | `/dashboard/partner` |
 | Investor | `investor@lovedis.dev` | `/dashboard/investor` |
 | Startup | `startup@lovedis.dev` | `/dashboard/startup` |
 
-Public self-signup exists for partners (`/auth/signup/partner`) and startups
+Öffentliche Selbstregistrierung gibt es für Partner (`/auth/signup/partner`) und Startups
 (`/auth/signup/startup`).
 
-## Architecture notes
+## Architektur-Notizen
 
-- **Two NextAuth configs**: `src/auth.config.ts` is Edge-safe and powers `src/middleware.ts`
-  (JWT-only check); `src/auth.ts` adds the Credentials provider with bcrypt + Prisma lookup.
-  The role rides in the JWT and is exposed as `session.user.role`.
-- **Server Actions are the only write API** (`src/app/actions/*.ts`), grouped by domain.
-  Every action re-checks `auth()` + role, validates with Zod, writes via Prisma and calls
-  `revalidatePath`. The only REST routes are `/api/auth/[...nextauth]` and `/api/health`.
-- **Role gating** via `lib/auth-guards.ts` (`requireAuth`, `requireRole`,
-  `requireScoutModule`); the Venture Scout module (`/startups`, `/evaluations`, `/compare`,
-  `/pipeline`, `/radar`, `/reports`) is restricted to `ADMIN` + `MEMBER`.
-- **Scoring engine** (`lib/scoring.ts` + `lib/constants.ts`): 7 weighted dimensions →
-  weighted overall score (0–5), Potential × Feasibility → quadrant (Money Maker / Dreamer /
-  Solid Bet / Pass), recommendation mapping (`STRONG_YES` … `STRONG_NO`). Per-user weight
-  overrides live in the persisted Zustand store (`stores/useAppStore.ts`) and are applied
-  client-side.
-- Generated Prisma client lives in `src/generated/prisma/` (gitignored); regenerate with
-  `npm run prisma:generate`.
+- **Zwei NextAuth-Konfigurationen**: `src/auth.config.ts` ist Edge-tauglich und treibt
+  `src/middleware.ts` an (reiner JWT-Check); `src/auth.ts` ergänzt den Credentials-Provider
+  mit bcrypt + Prisma-Lookup. Die Rolle reist im JWT mit und ist als `session.user.role`
+  verfügbar.
+- **Server Actions sind die einzige Schreib-API** (`src/app/actions/*.ts`), nach Domäne
+  gruppiert. Jede Action prüft `auth()` + Rolle erneut, validiert mit Zod, schreibt über
+  Prisma und ruft `revalidatePath` auf. Die einzigen REST-Routen sind
+  `/api/auth/[...nextauth]` und `/api/health`.
+- **Rollen-Gating** über `lib/auth-guards.ts` (`requireAuth`, `requireRole`,
+  `requireScoutModule`); das Venture-Scout-Modul (`/startups`, `/evaluations`, `/compare`,
+  `/pipeline`, `/radar`, `/reports`) ist auf `ADMIN` + `MEMBER` beschränkt.
+- **Scoring-Engine** (`lib/scoring.ts` + `lib/constants.ts`): 7 gewichtete Dimensionen →
+  gewichteter Gesamtscore (0–5), Potenzial × Machbarkeit → Quadrant (Money Maker / Dreamer /
+  Solid Bet / Pass), Empfehlungs-Mapping (`STRONG_YES` … `STRONG_NO`). Persönliche
+  Gewichtungs-Overrides liegen im persistierten Zustand-Store (`stores/useAppStore.ts`) und
+  werden clientseitig angewendet.
+- Der generierte Prisma-Client liegt in `src/generated/prisma/` (gitignored); neu generieren
+  mit `npm run prisma:generate`.
 
-## Scripts
+## Skripte
 
-| Script | Purpose |
+| Skript | Zweck |
 |---|---|
-| `npm run dev` | Dev server (Turbopack) |
-| `npm run build` / `npm start` | Production build / serve |
-| `npm run db:start` / `db:stop` | Local PostgreSQL 17 |
-| `npm run db:push` | Push Prisma schema |
-| `npm run db:seed` | Seed demo data |
-| `npm run prisma:generate` | Regenerate Prisma client |
+| `npm run dev` | Dev-Server (Turbopack) |
+| `npm run build` / `npm start` | Produktions-Build / Serve |
+| `npm run db:start` / `db:stop` | Lokales PostgreSQL 17 |
+| `npm run db:push` | Prisma-Schema pushen |
+| `npm run db:seed` | Demo-Daten seeden |
+| `npm run prisma:generate` | Prisma-Client neu generieren |
 | `npm run lint` | ESLint |

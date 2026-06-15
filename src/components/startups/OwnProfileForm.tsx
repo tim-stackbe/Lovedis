@@ -103,7 +103,7 @@ export function OwnProfileForm({ startup }: { startup: Startup | null }) {
               defaultValue={startup?.teamSize ?? ""}
             />
           </Field>
-          <Field label="Funding (Mio. €)" htmlFor="fundingRaised">
+          <Field label="Finanzierung (Mio. €)" htmlFor="fundingRaised">
             <Input
               id="fundingRaised"
               name="fundingRaised"
@@ -113,7 +113,7 @@ export function OwnProfileForm({ startup }: { startup: Startup | null }) {
               defaultValue={startup?.fundingRaised ?? ""}
             />
           </Field>
-          <Field label="Stage" htmlFor="stage">
+          <Field label="Phase" htmlFor="stage">
             <Select
               id="stage"
               name="stage"

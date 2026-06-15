@@ -79,24 +79,24 @@ export default async function StartupsPage({
     <>
       <HeroBanner
         kicker="Venture Scout"
-        title="Startup universe"
-        subtitle="Every company on the scouting desk — search, filter and dive into profiles, contacts and evaluations."
+        title="Startup-Universum"
+        subtitle="Jedes Unternehmen auf dem Scouting-Desk — suche, filtere und tauche ein in Profile, Kontakte und Bewertungen."
         actions={
           <LinkButton href="/startups/new" variant="white">
             <Plus className="h-4 w-4" />
-            New startup
+            Neues Startup
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
-          <BannerStat label="Tracked" value={total} />
-          <BannerStat label="Matches" value={startups.length} />
-          <BannerStat label="Partnered" value={partnered} />
+          <BannerStat label="Im Blick" value={total} />
+          <BannerStat label="Treffer" value={startups.length} />
+          <BannerStat label="Partnerschaften" value={partnered} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Discover" title="All startups" />
+        <SectionLabel number="01" label="Entdecken" title="Alle Startups" />
 
         <form
           method="GET"
@@ -107,12 +107,12 @@ export default async function StartupsPage({
             <Input
               name="q"
               defaultValue={q}
-              placeholder="Search by name or description…"
+              placeholder="Nach Name oder Beschreibung suchen…"
               className="pl-9"
             />
           </div>
           <Select name="industry" defaultValue={industry ?? ""} className="sm:w-44">
-            <option value="">All industries</option>
+            <option value="">Alle Branchen</option>
             {industries.map((i) => (
               <option key={i.industry} value={i.industry}>
                 {i.industry}
@@ -120,7 +120,7 @@ export default async function StartupsPage({
             ))}
           </Select>
           <Select name="stage" defaultValue={stage ?? ""} className="sm:w-36">
-            <option value="">All stages</option>
+            <option value="">Alle Phasen</option>
             {STARTUP_STAGES.map((s) => (
               <option key={s} value={s}>
                 {STARTUP_STAGE_LABELS[s]}
@@ -128,7 +128,7 @@ export default async function StartupsPage({
             ))}
           </Select>
           <Select name="pipeline" defaultValue={pipeline ?? ""} className="sm:w-40">
-            <option value="">All pipeline</option>
+            <option value="">Gesamte Pipeline</option>
             {PIPELINE_STAGES.map((s) => (
               <option key={s} value={s}>
                 {PIPELINE_STAGE_LABELS[s]}
@@ -139,19 +139,19 @@ export default async function StartupsPage({
             type="submit"
             className="rounded-button bg-lv-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-lv-blue-dark transition-colors"
           >
-            Filter
+            Filtern
           </button>
         </form>
 
         {startups.length === 0 ? (
           <EmptyState
             icon={Rocket}
-            title="No startups found"
-            description="Try a different search, or add the first startup to your scouting universe."
+            title="Keine Startups gefunden"
+            description="Versuch eine andere Suche oder leg das erste Startup in deinem Scouting-Universum an."
             action={
               <LinkButton href="/startups/new">
                 <Plus className="h-4 w-4" />
-                New startup
+                Neues Startup
               </LinkButton>
             }
           />
@@ -160,11 +160,11 @@ export default async function StartupsPage({
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Industry</Th>
-                <Th>Stage</Th>
+                <Th>Branche</Th>
+                <Th>Phase</Th>
                 <Th>Pipeline</Th>
-                <Th>Funding</Th>
-                <Th className="text-center">Evals</Th>
+                <Th>Finanzierung</Th>
+                <Th className="text-center">Bewertungen</Th>
                 <Th className="text-right">Score</Th>
               </tr>
             </THead>

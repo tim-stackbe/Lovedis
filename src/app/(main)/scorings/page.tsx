@@ -10,7 +10,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Shared scorings" };
+export const metadata: Metadata = { title: "Geteilte Scorings" };
 
 export default async function ScoringsPage() {
   const session = await requireRole(["BUSINESS_PARTNER", "INVESTOR"]);
@@ -29,31 +29,31 @@ export default async function ScoringsPage() {
   return (
     <>
       <HeroBanner
-        kicker="Collaboration"
-        title="Shared scorings"
-        subtitle="Evaluations the scouting team has shared with you — read-only, always up to date."
+        kicker="Zusammenarbeit"
+        title="Geteilte Scorings"
+        subtitle="Bewertungen, die das Scouting-Team mit dir geteilt hat — nur lesend, immer aktuell."
       />
 
       <SectionLabel
         number="01"
         label="Scorings"
-        title={`${shares.length} shared with you`}
+        title={`${shares.length} mit dir geteilt`}
       />
 
       {shares.length === 0 ? (
         <EmptyState
           icon={BarChart3}
-          title="Nothing shared yet"
-          description="When the scouting team shares an evaluation with you, it appears here."
+          title="Noch nichts geteilt"
+          description="Sobald das Scouting-Team eine Bewertung mit dir teilt, erscheint sie hier."
         />
       ) : (
         <TableCard>
           <THead>
             <tr>
               <Th>Startup</Th>
-              <Th>Shared by</Th>
-              <Th>Shared</Th>
-              <Th>Recommendation</Th>
+              <Th>Geteilt von</Th>
+              <Th>Geteilt</Th>
+              <Th>Empfehlung</Th>
               <Th className="text-right">Score</Th>
             </tr>
           </THead>

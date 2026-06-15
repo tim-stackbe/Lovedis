@@ -13,7 +13,7 @@ import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "PoC tracking" };
+export const metadata: Metadata = { title: "PoC-Tracking" };
 
 export default async function PoCsPage() {
   const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "INVESTOR"]);
@@ -48,24 +48,24 @@ export default async function PoCsPage() {
   return (
     <>
       <HeroBanner
-        kicker="Collaboration"
-        title="Proof-of-Concept tracking"
-        subtitle="Every PoC spawned from an accepted challenge application — KPIs, milestones, progress."
+        kicker="Zusammenarbeit"
+        title="Proof-of-Concept-Tracking"
+        subtitle="Jeder PoC aus einer angenommenen Challenge-Bewerbung — KPIs, Meilensteine, Fortschritt."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
-          <BannerStat label="Total" value={pocs.length} />
-          <BannerStat label="Running" value={running} />
-          <BannerStat label="Completed" value={completed} />
+          <BannerStat label="Gesamt" value={pocs.length} />
+          <BannerStat label="Laufend" value={running} />
+          <BannerStat label="Abgeschlossen" value={completed} />
         </div>
       </HeroBanner>
 
-      <SectionLabel number="01" label="PoCs" title="Tracked PoCs" />
+      <SectionLabel number="01" label="PoCs" title="Getrackte PoCs" />
 
       {pocs.length === 0 ? (
         <EmptyState
           icon={FlaskConical}
-          title="No PoCs yet"
-          description="Accept a challenge application to spawn its Proof-of-Concept here."
+          title="Noch keine PoCs"
+          description="Nimm eine Challenge-Bewerbung an, um hier den Proof-of-Concept zu starten."
         />
       ) : (
         <TableCard>
@@ -75,8 +75,8 @@ export default async function PoCsPage() {
               <Th>Startup</Th>
               <Th>Challenge</Th>
               <Th>Tracker</Th>
-              <Th>Progress</Th>
-              <Th>Updated</Th>
+              <Th>Fortschritt</Th>
+              <Th>Aktualisiert</Th>
               <Th className="text-right">Status</Th>
             </tr>
           </THead>

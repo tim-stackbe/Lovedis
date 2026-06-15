@@ -13,8 +13,8 @@ const roleEnum = z.enum(ALL_ROLES as [UserRole, ...UserRole[]]);
 
 const createUserSchema = z.object({
   name: z.string().min(2).max(120),
-  email: z.email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
+  password: z.string().min(8, "Passwort muss mindestens 8 Zeichen lang sein"),
   role: roleEnum,
   company: z.string().max(160).optional(),
 });
@@ -36,7 +36,8 @@ export async function createUser(
 
   const email = parsed.data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return { error: "A user with this email already exists." };
+  if (existing)
+    return { error: "Ein Nutzer mit dieser E-Mail existiert bereits." };
 
   await prisma.user.create({
     data: {
@@ -48,7 +49,7 @@ export async function createUser(
     },
   });
   revalidatePath("/users");
-  return { success: "User created." };
+  return { success: "Nutzer erstellt." };
 }
 
 export async function updateUserRole(
@@ -57,10 +58,10 @@ export async function updateUserRole(
 ): Promise<ActionState> {
   const session = await requireRole(["ADMIN"]);
   if (userId === session.user.id) {
-    return { error: "You cannot change your own role." };
+    return { error: "Du kannst deine eigene Rolle nicht ändern." };
   }
   const parsed = roleEnum.safeParse(role);
-  if (!parsed.success) return { error: "Invalid role." };
+  if (!parsed.success) return { error: "Ungültige Rolle." };
 
   await prisma.user.update({
     where: { id: userId },
@@ -73,13 +74,13 @@ export async function updateUserRole(
 export async function toggleUserActive(userId: string): Promise<ActionState> {
   const session = await requireRole(["ADMIN"]);
   if (userId === session.user.id) {
-    return { error: "You cannot deactivate your own account." };
+    return { error: "Du kannst dein eigenes Konto nicht deaktivieren." };
   }
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { isActive: true },
   });
-  if (!user) return { error: "User not found." };
+  if (!user) return { error: "Nutzer nicht gefunden." };
 
   await prisma.user.update({
     where: { id: userId },
@@ -114,12 +115,14 @@ export async function updateOwnProfile(
     data: { name: parsed.data.name, company: parsed.data.company ?? null },
   });
   revalidatePath("/settings");
-  return { success: "Profile updated." };
+  return { success: "Profil aktualisiert." };
 }
 
 const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "New password must be at least 8 characters"),
+  currentPassword: z.string().min(1, "Aktuelles Passwort ist erforderlich"),
+  newPassword: z
+    .string()
+    .min(8, "Neues Passwort muss mindestens 8 Zeichen lang sein"),
 });
 
 export async function changeOwnPassword(
@@ -136,17 +139,17 @@ export async function changeOwnPassword(
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
   });
-  if (!user) return { error: "User not found." };
+  if (!user) return { error: "Nutzer nicht gefunden." };
 
   const matches = await bcrypt.compare(
     parsed.data.currentPassword,
     user.passwordHash
   );
-  if (!matches) return { error: "Current password is incorrect." };
+  if (!matches) return { error: "Aktuelles Passwort ist falsch." };
 
   await prisma.user.update({
     where: { id: user.id },
     data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 10) },
   });
-  return { success: "Password changed." };
+  return { success: "Passwort geändert." };
 }

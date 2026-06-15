@@ -16,7 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { scoresToMap } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Reports" };
+export const metadata: Metadata = { title: "Berichte" };
 
 export default async function ReportsPage() {
   await requireScoutModule();
@@ -48,15 +48,15 @@ export default async function ReportsPage() {
     <>
       <HeroBanner
         kicker="Venture Scout"
-        title="Reports & exports"
-        subtitle="Take the portfolio with you — PDF for the board, Excel and CSV for the analysts."
+        title="Berichte & Exporte"
+        subtitle="Nimm das Portfolio mit — PDF fürs Board, Excel und CSV für die Analysten."
       />
-      <SectionLabel number="06" label="Report" title="Portfolio report" />
+      <SectionLabel number="06" label="Bericht" title="Portfolio-Bericht" />
       {rows.length === 0 ? (
         <EmptyState
           icon={Share2}
-          title="Nothing to report yet"
-          description="Create evaluations first — they will show up here ready for export."
+          title="Noch nichts zu berichten"
+          description="Erstelle zuerst Bewertungen — sie erscheinen hier exportbereit."
         />
       ) : (
         <ReportsView rows={rows} />

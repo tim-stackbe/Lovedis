@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Anmelden" };
 
 export default async function LoginPage({
   searchParams,
@@ -12,8 +12,8 @@ export default async function LoginPage({
   const { callbackUrl } = await searchParams;
   return (
     <AuthLayout
-      headline={["Discover.", "Evaluate.", "Partner up."]}
-      subline="The scouting workbench for innovation engineers — from first signal to signed Proof-of-Concept."
+      headline={["Entdecken.", "Bewerten.", "Partnern."]}
+      subline="Die Scouting-Workbench für Innovation Engineers — vom ersten Signal bis zum unterschriebenen Proof-of-Concept."
     >
       <LoginForm callbackUrl={callbackUrl} />
     </AuthLayout>

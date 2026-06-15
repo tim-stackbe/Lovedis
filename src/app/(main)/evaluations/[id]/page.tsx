@@ -32,7 +32,7 @@ export default async function EvaluationDetailPage({
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="lv-wordmark text-xs text-lv-blue">Evaluation</p>
+          <p className="lv-wordmark text-xs text-lv-blue">Bewertung</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">
             <Link
               href={`/startups/${evaluation.startup.id}`}
@@ -42,22 +42,22 @@ export default async function EvaluationDetailPage({
             </Link>
           </h1>
           <p className="mt-1 text-sm text-lv-secondary">
-            {evaluation.startup.industry} · by {evaluation.evaluator.name} ·
-            updated {formatDate(evaluation.updatedAt)}
+            {evaluation.startup.industry} · von {evaluation.evaluator.name} ·
+            aktualisiert {formatDate(evaluation.updatedAt)}
           </p>
         </div>
         <form action={deleteEvaluation.bind(null, evaluation.id)}>
           <Button type="submit" variant="danger" size="sm">
             <Trash2 className="h-4 w-4" />
-            Delete
+            Löschen
           </Button>
         </form>
       </div>
 
       <SectionLabel
         number="02"
-        label="Evaluate"
-        title="Score the seven dimensions"
+        label="Bewerten"
+        title="Bewerte die sieben Dimensionen"
       />
 
       <EvaluationForm

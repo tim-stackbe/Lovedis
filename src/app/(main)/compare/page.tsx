@@ -9,7 +9,7 @@ import { requireScoutModule } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { scoresToMap } from "@/lib/scoring";
 
-export const metadata: Metadata = { title: "Compare" };
+export const metadata: Metadata = { title: "Vergleich" };
 
 export default async function ComparePage() {
   await requireScoutModule();
@@ -44,10 +44,10 @@ export default async function ComparePage() {
     <>
       <HeroBanner
         kicker="Venture Scout"
-        title="Side-by-side compare"
-        subtitle="Stack startups against each other across all seven scoring dimensions."
+        title="Direktvergleich"
+        subtitle="Stelle Startups über alle sieben Scoring-Dimensionen hinweg gegenüber."
       />
-      <SectionLabel number="03" label="Decide" title="Comparison workbench" />
+      <SectionLabel number="03" label="Entscheiden" title="Vergleichs-Workbench" />
       <CompareView startups={compareStartups} />
     </>
   );

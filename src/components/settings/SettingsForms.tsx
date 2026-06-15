@@ -45,7 +45,7 @@ export function ProfileForm({
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       {state?.success && <SuccessChip>{state.success}</SuccessChip>}
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Save profile"}
+        {pending ? "Speichern…" : "Profil speichern"}
       </Button>
     </form>
   );
@@ -60,7 +60,7 @@ export function PasswordForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Current password" htmlFor="current-password">
+        <Field label="Aktuelles Passwort" htmlFor="current-password">
           <Input
             id="current-password"
             name="currentPassword"
@@ -69,7 +69,7 @@ export function PasswordForm() {
             required
           />
         </Field>
-        <Field label="New password" htmlFor="new-password-field">
+        <Field label="Neues Passwort" htmlFor="new-password-field">
           <Input
             id="new-password-field"
             name="newPassword"
@@ -83,7 +83,7 @@ export function PasswordForm() {
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       {state?.success && <SuccessChip>{state.success}</SuccessChip>}
       <Button type="submit" variant="secondary" disabled={pending}>
-        {pending ? "Updating…" : "Change password"}
+        {pending ? "Aktualisieren…" : "Passwort ändern"}
       </Button>
     </form>
   );

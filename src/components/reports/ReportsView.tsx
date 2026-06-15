@@ -32,18 +32,18 @@ export interface ReportRow {
 function toFlatRows(rows: ReportRow[]) {
   return rows.map((r) => ({
     Startup: r.startup,
-    Industry: r.industry,
-    Stage: r.stage,
+    Branche: r.industry,
+    Phase: r.stage,
     Pipeline: r.pipeline,
-    Evaluator: r.evaluator,
-    Date: r.date,
+    "Bewertet von": r.evaluator,
+    Datum: r.date,
     ...Object.fromEntries(
       SCORE_DIMENSIONS.map((d) => [DIMENSION_LABELS[d], r.scores[d] ?? 0])
     ),
-    Potential: r.potential,
-    Feasibility: r.feasibility,
-    Overall: r.overall,
-    Recommendation: RECOMMENDATION_LABELS[r.recommendation],
+    Potenzial: r.potential,
+    Machbarkeit: r.feasibility,
+    Gesamt: r.overall,
+    Empfehlung: RECOMMENDATION_LABELS[r.recommendation],
   }));
 }
 
@@ -79,7 +79,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
     try {
       const sheet = XLSX.utils.json_to_sheet(toFlatRows(rows));
       const book = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(book, sheet, "Evaluations");
+      XLSX.utils.book_append_sheet(book, sheet, "Bewertungen");
       XLSX.writeFile(book, `lovedis-portfolio-${stamp}.xlsx`);
     } finally {
       setExporting(null);
@@ -130,7 +130,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
       <div className="flex flex-wrap gap-3">
         <Button onClick={exportPdf} disabled={exporting !== null}>
           <FileText className="h-4 w-4" />
-          {exporting === "pdf" ? "Rendering PDF…" : "Export PDF"}
+          {exporting === "pdf" ? "PDF wird erstellt…" : "Als PDF exportieren"}
         </Button>
         <Button
           onClick={exportExcel}
@@ -138,7 +138,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
           disabled={exporting !== null}
         >
           <FileSpreadsheet className="h-4 w-4" />
-          Export Excel
+          Als Excel exportieren
         </Button>
         <Button
           onClick={exportCsv}
@@ -146,7 +146,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
           disabled={exporting !== null}
         >
           <FileDown className="h-4 w-4" />
-          Export CSV
+          Als CSV exportieren
         </Button>
       </div>
 
@@ -156,14 +156,14 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
             <div>
               <Wordmark />
               <h2 className="mt-3 text-xl font-bold tracking-tight">
-                Portfolio evaluation report
+                Portfolio-Bewertungsbericht
               </h2>
               <p className="text-sm text-lv-secondary">
-                {rows.length} evaluations · generated {stamp}
+                {rows.length} Bewertungen · erstellt am {stamp}
               </p>
             </div>
             <span className="lv-wordmark text-xs text-lv-blue">
-              Confidential
+              Vertraulich
             </span>
           </div>
 
@@ -172,7 +172,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
               <tr className="bg-lv-surface text-lv-secondary uppercase tracking-wide">
                 <th className="px-2.5 py-2 text-left font-semibold">Startup</th>
                 <th className="px-2.5 py-2 text-left font-semibold">
-                  Evaluator
+                  Bewertet von
                 </th>
                 {SCORE_DIMENSIONS.map((d) => (
                   <th
@@ -183,9 +183,9 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
                     {DIMENSION_LABELS[d].split(" ")[0]}
                   </th>
                 ))}
-                <th className="px-2.5 py-2 text-right font-semibold">Overall</th>
+                <th className="px-2.5 py-2 text-right font-semibold">Gesamt</th>
                 <th className="px-2.5 py-2 text-right font-semibold">
-                  Recommendation
+                  Empfehlung
                 </th>
               </tr>
             </thead>

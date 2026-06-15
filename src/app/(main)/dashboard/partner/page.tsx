@@ -15,7 +15,7 @@ import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Partner dashboard" };
+export const metadata: Metadata = { title: "Partner-Dashboard" };
 
 export default async function PartnerDashboard() {
   const session = await requireRole(["BUSINESS_PARTNER"]);
@@ -60,55 +60,55 @@ export default async function PartnerDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Section 00 — Business Partner"
-        title={`Hello, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Your challenges, the startups applying to them and the PoCs you are running."
+        kicker="Sektion 00 — Business Partner"
+        title={`Hallo, ${session.user.name?.split(" ")[0]}`}
+        subtitle="Deine Challenges, die Startups, die sich bewerben, und die PoCs, die du betreust."
         actions={
           <LinkButton href="/challenges/new" variant="white">
-            New challenge
+            Neue Challenge
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat label="Challenges" value={challenges.length} />
-          <BannerStat label="Open" value={openChallenges} />
+          <BannerStat label="Offen" value={openChallenges} />
           <BannerStat label="PoCs" value={pocs.length} />
           <BannerStat label="Scorings" value={shares.length} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Pulse" title="Needs your attention" />
+        <SectionLabel number="01" label="Puls" title="Braucht deine Aufmerksamkeit" />
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone={pendingCount > 0 ? "attention" : "muted"}
-            label="Pending applications"
+            label="Ausstehende Bewerbungen"
             value={pendingCount}
-            sub="waiting for your decision"
+            sub="warten auf deine Entscheidung"
           />
           <ToneCard
             tone="success"
-            label="Running PoCs"
+            label="Laufende PoCs"
             value={runningPoCs}
-            sub="active pilots"
+            sub="aktive Piloten"
           />
           <ToneCard
             tone="info"
-            label="Shared scorings"
+            label="Geteilte Scorings"
             value={shares.length}
-            sub="from the scouting team"
+            sub="vom Scouting-Team"
           />
         </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <SectionLabel number="02" label="Challenges" title="Your challenges" />
+          <SectionLabel number="02" label="Challenges" title="Deine Challenges" />
           {challenges.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
-              No challenges yet —{" "}
+              Noch keine Challenges —{" "}
               <Link href="/challenges/new" className="font-semibold text-lv-blue">
-                post your first one
+                veröffentliche deine erste
               </Link>
               .
             </Card>
@@ -117,7 +117,7 @@ export default async function PartnerDashboard() {
               <THead>
                 <tr>
                   <Th>Challenge</Th>
-                  <Th className="text-center">Apps</Th>
+                  <Th className="text-center">Bewerbungen</Th>
                   <Th className="text-right">Status</Th>
                 </tr>
               </THead>
@@ -146,17 +146,17 @@ export default async function PartnerDashboard() {
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="03" label="Pilots" title="PoC tracking" />
+          <SectionLabel number="03" label="Piloten" title="PoC-Tracking" />
           {pocs.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
-              Accept an application to spawn your first PoC.
+              Nimm eine Bewerbung an, um deinen ersten PoC zu starten.
             </Card>
           ) : (
             <TableCard>
               <THead>
                 <tr>
                   <Th>PoC</Th>
-                  <Th>Progress</Th>
+                  <Th>Fortschritt</Th>
                   <Th className="text-right">Status</Th>
                 </tr>
               </THead>
@@ -201,19 +201,19 @@ export default async function PartnerDashboard() {
       <section className="space-y-4">
         <SectionLabel
           number="04"
-          label="Intelligence"
-          title="Scorings shared with you"
+          label="Insights"
+          title="Mit dir geteilte Scorings"
         />
         {shares.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
-            No scorings shared with you yet.
+            Noch keine Scorings mit dir geteilt.
           </Card>
         ) : (
           <TableCard>
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Shared</Th>
+                <Th>Geteilt</Th>
                 <Th className="text-right">Score</Th>
               </tr>
             </THead>

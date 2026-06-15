@@ -11,7 +11,7 @@ import { requireAuth } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { VENTURE_SCOUT_ROLES } from "@/lib/roles";
 
-export const metadata: Metadata = { title: "Settings" };
+export const metadata: Metadata = { title: "Einstellungen" };
 
 export default async function SettingsPage() {
   const session = await requireAuth();
@@ -23,13 +23,13 @@ export default async function SettingsPage() {
   return (
     <>
       <HeroBanner
-        kicker="Account"
-        title="Settings"
-        subtitle="Your profile, password and personal scoring preferences."
+        kicker="Konto"
+        title="Einstellungen"
+        subtitle="Dein Profil, dein Passwort und deine persönlichen Scoring-Präferenzen."
       />
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Account" title="Profile" />
+        <SectionLabel number="01" label="Konto" title="Profil" />
         <Card className="p-6">
           <ProfileForm
             name={user?.name ?? ""}
@@ -40,7 +40,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="02" label="Security" title="Password" />
+        <SectionLabel number="02" label="Sicherheit" title="Passwort" />
         <Card className="p-6">
           <PasswordForm />
         </Card>
@@ -51,7 +51,7 @@ export default async function SettingsPage() {
           <SectionLabel
             number="03"
             label="Scoring"
-            title="Personal dimension weights"
+            title="Persönliche Dimensions-Gewichte"
           />
           <Card className="p-6">
             <WeightsEditor />

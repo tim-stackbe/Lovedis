@@ -27,22 +27,22 @@ export function ChallengeForm({ challenge }: { challenge?: Challenge }) {
   return (
     <Card className="p-6 sm:p-8">
       <form action={formAction} className="space-y-5">
-        <Field label="Title" htmlFor="title">
+        <Field label="Titel" htmlFor="title">
           <Input
             id="title"
             name="title"
             defaultValue={challenge?.title}
-            placeholder="Predictive maintenance for production lines"
+            placeholder="Predictive Maintenance für Produktionslinien"
             required
           />
         </Field>
-        <Field label="Description" htmlFor="description">
+        <Field label="Beschreibung" htmlFor="description">
           <Textarea
             id="description"
             name="description"
             defaultValue={challenge?.description}
             className="min-h-36"
-            placeholder="Describe the problem, the context and what a successful pilot looks like…"
+            placeholder="Beschreibe das Problem, den Kontext und wie ein erfolgreicher Pilot aussieht…"
             required
           />
         </Field>
@@ -75,13 +75,13 @@ export function ChallengeForm({ challenge }: { challenge?: Challenge }) {
           <Field
             label="Tags"
             htmlFor="tags"
-            hint="Comma-separated, e.g. AI, IoT"
+            hint="Kommagetrennt, z. B. KI, IoT"
           >
             <Input
               id="tags"
               name="tags"
               defaultValue={challenge?.tags.join(", ")}
-              placeholder="AI, Manufacturing"
+              placeholder="KI, Fertigung"
             />
           </Field>
         </div>
@@ -90,10 +90,10 @@ export function ChallengeForm({ challenge }: { challenge?: Challenge }) {
         <div className="flex justify-end">
           <Button type="submit" disabled={pending}>
             {pending
-              ? "Saving…"
+              ? "Speichern…"
               : challenge
-                ? "Save changes"
-                : "Create challenge"}
+                ? "Änderungen speichern"
+                : "Challenge erstellen"}
           </Button>
         </div>
       </form>

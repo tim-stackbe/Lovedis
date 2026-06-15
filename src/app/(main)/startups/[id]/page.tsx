@@ -68,25 +68,25 @@ export default async function StartupDetailPage({
   return (
     <>
       <HeroBanner
-        kicker="Startup profile"
+        kicker="Startup-Profil"
         title={startup.name}
         subtitle={startup.description}
         actions={
           <form action={createEvaluation.bind(null, startup.id)}>
             <Button type="submit" variant="white">
               <Plus className="h-4 w-4" />
-              New evaluation
+              Neue Bewertung
             </Button>
           </form>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat
-            label="Latest score"
+            label="Letzter Score"
             value={latest ? latest.overallScore.toFixed(1) : "—"}
           />
           <BannerStat
-            label="Stage"
+            label="Phase"
             value={STARTUP_STAGE_LABELS[startup.stage]}
           />
           <BannerStat
@@ -98,13 +98,13 @@ export default async function StartupDetailPage({
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Profile" title="Company facts" />
+        <SectionLabel number="01" label="Profil" title="Unternehmensdaten" />
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="p-6 lg:col-span-2">
             <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-xs uppercase tracking-wider text-lv-secondary">
-                  Industry
+                  Branche
                 </dt>
                 <dd className="mt-1">
                   <Badge tone="pink">{startup.industry}</Badge>
@@ -112,7 +112,7 @@ export default async function StartupDetailPage({
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider text-lv-secondary">
-                  Location
+                  Standort
                 </dt>
                 <dd className="mt-1 font-medium">
                   {[startup.city, startup.country].filter(Boolean).join(", ") ||
@@ -121,7 +121,7 @@ export default async function StartupDetailPage({
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider text-lv-secondary">
-                  Founded
+                  Gegründet
                 </dt>
                 <dd className="mt-1 font-medium">
                   {startup.foundedYear ?? "—"}
@@ -140,7 +140,7 @@ export default async function StartupDetailPage({
                       className="inline-flex items-center gap-1 text-lv-blue hover:underline"
                     >
                       <Globe className="h-3.5 w-3.5" />
-                      Visit
+                      Öffnen
                     </a>
                   ) : (
                     "—"
@@ -149,7 +149,7 @@ export default async function StartupDetailPage({
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider text-lv-secondary">
-                  Campaign
+                  Kampagne
                 </dt>
                 <dd className="mt-1 font-medium">
                   {startup.campaign?.name ?? "—"}
@@ -157,7 +157,7 @@ export default async function StartupDetailPage({
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider text-lv-secondary">
-                  Added
+                  Hinzugefügt
                 </dt>
                 <dd className="mt-1 font-medium">
                   {formatDate(startup.createdAt)}
@@ -168,7 +168,7 @@ export default async function StartupDetailPage({
 
           <Card className="p-6">
             <p className="text-xs uppercase tracking-wider text-lv-secondary">
-              Placement
+              Einordnung
             </p>
             <div className="mt-3 space-y-3 text-sm">
               <div className="flex items-center justify-between">
@@ -180,7 +180,7 @@ export default async function StartupDetailPage({
                 <span className="font-medium">
                   {startup.radarQuadrant && startup.radarRing
                     ? `${RADAR_QUADRANT_LABELS[startup.radarQuadrant]} · ${RADAR_RING_LABELS[startup.radarRing]}`
-                    : "Not placed"}
+                    : "Nicht platziert"}
                 </span>
               </div>
               {latest && (
@@ -192,7 +192,7 @@ export default async function StartupDetailPage({
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-lv-secondary">Recommendation</span>
+                    <span className="text-lv-secondary">Empfehlung</span>
                     <RecommendationBadge value={latest.recommendation} />
                   </div>
                 </>
@@ -205,23 +205,23 @@ export default async function StartupDetailPage({
       <section className="space-y-4">
         <SectionLabel
           number="02"
-          label="Evaluate"
-          title={`Evaluations (${startup.evaluations.length})`}
+          label="Bewerten"
+          title={`Bewertungen (${startup.evaluations.length})`}
         />
         {startup.evaluations.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
-            No evaluations yet — start one with the button above.
+            Noch keine Bewertungen — starte eine mit dem Button oben.
           </Card>
         ) : (
           <TableCard>
             <THead>
               <tr>
-                <Th>Evaluator</Th>
-                <Th>Updated</Th>
-                <Th>Recommendation</Th>
-                <Th className="text-right">Potential</Th>
-                <Th className="text-right">Feasibility</Th>
-                <Th className="text-right">Overall</Th>
+                <Th>Bewertet von</Th>
+                <Th>Aktualisiert</Th>
+                <Th>Empfehlung</Th>
+                <Th className="text-right">Potenzial</Th>
+                <Th className="text-right">Machbarkeit</Th>
+                <Th className="text-right">Gesamt</Th>
               </tr>
             </THead>
             <tbody>
@@ -261,8 +261,8 @@ export default async function StartupDetailPage({
         <div className="space-y-4">
           <SectionLabel
             number="03"
-            label="Network"
-            title={`Contacts (${startup.contacts.length})`}
+            label="Netzwerk"
+            title={`Kontakte (${startup.contacts.length})`}
           />
           <Card className="divide-y divide-lv-border">
             {startup.contacts.map((c) => (
@@ -301,7 +301,7 @@ export default async function StartupDetailPage({
                   <button
                     type="submit"
                     className="rounded-button p-1.5 text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange transition-colors"
-                    aria-label={`Delete ${c.name}`}
+                    aria-label={`${c.name} löschen`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -318,7 +318,7 @@ export default async function StartupDetailPage({
           <SectionLabel
             number="04"
             label="Material"
-            title={`Attachments (${startup.attachments.length})`}
+            title={`Anhänge (${startup.attachments.length})`}
           />
           <Card className="divide-y divide-lv-border">
             {startup.attachments.map((a) => (
@@ -342,7 +342,7 @@ export default async function StartupDetailPage({
                   <button
                     type="submit"
                     className="rounded-button p-1.5 text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange transition-colors"
-                    aria-label={`Delete ${a.name}`}
+                    aria-label={`${a.name} löschen`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -357,13 +357,13 @@ export default async function StartupDetailPage({
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="05" label="Manage" title="Edit startup" />
+        <SectionLabel number="05" label="Verwalten" title="Startup bearbeiten" />
         <StartupForm startup={startup} />
         <div className="flex justify-end">
           <form action={deleteStartup.bind(null, startup.id)}>
             <Button type="submit" variant="danger" size="sm">
               <Trash2 className="h-4 w-4" />
-              Delete startup
+              Startup löschen
             </Button>
           </form>
         </div>

@@ -10,10 +10,10 @@ import { CHALLENGE_STATUSES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 const challengeSchema = z.object({
-  title: z.string().min(4, "Title must be at least 4 characters").max(200),
+  title: z.string().min(4, "Titel muss mindestens 4 Zeichen lang sein").max(200),
   description: z
     .string()
-    .min(20, "Description must be at least 20 characters")
+    .min(20, "Beschreibung muss mindestens 20 Zeichen lang sein")
     .max(8000),
   status: z.enum(CHALLENGE_STATUSES as [ChallengeStatus, ...ChallengeStatus[]]),
   deadline: z.string().optional(),
@@ -84,7 +84,8 @@ export async function updateChallenge(
   formData: FormData
 ): Promise<ActionState> {
   const { challenge } = await getManagedChallenge(challengeId);
-  if (!challenge) return { error: "Challenge not found or not yours." };
+  if (!challenge)
+    return { error: "Challenge nicht gefunden oder nicht deine eigene." };
 
   const parsed = parseChallengeForm(formData);
   if (!parsed.success) return { error: firstZodError(parsed.error) };
@@ -101,7 +102,7 @@ export async function updateChallenge(
   });
   revalidatePath("/challenges");
   revalidatePath(`/challenges/${challengeId}`);
-  return { success: "Challenge updated." };
+  return { success: "Challenge aktualisiert." };
 }
 
 export async function updateChallengeStatus(
@@ -109,11 +110,12 @@ export async function updateChallengeStatus(
   status: ChallengeStatus
 ): Promise<ActionState> {
   const { challenge } = await getManagedChallenge(challengeId);
-  if (!challenge) return { error: "Challenge not found or not yours." };
+  if (!challenge)
+    return { error: "Challenge nicht gefunden oder nicht deine eigene." };
   const parsed = z
     .enum(CHALLENGE_STATUSES as [ChallengeStatus, ...ChallengeStatus[]])
     .safeParse(status);
-  if (!parsed.success) return { error: "Invalid status." };
+  if (!parsed.success) return { error: "Ungültiger Status." };
 
   await prisma.challenge.update({
     where: { id: challengeId },
@@ -138,7 +140,10 @@ export async function deleteChallenge(challengeId: string): Promise<void> {
 
 const applySchema = z.object({
   challengeId: z.string().min(1),
-  pitch: z.string().min(30, "Pitch must be at least 30 characters").max(5000),
+  pitch: z
+    .string()
+    .min(30, "Pitch muss mindestens 30 Zeichen lang sein")
+    .max(5000),
 });
 
 export async function applyToChallenge(
@@ -147,7 +152,7 @@ export async function applyToChallenge(
 ): Promise<ActionState> {
   const session = await requireAuth();
   if (session.user.role !== "STARTUP") {
-    return { error: "Only startup accounts can apply to challenges." };
+    return { error: "Nur Startup-Konten können sich auf Challenges bewerben." };
   }
 
   const parsed = applySchema.safeParse({
@@ -162,7 +167,8 @@ export async function applyToChallenge(
   });
   if (!startup) {
     return {
-      error: "Complete your startup profile before applying to a challenge.",
+      error:
+        "Vervollständige dein Startup-Profil, bevor du dich auf eine Challenge bewirbst.",
     };
   }
 
@@ -171,7 +177,7 @@ export async function applyToChallenge(
     select: { status: true },
   });
   if (!challenge || challenge.status !== "OPEN") {
-    return { error: "This challenge is not open for applications." };
+    return { error: "Diese Challenge ist nicht für Bewerbungen geöffnet." };
   }
 
   const existing = await prisma.challengeApplication.findUnique({
@@ -182,7 +188,8 @@ export async function applyToChallenge(
       },
     },
   });
-  if (existing) return { error: "You have already applied to this challenge." };
+  if (existing)
+    return { error: "Du hast dich bereits auf diese Challenge beworben." };
 
   await prisma.challengeApplication.create({
     data: {
@@ -194,7 +201,7 @@ export async function applyToChallenge(
   revalidatePath("/challenges");
   revalidatePath(`/challenges/${parsed.data.challengeId}`);
   revalidatePath("/applications");
-  return { success: "Application submitted." };
+  return { success: "Bewerbung abgeschickt." };
 }
 
 export async function decideApplication(
@@ -203,7 +210,7 @@ export async function decideApplication(
 ): Promise<ActionState> {
   const session = await requireRole(["ADMIN", "BUSINESS_PARTNER"]);
   const parsed = z.enum(["ACCEPTED", "REJECTED"]).safeParse(decision);
-  if (!parsed.success) return { error: "Invalid decision." };
+  if (!parsed.success) return { error: "Ungültige Entscheidung." };
 
   const application = await prisma.challengeApplication.findUnique({
     where: { id: applicationId },
@@ -213,12 +220,15 @@ export async function decideApplication(
       poc: { select: { id: true } },
     },
   });
-  if (!application) return { error: "Application not found." };
+  if (!application) return { error: "Bewerbung nicht gefunden." };
   if (
     session.user.role !== "ADMIN" &&
     application.challenge.createdById !== session.user.id
   ) {
-    return { error: "You can only decide applications on your own challenges." };
+    return {
+      error:
+        "Du kannst nur über Bewerbungen auf deine eigenen Challenges entscheiden.",
+    };
   }
 
   await prisma.challengeApplication.update({

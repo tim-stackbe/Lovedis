@@ -15,7 +15,7 @@ import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Investor dashboard" };
+export const metadata: Metadata = { title: "Investor-Dashboard" };
 
 export default async function InvestorDashboard() {
   const session = await requireRole(["INVESTOR"]);
@@ -58,52 +58,52 @@ export default async function InvestorDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Section 00 — Investor"
-        title={`Welcome, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Your portfolio view: tracked Proof-of-Concepts and the scorings shared with you."
+        kicker="Sektion 00 — Investor"
+        title={`Willkommen, ${session.user.name?.split(" ")[0]}`}
+        subtitle="Deine Portfolio-Sicht: getrackte Proof-of-Concepts und die mit dir geteilten Scorings."
         actions={
           <LinkButton href="/pocs" variant="white">
-            Open PoC tracking
+            PoC-Tracking öffnen
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <BannerStat label="Tracked PoCs" value={pocs.length} />
-          <BannerStat label="Running" value={running} />
+          <BannerStat label="Getrackte PoCs" value={pocs.length} />
+          <BannerStat label="Laufend" value={running} />
           <BannerStat label="Scorings" value={shares.length} />
-          <BannerStat label="Avg score" value={avgScore.toFixed(1)} />
+          <BannerStat label="Ø Score" value={avgScore.toFixed(1)} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Pulse" title="Portfolio health" />
+        <SectionLabel number="01" label="Puls" title="Portfolio-Gesundheit" />
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone="success"
-            label="Running PoCs"
+            label="Laufende PoCs"
             value={running}
-            sub="active pilots"
+            sub="aktive Piloten"
           />
           <ToneCard
             tone="info"
-            label="Completed"
+            label="Abgeschlossen"
             value={completed}
-            sub="finished pilots"
+            sub="beendete Piloten"
           />
           <ToneCard
             tone={shares.length > 0 ? "attention" : "muted"}
-            label="New intelligence"
+            label="Neue Insights"
             value={shares.length}
-            sub="shared scorings"
+            sub="geteilte Scorings"
           />
         </div>
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="02" label="Pilots" title="Tracked PoCs" />
+        <SectionLabel number="02" label="Piloten" title="Getrackte PoCs" />
         {pocs.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
-            No PoCs are assigned to you yet.
+            Dir sind noch keine PoCs zugewiesen.
           </Card>
         ) : (
           <TableCard>
@@ -111,8 +111,8 @@ export default async function InvestorDashboard() {
               <tr>
                 <Th>Startup</Th>
                 <Th>Challenge</Th>
-                <Th>Progress</Th>
-                <Th>Updated</Th>
+                <Th>Fortschritt</Th>
+                <Th>Aktualisiert</Th>
                 <Th className="text-right">Status</Th>
               </tr>
             </THead>
@@ -165,20 +165,20 @@ export default async function InvestorDashboard() {
       <section className="space-y-4">
         <SectionLabel
           number="03"
-          label="Intelligence"
-          title="Scorings shared with you"
+          label="Insights"
+          title="Mit dir geteilte Scorings"
         />
         {shares.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
-            No scorings shared with you yet.
+            Noch keine Scorings mit dir geteilt.
           </Card>
         ) : (
           <TableCard>
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Shared</Th>
-                <Th>Recommendation</Th>
+                <Th>Geteilt</Th>
+                <Th>Empfehlung</Th>
                 <Th className="text-right">Score</Th>
               </tr>
             </THead>

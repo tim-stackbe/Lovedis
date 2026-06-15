@@ -36,14 +36,14 @@ export default async function SharedScoringDetailPage({
     <>
       <SectionLabel
         number="01"
-        label="Shared scoring"
-        title={`${e.startup.name} — evaluated by ${e.evaluator.name}`}
+        label="Geteiltes Scoring"
+        title={`${e.startup.name} — bewertet von ${e.evaluator.name}`}
       />
 
       {share.message && (
         <Card className="border-lv-blue-soft bg-lv-blue-soft p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-lv-blue/70">
-            Message from {share.sharedBy.name} · {formatDate(share.createdAt)}
+            Nachricht von {share.sharedBy.name} · {formatDate(share.createdAt)}
           </p>
           <p className="mt-2 text-sm text-lv-blue">{share.message}</p>
         </Card>

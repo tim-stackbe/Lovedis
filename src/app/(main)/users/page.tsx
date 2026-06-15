@@ -13,7 +13,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "User management" };
+export const metadata: Metadata = { title: "Nutzerverwaltung" };
 
 export default async function UsersPage() {
   const session = await requireRole(["ADMIN"]);
@@ -27,35 +27,35 @@ export default async function UsersPage() {
   return (
     <>
       <HeroBanner
-        kicker="Platform"
-        title="User management"
-        subtitle="Create accounts, change roles and deactivate users across all five roles."
+        kicker="Plattform"
+        title="Nutzerverwaltung"
+        subtitle="Erstelle Konten, ändere Rollen und deaktiviere Nutzer über alle fünf Rollen hinweg."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
-          <BannerStat label="Users" value={users.length} />
-          <BannerStat label="Active" value={active} />
-          <BannerStat label="Deactivated" value={users.length - active} />
+          <BannerStat label="Nutzer" value={users.length} />
+          <BannerStat label="Aktiv" value={active} />
+          <BannerStat label="Deaktiviert" value={users.length - active} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Create" title="New user" />
+        <SectionLabel number="01" label="Erstellen" title="Neuer Nutzer" />
         <Card className="p-6">
           <CreateUserForm />
         </Card>
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="02" label="Manage" title="All users" />
+        <SectionLabel number="02" label="Verwalten" title="Alle Nutzer" />
         <TableCard>
           <THead>
             <tr>
-              <Th>User</Th>
-              <Th>Company</Th>
-              <Th>Created</Th>
-              <Th>Role</Th>
+              <Th>Nutzer</Th>
+              <Th>Unternehmen</Th>
+              <Th>Erstellt</Th>
+              <Th>Rolle</Th>
               <Th>Status</Th>
-              <Th className="text-right">Actions</Th>
+              <Th className="text-right">Aktionen</Th>
             </tr>
           </THead>
           <tbody>
@@ -74,9 +74,9 @@ export default async function UsersPage() {
                   </Td>
                   <Td>
                     {u.isActive ? (
-                      <Badge tone="mint">Active</Badge>
+                      <Badge tone="mint">Aktiv</Badge>
                     ) : (
-                      <Badge tone="orange">Deactivated</Badge>
+                      <Badge tone="orange">Deaktiviert</Badge>
                     )}
                   </Td>
                   <Td className="text-right">

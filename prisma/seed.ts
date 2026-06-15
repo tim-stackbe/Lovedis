@@ -55,10 +55,10 @@ const STARTUPS: StartupSeed[] = [
     name: "NeuralForge",
     website: "https://neuralforge.example.com",
     description:
-      "Foundation-model copilot that writes and verifies PLC code for industrial automation engineers.",
-    industry: "Artificial Intelligence",
-    country: "Germany",
-    city: "Munich",
+      "Foundation-Model-Copilot, der SPS-Code für Automatisierungsingenieure in der Industrie schreibt und verifiziert.",
+    industry: "Künstliche Intelligenz",
+    country: "Deutschland",
+    city: "München",
     foundedYear: 2023,
     teamSize: 28,
     stage: "SERIES_A",
@@ -75,9 +75,9 @@ const STARTUPS: StartupSeed[] = [
     name: "Voltaic Grid",
     website: "https://voltaicgrid.example.com",
     description:
-      "Virtual power plant software that aggregates industrial battery storage for grid balancing markets.",
-    industry: "Energy",
-    country: "Germany",
+      "Software für virtuelle Kraftwerke, die industrielle Batteriespeicher für Regelenergiemärkte bündelt.",
+    industry: "Energie",
+    country: "Deutschland",
     city: "Hamburg",
     foundedYear: 2022,
     teamSize: 41,
@@ -95,9 +95,9 @@ const STARTUPS: StartupSeed[] = [
     name: "CarbonLoom",
     website: "https://carbonloom.example.com",
     description:
-      "Direct-air-capture modules that retrofit onto existing HVAC systems of commercial buildings.",
+      "Direct-Air-Capture-Module zum Nachrüsten bestehender Lüftungsanlagen in Gewerbegebäuden.",
     industry: "Climate Tech",
-    country: "Netherlands",
+    country: "Niederlande",
     city: "Rotterdam",
     foundedYear: 2024,
     teamSize: 9,
@@ -115,9 +115,9 @@ const STARTUPS: StartupSeed[] = [
     name: "MediGraph",
     website: "https://medigraph.example.com",
     description:
-      "Knowledge-graph platform that links clinical trial data with real-world evidence for pharma R&D.",
+      "Knowledge-Graph-Plattform, die klinische Studiendaten mit Real-World-Evidenz für die Pharma-F&E verknüpft.",
     industry: "Health Tech",
-    country: "Germany",
+    country: "Deutschland",
     city: "Berlin",
     foundedYear: 2021,
     teamSize: 55,
@@ -135,10 +135,10 @@ const STARTUPS: StartupSeed[] = [
     name: "HaptiCare",
     website: "https://hapticare.example.com",
     description:
-      "Haptic feedback gloves for remote physiotherapy with motion-tracking outcome analytics.",
+      "Haptik-Feedback-Handschuhe für Remote-Physiotherapie mit Motion-Tracking und Outcome-Analytik.",
     industry: "Health Tech",
-    country: "Austria",
-    city: "Vienna",
+    country: "Österreich",
+    city: "Wien",
     foundedYear: 2023,
     teamSize: 14,
     stage: "SEED",
@@ -155,9 +155,9 @@ const STARTUPS: StartupSeed[] = [
     name: "FactoryPulse",
     website: "https://factorypulse.example.com",
     description:
-      "Self-calibrating acoustic sensors that detect machine anomalies weeks before failure.",
+      "Selbstkalibrierende Akustiksensoren, die Maschinenanomalien Wochen vor dem Ausfall erkennen.",
     industry: "Industrial IoT",
-    country: "Germany",
+    country: "Deutschland",
     city: "Stuttgart",
     foundedYear: 2022,
     teamSize: 23,
@@ -175,9 +175,9 @@ const STARTUPS: StartupSeed[] = [
     name: "RoboHive",
     website: "https://robohive.example.com",
     description:
-      "Swarm-coordination software for mixed fleets of warehouse robots from different vendors.",
-    industry: "Robotics",
-    country: "Denmark",
+      "Schwarm-Koordinationssoftware für gemischte Flotten von Lagerrobotern verschiedener Hersteller.",
+    industry: "Robotik",
+    country: "Dänemark",
     city: "Odense",
     foundedYear: 2023,
     teamSize: 19,
@@ -195,9 +195,9 @@ const STARTUPS: StartupSeed[] = [
     name: "QuantaShield",
     website: "https://quantashield.example.com",
     description:
-      "Post-quantum cryptography toolkit that migrates legacy industrial protocols without downtime.",
+      "Post-Quanten-Kryptografie-Toolkit, das industrielle Legacy-Protokolle ohne Ausfallzeit migriert.",
     industry: "Cybersecurity",
-    country: "France",
+    country: "Frankreich",
     city: "Paris",
     foundedYear: 2024,
     teamSize: 11,
@@ -215,10 +215,10 @@ const STARTUPS: StartupSeed[] = [
     name: "FreightFlow",
     website: "https://freightflow.example.com",
     description:
-      "AI dispatcher that consolidates LTL freight across carriers and cuts empty miles by 30%.",
-    industry: "Logistics",
-    country: "Germany",
-    city: "Cologne",
+      "KI-Disponent, der Stückgutfracht über Spediteure hinweg bündelt und Leerkilometer um 30 % senkt.",
+    industry: "Logistik",
+    country: "Deutschland",
+    city: "Köln",
     foundedYear: 2021,
     teamSize: 62,
     stage: "SERIES_B",
@@ -235,9 +235,9 @@ const STARTUPS: StartupSeed[] = [
     name: "AgriSense Labs",
     website: "https://agrisense.example.com",
     description:
-      "Hyperspectral drone imaging plus agronomy models that cut fertilizer use for row crops.",
+      "Hyperspektrale Drohnenbilder plus Agronomie-Modelle, die den Düngereinsatz im Reihenanbau senken.",
     industry: "Climate Tech",
-    country: "Spain",
+    country: "Spanien",
     city: "Valencia",
     foundedYear: 2022,
     teamSize: 17,
@@ -251,9 +251,9 @@ const STARTUPS: StartupSeed[] = [
     name: "SynthBio Works",
     website: "https://synthbio.example.com",
     description:
-      "Enzyme-design platform producing biodegradable alternatives to industrial lubricants.",
+      "Enzym-Design-Plattform für biologisch abbaubare Alternativen zu industriellen Schmierstoffen.",
     industry: "Health Tech",
-    country: "Switzerland",
+    country: "Schweiz",
     city: "Basel",
     foundedYear: 2023,
     teamSize: 21,
@@ -267,9 +267,9 @@ const STARTUPS: StartupSeed[] = [
     name: "EdgeMind",
     website: "https://edgemind.example.com",
     description:
-      "TinyML compiler that shrinks vision models 40x to run on existing factory cameras.",
-    industry: "Artificial Intelligence",
-    country: "Sweden",
+      "TinyML-Compiler, der Vision-Modelle 40-fach verkleinert, damit sie auf bestehenden Fabrikkameras laufen.",
+    industry: "Künstliche Intelligenz",
+    country: "Schweden",
     city: "Stockholm",
     foundedYear: 2024,
     teamSize: 8,
@@ -282,9 +282,12 @@ const STARTUPS: StartupSeed[] = [
 ];
 
 async function main() {
-  console.log("Seeding database…");
+  console.log("Datenbank wird geseedet…");
 
   // Wipe in dependency order (idempotent re-seeds).
+  await prisma.message.deleteMany();
+  await prisma.conversationParticipant.deleteMany();
+  await prisma.conversation.deleteMany();
   await prisma.sharedScoring.deleteMany();
   await prisma.poCPerformance.deleteMany();
   await prisma.challengeApplication.deleteMany();
@@ -372,7 +375,7 @@ async function main() {
     data: {
       name: "Industrial AI 2026",
       description:
-        "Scouting sprint for AI startups that improve industrial operations.",
+        "Scouting-Sprint für KI-Startups, die industrielle Abläufe verbessern.",
       startDate: new Date("2026-01-15"),
       endDate: new Date("2026-09-30"),
     },
@@ -380,7 +383,7 @@ async function main() {
   const campaign2 = await prisma.scoutingCampaign.create({
     data: {
       name: "Green Factory",
-      description: "Decarbonization and energy-efficiency technologies.",
+      description: "Technologien für Dekarbonisierung und Energieeffizienz.",
       startDate: new Date("2026-03-01"),
     },
   });
@@ -412,17 +415,17 @@ async function main() {
     await prisma.contact.create({
       data: {
         startupId: record.id,
-        name: `Founder of ${s.name}`,
+        name: `Founder von ${s.name}`,
         position: "CEO & Co-Founder",
         email: `founder@${s.name.toLowerCase().replace(/\s+/g, "")}.example.com`,
         phone: "+49 30 1234 5678",
-        notes: "First call done — open to a pilot conversation.",
+        notes: "Erstes Gespräch geführt — offen für ein Pilotprojekt.",
       },
     });
     await prisma.attachment.create({
       data: {
         startupId: record.id,
-        name: "Pitch deck",
+        name: "Pitch-Deck",
         url: `https://example.com/decks/${record.id}.pdf`,
         type: "DECK",
       },
@@ -447,8 +450,8 @@ async function main() {
         recommendation: deriveRecommendation(overallScore),
         notes:
           overallScore >= 3.5
-            ? "Strong candidate — clear strategic fit and credible execution. Recommend moving forward to a pilot conversation."
-            : "Interesting technology but open questions on traction and business model. Revisit next quarter.",
+            ? "Starker Kandidat — klarer strategischer Fit und glaubwürdige Umsetzung. Empfehlung: ins Pilotgespräch gehen."
+            : "Interessante Technologie, aber offene Fragen zu Traktion und Geschäftsmodell. Nächstes Quartal erneut prüfen.",
         scores: {
           create: SCORE_DIMENSIONS.map((dimension) => ({
             dimension,
@@ -479,7 +482,7 @@ async function main() {
         potential: computePotential(tweaked),
         feasibility: computeFeasibility(tweaked),
         recommendation: deriveRecommendation(overallScore),
-        notes: "Second opinion — slightly more conservative on traction.",
+        notes: "Zweitmeinung — etwas konservativer bei der Traktion.",
         scores: {
           create: SCORE_DIMENSIONS.map((dimension) => ({
             dimension,
@@ -493,44 +496,44 @@ async function main() {
   // --- Challenges -----------------------------------------------------------
   const challenge1 = await prisma.challenge.create({
     data: {
-      title: "Predictive maintenance for stamping lines",
+      title: "Predictive Maintenance für Stanzlinien",
       description:
-        "Our press shop loses ~140 production hours per year to unplanned downtime on stamping lines. We are looking for a sensor- or data-driven solution that predicts failures at least 48 hours in advance and integrates with our existing Siemens PLC landscape.\n\nA successful PoC runs on two lines in our Cologne plant for 12 weeks.",
+        "Unser Presswerk verliert jährlich ca. 140 Produktionsstunden durch ungeplante Stillstände an Stanzlinien. Wir suchen eine sensor- oder datenbasierte Lösung, die Ausfälle mindestens 48 Stunden im Voraus vorhersagt und sich in unsere bestehende Siemens-SPS-Landschaft integriert.\n\nEin erfolgreicher PoC läuft 12 Wochen auf zwei Linien in unserem Kölner Werk.",
       status: "OPEN",
       deadline: new Date("2026-08-31"),
-      tags: ["Industry 4.0", "Predictive Maintenance", "IoT"],
+      tags: ["Industrie 4.0", "Predictive Maintenance", "IoT"],
       createdById: partner.id,
     },
   });
   const challenge2 = await prisma.challenge.create({
     data: {
-      title: "Energy flexibility for factory load peaks",
+      title: "Energieflexibilität für Lastspitzen in der Fabrik",
       description:
-        "We pay six-figure peak-load charges every year. We want to pilot software that shifts non-critical loads and orchestrates our 2 MWh battery storage against day-ahead prices, without touching production-critical equipment.",
+        "Wir zahlen jedes Jahr sechsstellige Lastspitzen-Entgelte. Wir wollen Software pilotieren, die unkritische Lasten verschiebt und unseren 2-MWh-Batteriespeicher gegen Day-Ahead-Preise orchestriert — ohne produktionskritische Anlagen anzufassen.",
       status: "OPEN",
       deadline: new Date("2026-09-30"),
-      tags: ["Energy", "Climate"],
+      tags: ["Energie", "Klima"],
       createdById: partner2.id,
     },
   });
   const challenge3 = await prisma.challenge.create({
     data: {
-      title: "Automated visual inspection for weld seams",
+      title: "Automatisierte Sichtprüfung von Schweißnähten",
       description:
-        "Manual inspection of weld seams is slow and inconsistent. We look for a camera-based solution reaching >98% defect detection on our reference dataset, deployable on the edge next to the welding cells.",
+        "Die manuelle Prüfung von Schweißnähten ist langsam und inkonsistent. Wir suchen eine kamerabasierte Lösung mit >98 % Fehlererkennung auf unserem Referenzdatensatz, einsetzbar auf der Edge direkt neben den Schweißzellen.",
       status: "IN_REVIEW",
       deadline: new Date("2026-06-30"),
-      tags: ["AI", "Quality", "Computer Vision"],
+      tags: ["KI", "Qualität", "Computer Vision"],
       createdById: partner.id,
     },
   });
   await prisma.challenge.create({
     data: {
-      title: "Circular packaging for spare-parts logistics",
+      title: "Kreislauffähige Verpackung für die Ersatzteillogistik",
       description:
-        "Draft challenge — we are exploring reusable packaging concepts for our spare-parts network across 14 European warehouses. Scope and budget to be defined.",
+        "Challenge-Entwurf — wir prüfen Mehrweg-Verpackungskonzepte für unser Ersatzteilnetzwerk über 14 europäische Lager hinweg. Umfang und Budget noch offen.",
       status: "DRAFT",
-      tags: ["Logistics", "Sustainability"],
+      tags: ["Logistik", "Nachhaltigkeit"],
       createdById: partner.id,
     },
   });
@@ -548,30 +551,30 @@ async function main() {
       startupId: factoryPulse.id,
       status: "ACCEPTED",
       pitch:
-        "Our acoustic sensors detect bearing wear and tool degradation 2–4 weeks before failure. We already run on 600+ machines, integrate with Siemens S7 PLCs out of the box and can be live on your two stamping lines within 10 days.",
+        "Unsere Akustiksensoren erkennen Lagerverschleiß und Werkzeugabnutzung 2–4 Wochen vor dem Ausfall. Wir laufen bereits auf über 600 Maschinen, integrieren Siemens-S7-SPS out of the box und sind innerhalb von 10 Tagen auf euren zwei Stanzlinien live.",
     },
   });
   await prisma.poCPerformance.create({
     data: {
       applicationId: app1.id,
-      title: "PoC — FactoryPulse × Predictive maintenance for stamping lines",
+      title: "PoC — FactoryPulse × Predictive Maintenance für Stanzlinien",
       status: "RUNNING",
       trackedById: partner.id,
       startDate: new Date("2026-04-01"),
       endDate: new Date("2026-07-01"),
       notes:
-        "Sensors installed on lines 3 and 7. First anomaly correctly flagged in week 5.",
+        "Sensoren auf Linie 3 und 7 installiert. Erste Anomalie in Woche 5 korrekt gemeldet.",
       kpis: [
-        { name: "Downtime hours avoided", target: 40, current: 22, unit: "h" },
-        { name: "Detection precision", target: 90, current: 86, unit: "%" },
-        { name: "Lines instrumented", target: 2, current: 2, unit: "lines" },
+        { name: "Vermiedene Stillstandsstunden", target: 40, current: 22, unit: "h" },
+        { name: "Erkennungspräzision", target: 90, current: 86, unit: "%" },
+        { name: "Instrumentierte Linien", target: 2, current: 2, unit: "Linien" },
       ],
       milestones: [
-        { title: "Sensor installation complete", dueDate: "2026-04-10", done: true },
-        { title: "Baseline data collected", dueDate: "2026-05-01", done: true },
-        { title: "First validated prediction", dueDate: "2026-05-20", done: true },
-        { title: "Mid-term review with plant manager", dueDate: "2026-06-05", done: false },
-        { title: "Final report & rollout decision", dueDate: "2026-07-01", done: false },
+        { title: "Sensorinstallation abgeschlossen", dueDate: "2026-04-10", done: true },
+        { title: "Baseline-Daten erhoben", dueDate: "2026-05-01", done: true },
+        { title: "Erste validierte Vorhersage", dueDate: "2026-05-20", done: true },
+        { title: "Zwischenreview mit Werksleitung", dueDate: "2026-06-05", done: false },
+        { title: "Abschlussbericht & Rollout-Entscheidung", dueDate: "2026-07-01", done: false },
       ],
     },
   });
@@ -583,25 +586,25 @@ async function main() {
       startupId: voltaic.id,
       status: "ACCEPTED",
       pitch:
-        "We already orchestrate 80 MWh of industrial storage in Germany. Our dispatcher shifts flexible loads against day-ahead and intraday prices — typical peak-charge savings: 18–25% in year one.",
+        "Wir orchestrieren bereits 80 MWh Industriespeicher in Deutschland. Unser Dispatcher verschiebt flexible Lasten gegen Day-Ahead- und Intraday-Preise — typische Lastspitzen-Ersparnis: 18–25 % im ersten Jahr.",
     },
   });
   await prisma.poCPerformance.create({
     data: {
       applicationId: app2.id,
-      title: "PoC — Voltaic Grid × Energy flexibility for factory load peaks",
+      title: "PoC — Voltaic Grid × Energieflexibilität für Lastspitzen in der Fabrik",
       status: "PLANNED",
       trackedById: investor.id,
       startDate: new Date("2026-07-01"),
-      notes: "Kick-off scheduled — awaiting grid operator approval.",
+      notes: "Kick-off terminiert — Freigabe des Netzbetreibers steht aus.",
       kpis: [
-        { name: "Peak load reduction", target: 20, current: 0, unit: "%" },
-        { name: "Battery cycles optimized", target: 120, current: 0, unit: "cycles" },
+        { name: "Lastspitzen-Reduktion", target: 20, current: 0, unit: "%" },
+        { name: "Optimierte Batteriezyklen", target: 120, current: 0, unit: "Zyklen" },
       ],
       milestones: [
-        { title: "Contract signed", dueDate: "2026-06-15", done: true },
-        { title: "Metering integration", dueDate: "2026-07-15", done: false },
-        { title: "First optimized week", dueDate: "2026-08-01", done: false },
+        { title: "Vertrag unterschrieben", dueDate: "2026-06-15", done: true },
+        { title: "Messstellen-Integration", dueDate: "2026-07-15", done: false },
+        { title: "Erste optimierte Woche", dueDate: "2026-08-01", done: false },
       ],
     },
   });
@@ -613,7 +616,7 @@ async function main() {
       startupId: neuralForge.id,
       status: "PENDING",
       pitch:
-        "Beyond code generation, our copilot analyzes PLC alarm logs to spot recurring fault patterns — we'd love to validate the maintenance use case on your stamping lines.",
+        "Über Codegenerierung hinaus analysiert unser Copilot SPS-Alarmlogs und erkennt wiederkehrende Fehlermuster — wir würden den Instandhaltungs-Use-Case gern auf euren Stanzlinien validieren.",
     },
   });
   await prisma.challengeApplication.create({
@@ -622,7 +625,7 @@ async function main() {
       startupId: edgeMind.id,
       status: "PENDING",
       pitch:
-        "Our TinyML compiler runs a 40x-compressed weld-seam inspection model directly on your existing GigE cameras — no new hardware, 99.1% detection on the public WeldNet benchmark.",
+        "Unser TinyML-Compiler bringt ein 40-fach komprimiertes Schweißnaht-Inspektionsmodell direkt auf eure bestehenden GigE-Kameras — keine neue Hardware, 99,1 % Erkennung auf dem öffentlichen WeldNet-Benchmark.",
     },
   });
   // Rejected application
@@ -632,7 +635,7 @@ async function main() {
       startupId: factoryPulse.id,
       status: "REJECTED",
       pitch:
-        "Acoustic signatures can complement visual inspection for sub-surface weld defects.",
+        "Akustische Signaturen können die Sichtprüfung bei Schweißfehlern unter der Oberfläche ergänzen.",
     },
   });
 
@@ -648,7 +651,7 @@ async function main() {
         recipientId: partner.id,
         sharedById: admin.id,
         message:
-          "NeuralForge also applied to your stamping-line challenge — here is our internal scoring for context.",
+          "NeuralForge hat sich auch auf eure Stanzlinien-Challenge beworben — hier unser internes Scoring als Kontext.",
       },
     });
     await prisma.sharedScoring.create({
@@ -656,7 +659,7 @@ async function main() {
         evaluationId: nfEval.evaluation.id,
         recipientId: investor.id,
         sharedById: admin.id,
-        message: "Strongest AI candidate in the current cohort.",
+        message: "Stärkster KI-Kandidat der aktuellen Kohorte.",
       },
     });
   }
@@ -666,7 +669,7 @@ async function main() {
         evaluationId: vgEval.evaluation.id,
         recipientId: investor.id,
         sharedById: admin.id,
-        message: "Fits your energy-transition thesis — PoC starting in July.",
+        message: "Passt zu eurer Energiewende-These — PoC startet im Juli.",
       },
     });
   }
@@ -680,8 +683,154 @@ async function main() {
     });
   }
 
-  console.log("Seed complete.");
-  console.log("\nDemo accounts (password: %s)", PASSWORD);
+  // --- Conversations & messages ---------------------------------------------
+  type SeedUser = { id: string };
+  type SeedMsg = { fromId: string; body: string; minutesAgo: number };
+
+  async function seedConversation(
+    a: SeedUser,
+    b: SeedUser,
+    msgs: SeedMsg[],
+    opts?: { unreadFor?: string }
+  ) {
+    const convo = await prisma.conversation.create({
+      data: { participants: { create: [{ userId: a.id }, { userId: b.id }] } },
+    });
+    let lastAt = convo.createdAt;
+    for (const m of msgs) {
+      const createdAt = new Date(Date.now() - m.minutesAgo * 60_000);
+      await prisma.message.create({
+        data: {
+          conversationId: convo.id,
+          senderId: m.fromId,
+          body: m.body,
+          createdAt,
+        },
+      });
+      if (createdAt > lastAt) lastAt = createdAt;
+    }
+    await prisma.conversation.update({
+      where: { id: convo.id },
+      data: { lastMessageAt: lastAt },
+    });
+    for (const p of [a, b]) {
+      let readAt = lastAt;
+      if (opts?.unreadFor === p.id) {
+        const mine = msgs.filter((m) => m.fromId === p.id);
+        const lastMineMinutes = mine.length
+          ? Math.min(...mine.map((m) => m.minutesAgo))
+          : 24 * 60;
+        readAt = new Date(Date.now() - lastMineMinutes * 60_000);
+      }
+      await prisma.conversationParticipant.update({
+        where: { conversationId_userId: { conversationId: convo.id, userId: p.id } },
+        data: { lastReadAt: readAt },
+      });
+    }
+  }
+
+  // Mia (Member) ↔ Selin (Startup / NeuralForge) — 2 unread for Mia
+  await seedConversation(
+    member,
+    startupUser,
+    [
+      {
+        fromId: startupUser.id,
+        body: "Hallo Mia! Anbei unsere aktualisierte Demo. Wir freuen uns auf euer Feedback.",
+        minutesAgo: 200,
+      },
+      {
+        fromId: member.id,
+        body: "Hi Selin! Sieht stark aus — das Team war beeindruckt von der Genauigkeit.",
+        minutesAgo: 150,
+      },
+      {
+        fromId: startupUser.id,
+        body: "Super, danke! Können wir einen PoC-Termin für die Stanzlinien-Challenge einplanen?",
+        minutesAgo: 40,
+      },
+      {
+        fromId: startupUser.id,
+        body: "Nächste Woche Dienstag oder Mittwoch würde bei uns passen.",
+        minutesAgo: 18,
+      },
+    ],
+    { unreadFor: member.id }
+  );
+
+  // Mia (Member) ↔ Paul (Business Partner) — all read
+  await seedConversation(member, partner, [
+    {
+      fromId: partner.id,
+      body: "Hi Mia, wir senden den PoC-Plan für FactoryPulse heute noch raus.",
+      minutesAgo: 1500,
+    },
+    {
+      fromId: member.id,
+      body: "Perfekt, danke Paul! Ich leite ihn intern weiter.",
+      minutesAgo: 1480,
+    },
+  ]);
+
+  // Mia (Member) ↔ Ines (Investor)
+  await seedConversation(member, investor, [
+    {
+      fromId: member.id,
+      body: "Hi Ines, ich teile gleich das NeuralForge-Scoring mit dir.",
+      minutesAgo: 5000,
+    },
+    { fromId: investor.id, body: "Top, danke dir!", minutesAgo: 4980 },
+  ]);
+
+  // Mia (Member) ↔ Jonas (Member) — internal, 1 unread for Mia
+  await seedConversation(
+    member,
+    member2,
+    [
+      {
+        fromId: member2.id,
+        body: "Schaust du dir EdgeMind heute noch an?",
+        minutesAgo: 300,
+      },
+      {
+        fromId: member.id,
+        body: "Ja, mache ich direkt nach dem Standup.",
+        minutesAgo: 280,
+      },
+      {
+        fromId: member2.id,
+        body: "Klasse — danke! 🙌",
+        minutesAgo: 25,
+      },
+    ],
+    { unreadFor: member.id }
+  );
+
+  // Alex (Admin) ↔ Ines (Investor)
+  await seedConversation(admin, investor, [
+    {
+      fromId: investor.id,
+      body: "Können wir den Termin zu Voltaic Grid verschieben?",
+      minutesAgo: 2900,
+    },
+    {
+      fromId: admin.id,
+      body: "Klar, ich schlage dir gleich neue Slots vor.",
+      minutesAgo: 2880,
+    },
+  ]);
+
+  // Jonas (Member) ↔ Petra (Business Partner)
+  await seedConversation(member2, partner2, [
+    {
+      fromId: partner2.id,
+      body: "Die Slides zur Energie-Challenge sind angehängt.",
+      minutesAgo: 8000,
+    },
+  ]);
+
+  console.log("Seed abgeschlossen.");
+  console.log("\nDemo-Konten (Passwort: %s)", PASSWORD);
   console.log("  ADMIN             admin@lovedis.dev");
   console.log("  MEMBER            member@lovedis.dev");
   console.log("  BUSINESS_PARTNER  partner@lovedis.dev");

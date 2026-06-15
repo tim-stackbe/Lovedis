@@ -46,7 +46,7 @@ export default async function PoCDetailPage({
         <PoCStatusBadge value={poc.status} />
       </div>
 
-      <SectionLabel number="01" label="Track" title="KPIs & milestones" />
+      <SectionLabel number="01" label="Tracken" title="KPIs & Meilensteine" />
 
       <PoCEditor
         pocId={poc.id}

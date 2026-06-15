@@ -20,18 +20,18 @@ export const metadata: Metadata = { title: "Challenges" };
 
 const COPY = {
   ADMIN: {
-    title: "All challenges",
-    subtitle: "Platform-wide oversight of every partner challenge.",
+    title: "Alle Challenges",
+    subtitle: "Plattformweiter Überblick über jede Partner-Challenge.",
   },
   BUSINESS_PARTNER: {
-    title: "My challenges",
+    title: "Meine Challenges",
     subtitle:
-      "Post innovation challenges and review the startups that apply.",
+      "Stelle Innovations-Challenges und prüfe die Startups, die sich bewerben.",
   },
   STARTUP: {
-    title: "Open challenges",
+    title: "Offene Challenges",
     subtitle:
-      "Browse corporate innovation challenges and pitch your solution.",
+      "Entdecke Corporate-Innovations-Challenges und pitche deine Lösung.",
   },
 } as const;
 
@@ -74,14 +74,14 @@ export default async function ChallengesPage() {
   return (
     <>
       <HeroBanner
-        kicker="Challenge system"
+        kicker="Challenge-System"
         title={COPY[role].title}
         subtitle={COPY[role].subtitle}
         actions={
           canCreate ? (
             <LinkButton href="/challenges/new" variant="white">
               <Plus className="h-4 w-4" />
-              New challenge
+              Neue Challenge
             </LinkButton>
           ) : undefined
         }
@@ -90,23 +90,23 @@ export default async function ChallengesPage() {
       <SectionLabel
         number="01"
         label="Challenges"
-        title={`${challenges.length} challenge${challenges.length === 1 ? "" : "s"}`}
+        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}`}
       />
 
       {challenges.length === 0 ? (
         <EmptyState
           icon={Target}
-          title="No challenges yet"
+          title="Noch keine Challenges"
           description={
             canCreate
-              ? "Post your first innovation challenge to start receiving startup applications."
-              : "There are no challenges right now — check back soon."
+              ? "Stelle deine erste Innovations-Challenge und erhalte Startup-Bewerbungen."
+              : "Gerade gibt es keine Challenges — schau bald wieder vorbei."
           }
           action={
             canCreate ? (
               <LinkButton href="/challenges/new">
                 <Plus className="h-4 w-4" />
-                New challenge
+                Neue Challenge
               </LinkButton>
             ) : undefined
           }
@@ -144,7 +144,7 @@ export default async function ChallengesPage() {
                 <div className="mt-4 flex items-center justify-between border-t border-lv-border pt-3 text-xs text-lv-secondary">
                   <span>
                     {c.createdBy.company ?? c.createdBy.name}
-                    {c.deadline && ` · due ${formatDate(c.deadline)}`}
+                    {c.deadline && ` · Frist ${formatDate(c.deadline)}`}
                   </span>
                   {role === "STARTUP" ? (
                     applied ? (
@@ -153,13 +153,13 @@ export default async function ChallengesPage() {
                       />
                     ) : (
                       <span className="font-semibold text-lv-blue">
-                        {c.status === "OPEN" ? "Apply now →" : ""}
+                        {c.status === "OPEN" ? "Bewirb dich jetzt →" : ""}
                       </span>
                     )
                   ) : (
                     <span>
-                      {c._count.applications} application
-                      {c._count.applications === 1 ? "" : "s"}
+                      {c._count.applications} Bewerbung
+                      {c._count.applications === 1 ? "" : "en"}
                     </span>
                   )}
                 </div>

@@ -20,9 +20,11 @@ import {
 import { prisma } from "@/lib/prisma";
 
 const startupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").max(160),
+  name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein").max(160),
   website: z.union([z.url(), z.literal("")]).optional(),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z
+    .string()
+    .min(10, "Beschreibung muss mindestens 10 Zeichen lang sein"),
   industry: z.string().min(2).max(80),
   country: z.string().max(80).optional(),
   city: z.string().max(80).optional(),
@@ -94,7 +96,7 @@ export async function updateStartup(
   revalidatePath(`/startups/${startupId}`);
   revalidatePath("/pipeline");
   revalidatePath("/radar");
-  return { success: "Startup updated." };
+  return { success: "Startup aktualisiert." };
 }
 
 export async function deleteStartup(startupId: string): Promise<void> {
@@ -161,7 +163,7 @@ export async function addContact(
     data: { ...parsed.data, email: parsed.data.email || null },
   });
   revalidatePath(`/startups/${parsed.data.startupId}`);
-  return { success: "Contact added." };
+  return { success: "Kontakt hinzugefügt." };
 }
 
 export async function deleteContact(
@@ -180,7 +182,7 @@ export async function deleteContact(
 const attachmentSchema = z.object({
   startupId: z.string().min(1),
   name: z.string().min(1).max(160),
-  url: z.url("Please provide a valid URL"),
+  url: z.url("Bitte gib eine gültige URL an"),
   type: z.enum(["LINK", "DOCUMENT", "DECK", "OTHER"]),
 });
 
@@ -199,7 +201,7 @@ export async function addAttachment(
 
   await prisma.attachment.create({ data: parsed.data });
   revalidatePath(`/startups/${parsed.data.startupId}`);
-  return { success: "Attachment added." };
+  return { success: "Anhang hinzugefügt." };
 }
 
 export async function deleteAttachment(
@@ -234,7 +236,7 @@ export async function upsertOwnStartupProfile(
 ): Promise<ActionState> {
   const session = await requireAuth();
   if (session.user.role !== "STARTUP") {
-    return { error: "Only startup accounts can edit a startup profile." };
+    return { error: "Nur Startup-Konten können ein Startup-Profil bearbeiten." };
   }
 
   const parsed = profileSchema.safeParse({
@@ -264,5 +266,5 @@ export async function upsertOwnStartupProfile(
   }
   revalidatePath("/profile");
   revalidatePath("/dashboard/startup");
-  return { success: "Profile saved." };
+  return { success: "Profil gespeichert." };
 }

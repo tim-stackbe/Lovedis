@@ -23,7 +23,7 @@ export default async function MainLayout({
 
   return (
     <AppShell
-      userName={session.user.name ?? "User"}
+      userName={session.user.name ?? "Nutzer"}
       role={role}
       startups={startups}
     >

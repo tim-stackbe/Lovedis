@@ -62,9 +62,9 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
       <Card className="p-5">
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm font-semibold">
-            Pick up to 4 startups{" "}
+            Wähle bis zu 4 Startups{" "}
             <span className="font-normal text-lv-secondary">
-              ({selected.length} selected)
+              ({selected.length} ausgewählt)
             </span>
           </p>
           {selection.length > 0 && (
@@ -72,7 +72,7 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
               onClick={clear}
               className="text-xs font-semibold text-lv-orange hover:underline"
             >
-              Clear selection
+              Auswahl zurücksetzen
             </button>
           )}
         </div>
@@ -85,7 +85,7 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
                 onClick={() => toggle(s.id)}
                 disabled={!s.hasEvaluation}
                 title={
-                  s.hasEvaluation ? undefined : "No evaluation yet"
+                  s.hasEvaluation ? undefined : "Noch keine Bewertung"
                 }
                 className={cn(
                   "rounded-button border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
@@ -104,14 +104,14 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
       {selected.length < 2 ? (
         <EmptyState
           icon={GitCompare}
-          title="Select at least two startups"
-          description="Choose evaluated startups above to compare them across all seven scoring dimensions."
+          title="Wähle mindestens zwei Startups"
+          description="Wähle oben bewertete Startups aus, um sie über alle sieben Scoring-Dimensionen zu vergleichen."
         />
       ) : (
         <>
           <Card className="p-5">
             <p className="lv-wordmark mb-4 text-xs text-lv-blue">
-              Dimension overlay
+              Dimensions-Overlay
             </p>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
@@ -190,7 +190,7 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
                   );
                 })}
                 <tr className="border-t border-lv-border bg-lv-surface/50">
-                  <td className="px-4 py-3 font-semibold">Overall (weighted)</td>
+                  <td className="px-4 py-3 font-semibold">Gesamt (gewichtet)</td>
                   {selected.map((s) => (
                     <td key={s.id} className="px-4 py-3 text-right">
                       <ScorePill
@@ -210,7 +210,7 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
                   ))}
                 </tr>
                 <tr className="border-t border-lv-border">
-                  <td className="px-4 py-3 font-semibold">Recommendation</td>
+                  <td className="px-4 py-3 font-semibold">Empfehlung</td>
                   {selected.map((s) => (
                     <td key={s.id} className="px-4 py-3 text-right">
                       <RecommendationBadge value={s.recommendation} />

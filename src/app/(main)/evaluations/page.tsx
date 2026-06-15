@@ -16,7 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { deriveQuadrant } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Evaluations" };
+export const metadata: Metadata = { title: "Bewertungen" };
 
 export default async function EvaluationsPage() {
   await requireScoutModule();
@@ -42,34 +42,34 @@ export default async function EvaluationsPage() {
     <>
       <HeroBanner
         kicker="Venture Scout"
-        title="Evaluations"
-        subtitle="Seven weighted dimensions per startup — from market and product to strategic fit."
+        title="Bewertungen"
+        subtitle="Sieben gewichtete Dimensionen pro Startup — von Markt und Produkt bis zum strategischen Fit."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
-          <BannerStat label="Total" value={evaluations.length} />
-          <BannerStat label="Avg score" value={avg.toFixed(1)} />
-          <BannerStat label="Yes votes" value={strongYes} />
+          <BannerStat label="Gesamt" value={evaluations.length} />
+          <BannerStat label="Ø Score" value={avg.toFixed(1)} />
+          <BannerStat label="Ja-Stimmen" value={strongYes} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="02" label="Evaluate" title="All evaluations" />
+        <SectionLabel number="02" label="Bewerten" title="Alle Bewertungen" />
         {evaluations.length === 0 ? (
           <EmptyState
             icon={BarChart3}
-            title="No evaluations yet"
-            description="Open a startup profile and start its first evaluation."
+            title="Noch keine Bewertungen"
+            description="Öffne ein Startup-Profil und starte die erste Bewertung."
           />
         ) : (
           <TableCard>
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Evaluator</Th>
-                <Th>Updated</Th>
+                <Th>Bewertet von</Th>
+                <Th>Aktualisiert</Th>
                 <Th>Quadrant</Th>
-                <Th>Recommendation</Th>
-                <Th className="text-right">Overall</Th>
+                <Th>Empfehlung</Th>
+                <Th className="text-right">Gesamt</Th>
               </tr>
             </THead>
             <tbody>

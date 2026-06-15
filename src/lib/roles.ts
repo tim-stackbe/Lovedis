@@ -6,6 +6,7 @@ import {
   GitCompare,
   Home,
   Kanban,
+  MessageSquare,
   Radar,
   Rocket,
   Settings,
@@ -65,6 +66,12 @@ const SCOUT_SECTION: NavSection = {
   ],
 };
 
+const MESSAGES_ITEM: NavItem = {
+  label: "Nachrichten",
+  href: "/messages",
+  icon: MessageSquare,
+};
+
 const SETTINGS_SECTION: NavSection = {
   items: [{ label: "Einstellungen", href: "/settings", icon: Settings }],
 };
@@ -80,6 +87,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [
         { label: "Challenges", href: "/challenges", icon: Target },
         { label: "Geteilte Scorings", href: "/sharing", icon: Share2 },
+        MESSAGES_ITEM,
         { label: "Nutzer", href: "/users", icon: Users },
       ],
     },
@@ -90,6 +98,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
     SCOUT_SECTION,
+    { items: [MESSAGES_ITEM] },
     SETTINGS_SECTION,
   ],
   BUSINESS_PARTNER: [
@@ -102,6 +111,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
         { label: "Meine Challenges", href: "/challenges", icon: Target },
         { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
         { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
+        MESSAGES_ITEM,
       ],
     },
     SETTINGS_SECTION,
@@ -115,6 +125,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [
         { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
         { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
+        MESSAGES_ITEM,
       ],
     },
     SETTINGS_SECTION,
@@ -129,6 +140,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
         { label: "Challenges", href: "/challenges", icon: Target },
         { label: "Meine Bewerbungen", href: "/applications", icon: Building2 },
         { label: "Mein Profil", href: "/profile", icon: Rocket },
+        MESSAGES_ITEM,
       ],
     },
     SETTINGS_SECTION,

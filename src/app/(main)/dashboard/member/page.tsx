@@ -17,7 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { deriveQuadrant } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Scout dashboard" };
+export const metadata: Metadata = { title: "Scout-Dashboard" };
 
 export default async function MemberDashboard() {
   const session = await requireRole(["MEMBER", "ADMIN"]);
@@ -60,46 +60,46 @@ export default async function MemberDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Section 00 — Venture Scout"
-        title={`Good to see you, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Your scouting desk: discover startups, evaluate them and move them through the funnel."
+        kicker="Sektion 00 — Venture Scout"
+        title={`Schön, dich zu sehen, ${session.user.name?.split(" ")[0]}`}
+        subtitle="Dein Scouting-Desk: entdecke Startups, bewerte sie und beweg sie durch den Funnel."
         actions={
           <LinkButton href="/startups/new" variant="white">
-            Add startup
+            Startup hinzufügen
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat label="Startups" value={startupCount} />
-          <BannerStat label="Evaluations" value={evaluationCount} />
-          <BannerStat label="Yours" value={myEvaluationCount} />
-          <BannerStat label="On radar" value={onRadar} />
+          <BannerStat label="Bewertungen" value={evaluationCount} />
+          <BannerStat label="Deine" value={myEvaluationCount} />
+          <BannerStat label="Im Radar" value={onRadar} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Status" title="Scouting pulse" />
+        <SectionLabel number="01" label="Status" title="Scouting-Puls" />
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone="attention"
-            label="In evaluation"
+            label="In Bewertung"
             value={inEvaluation}
-            sub="startups being scored"
+            sub="Startups werden gescort"
           />
           <ToneCard
             tone="info"
-            label="Your evaluations"
+            label="Deine Bewertungen"
             value={myEvaluationCount}
-            sub="authored by you"
+            sub="von dir verfasst"
           />
           <ToneCard
             tone="success"
-            label="Partnered"
+            label="Partnerschaften"
             value={
               pipelineGroups.find((g) => g.pipelineStage === "PARTNERED")
                 ?._count ?? 0
             }
-            sub="deals closed"
+            sub="Deals abgeschlossen"
           />
         </div>
       </section>
@@ -113,7 +113,7 @@ export default async function MemberDashboard() {
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="03" label="Leaders" title="Top-rated startups" />
+          <SectionLabel number="03" label="Spitze" title="Top-bewertete Startups" />
           <TableCard>
             <THead>
               <tr>
@@ -152,19 +152,18 @@ export default async function MemberDashboard() {
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="04" label="Yours" title="Your recent evaluations" />
+        <SectionLabel number="04" label="Deine" title="Deine letzten Bewertungen" />
         {myRecent.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
-            You haven&apos;t evaluated anything yet — open a startup profile to
-            start.
+            Du hast noch nichts bewertet — öffne ein Startup-Profil und leg los.
           </Card>
         ) : (
           <TableCard>
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Updated</Th>
-                <Th>Recommendation</Th>
+                <Th>Aktualisiert</Th>
+                <Th>Empfehlung</Th>
                 <Th className="text-right">Score</Th>
               </tr>
             </THead>

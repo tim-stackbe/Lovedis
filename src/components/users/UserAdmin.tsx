@@ -28,7 +28,7 @@ export function CreateUserForm() {
         <Field label="Name" htmlFor="new-name">
           <Input id="new-name" name="name" placeholder="Jane Doe" required />
         </Field>
-        <Field label="Email" htmlFor="new-email">
+        <Field label="E-Mail" htmlFor="new-email">
           <Input
             id="new-email"
             name="email"
@@ -39,17 +39,17 @@ export function CreateUserForm() {
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Password" htmlFor="new-password">
+        <Field label="Passwort" htmlFor="new-password">
           <Input
             id="new-password"
             name="password"
             type="text"
-            placeholder="min. 8 characters"
+            placeholder="mind. 8 Zeichen"
             required
             minLength={8}
           />
         </Field>
-        <Field label="Role" htmlFor="new-role">
+        <Field label="Rolle" htmlFor="new-role">
           <Select id="new-role" name="role" defaultValue="MEMBER">
             {ALL_ROLES.map((r) => (
               <option key={r} value={r}>
@@ -58,14 +58,14 @@ export function CreateUserForm() {
             ))}
           </Select>
         </Field>
-        <Field label="Company (optional)" htmlFor="new-company">
+        <Field label="Unternehmen (optional)" htmlFor="new-company">
           <Input id="new-company" name="company" placeholder="ACME GmbH" />
         </Field>
       </div>
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       {state?.success && <SuccessChip>{state.success}</SuccessChip>}
       <Button type="submit" disabled={pending}>
-        {pending ? "Creating…" : "Create user"}
+        {pending ? "Erstellen…" : "Nutzer erstellen"}
       </Button>
     </form>
   );
@@ -115,7 +115,7 @@ export function ActiveToggle({
   const [pending, startTransition] = useTransition();
 
   if (disabled) {
-    return <Badge tone="blue">You</Badge>;
+    return <Badge tone="blue">Du</Badge>;
   }
 
   return (
@@ -133,7 +133,7 @@ export function ActiveToggle({
           : "bg-lv-mint text-lv-mint-deep hover:bg-lv-mint-deep hover:text-white"
       )}
     >
-      {pending ? "…" : isActive ? "Deactivate" : "Reactivate"}
+      {pending ? "…" : isActive ? "Deaktivieren" : "Reaktivieren"}
     </button>
   );
 }

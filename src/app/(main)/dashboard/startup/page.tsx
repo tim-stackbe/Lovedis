@@ -12,7 +12,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate, truncate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Startup dashboard" };
+export const metadata: Metadata = { title: "Startup-Dashboard" };
 
 export default async function StartupDashboard() {
   const session = await requireRole(["STARTUP"]);
@@ -43,10 +43,13 @@ export default async function StartupDashboard() {
   const pending = applications.filter((a) => a.status === "PENDING").length;
 
   const profileChecks = [
-    { label: "Company profile created", done: Boolean(startup) },
-    { label: "Description added", done: (startup?.description?.length ?? 0) >= 10 },
-    { label: "Website linked", done: Boolean(startup?.website) },
-    { label: "Team size set", done: Boolean(startup?.teamSize) },
+    { label: "Unternehmensprofil erstellt", done: Boolean(startup) },
+    {
+      label: "Beschreibung hinzugefügt",
+      done: (startup?.description?.length ?? 0) >= 10,
+    },
+    { label: "Website verlinkt", done: Boolean(startup?.website) },
+    { label: "Teamgröße angegeben", done: Boolean(startup?.teamSize) },
   ];
   const completeness = Math.round(
     (profileChecks.filter((c) => c.done).length / profileChecks.length) * 100
@@ -55,28 +58,30 @@ export default async function StartupDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Section 00 — Startup"
+        kicker="Sektion 00 — Startup"
         title={
-          startup ? `${startup.name}, welcome back` : "Let’s set up your profile"
+          startup
+            ? `${startup.name}, willkommen zurück`
+            : "Lass uns dein Profil aufsetzen"
         }
-        subtitle="Browse corporate challenges, pitch your solution and track your applications."
+        subtitle="Entdecke Corporate-Challenges, pitche deine Lösung und tracke deine Bewerbungen."
         actions={
           <LinkButton href="/challenges" variant="white">
-            Browse challenges
+            Challenges entdecken
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <BannerStat label="Profile" value={`${completeness}%`} />
-          <BannerStat label="Applications" value={applications.length} />
-          <BannerStat label="Accepted" value={accepted} />
-          <BannerStat label="Open challenges" value={openChallenges.length} />
+          <BannerStat label="Profil" value={`${completeness}%`} />
+          <BannerStat label="Bewerbungen" value={applications.length} />
+          <BannerStat label="Angenommen" value={accepted} />
+          <BannerStat label="Offene Challenges" value={openChallenges.length} />
         </div>
       </HeroBanner>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <SectionLabel number="01" label="Profile" title="Profile completeness" />
+          <SectionLabel number="01" label="Profil" title="Profil-Vollständigkeit" />
           <Card className="p-6">
             <div className="flex items-center gap-3">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-lv-surface">
@@ -109,25 +114,25 @@ export default async function StartupDashboard() {
               size="sm"
               className="mt-5"
             >
-              Edit profile
+              Profil bearbeiten
             </LinkButton>
           </Card>
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="02" label="Status" title="Your applications" />
+          <SectionLabel number="02" label="Status" title="Deine Bewerbungen" />
           <div className="grid gap-4 sm:grid-cols-2">
             <ToneCard
               tone={pending > 0 ? "attention" : "muted"}
-              label="Pending"
+              label="Ausstehend"
               value={pending}
-              sub="awaiting review"
+              sub="in Prüfung"
             />
             <ToneCard
               tone="success"
-              label="Accepted"
+              label="Angenommen"
               value={accepted}
-              sub="PoCs in motion"
+              sub="PoCs in Bewegung"
             />
           </div>
           {applications.length > 0 && (
@@ -135,7 +140,7 @@ export default async function StartupDashboard() {
               <THead>
                 <tr>
                   <Th>Challenge</Th>
-                  <Th>Submitted</Th>
+                  <Th>Eingereicht</Th>
                   <Th className="text-right">Status</Th>
                 </tr>
               </THead>
@@ -167,12 +172,12 @@ export default async function StartupDashboard() {
       <section className="space-y-4">
         <SectionLabel
           number="03"
-          label="Opportunities"
-          title="Open challenges for you"
+          label="Chancen"
+          title="Offene Challenges für dich"
         />
         {openChallenges.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
-            No open challenges right now — check back soon.
+            Gerade keine offenen Challenges — schau bald wieder vorbei.
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -191,7 +196,7 @@ export default async function StartupDashboard() {
                   <span className="text-xs text-lv-secondary">
                     {c.createdBy.company ?? c.createdBy.name}
                   </span>
-                  <Badge tone="mint">Open</Badge>
+                  <Badge tone="mint">Offen</Badge>
                 </div>
               </Card>
             ))}

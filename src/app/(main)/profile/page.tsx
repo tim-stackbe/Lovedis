@@ -5,7 +5,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = { title: "My profile" };
+export const metadata: Metadata = { title: "Mein Profil" };
 
 export default async function ProfilePage() {
   const session = await requireRole(["STARTUP"]);
@@ -17,11 +17,11 @@ export default async function ProfilePage() {
   return (
     <>
       <HeroBanner
-        kicker="Self service"
-        title="Your startup profile"
-        subtitle="This is what partners and the scouting team see. A complete profile is required to apply to challenges."
+        kicker="Self-Service"
+        title="Dein Startup-Profil"
+        subtitle="Das sehen Partner und das Scouting-Team. Ein vollständiges Profil ist Voraussetzung, um dich auf Challenges zu bewerben."
       />
-      <SectionLabel number="01" label="Profile" title="Company details" />
+      <SectionLabel number="01" label="Profil" title="Unternehmensdaten" />
       <OwnProfileForm startup={startup} />
     </>
   );

@@ -20,15 +20,15 @@ export function ApplyForm({ challengeId }: { challengeId: string }) {
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="challengeId" value={challengeId} />
       <Field
-        label="Your pitch"
+        label="Dein Pitch"
         htmlFor="pitch"
-        hint="Why is your startup the right fit for this challenge? (min. 30 characters)"
+        hint="Warum ist dein Startup genau der richtige Fit für diese Challenge? (mind. 30 Zeichen)"
       >
         <Textarea
           id="pitch"
           name="pitch"
           className="min-h-32"
-          placeholder="We solve exactly this problem by…"
+          placeholder="Wir lösen genau dieses Problem, indem…"
           required
           minLength={30}
         />
@@ -36,7 +36,7 @@ export function ApplyForm({ challengeId }: { challengeId: string }) {
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       {state?.success && <SuccessChip>{state.success}</SuccessChip>}
       <Button type="submit" disabled={pending}>
-        {pending ? "Submitting…" : "Submit application"}
+        {pending ? "Absenden…" : "Bewerbung absenden"}
       </Button>
     </form>
   );
