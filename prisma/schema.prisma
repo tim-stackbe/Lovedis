@@ -138,6 +138,7 @@ model User {
   authoredUpdates    StartupUpdate[]           @relation("UpdateAuthor")
   introRequests      IntroRequest[]            @relation("IntroInvestor")
   handledIntros      IntroRequest[]            @relation("IntroHandler")
+  matchDismissals    ChallengeMatchDismissal[] @relation("MatchDismisser")
 
   @@index([role])
   @@index([isActive])
@@ -204,6 +205,7 @@ model Startup {
   followers     StartupFollow[]
   updates       StartupUpdate[]
   introRequests IntroRequest[]
+  matchDismissals ChallengeMatchDismissal[]
 
   @@index([name])
   @@index([industry])
@@ -292,7 +294,8 @@ model Challenge {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  applications ChallengeApplication[]
+  applications    ChallengeApplication[]
+  matchDismissals ChallengeMatchDismissal[]
 
   @@index([status])
   @@index([createdById])
@@ -315,6 +318,25 @@ model ChallengeApplication {
   @@index([challengeId])
   @@index([startupId])
   @@index([status])
+}
+
+// Records a team member dismissing an auto-matching suggestion so the
+// startup no longer surfaces for that challenge in the triage queue.
+// "Invited" suggestions are persisted via ChallengeApplication instead, so
+// this single, minimal model covers the only state not already representable.
+model ChallengeMatchDismissal {
+  id            String    @id @default(cuid())
+  challengeId   String
+  challenge     Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  startupId     String
+  startup       Startup   @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  dismissedById String
+  dismissedBy   User      @relation("MatchDismisser", fields: [dismissedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+
+  @@unique([challengeId, startupId])
+  @@index([challengeId])
+  @@index([startupId])
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,8 @@
 import type { UserRole } from "@/generated/prisma/enums";
 import {
+  Activity,
   BarChart3,
+  Briefcase,
   Building2,
   Compass,
   FlaskConical,
@@ -14,6 +16,7 @@ import {
   Rocket,
   Settings,
   Share2,
+  Sparkles,
   Target,
   Users,
   type LucideIcon,
@@ -80,6 +83,20 @@ const SCOUT_SECTION: NavSection = {
   ],
 };
 
+/**
+ * Internal team operations (ADMIN + MEMBER only). These surfaces aggregate
+ * partner, matching and scouting data and must never be exposed to partners,
+ * investors or startups.
+ */
+const TEAM_OPS_SECTION: NavSection = {
+  title: "Team-Ops",
+  items: [
+    { label: "Partner-Cockpit", href: "/partners", icon: Briefcase },
+    { label: "Auto-Matching", href: "/matching", icon: Sparkles },
+    { label: "Scouting-Analytics", href: "/analytics", icon: Activity },
+  ],
+};
+
 const MARKETPLACE_SECTION: NavSection = {
   title: "Ökosystem",
   items: [
@@ -110,6 +127,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
     },
     SCOUT_SECTION,
+    TEAM_OPS_SECTION,
     MARKETPLACE_SECTION,
     {
       title: "Plattform",
@@ -128,6 +146,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
     SCOUT_SECTION,
+    TEAM_OPS_SECTION,
     MARKETPLACE_SECTION,
     {
       title: "Plattform",

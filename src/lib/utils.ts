@@ -46,3 +46,22 @@ export function initials(name: string): string {
 export function truncate(text: string, length: number): string {
   return text.length > length ? `${text.slice(0, length - 1)}…` : text;
 }
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+/** Whole days elapsed since `date` (0 if in the future). */
+export function daysSince(date: Date | string | null | undefined): number {
+  if (!date) return 0;
+  const diff = Date.now() - new Date(date).getTime();
+  return Math.max(0, Math.floor(diff / MS_PER_DAY));
+}
+
+/**
+ * Whole days until `date`. Negative if the date is already in the past,
+ * null when no date is given.
+ */
+export function daysUntil(date: Date | string | null | undefined): number | null {
+  if (!date) return null;
+  const diff = new Date(date).getTime() - Date.now();
+  return Math.ceil(diff / MS_PER_DAY);
+}
