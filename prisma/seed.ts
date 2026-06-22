@@ -48,6 +48,13 @@ interface StartupSeed {
   radarQuadrant?: RadarQuadrant;
   radarRing?: RadarRing;
   scores?: Partial<Record<ScoreDimension, number>>;
+  // Curated public storefront (marketplace)
+  published?: boolean;
+  tagline?: string;
+  publicPitch?: string;
+  lookingFor?: string[];
+  seekingFunding?: boolean;
+  seekingAmount?: number;
 }
 
 const STARTUPS: StartupSeed[] = [
@@ -70,6 +77,13 @@ const STARTUPS: StartupSeed[] = [
       MARKET: 5, PRODUCT: 4, TRACTION: 4, COMPETITIVE_POSITION: 4,
       TEAM: 5, BUSINESS_MODEL: 4, STRATEGIC_FIT: 5,
     },
+    published: true,
+    tagline: "Der Copilot, der SPS-Code schreibt und verifiziert.",
+    publicPitch:
+      "NeuralForge bringt Foundation Models in die Fabrikhalle: Automatisierungsingenieure beschreiben das gewünschte Verhalten in natürlicher Sprache, unser Copilot generiert verifizierten SPS-Code und prüft ihn gegen Sicherheitsregeln. Über 40 Industriekunden, 12 Pilotprojekte und ein Team aus Robotik- und ML-Veteranen.",
+    lookingFor: ["Funding", "Piloten"],
+    seekingFunding: true,
+    seekingAmount: 18,
   },
   {
     name: "Voltaic Grid",
@@ -90,6 +104,13 @@ const STARTUPS: StartupSeed[] = [
       MARKET: 5, PRODUCT: 5, TRACTION: 4, COMPETITIVE_POSITION: 3,
       TEAM: 4, BUSINESS_MODEL: 5, STRATEGIC_FIT: 4,
     },
+    published: true,
+    tagline: "Virtuelle Kraftwerke für die Industrie.",
+    publicPitch:
+      "Voltaic Grid bündelt industrielle Batteriespeicher zu virtuellen Kraftwerken und vermarktet sie auf Regelenergie- und Day-Ahead-Märkten. 80 MWh unter Management, Partnerschaft mit einem der größten deutschen Industriekonzerne, profitabel auf Beitragsebene.",
+    lookingFor: ["Funding"],
+    seekingFunding: true,
+    seekingAmount: 30,
   },
   {
     name: "CarbonLoom",
@@ -110,6 +131,13 @@ const STARTUPS: StartupSeed[] = [
       MARKET: 5, PRODUCT: 2, TRACTION: 1, COMPETITIVE_POSITION: 3,
       TEAM: 4, BUSINESS_MODEL: 2, STRATEGIC_FIT: 4,
     },
+    published: true,
+    tagline: "Direct Air Capture zum Nachrüsten.",
+    publicPitch:
+      "CarbonLoom macht CO2-Abscheidung zur Plug-in-Komponente für bestehende Gebäudelüftung. Unsere Module binden CO2 dort, wo es entsteht, ohne teure Neubauten. Erstes Pilotgebäude live in Rotterdam, zweites in Planung.",
+    lookingFor: ["Funding", "Piloten", "Talent"],
+    seekingFunding: true,
+    seekingAmount: 6,
   },
   {
     name: "MediGraph",
@@ -130,6 +158,12 @@ const STARTUPS: StartupSeed[] = [
       MARKET: 4, PRODUCT: 4, TRACTION: 5, COMPETITIVE_POSITION: 4,
       TEAM: 4, BUSINESS_MODEL: 4, STRATEGIC_FIT: 3,
     },
+    published: true,
+    tagline: "Knowledge Graphs für die Pharma-Forschung.",
+    publicPitch:
+      "MediGraph verknüpft klinische Studiendaten mit Real-World-Evidenz und macht sie für die Pharma-F&E abfragbar. Vier der Top-20-Pharmaunternehmen nutzen unsere Plattform bereits produktiv.",
+    lookingFor: ["Talent"],
+    seekingFunding: false,
   },
   {
     name: "HaptiCare",
@@ -150,6 +184,13 @@ const STARTUPS: StartupSeed[] = [
       MARKET: 3, PRODUCT: 4, TRACTION: 2, COMPETITIVE_POSITION: 4,
       TEAM: 4, BUSINESS_MODEL: 3, STRATEGIC_FIT: 4,
     },
+    published: true,
+    tagline: "Haptisches Feedback für die Tele-Physiotherapie.",
+    publicPitch:
+      "HaptiCare verbindet Reha-Patientinnen und -Patienten per Haptik-Handschuh mit ihren Therapeut:innen — mit Motion-Tracking und Outcome-Analytik. Pilotiert mit zwei Klinikgruppen in der DACH-Region.",
+    lookingFor: ["Funding", "Piloten"],
+    seekingFunding: true,
+    seekingAmount: 4,
   },
   {
     name: "FactoryPulse",
@@ -170,6 +211,13 @@ const STARTUPS: StartupSeed[] = [
       MARKET: 4, PRODUCT: 5, TRACTION: 4, COMPETITIVE_POSITION: 4,
       TEAM: 4, BUSINESS_MODEL: 4, STRATEGIC_FIT: 5,
     },
+    published: true,
+    tagline: "Maschinenausfälle hören, bevor sie passieren.",
+    publicPitch:
+      "FactoryPulse rüstet bestehende Maschinen mit selbstkalibrierenden Akustiksensoren aus, die Anomalien Wochen vor dem Ausfall erkennen. Über 600 Maschinen instrumentiert, laufende Pilotprojekte in mehreren Presswerken.",
+    lookingFor: ["Funding", "Piloten"],
+    seekingFunding: true,
+    seekingAmount: 12,
   },
   {
     name: "RoboHive",
@@ -278,6 +326,13 @@ const STARTUPS: StartupSeed[] = [
     pipelineStage: "SCREENING",
     radarQuadrant: "AI_DATA",
     radarRing: "TRIAL",
+    published: true,
+    tagline: "Vision-KI auf jeder Fabrikkamera.",
+    publicPitch:
+      "EdgeMind komprimiert Vision-Modelle um das 40-Fache, sodass sie direkt auf vorhandenen Fabrikkameras laufen — ohne neue Hardware. 99,1 % Erkennung auf dem öffentlichen WeldNet-Benchmark.",
+    lookingFor: ["Funding", "Talent"],
+    seekingFunding: true,
+    seekingAmount: 2.5,
   },
 ];
 
@@ -285,6 +340,9 @@ async function main() {
   console.log("Datenbank wird geseedet…");
 
   // Wipe in dependency order (idempotent re-seeds).
+  await prisma.introRequest.deleteMany();
+  await prisma.startupUpdate.deleteMany();
+  await prisma.startupFollow.deleteMany();
   await prisma.message.deleteMany();
   await prisma.conversationParticipant.deleteMany();
   await prisma.conversation.deleteMany();
@@ -307,6 +365,7 @@ async function main() {
     await Promise.all([
       prisma.user.create({
         data: {
+          id: "usr_admin",
           email: "admin@lovedis.dev",
           name: "Alex Admin",
           role: "ADMIN",
@@ -316,6 +375,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          id: "usr_member",
           email: "member@lovedis.dev",
           name: "Mia Member",
           role: "MEMBER",
@@ -325,6 +385,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          id: "usr_partner",
           email: "partner@lovedis.dev",
           name: "Paul Partner",
           role: "BUSINESS_PARTNER",
@@ -334,6 +395,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          id: "usr_investor",
           email: "investor@lovedis.dev",
           name: "Ines Investor",
           role: "INVESTOR",
@@ -343,6 +405,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          id: "usr_startup",
           email: "startup@lovedis.dev",
           name: "Selin Startup",
           role: "STARTUP",
@@ -352,6 +415,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          id: "usr_member2",
           email: "jonas@lovedis.dev",
           name: "Jonas Scout",
           role: "MEMBER",
@@ -361,6 +425,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          id: "usr_partner2",
           email: "petra@helioswerk.dev",
           name: "Petra Helios",
           role: "BUSINESS_PARTNER",
@@ -389,7 +454,7 @@ async function main() {
   });
 
   // --- Startups ------------------------------------------------------------
-  const startupRecords = [];
+  const startupRecords: Awaited<ReturnType<typeof prisma.startup.create>>[] = [];
   for (const [i, s] of STARTUPS.entries()) {
     const record = await prisma.startup.create({
       data: {
@@ -406,6 +471,13 @@ async function main() {
         pipelineStage: s.pipelineStage,
         radarQuadrant: s.radarQuadrant,
         radarRing: s.radarRing,
+        tagline: s.tagline ?? null,
+        publicPitch: s.publicPitch ?? null,
+        lookingFor: s.lookingFor ?? [],
+        seekingFunding: s.seekingFunding ?? false,
+        seekingAmount: s.seekingAmount ?? null,
+        isPublished: s.published ?? false,
+        publishedAt: s.published ? new Date() : null,
         campaignId: i % 3 === 0 ? campaign.id : i % 3 === 1 ? campaign2.id : null,
         ownerUserId: s.name === "NeuralForge" ? startupUser.id : null,
       },
@@ -828,6 +900,104 @@ async function main() {
       minutesAgo: 8000,
     },
   ]);
+
+  // --- Ecosystem: follows, updates & intro requests ------------------------
+  const byName = (name: string) =>
+    startupRecords[STARTUPS.findIndex((s) => s.name === name)];
+  const carbonLoom = byName("CarbonLoom");
+  const mediGraph = byName("MediGraph");
+
+  // Investor follows a slice of the published universe.
+  for (const s of [neuralForge, voltaic, carbonLoom, factoryPulse]) {
+    await prisma.startupFollow.create({
+      data: { userId: investor.id, startupId: s.id },
+    });
+  }
+
+  // Updates that populate the following feed. Owner posts where available,
+  // otherwise the Lovedis team posts on the startup's behalf.
+  const updateSeeds: {
+    startupId: string;
+    authorId: string;
+    title: string;
+    body: string;
+    category: "MILESTONE" | "FUNDING" | "PRODUCT" | "TEAM" | "PRESS" | "GENERAL";
+    minutesAgo: number;
+  }[] = [
+    {
+      startupId: neuralForge.id,
+      authorId: startupUser.id,
+      title: "Series-A-Runde über 18 Mio. € geschlossen",
+      body: "Wir freuen uns, unsere Series A unter Führung von Northlight Ventures bekanntzugeben. Das frische Kapital fließt in den Ausbau unseres Verifikations-Stacks und in die Expansion nach Frankreich.",
+      category: "FUNDING",
+      minutesAgo: 60 * 5,
+    },
+    {
+      startupId: neuralForge.id,
+      authorId: startupUser.id,
+      title: "Pilot mit Rheinwerk Industries gestartet",
+      body: "Unser Copilot läuft jetzt produktiv auf zwei Stanzlinien — erste verifizierte SPS-Programme wurden bereits ausgerollt.",
+      category: "MILESTONE",
+      minutesAgo: 60 * 48,
+    },
+    {
+      startupId: voltaic.id,
+      authorId: member.id,
+      title: "100 MWh unter Management überschritten",
+      body: "Mit dem jüngsten Industriespeicher-Verbund managen wir nun über 100 MWh flexibler Kapazität auf deutschen Regelenergiemärkten.",
+      category: "MILESTONE",
+      minutesAgo: 60 * 20,
+    },
+    {
+      startupId: carbonLoom.id,
+      authorId: member.id,
+      title: "Zweites Pilotgebäude in Amsterdam bestätigt",
+      body: "Nach Rotterdam rüsten wir ein weiteres Gewerbegebäude mit unseren Direct-Air-Capture-Modulen aus.",
+      category: "PRODUCT",
+      minutesAgo: 60 * 12,
+    },
+    {
+      startupId: factoryPulse.id,
+      authorId: member.id,
+      title: "Neue Akustik-Firmware mit 12 % höherer Präzision",
+      body: "Unser jüngstes Firmware-Update verbessert die Anomalie-Erkennung deutlich — bereits auf allen Pilotmaschinen aktiv.",
+      category: "PRODUCT",
+      minutesAgo: 60 * 3,
+    },
+  ];
+  for (const u of updateSeeds) {
+    await prisma.startupUpdate.create({
+      data: {
+        startupId: u.startupId,
+        authorId: u.authorId,
+        title: u.title,
+        body: u.body,
+        category: u.category,
+        createdAt: new Date(Date.now() - u.minutesAgo * 60_000),
+      },
+    });
+  }
+
+  // A pending intro request for the team broker inbox.
+  await prisma.introRequest.create({
+    data: {
+      investorId: investor.id,
+      startupId: carbonLoom.id,
+      message:
+        "Climate Tech passt genau in unsere These — wir würden CarbonLoom gern für ein Erstgespräch kennenlernen.",
+      status: "PENDING",
+    },
+  });
+  // An already-brokered intro (for context on the investor side).
+  await prisma.introRequest.create({
+    data: {
+      investorId: investor.id,
+      startupId: mediGraph.id,
+      message: "Spannender Knowledge-Graph-Ansatz — bitte um eine Einführung.",
+      status: "APPROVED",
+      handledById: admin.id,
+    },
+  });
 
   console.log("Seed abgeschlossen.");
   console.log("\nDemo-Konten (Passwort: %s)", PASSWORD);

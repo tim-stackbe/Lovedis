@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Card({
@@ -85,22 +86,32 @@ export function ToneCard({
 interface StatCardProps {
   label: string;
   value: React.ReactNode;
+  icon?: LucideIcon;
   className?: string;
 }
 
-/** Translucent stat card for use on colored hero banners. */
-export function BannerStat({ label, value, className }: StatCardProps) {
+/** Translucent frosted stat chip for use on the gradient hero banner. */
+export function BannerStat({ label, value, icon: Icon, className }: StatCardProps) {
   return (
     <div
       className={cn(
-        "rounded-button bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3",
+        "flex items-center gap-3 rounded-button border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-md transition-colors hover:bg-white/15",
         className
       )}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
-        {label}
-      </p>
-      <p className="mt-0.5 text-2xl font-bold text-white">{value}</p>
+      {Icon && (
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-button bg-white/15 text-white">
+          <Icon className="h-4 w-4" />
+        </span>
+      )}
+      <span className="min-w-0">
+        <span className="block text-[11px] font-semibold uppercase tracking-wider text-white/70">
+          {label}
+        </span>
+        <span className="mt-0.5 block truncate text-2xl font-bold leading-tight text-white">
+          {value}
+        </span>
+      </span>
     </div>
   );
 }

@@ -1,6 +1,10 @@
+import { Compass, Newspaper } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { StartupLogo } from "@/components/discovery/StartupLogo";
+import { UpdateFeed, type FeedUpdate } from "@/components/discovery/UpdateFeed";
 import {
+  IntroStatusBadge,
   PoCStatusBadge,
   RecommendationBadge,
   ScorePill,
@@ -21,7 +25,7 @@ export default async function InvestorDashboard() {
   const session = await requireRole(["INVESTOR"]);
   const userId = session.user.id;
 
-  const [pocs, shares] = await Promise.all([
+  const [pocs, shares, follows, introRequests] = await Promise.all([
     prisma.poCPerformance.findMany({
       where: { trackedById: userId },
       include: {
@@ -45,62 +49,218 @@ export default async function InvestorDashboard() {
       },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.startupFollow.findMany({
+      where: { userId },
+      select: { startupId: true },
+    }),
+    prisma.introRequest.findMany({
+      where: { investorId: userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        conversationId: true,
+        startup: { select: { id: true, name: true } },
+      },
+    }),
   ]);
 
-  const running = pocs.filter((p) => p.status === "RUNNING").length;
-  const completed = pocs.filter((p) => p.status === "COMPLETED").length;
+  const followedIds = follows.map((f) => f.startupId);
+
+  const [feedUpdates, recommended] = await Promise.all([
+    followedIds.length
+      ? prisma.startupUpdate.findMany({
+          where: { startupId: { in: followedIds } },
+          orderBy: { createdAt: "desc" },
+          take: 4,
+          select: {
+            id: true,
+            title: true,
+            body: true,
+            category: true,
+            createdAt: true,
+            startup: { select: { id: true, name: true, logoUrl: true } },
+          },
+        })
+      : Promise.resolve([]),
+    prisma.startup.findMany({
+      where: { isPublished: true, id: { notIn: followedIds } },
+      orderBy: { publishedAt: "desc" },
+      take: 4,
+      select: {
+        id: true,
+        name: true,
+        tagline: true,
+        logoUrl: true,
+        industry: true,
+      },
+    }),
+  ]);
+
   const avgScore =
     shares.length > 0
       ? shares.reduce((a, s) => a + s.evaluation.overallScore, 0) /
         shares.length
       : 0;
+  const openIntros = introRequests.filter(
+    (r) => r.status === "PENDING" || r.status === "APPROVED"
+  ).length;
+
+  const feedItems: FeedUpdate[] = feedUpdates.map((u) => ({
+    id: u.id,
+    title: u.title,
+    body: u.body,
+    category: u.category,
+    createdAt: u.createdAt,
+    startup: u.startup,
+  }));
 
   return (
     <>
       <HeroBanner
         kicker="Sektion 00 — Investor"
         title={`Willkommen, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Deine Portfolio-Sicht: getrackte Proof-of-Concepts und die mit dir geteilten Scorings."
+        subtitle="Dein Hub: folge Startups, verfolge ihre Updates und vertiefe dein Portfolio aus Piloten und Scorings."
         actions={
-          <LinkButton href="/pocs" variant="white">
-            PoC-Tracking öffnen
+          <LinkButton href="/discover" variant="white">
+            <Compass className="h-4 w-4" />
+            Startups entdecken
           </LinkButton>
         }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <BannerStat label="Ich folge" value={followedIds.length} />
+          <BannerStat label="Intro-Anfragen" value={introRequests.length} />
           <BannerStat label="Getrackte PoCs" value={pocs.length} />
-          <BannerStat label="Laufend" value={running} />
-          <BannerStat label="Scorings" value={shares.length} />
           <BannerStat label="Ø Score" value={avgScore.toFixed(1)} />
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Puls" title="Portfolio-Gesundheit" />
+        <SectionLabel number="01" label="Ökosystem" title="Dein Netzwerk" />
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
+            tone={followedIds.length > 0 ? "info" : "muted"}
+            label="Beobachtet"
+            value={followedIds.length}
+            sub="Startups, denen du folgst"
+          />
+          <ToneCard
+            tone={openIntros > 0 ? "attention" : "muted"}
+            label="Offene Intros"
+            value={openIntros}
+            sub="in Anbahnung"
+          />
+          <ToneCard
             tone="success"
-            label="Laufende PoCs"
-            value={running}
-            sub="aktive Piloten"
-          />
-          <ToneCard
-            tone="info"
-            label="Abgeschlossen"
-            value={completed}
-            sub="beendete Piloten"
-          />
-          <ToneCard
-            tone={shares.length > 0 ? "attention" : "muted"}
-            label="Neue Insights"
-            value={shares.length}
-            sub="geteilte Scorings"
+            label="Neue Updates"
+            value={feedItems.length}
+            sub="von deinen Startups"
           />
         </div>
       </section>
 
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <SectionLabel number="02" label="Feed" title="Updates deiner Startups" />
+          {feedItems.length === 0 ? (
+            <Card className="flex flex-col items-start gap-3 p-6 text-sm text-lv-secondary">
+              <span className="inline-flex items-center gap-2">
+                <Newspaper className="h-4 w-4" />
+                Noch keine Updates — folge Startups, um ihren Neuigkeiten zu
+                folgen.
+              </span>
+              <LinkButton href="/discover" size="sm" variant="secondary">
+                <Compass className="h-4 w-4" />
+                Entdecken
+              </LinkButton>
+            </Card>
+          ) : (
+            <>
+              <UpdateFeed updates={feedItems} />
+              <Link
+                href="/feed"
+                className="text-sm font-semibold text-lv-blue hover:underline"
+              >
+                Ganzen Feed ansehen →
+              </Link>
+            </>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <SectionLabel
+            number="03"
+            label="Anbahnung"
+            title="Deine Intro-Anfragen"
+          />
+          {introRequests.length === 0 ? (
+            <Card className="p-6 text-sm text-lv-secondary">
+              Noch keine Intros angefragt. Auf einem öffentlichen Profil kannst
+              du über das Lovedis-Team eine Einführung anfragen.
+            </Card>
+          ) : (
+            <Card className="divide-y divide-lv-border">
+              {introRequests.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 p-4"
+                >
+                  <div>
+                    <Link
+                      href={`/discover/${r.startup.id}`}
+                      className="text-sm font-semibold text-lv-text hover:text-lv-blue"
+                    >
+                      {r.startup.name}
+                    </Link>
+                    {r.status === "CONNECTED" && r.conversationId && (
+                      <Link
+                        href={`/messages?c=${r.conversationId}`}
+                        className="ml-2 text-xs font-semibold text-lv-blue hover:underline"
+                      >
+                        Chat öffnen
+                      </Link>
+                    )}
+                  </div>
+                  <IntroStatusBadge value={r.status} />
+                </div>
+              ))}
+            </Card>
+          )}
+
+          {recommended.length > 0 && (
+            <>
+              <SectionLabel
+                number="04"
+                label="Neu"
+                title="Neu im Universum"
+              />
+              <Card className="divide-y divide-lv-border">
+                {recommended.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/discover/${s.id}`}
+                    className="flex items-center gap-3 p-4 hover:bg-lv-surface/50"
+                  >
+                    <StartupLogo name={s.name} logoUrl={s.logoUrl} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-lv-text">
+                        {s.name}
+                      </p>
+                      <p className="truncate text-xs text-lv-secondary">
+                        {s.tagline ?? s.industry}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </Card>
+            </>
+          )}
+        </div>
+      </section>
+
       <section className="space-y-4">
-        <SectionLabel number="02" label="Piloten" title="Getrackte PoCs" />
+        <SectionLabel number="05" label="Piloten" title="Getrackte PoCs" />
         {pocs.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
             Dir sind noch keine PoCs zugewiesen.
@@ -164,7 +324,7 @@ export default async function InvestorDashboard() {
 
       <section className="space-y-4">
         <SectionLabel
-          number="03"
+          number="06"
           label="Insights"
           title="Mit dir geteilte Scorings"
         />

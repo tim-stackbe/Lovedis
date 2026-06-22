@@ -2,11 +2,14 @@ import type { UserRole } from "@/generated/prisma/enums";
 import {
   BarChart3,
   Building2,
+  Compass,
   FlaskConical,
   GitCompare,
+  Handshake,
   Home,
   Kanban,
   MessageSquare,
+  Newspaper,
   Radar,
   Rocket,
   Settings,
@@ -34,6 +37,17 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 /** Roles allowed into the internal Venture Scout module. */
 export const VENTURE_SCOUT_ROLES: UserRole[] = ["ADMIN", "MEMBER"];
+
+/**
+ * Roles with access to the curated ecosystem marketplace (Discover + Feed).
+ * Internal team is included so they can preview exactly what externals see.
+ */
+export const MARKETPLACE_ROLES: UserRole[] = [
+  "ADMIN",
+  "MEMBER",
+  "INVESTOR",
+  "BUSINESS_PARTNER",
+];
 
 export const ROLE_HOMES: Record<UserRole, string> = {
   ADMIN: "/dashboard/admin",
@@ -66,10 +80,24 @@ const SCOUT_SECTION: NavSection = {
   ],
 };
 
+const MARKETPLACE_SECTION: NavSection = {
+  title: "Ökosystem",
+  items: [
+    { label: "Entdecken", href: "/discover", icon: Compass },
+    { label: "Feed", href: "/feed", icon: Newspaper },
+  ],
+};
+
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
   href: "/messages",
   icon: MessageSquare,
+};
+
+const INTROS_ITEM: NavItem = {
+  label: "Intro-Anfragen",
+  href: "/intros",
+  icon: Handshake,
 };
 
 const SETTINGS_SECTION: NavSection = {
@@ -82,11 +110,13 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
     },
     SCOUT_SECTION,
+    MARKETPLACE_SECTION,
     {
       title: "Plattform",
       items: [
         { label: "Challenges", href: "/challenges", icon: Target },
         { label: "Geteilte Scorings", href: "/sharing", icon: Share2 },
+        INTROS_ITEM,
         MESSAGES_ITEM,
         { label: "Nutzer", href: "/users", icon: Users },
       ],
@@ -98,13 +128,18 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
     SCOUT_SECTION,
-    { items: [MESSAGES_ITEM] },
+    MARKETPLACE_SECTION,
+    {
+      title: "Plattform",
+      items: [INTROS_ITEM, MESSAGES_ITEM],
+    },
     SETTINGS_SECTION,
   ],
   BUSINESS_PARTNER: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/partner", icon: Home }],
     },
+    MARKETPLACE_SECTION,
     {
       title: "Zusammenarbeit",
       items: [
@@ -120,6 +155,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/investor", icon: Home }],
     },
+    MARKETPLACE_SECTION,
     {
       title: "Portfolio",
       items: [

@@ -95,6 +95,22 @@ enum PoCStatus {
   CANCELLED
 }
 
+enum UpdateCategory {
+  MILESTONE
+  FUNDING
+  PRODUCT
+  TEAM
+  PRESS
+  GENERAL
+}
+
+enum IntroStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  CONNECTED
+}
+
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------
@@ -118,6 +134,10 @@ model User {
   sharedScoringsOut  SharedScoring[]       @relation("ScoringSharer")
   conversations      ConversationParticipant[] @relation("ConversationMember")
   messages           Message[]                 @relation("MessageSender")
+  follows            StartupFollow[]           @relation("UserFollows")
+  authoredUpdates    StartupUpdate[]           @relation("UpdateAuthor")
+  introRequests      IntroRequest[]            @relation("IntroInvestor")
+  handledIntros      IntroRequest[]            @relation("IntroHandler")
 
   @@index([role])
   @@index([isActive])
@@ -156,6 +176,18 @@ model Startup {
   pipelineStage PipelineStage  @default(DISCOVERED)
   radarQuadrant RadarQuadrant?
   radarRing     RadarRing?
+
+  // Curated, startup-controlled public storefront (visible to investors/partners
+  // in the marketplace). Internal scores/evaluations/pipeline stay private.
+  tagline        String?
+  logoUrl        String?
+  publicPitch    String?
+  seekingFunding Boolean   @default(false)
+  seekingAmount  Float? // target raise in EUR millions
+  lookingFor     String[]  @default([]) // e.g. Funding, Piloten, Talent
+  isPublished    Boolean   @default(false)
+  publishedAt    DateTime?
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -165,16 +197,20 @@ model Startup {
   ownerUserId String? @unique
   owner       User?   @relation("StartupOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
 
-  contacts     Contact[]
-  attachments  Attachment[]
-  evaluations  Evaluation[]
-  applications ChallengeApplication[]
+  contacts      Contact[]
+  attachments   Attachment[]
+  evaluations   Evaluation[]
+  applications  ChallengeApplication[]
+  followers     StartupFollow[]
+  updates       StartupUpdate[]
+  introRequests IntroRequest[]
 
   @@index([name])
   @@index([industry])
   @@index([pipelineStage])
   @@index([radarQuadrant, radarRing])
   @@index([stage])
+  @@index([isPublished])
 }
 
 model Contact {
@@ -362,4 +398,56 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@index([senderId])
+}
+
+// ---------------------------------------------------------------------------
+// Ecosystem — discovery, following, updates & brokered intros
+// ---------------------------------------------------------------------------
+
+model StartupFollow {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
+  startupId String
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, startupId])
+  @@index([userId])
+  @@index([startupId])
+}
+
+model StartupUpdate {
+  id        String         @id @default(cuid())
+  startupId String
+  startup   Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User           @relation("UpdateAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  category  UpdateCategory @default(GENERAL)
+  createdAt DateTime       @default(now())
+
+  @@index([startupId, createdAt])
+  @@index([createdAt])
+}
+
+model IntroRequest {
+  id             String      @id @default(cuid())
+  investorId     String
+  investor       User        @relation("IntroInvestor", fields: [investorId], references: [id], onDelete: Cascade)
+  startupId      String
+  startup        Startup     @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  message        String
+  status         IntroStatus @default(PENDING)
+  handledById    String?
+  handledBy      User?       @relation("IntroHandler", fields: [handledById], references: [id], onDelete: SetNull)
+  conversationId String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([investorId, startupId])
+  @@index([startupId])
+  @@index([investorId])
+  @@index([status])
 }

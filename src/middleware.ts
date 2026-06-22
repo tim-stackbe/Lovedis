@@ -5,7 +5,13 @@ import { ROLE_HOMES } from "@/lib/roles";
 
 const { auth } = NextAuth(authConfig);
 
-const PUBLIC_PATHS = ["/login", "/auth", "/api/auth", "/api/health"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth",
+  "/api/auth",
+  "/api/health",
+  "/api/session-clear",
+];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(

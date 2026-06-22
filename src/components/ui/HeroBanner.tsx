@@ -21,20 +21,25 @@ export function HeroBanner({
   return (
     <div
       className={cn(
-        "rounded-card bg-lv-blue text-white p-6 sm:p-8 shadow-card relative overflow-hidden",
+        "rounded-card bg-lv-cover text-white p-6 sm:p-8 shadow-card relative overflow-hidden",
         className
       )}
     >
-      <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-lv-orange/30 blur-3xl pointer-events-none" />
+      {/* Warm orange orb echoing the gradient's far edge */}
+      <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-lv-orange/40 blur-3xl pointer-events-none" />
+      {/* Subtle indigo depth in the lower-left */}
+      <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-lv-blue-dark/40 blur-3xl pointer-events-none" />
       <div className="relative">
-        <p className="lv-wordmark text-xs text-white/70">{kicker}</p>
+        <p className="lv-wordmark text-xs text-white/75">{kicker}</p>
         <div className="mt-3 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
               {title}
             </h1>
             {subtitle && (
-              <p className="mt-2 max-w-2xl text-sm text-white/70">{subtitle}</p>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/80">
+                {subtitle}
+              </p>
             )}
           </div>
           {actions && <div className="flex shrink-0 gap-3">{actions}</div>}

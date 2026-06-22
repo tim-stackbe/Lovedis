@@ -1,18 +1,22 @@
 import type {
   ApplicationStatus,
   ChallengeStatus,
+  IntroStatus,
   PipelineStage,
   PoCStatus,
   Recommendation,
+  UpdateCategory,
 } from "@/generated/prisma/enums";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import {
   APPLICATION_STATUS_LABELS,
   CHALLENGE_STATUS_LABELS,
+  INTRO_STATUS_LABELS,
   PIPELINE_STAGE_LABELS,
   POC_STATUS_LABELS,
   QUADRANT_LABELS,
   RECOMMENDATION_LABELS,
+  UPDATE_CATEGORY_LABELS,
   type Quadrant,
 } from "@/lib/constants";
 import { cn, formatScore } from "@/lib/utils";
@@ -99,6 +103,36 @@ export const QUADRANT_TONES: Record<Quadrant, BadgeTone> = {
 
 export function QuadrantBadge({ value }: { value: Quadrant }) {
   return <Badge tone={QUADRANT_TONES[value]}>{QUADRANT_LABELS[value]}</Badge>;
+}
+
+export const UPDATE_CATEGORY_TONES: Record<UpdateCategory, BadgeTone> = {
+  MILESTONE: "mint",
+  FUNDING: "blue",
+  PRODUCT: "pink",
+  TEAM: "yellow",
+  PRESS: "blue",
+  GENERAL: "muted",
+};
+
+export function UpdateCategoryBadge({ value }: { value: UpdateCategory }) {
+  return (
+    <Badge tone={UPDATE_CATEGORY_TONES[value]}>
+      {UPDATE_CATEGORY_LABELS[value]}
+    </Badge>
+  );
+}
+
+const INTRO_STATUS_TONES: Record<IntroStatus, BadgeTone> = {
+  PENDING: "yellow",
+  APPROVED: "blue",
+  DECLINED: "orange",
+  CONNECTED: "mint",
+};
+
+export function IntroStatusBadge({ value }: { value: IntroStatus }) {
+  return (
+    <Badge tone={INTRO_STATUS_TONES[value]}>{INTRO_STATUS_LABELS[value]}</Badge>
+  );
 }
 
 export function ScorePill({

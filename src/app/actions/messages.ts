@@ -24,6 +24,27 @@ async function isParticipant(
   return Boolean(link);
 }
 
+/**
+ * Whether two users are connected through a brokered intro that the team has
+ * approved — links an investor with the owner of the requested startup.
+ */
+async function usersHaveApprovedIntro(
+  userA: string,
+  userB: string
+): Promise<boolean> {
+  const intro = await prisma.introRequest.findFirst({
+    where: {
+      status: { in: ["APPROVED", "CONNECTED"] },
+      OR: [
+        { investorId: userA, startup: { ownerUserId: userB } },
+        { investorId: userB, startup: { ownerUserId: userA } },
+      ],
+    },
+    select: { id: true },
+  });
+  return Boolean(intro);
+}
+
 export async function sendMessage(
   conversationId: string,
   _prevState: ActionState | undefined,
@@ -78,7 +99,10 @@ export async function startConversation(
   if (!recipient || !recipient.isActive) {
     return { error: "Empfänger nicht gefunden." };
   }
-  if (!canMessage(session.user.role, recipient.role)) {
+  if (
+    !canMessage(session.user.role, recipient.role) &&
+    !(await usersHaveApprovedIntro(session.user.id, recipientId))
+  ) {
     return { error: "Du darfst diesem Nutzer nicht schreiben." };
   }
 

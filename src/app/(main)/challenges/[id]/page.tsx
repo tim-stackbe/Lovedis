@@ -7,6 +7,7 @@ import {
 } from "@/app/actions/challenges";
 import { ApplyForm } from "@/components/challenges/ApplyForm";
 import { ChallengeForm } from "@/components/challenges/ChallengeForm";
+import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
 import {
   ApplicationStatusBadge,
   ChallengeStatusBadge,
@@ -74,7 +75,10 @@ export default async function ChallengeDetailPage({
             {challenge.deadline && ` · Frist ${formatDate(challenge.deadline)}`}
           </p>
         </div>
-        <ChallengeStatusBadge value={challenge.status} />
+        <div className="flex items-center gap-3">
+          <ChallengeStatusBadge value={challenge.status} />
+          <ShareChallengeButton title={challenge.title} challengeId={challenge.id} />
+        </div>
       </div>
 
       <Card className="p-6">

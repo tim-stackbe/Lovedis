@@ -2,12 +2,33 @@ import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
-import { ROLE_HOMES, VENTURE_SCOUT_ROLES } from "@/lib/roles";
+import { prisma } from "@/lib/prisma";
+import { MARKETPLACE_ROLES, ROLE_HOMES, VENTURE_SCOUT_ROLES } from "@/lib/roles";
 
-/** Ensures a valid session; redirects to /login otherwise. */
+/**
+ * Ensures a valid session; redirects to /login otherwise.
+ *
+ * Beyond checking the JWT cookie, this verifies that the session's user id
+ * still references an existing, active row in the database. JWT sessions
+ * survive a DB re-seed (which mints fresh user ids), so a stale cookie can
+ * otherwise carry an id that no longer exists — any downstream write keyed on
+ * `session.user.id` would then crash with a foreign-key violation.
+ *
+ * An invalid session is sent to /api/session-clear (not straight to /login):
+ * the cookie is still cryptographically valid, so middleware would bounce a
+ * bare /login redirect back to the role home and loop forever. The clear
+ * route deletes the cookie first, so the subsequent /login lands cleanly.
+ */
 export async function requireAuth(): Promise<Session> {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, isActive: true },
+  });
+  if (!user || !user.isActive) redirect("/api/session-clear");
+
   return session;
 }
 
@@ -26,4 +47,9 @@ export async function requireRole(roles: UserRole[]): Promise<Session> {
 /** Venture Scout module gate (ADMIN + MEMBER). */
 export async function requireScoutModule(): Promise<Session> {
   return requireRole(VENTURE_SCOUT_ROLES);
+}
+
+/** Ecosystem marketplace gate (investors, partners + internal team preview). */
+export async function requireMarketplace(): Promise<Session> {
+  return requireRole(MARKETPLACE_ROLES);
 }

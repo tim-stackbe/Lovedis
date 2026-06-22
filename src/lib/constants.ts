@@ -1,6 +1,7 @@
 import type {
   ApplicationStatus,
   ChallengeStatus,
+  IntroStatus,
   PipelineStage,
   PoCStatus,
   RadarQuadrant,
@@ -8,6 +9,7 @@ import type {
   Recommendation,
   ScoreDimension,
   StartupStage,
+  UpdateCategory,
 } from "@/generated/prisma/enums";
 
 // ---------------------------------------------------------------------------
@@ -207,6 +209,51 @@ export const POC_STATUS_LABELS: Record<PoCStatus, string> = {
   COMPLETED: "Abgeschlossen",
   CANCELLED: "Abgebrochen",
 };
+
+// ---------------------------------------------------------------------------
+// Ecosystem — startup updates, intro requests & "looking for"
+// ---------------------------------------------------------------------------
+
+export const UPDATE_CATEGORIES: UpdateCategory[] = [
+  "MILESTONE",
+  "FUNDING",
+  "PRODUCT",
+  "TEAM",
+  "PRESS",
+  "GENERAL",
+];
+
+export const UPDATE_CATEGORY_LABELS: Record<UpdateCategory, string> = {
+  MILESTONE: "Meilenstein",
+  FUNDING: "Finanzierung",
+  PRODUCT: "Produkt",
+  TEAM: "Team",
+  PRESS: "Presse",
+  GENERAL: "Allgemein",
+};
+
+export const INTRO_STATUSES: IntroStatus[] = [
+  "PENDING",
+  "APPROVED",
+  "DECLINED",
+  "CONNECTED",
+];
+
+export const INTRO_STATUS_LABELS: Record<IntroStatus, string> = {
+  PENDING: "Ausstehend",
+  APPROVED: "Angenommen",
+  DECLINED: "Abgelehnt",
+  CONNECTED: "Verbunden",
+};
+
+/** Options a startup can signal it is looking for (free-form, but suggested). */
+export const LOOKING_FOR_OPTIONS = [
+  "Funding",
+  "Piloten",
+  "Talent",
+  "Partnerschaften",
+  "Beirat",
+] as const;
 
 // ---------------------------------------------------------------------------
 // Industries (suggestions for forms/filters)

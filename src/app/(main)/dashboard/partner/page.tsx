@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
 import {
   ChallengeStatusBadge,
   PoCStatusBadge,
@@ -136,7 +137,14 @@ export default async function PartnerDashboard() {
                       {c._count.applications}
                     </Td>
                     <Td className="text-right">
-                      <ChallengeStatusBadge value={c.status} />
+                      <div className="flex items-center justify-end gap-2">
+                        <ChallengeStatusBadge value={c.status} />
+                        <ShareChallengeButton
+                          title={c.title}
+                          challengeId={c.id}
+                          variant="ghost"
+                        />
+                      </div>
                     </Td>
                   </Tr>
                 ))}

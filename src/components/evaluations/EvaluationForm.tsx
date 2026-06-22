@@ -104,8 +104,8 @@ export function EvaluationForm({
 
       <div className="space-y-4">
         <Card className="overflow-hidden">
-          <div className="relative bg-lv-blue p-5 text-white">
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lv-orange/30 blur-2xl pointer-events-none" />
+          <div className="relative bg-lv-cover p-5 text-white">
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lv-orange/40 blur-2xl pointer-events-none" />
             <p className="lv-wordmark relative text-[10px] text-white/70">
               Live-Ergebnis
             </p>

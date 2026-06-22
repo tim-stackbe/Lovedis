@@ -21,7 +21,7 @@ export function SectionLabel({
         <span className="h-px flex-1 bg-lv-border" />
       </div>
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-bold tracking-tight text-lv-text">
+        <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
           {title}
         </h2>
         {actions}

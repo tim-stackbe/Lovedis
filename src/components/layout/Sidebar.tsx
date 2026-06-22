@@ -2,21 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import type { UserRole } from "@/generated/prisma/enums";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { ROLE_LABELS, ROLE_NAV } from "@/lib/roles";
-import { cn } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 
 interface SidebarProps {
   role: UserRole;
+  userName: string;
   mobileOpen: boolean;
   onClose: () => void;
 }
 
-export function Sidebar({ role, mobileOpen, onClose }: SidebarProps) {
+export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const sections = ROLE_NAV[role];
+
+  const userChip = (
+    <Link
+      href="/settings"
+      onClick={onClose}
+      className="flex items-center gap-3 rounded-card border border-lv-border bg-white px-3 py-2.5 transition-colors hover:bg-lv-surface"
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lv-blue text-xs font-bold text-white">
+        {initials(userName)}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-lv-text">
+          {userName}
+        </span>
+        <span className="block truncate text-xs text-lv-secondary">
+          {ROLE_LABELS[role]}
+        </span>
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-lv-secondary" />
+    </Link>
+  );
 
   const nav = (
     <nav className="flex flex-col gap-6 px-3 py-4">
@@ -66,11 +88,7 @@ export function Sidebar({ role, mobileOpen, onClose }: SidebarProps) {
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto lv-scroll">{nav}</div>
-        <div className="border-t border-lv-border px-5 py-3">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-lv-secondary">
-            {ROLE_LABELS[role]}-Workspace
-          </p>
-        </div>
+        <div className="border-t border-lv-border p-3">{userChip}</div>
       </aside>
 
       {/* Mobile drawer */}
@@ -92,7 +110,8 @@ export function Sidebar({ role, mobileOpen, onClose }: SidebarProps) {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto">{nav}</div>
+            <div className="flex-1 overflow-y-auto lv-scroll">{nav}</div>
+            <div className="border-t border-lv-border p-3">{userChip}</div>
           </aside>
         </div>
       )}

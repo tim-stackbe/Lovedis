@@ -2,6 +2,7 @@ import { Plus, Target } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@/generated/prisma/client";
+import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
 import {
   ApplicationStatusBadge,
   ChallengeStatusBadge,
@@ -127,7 +128,14 @@ export default async function ChallengesPage() {
                   >
                     {c.title}
                   </Link>
-                  <ChallengeStatusBadge value={c.status} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <ChallengeStatusBadge value={c.status} />
+                    <ShareChallengeButton
+                      title={c.title}
+                      challengeId={c.id}
+                      variant="ghost"
+                    />
+                  </div>
                 </div>
                 <p className="mt-2 flex-1 text-sm text-lv-secondary">
                   {truncate(c.description, 160)}
