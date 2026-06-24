@@ -3,7 +3,12 @@ import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
-import { MARKETPLACE_ROLES, ROLE_HOMES, VENTURE_SCOUT_ROLES } from "@/lib/roles";
+import {
+  MARKETPLACE_ROLES,
+  ROLE_HOMES,
+  VENTURE_SCOUT_ROLES,
+  VENTURE_VIEW_ROLES,
+} from "@/lib/roles";
 
 /**
  * Ensures a valid session; redirects to /login otherwise.
@@ -72,4 +77,14 @@ export async function requirePartner(): Promise<Session> {
 /** Startup-only gate (venture platform / self-service). */
 export async function requireStartup(): Promise<Session> {
   return requireRole(["STARTUP"]);
+}
+
+/**
+ * Startup-facing Venture Platform / Marktplatz VIEW gate. Startups see it as
+ * self-service; the internal team (ADMIN + MEMBER) gets the identical surfaces
+ * as a fully-visible "Admin-Sicht" preview and may act on behalf of a startup.
+ * Admin must always be able to see everything that is "for startups".
+ */
+export async function requireVentureView(): Promise<Session> {
+  return requireRole(VENTURE_VIEW_ROLES);
 }

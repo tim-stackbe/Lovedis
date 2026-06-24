@@ -43,6 +43,20 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const VENTURE_SCOUT_ROLES: UserRole[] = ["ADMIN", "MEMBER"];
 
 /**
+ * Roles allowed to VIEW the startup-facing Venture Platform / Marktplatz
+ * (storefront, offering detail, Anfrage flow, bookings list, credits view).
+ * Startups use it as self-service; the internal team (ADMIN + MEMBER) gets the
+ * exact same surfaces as a fully-visible "Admin-Sicht" preview and can act on
+ * behalf of a startup. Per the product model, admin must see EVERYTHING.
+ */
+export const VENTURE_VIEW_ROLES: UserRole[] = ["STARTUP", "ADMIN", "MEMBER"];
+
+/** True for the internal Lovedis team (who preview/coordinate on behalf). */
+export function isTeamRole(role: UserRole): boolean {
+  return role === "ADMIN" || role === "MEMBER";
+}
+
+/**
  * Roles with access to the curated ecosystem marketplace (Discover + Feed).
  * Internal team is included so they can preview exactly what externals see.
  */
@@ -85,7 +99,8 @@ const TEAM_SSOT_SECTION: NavSection = {
     { label: "Push & Check-ins", href: "/pushes", icon: Send },
     { label: "SSOT-Pflege", href: "/hub-admin", icon: BookOpen },
     { label: "Venture-Credits", href: "/credits", icon: Coins },
-    { label: "Marktplatz", href: "/marketplace", icon: Store },
+    { label: "Marktplatz-Inbox", href: "/marketplace", icon: Inbox },
+    { label: "Marktplatz-Storefront", href: "/venture/marketplace", icon: Store },
   ],
 };
 
