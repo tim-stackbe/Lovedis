@@ -8,23 +8,18 @@ import {
   Coins,
   Compass,
   FlaskConical,
-  GitCompare,
   Handshake,
   Home,
   Inbox,
-  Kanban,
   ListChecks,
   MessageSquare,
   Newspaper,
-  Radar,
   Rocket,
   Send,
   Settings,
-  Share2,
   Sparkles,
   Store,
   Target,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -77,18 +72,6 @@ export interface NavSection {
   items: NavItem[];
 }
 
-const SCOUT_SECTION: NavSection = {
-  title: "Venture Scout",
-  items: [
-    { label: "Startups", href: "/startups", icon: Rocket },
-    { label: "Bewertungen", href: "/evaluations", icon: BarChart3 },
-    { label: "Vergleich", href: "/compare", icon: GitCompare },
-    { label: "Pipeline", href: "/pipeline", icon: Kanban },
-    { label: "Radar", href: "/radar", icon: Radar },
-    { label: "Berichte", href: "/reports", icon: Share2 },
-  ],
-};
-
 /**
  * Screening & SSOT workflows owned by the internal team. These create the
  * curated data (Polina screening, pushes, engagements, SSOT content, credits)
@@ -120,12 +103,6 @@ const MESSAGES_ITEM: NavItem = {
   icon: MessageSquare,
 };
 
-const INTROS_ITEM: NavItem = {
-  label: "Intro-Anfragen",
-  href: "/intros",
-  icon: Handshake,
-};
-
 const SETTINGS_SECTION: NavSection = {
   items: [{ label: "Einstellungen", href: "/settings", icon: Settings }],
 };
@@ -135,32 +112,16 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
     },
-    SCOUT_SECTION,
     TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
-    {
-      title: "Plattform",
-      items: [
-        { label: "Challenges", href: "/challenges", icon: Target },
-        { label: "Geteilte Scorings", href: "/sharing", icon: Share2 },
-        INTROS_ITEM,
-        MESSAGES_ITEM,
-        { label: "Nutzer", href: "/users", icon: Users },
-      ],
-    },
     SETTINGS_SECTION,
   ],
   MEMBER: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
-    SCOUT_SECTION,
     TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
-    {
-      title: "Plattform",
-      items: [INTROS_ITEM, MESSAGES_ITEM],
-    },
     SETTINGS_SECTION,
   ],
   BUSINESS_PARTNER: [
