@@ -17,11 +17,14 @@ import {
 } from "@/app/actions/startups";
 import { createEvaluation } from "@/app/actions/evaluations";
 import {
+  PartnerVerdictBadge,
   PipelineStageBadge,
   QuadrantBadge,
   RecommendationBadge,
   ScorePill,
+  SourceTypeBadge,
 } from "@/components/shared/badges";
+import { PolinaScreenForm } from "@/components/screening/PolinaScreenForm";
 import { AttachmentForm } from "@/components/startups/AttachmentForm";
 import { ContactForm } from "@/components/startups/ContactForm";
 import { StartupForm } from "@/components/startups/StartupForm";
@@ -59,6 +62,12 @@ export default async function StartupDetailPage({
         orderBy: { updatedAt: "desc" },
       },
       campaign: { select: { name: true } },
+      screenedBy: { select: { name: true } },
+      partnerReviews: {
+        where: { challengeId: null },
+        include: { partner: { select: { name: true, company: true } } },
+        orderBy: { updatedAt: "desc" },
+      },
     },
   });
   if (!startup) notFound();
@@ -198,6 +207,69 @@ export default async function StartupDetailPage({
                 </>
               )}
             </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <SectionLabel
+          number="01b"
+          label="Screening"
+          title="Polina-Erst-Einordnung & Partner-Feedback"
+        />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-xs uppercase tracking-wider text-lv-secondary">
+                Polina-Einordnung
+              </p>
+              <div className="flex items-center gap-2">
+                {startup.sourceType && (
+                  <SourceTypeBadge value={startup.sourceType} />
+                )}
+                {startup.screenedAt && startup.screenedBy && (
+                  <span className="text-xs text-lv-secondary">
+                    {startup.screenedBy.name} · {formatDate(startup.screenedAt)}
+                  </span>
+                )}
+              </div>
+            </div>
+            <PolinaScreenForm
+              startupId={startup.id}
+              summary={startup.screenSummary}
+              recommendation={startup.screenRecommendation}
+            />
+          </Card>
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-wider text-lv-secondary">
+              Partner-Verdikte ({startup.partnerReviews.length})
+            </p>
+            {startup.partnerReviews.length === 0 ? (
+              <p className="mt-3 text-sm text-lv-secondary">
+                Noch kein Partner-Feedback zu diesem Startup.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {startup.partnerReviews.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex items-start justify-between gap-3 border-b border-lv-border pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">
+                        {r.partner.company ?? r.partner.name}
+                      </p>
+                      {r.note && (
+                        <p className="mt-0.5 text-xs text-lv-secondary">
+                          {r.note}
+                        </p>
+                      )}
+                    </div>
+                    <PartnerVerdictBadge value={r.verdict} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </div>
       </section>
