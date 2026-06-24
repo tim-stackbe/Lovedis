@@ -53,3 +53,23 @@ export async function requireScoutModule(): Promise<Session> {
 export async function requireMarketplace(): Promise<Session> {
   return requireRole(MARKETPLACE_ROLES);
 }
+
+/**
+ * Internal Lovedis team gate (ADMIN + MEMBER). Used for the screening/SSOT
+ * back-office surfaces (longlist, pushes, SSOT-Pflege, credits) that own the
+ * curated data partners and startups consume. Distinct from the partner- and
+ * startup-facing low-overload views.
+ */
+export async function requireTeam(): Promise<Session> {
+  return requireRole(VENTURE_SCOUT_ROLES);
+}
+
+/** Business-partner-only gate (curated, low-overload partner views). */
+export async function requirePartner(): Promise<Session> {
+  return requireRole(["BUSINESS_PARTNER"]);
+}
+
+/** Startup-only gate (venture platform / self-service). */
+export async function requireStartup(): Promise<Session> {
+  return requireRole(["STARTUP"]);
+}

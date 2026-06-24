@@ -1,19 +1,26 @@
 import type { UserRole } from "@/generated/prisma/enums";
 import {
   BarChart3,
+  Bell,
+  BookOpen,
   Building2,
+  ClipboardCheck,
+  Coins,
   Compass,
   FlaskConical,
   GitCompare,
   Handshake,
   Home,
   Kanban,
+  ListChecks,
   MessageSquare,
   Newspaper,
   Radar,
   Rocket,
+  Send,
   Settings,
   Share2,
+  Sparkles,
   Target,
   Users,
   type LucideIcon,
@@ -80,6 +87,22 @@ const SCOUT_SECTION: NavSection = {
   ],
 };
 
+/**
+ * Screening & SSOT workflows owned by the internal team. These create the
+ * curated data (Polina screening, pushes, engagements, SSOT content, credits)
+ * that partners and startups consume through their low-overload views.
+ */
+const TEAM_SSOT_SECTION: NavSection = {
+  title: "Screening & SSOT",
+  items: [
+    { label: "Longlist", href: "/longlist", icon: ListChecks },
+    { label: "Engagements", href: "/engagements", icon: Handshake },
+    { label: "Push & Check-ins", href: "/pushes", icon: Send },
+    { label: "SSOT-Pflege", href: "/hub-admin", icon: BookOpen },
+    { label: "Venture-Credits", href: "/credits", icon: Coins },
+  ],
+};
+
 const MARKETPLACE_SECTION: NavSection = {
   title: "Ökosystem",
   items: [
@@ -110,6 +133,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
     },
     SCOUT_SECTION,
+    TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
     {
       title: "Plattform",
@@ -128,6 +152,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
     SCOUT_SECTION,
+    TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
     {
       title: "Plattform",
@@ -141,13 +166,26 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     },
     MARKETPLACE_SECTION,
     {
+      title: "Screening",
+      items: [
+        { label: "Longlist-Screening", href: "/screening", icon: ClipboardCheck },
+        { label: "Use-Case-Bewertung", href: "/use-cases", icon: Target },
+        { label: "Check-ins", href: "/check-ins", icon: Bell },
+      ],
+    },
+    {
       title: "Zusammenarbeit",
       items: [
         { label: "Meine Challenges", href: "/challenges", icon: Target },
+        { label: "Engagements", href: "/engagements", icon: Handshake },
         { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
         { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
         MESSAGES_ITEM,
       ],
+    },
+    {
+      title: "Wissen",
+      items: [{ label: "Partner-Hub", href: "/partner-hub", icon: BookOpen }],
     },
     SETTINGS_SECTION,
   ],
@@ -177,6 +215,13 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
         { label: "Meine Bewerbungen", href: "/applications", icon: Building2 },
         { label: "Mein Profil", href: "/profile", icon: Rocket },
         MESSAGES_ITEM,
+      ],
+    },
+    {
+      title: "Venture Platform",
+      items: [
+        { label: "Venture Platform", href: "/venture", icon: Sparkles },
+        { label: "Mein Guthaben", href: "/venture/credits", icon: Coins },
       ],
     },
     SETTINGS_SECTION,

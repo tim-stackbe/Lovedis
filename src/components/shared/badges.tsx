@@ -1,21 +1,35 @@
 import type {
   ApplicationStatus,
   ChallengeStatus,
+  ContentAudience,
+  CreditTxType,
+  EngagementStatus,
   IntroStatus,
+  PartnerVerdict,
   PipelineStage,
   PoCStatus,
   Recommendation,
+  ReminderStatus,
+  RoadmapStatus,
+  SourceType,
   UpdateCategory,
 } from "@/generated/prisma/enums";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import {
   APPLICATION_STATUS_LABELS,
   CHALLENGE_STATUS_LABELS,
+  CONTENT_AUDIENCE_LABELS,
+  CREDIT_TX_TYPE_LABELS,
+  ENGAGEMENT_STATUS_LABELS,
   INTRO_STATUS_LABELS,
+  PARTNER_VERDICT_LABELS,
   PIPELINE_STAGE_LABELS,
   POC_STATUS_LABELS,
   QUADRANT_LABELS,
   RECOMMENDATION_LABELS,
+  REMINDER_STATUS_LABELS,
+  ROADMAP_STATUS_LABELS,
+  SOURCE_TYPE_LABELS,
   UPDATE_CATEGORY_LABELS,
   type Quadrant,
 } from "@/lib/constants";
@@ -132,6 +146,103 @@ const INTRO_STATUS_TONES: Record<IntroStatus, BadgeTone> = {
 export function IntroStatusBadge({ value }: { value: IntroStatus }) {
   return (
     <Badge tone={INTRO_STATUS_TONES[value]}>{INTRO_STATUS_LABELS[value]}</Badge>
+  );
+}
+
+const PARTNER_VERDICT_TONES: Record<PartnerVerdict, BadgeTone> = {
+  PENDING: "muted",
+  CONTINUE: "mint",
+  PASS: "orange",
+};
+
+export function PartnerVerdictBadge({ value }: { value: PartnerVerdict }) {
+  return (
+    <Badge tone={PARTNER_VERDICT_TONES[value]}>
+      {PARTNER_VERDICT_LABELS[value]}
+    </Badge>
+  );
+}
+
+const SOURCE_TYPE_TONES: Record<SourceType, BadgeTone> = {
+  INBOUND: "blue",
+  OUTBOUND: "pink",
+};
+
+export function SourceTypeBadge({ value }: { value: SourceType }) {
+  return (
+    <Badge tone={SOURCE_TYPE_TONES[value]}>{SOURCE_TYPE_LABELS[value]}</Badge>
+  );
+}
+
+const REMINDER_STATUS_TONES: Record<ReminderStatus, BadgeTone> = {
+  SCHEDULED: "yellow",
+  SENT: "blue",
+  DONE: "mint",
+  CANCELLED: "muted",
+};
+
+export function ReminderStatusBadge({ value }: { value: ReminderStatus }) {
+  return (
+    <Badge tone={REMINDER_STATUS_TONES[value]}>
+      {REMINDER_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const ENGAGEMENT_STATUS_TONES: Record<EngagementStatus, BadgeTone> = {
+  ACTIVE: "mint",
+  PAUSED: "yellow",
+  COMPLETED: "blue",
+  CANCELLED: "orange",
+};
+
+export function EngagementStatusBadge({ value }: { value: EngagementStatus }) {
+  return (
+    <Badge tone={ENGAGEMENT_STATUS_TONES[value]}>
+      {ENGAGEMENT_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const ROADMAP_STATUS_TONES: Record<RoadmapStatus, BadgeTone> = {
+  PLANNED: "muted",
+  IN_PROGRESS: "yellow",
+  DONE: "mint",
+};
+
+export function RoadmapStatusBadge({ value }: { value: RoadmapStatus }) {
+  return (
+    <Badge tone={ROADMAP_STATUS_TONES[value]}>
+      {ROADMAP_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const CONTENT_AUDIENCE_TONES: Record<ContentAudience, BadgeTone> = {
+  PARTNER: "blue",
+  STARTUP: "pink",
+  BOTH: "mint",
+};
+
+export function ContentAudienceBadge({ value }: { value: ContentAudience }) {
+  return (
+    <Badge tone={CONTENT_AUDIENCE_TONES[value]}>
+      {CONTENT_AUDIENCE_LABELS[value]}
+    </Badge>
+  );
+}
+
+const CREDIT_TX_TYPE_TONES: Record<CreditTxType, BadgeTone> = {
+  GRANT: "mint",
+  SPEND: "orange",
+  ADJUSTMENT: "yellow",
+};
+
+export function CreditTxTypeBadge({ value }: { value: CreditTxType }) {
+  return (
+    <Badge tone={CREDIT_TX_TYPE_TONES[value]}>
+      {CREDIT_TX_TYPE_LABELS[value]}
+    </Badge>
   );
 }
 

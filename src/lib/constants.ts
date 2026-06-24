@@ -1,13 +1,20 @@
 import type {
   ApplicationStatus,
   ChallengeStatus,
+  ContentAudience,
+  CreditTxType,
+  EngagementStatus,
   IntroStatus,
+  PartnerVerdict,
   PipelineStage,
   PoCStatus,
   RadarQuadrant,
   RadarRing,
   Recommendation,
+  ReminderStatus,
+  RoadmapStatus,
   ScoreDimension,
+  SourceType,
   StartupStage,
   UpdateCategory,
 } from "@/generated/prisma/enums";
@@ -273,3 +280,110 @@ export const INDUSTRIES = [
   "Robotik",
   "SaaS",
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Partner verdict (lightweight screening feedback)
+// ---------------------------------------------------------------------------
+
+export const PARTNER_VERDICTS: PartnerVerdict[] = [
+  "PENDING",
+  "CONTINUE",
+  "PASS",
+];
+
+export const PARTNER_VERDICT_LABELS: Record<PartnerVerdict, string> = {
+  PENDING: "Offen",
+  CONTINUE: "Weitermachen",
+  PASS: "Nicht weiter",
+};
+
+// ---------------------------------------------------------------------------
+// Sourcing provenance (Inbound vs. Outbound)
+// ---------------------------------------------------------------------------
+
+export const SOURCE_TYPES: SourceType[] = ["INBOUND", "OUTBOUND"];
+
+export const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
+  INBOUND: "Inbound",
+  OUTBOUND: "Outbound",
+};
+
+// ---------------------------------------------------------------------------
+// Check-in reminders
+// ---------------------------------------------------------------------------
+
+export const REMINDER_STATUSES: ReminderStatus[] = [
+  "SCHEDULED",
+  "SENT",
+  "DONE",
+  "CANCELLED",
+];
+
+export const REMINDER_STATUS_LABELS: Record<ReminderStatus, string> = {
+  SCHEDULED: "Geplant",
+  SENT: "Versendet",
+  DONE: "Erledigt",
+  CANCELLED: "Abgebrochen",
+};
+
+// ---------------------------------------------------------------------------
+// Engagements (accelerator-independent collaboration)
+// ---------------------------------------------------------------------------
+
+export const ENGAGEMENT_STATUSES: EngagementStatus[] = [
+  "ACTIVE",
+  "PAUSED",
+  "COMPLETED",
+  "CANCELLED",
+];
+
+export const ENGAGEMENT_STATUS_LABELS: Record<EngagementStatus, string> = {
+  ACTIVE: "Aktiv",
+  PAUSED: "Pausiert",
+  COMPLETED: "Abgeschlossen",
+  CANCELLED: "Abgebrochen",
+};
+
+// ---------------------------------------------------------------------------
+// SSOT content — roadmap status & audience
+// ---------------------------------------------------------------------------
+
+export const ROADMAP_STATUSES: RoadmapStatus[] = [
+  "PLANNED",
+  "IN_PROGRESS",
+  "DONE",
+];
+
+export const ROADMAP_STATUS_LABELS: Record<RoadmapStatus, string> = {
+  PLANNED: "Geplant",
+  IN_PROGRESS: "In Arbeit",
+  DONE: "Erledigt",
+};
+
+export const CONTENT_AUDIENCES: ContentAudience[] = [
+  "PARTNER",
+  "STARTUP",
+  "BOTH",
+];
+
+export const CONTENT_AUDIENCE_LABELS: Record<ContentAudience, string> = {
+  PARTNER: "Partner",
+  STARTUP: "Startups",
+  BOTH: "Alle",
+};
+
+// ---------------------------------------------------------------------------
+// Venture credits
+// ---------------------------------------------------------------------------
+
+export const CREDIT_TX_TYPES: CreditTxType[] = [
+  "GRANT",
+  "SPEND",
+  "ADJUSTMENT",
+];
+
+export const CREDIT_TX_TYPE_LABELS: Record<CreditTxType, string> = {
+  GRANT: "Gutschrift",
+  SPEND: "Verbrauch",
+  ADJUSTMENT: "Korrektur",
+};

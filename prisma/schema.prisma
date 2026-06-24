@@ -111,6 +111,51 @@ enum IntroStatus {
   CONNECTED
 }
 
+// --- Partner/Startup-SSOT & Screening platform (Plan: partner-startup-ssot) ---
+
+enum PartnerVerdict {
+  PENDING  // noch nicht entschieden
+  CONTINUE // „spannend, weitermachen"
+  PASS     // „nicht weiter"
+}
+
+enum SourceType {
+  INBOUND
+  OUTBOUND
+}
+
+enum ReminderStatus {
+  SCHEDULED
+  SENT
+  DONE
+  CANCELLED
+}
+
+enum EngagementStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum RoadmapStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+}
+
+enum ContentAudience {
+  PARTNER
+  STARTUP
+  BOTH
+}
+
+enum CreditTxType {
+  GRANT      // Gutschrift
+  SPEND      // Verbrauch
+  ADJUSTMENT // Korrektur
+}
+
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------
@@ -138,6 +183,16 @@ model User {
   authoredUpdates    StartupUpdate[]           @relation("UpdateAuthor")
   introRequests      IntroRequest[]            @relation("IntroInvestor")
   handledIntros      IntroRequest[]            @relation("IntroHandler")
+
+  // Partner/Startup-SSOT
+  partnerReviews     PartnerStartupReview[]    @relation("PartnerReviewer")
+  screenedStartups   Startup[]                 @relation("StartupScreener")
+  pushesReceived     StartupPush[]             @relation("PushPartner")
+  pushesAuthored     StartupPush[]             @relation("PushAuthor")
+  checkInReminders   CheckInReminder[]         @relation("ReminderPartner")
+  partnerEngagements Engagement[]              @relation("EngagementPartner")
+  createdEngagements Engagement[]              @relation("EngagementCreator")
+  creditTxAuthored   CreditTransaction[]       @relation("CreditTxAuthor")
 
   @@index([role])
   @@index([isActive])
@@ -188,6 +243,18 @@ model Startup {
   isPublished    Boolean   @default(false)
   publishedAt    DateTime?
 
+  // Sourcing provenance (Inbound vs. Outbound screening data).
+  sourceType   SourceType?
+  sourceDetail String?     // e.g. "Glassdollar", "Inbound-Form", referrer
+
+  // Polina "Erst-Einordnung" — lightweight, kept separate from deep scoring
+  // (Variante A from the plan: fields directly on the Startup).
+  screenSummary        String?
+  screenRecommendation Recommendation?
+  screenedAt           DateTime?
+  screenedById         String?
+  screenedBy           User?           @relation("StartupScreener", fields: [screenedById], references: [id], onDelete: SetNull)
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -205,12 +272,20 @@ model Startup {
   updates       StartupUpdate[]
   introRequests IntroRequest[]
 
+  // Partner/Startup-SSOT
+  partnerReviews PartnerStartupReview[]
+  pushes         StartupPush[]
+  reminders      CheckInReminder[]
+  engagements    Engagement[]
+  creditAccount  CreditAccount?
+
   @@index([name])
   @@index([industry])
   @@index([pipelineStage])
   @@index([radarQuadrant, radarRing])
   @@index([stage])
   @@index([isPublished])
+  @@index([sourceType])
 }
 
 model Contact {
@@ -292,7 +367,8 @@ model Challenge {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  applications ChallengeApplication[]
+  applications   ChallengeApplication[]
+  partnerReviews PartnerStartupReview[]
 
   @@index([status])
   @@index([createdById])
@@ -450,4 +526,168 @@ model IntroRequest {
   @@index([startupId])
   @@index([investorId])
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Screening — partner verdict feedback (central screening signal)
+// ---------------------------------------------------------------------------
+
+model PartnerStartupReview {
+  id          String         @id @default(cuid())
+  partnerId   String
+  partner     User           @relation("PartnerReviewer", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId   String
+  startup     Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  challengeId String? // optional Use-Case reference (Journey 1b)
+  challenge   Challenge?     @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  verdict     PartnerVerdict @default(PENDING)
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([partnerId, startupId, challengeId])
+  @@index([startupId])
+  @@index([partnerId])
+  @@index([challengeId])
+  @@index([verdict])
+}
+
+// ---------------------------------------------------------------------------
+// Accelerator-independent push + automated check-in reminders
+// ---------------------------------------------------------------------------
+
+model StartupPush {
+  id         String   @id @default(cuid())
+  partnerId  String
+  partner    User     @relation("PushPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId  String
+  startup    Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  pushedById String
+  pushedBy   User     @relation("PushAuthor", fields: [pushedById], references: [id], onDelete: Cascade)
+  context    String?
+  createdAt  DateTime @default(now())
+
+  reminders CheckInReminder[]
+
+  @@unique([partnerId, startupId])
+  @@index([partnerId])
+  @@index([startupId])
+}
+
+model CheckInReminder {
+  id        String         @id @default(cuid())
+  partnerId String
+  partner   User           @relation("ReminderPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId String?
+  startup   Startup?       @relation(fields: [startupId], references: [id], onDelete: SetNull)
+  pushId    String?
+  push      StartupPush?   @relation(fields: [pushId], references: [id], onDelete: SetNull)
+  dueAt     DateTime
+  status    ReminderStatus @default(SCHEDULED)
+  sentAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([status, dueAt])
+  @@index([partnerId])
+}
+
+// ---------------------------------------------------------------------------
+// Accelerator-independent collaboration ("Engagement" — Oberbegriff für PoC)
+// ---------------------------------------------------------------------------
+
+model Engagement {
+  id          String           @id @default(cuid())
+  partnerId   String
+  partner     User             @relation("EngagementPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId   String
+  startup     Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  title       String
+  status      EngagementStatus @default(ACTIVE)
+  kpis        Json             @default("[]") // [{ name, target, current, unit }]
+  milestones  Json             @default("[]") // [{ title, dueDate, done }]
+  startDate   DateTime?
+  endDate     DateTime?
+  notes       String?
+  createdById String
+  createdBy   User             @relation("EngagementCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([partnerId])
+  @@index([startupId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Partner-SSOT content (Notion replacement)
+// ---------------------------------------------------------------------------
+
+model RoadmapItem {
+  id        String          @id @default(cuid())
+  title     String
+  body      String?
+  phase     String? // e.g. "Q3 2026" / batch name
+  status    RoadmapStatus   @default(PLANNED)
+  audience  ContentAudience @default(PARTNER)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([audience])
+  @@index([status])
+}
+
+model ContentPage {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  body        String // Markdown
+  audience    ContentAudience @default(PARTNER)
+  isPublished Boolean         @default(false)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([audience])
+  @@index([isPublished])
+}
+
+model MediaAsset {
+  id        String          @id @default(cuid())
+  name      String
+  url       String
+  type      AttachmentType  @default(DOCUMENT)
+  audience  ContentAudience @default(PARTNER)
+  createdAt DateTime        @default(now())
+
+  @@index([audience])
+}
+
+// ---------------------------------------------------------------------------
+// Venture Credit System (Startup-Venture-Platform)
+// ---------------------------------------------------------------------------
+
+model CreditAccount {
+  id        String   @id @default(cuid())
+  startupId String   @unique
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  balance   Int      @default(0) // cached running total of transactions
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions CreditTransaction[]
+}
+
+model CreditTransaction {
+  id          String        @id @default(cuid())
+  accountId   String
+  account     CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type        CreditTxType
+  amount      Int // positive = grant, negative = spend
+  reason      String
+  createdById String?
+  createdBy   User?         @relation("CreditTxAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+
+  @@index([accountId, createdAt])
 }

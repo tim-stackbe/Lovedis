@@ -16,6 +16,7 @@ import type {
   PipelineStage,
   RadarQuadrant,
   RadarRing,
+  Recommendation,
   ScoreDimension,
   StartupStage,
 } from "../src/generated/prisma/enums";
@@ -48,6 +49,12 @@ interface StartupSeed {
   radarQuadrant?: RadarQuadrant;
   radarRing?: RadarRing;
   scores?: Partial<Record<ScoreDimension, number>>;
+  // Sourcing provenance (Inbound/Outbound screening data)
+  sourceType?: "INBOUND" | "OUTBOUND";
+  sourceDetail?: string;
+  // Polina "Erst-Einordnung" (lightweight screening)
+  screenSummary?: string;
+  screenRecommendation?: Recommendation;
   // Curated public storefront (marketplace)
   published?: boolean;
   tagline?: string;
@@ -73,6 +80,11 @@ const STARTUPS: StartupSeed[] = [
     pipelineStage: "PILOT",
     radarQuadrant: "AI_DATA",
     radarRing: "ADOPT",
+    sourceType: "OUTBOUND",
+    sourceDetail: "Glassdollar",
+    screenSummary:
+      "Starker Founder-Market-Fit, klarer Industriebezug. Sehr relevant für unsere Automatisierungs-Partner — weiterverfolgen.",
+    screenRecommendation: "STRONG_YES",
     scores: {
       MARKET: 5, PRODUCT: 4, TRACTION: 4, COMPETITIVE_POSITION: 4,
       TEAM: 5, BUSINESS_MODEL: 4, STRATEGIC_FIT: 5,
@@ -127,6 +139,11 @@ const STARTUPS: StartupSeed[] = [
     pipelineStage: "IN_EVALUATION",
     radarQuadrant: "CLIMATE_ENERGY",
     radarRing: "ASSESS",
+    sourceType: "INBOUND",
+    sourceDetail: "Inbound-Form",
+    screenSummary:
+      "Spannende Technologie, aber sehr früh und Traktion fehlt. Für einen Partner-Piloten noch zu unreif — beobachten.",
+    screenRecommendation: "MAYBE",
     scores: {
       MARKET: 5, PRODUCT: 2, TRACTION: 1, COMPETITIVE_POSITION: 3,
       TEAM: 4, BUSINESS_MODEL: 2, STRATEGIC_FIT: 4,
@@ -234,6 +251,11 @@ const STARTUPS: StartupSeed[] = [
     pipelineStage: "SCREENING",
     radarQuadrant: "INDUSTRY_40",
     radarRing: "ASSESS",
+    sourceType: "OUTBOUND",
+    sourceDetail: "Glassdollar",
+    screenSummary:
+      "Herstellerübergreifende Schwarmkoordination ist ein echtes Differenzierungsmerkmal. Passt zu mehreren Logistik-Partnern.",
+    screenRecommendation: "YES",
     scores: {
       MARKET: 4, PRODUCT: 3, TRACTION: 2, COMPETITIVE_POSITION: 3,
       TEAM: 5, BUSINESS_MODEL: 3, STRATEGIC_FIT: 4,
@@ -340,6 +362,15 @@ async function main() {
   console.log("Datenbank wird geseedet…");
 
   // Wipe in dependency order (idempotent re-seeds).
+  await prisma.creditTransaction.deleteMany();
+  await prisma.creditAccount.deleteMany();
+  await prisma.mediaAsset.deleteMany();
+  await prisma.contentPage.deleteMany();
+  await prisma.roadmapItem.deleteMany();
+  await prisma.engagement.deleteMany();
+  await prisma.checkInReminder.deleteMany();
+  await prisma.startupPush.deleteMany();
+  await prisma.partnerStartupReview.deleteMany();
   await prisma.introRequest.deleteMany();
   await prisma.startupUpdate.deleteMany();
   await prisma.startupFollow.deleteMany();
@@ -478,6 +509,16 @@ async function main() {
         seekingAmount: s.seekingAmount ?? null,
         isPublished: s.published ?? false,
         publishedAt: s.published ? new Date() : null,
+        // Sourcing provenance: alternate inbound/outbound for a realistic mix.
+        sourceType: s.sourceType ?? (i % 2 === 0 ? "OUTBOUND" : "INBOUND"),
+        sourceDetail:
+          s.sourceDetail ??
+          (i % 2 === 0 ? "Glassdollar" : "Inbound-Form"),
+        // Polina-Erst-Einordnung (only where curated).
+        screenSummary: s.screenSummary ?? null,
+        screenRecommendation: s.screenRecommendation ?? null,
+        screenedAt: s.screenSummary ? new Date() : null,
+        screenedById: s.screenSummary ? member.id : null,
         campaignId: i % 3 === 0 ? campaign.id : i % 3 === 1 ? campaign2.id : null,
         ownerUserId: s.name === "NeuralForge" ? startupUser.id : null,
       },
@@ -996,6 +1037,258 @@ async function main() {
       message: "Spannender Knowledge-Graph-Ansatz — bitte um eine Einführung.",
       status: "APPROVED",
       handledById: admin.id,
+    },
+  });
+
+  // --- Partner verdicts (screening feedback) -------------------------------
+  const roboHive = byName("RoboHive");
+  await prisma.partnerStartupReview.createMany({
+    data: [
+      {
+        partnerId: partner.id,
+        startupId: neuralForge.id,
+        verdict: "CONTINUE",
+        note: "Sehr relevant für unsere Stanzlinien — bitte Erstgespräch aufsetzen.",
+      },
+      {
+        partnerId: partner.id,
+        startupId: factoryPulse.id,
+        verdict: "CONTINUE",
+        note: "Akustik-Ansatz überzeugt, läuft bereits als PoC.",
+      },
+      {
+        partnerId: partner.id,
+        startupId: carbonLoom.id,
+        verdict: "PASS",
+        note: "Spannend, aber zu früh und zu weit weg von unserem Kerngeschäft.",
+      },
+      {
+        partnerId: partner2.id,
+        startupId: voltaic.id,
+        verdict: "CONTINUE",
+        note: "Genau unser Energie-Use-Case.",
+      },
+      {
+        partnerId: partner2.id,
+        startupId: roboHive.id,
+        verdict: "PENDING",
+      },
+      // Use-Case-bezogenes Verdikt (Journey 1b)
+      {
+        partnerId: partner.id,
+        startupId: edgeMind.id,
+        challengeId: challenge3.id,
+        verdict: "CONTINUE",
+        note: "Edge-Inferenz passt exakt zur Schweißnaht-Challenge.",
+      },
+    ],
+  });
+
+  // --- Accelerator-independent push + check-in reminders -------------------
+  const push1 = await prisma.startupPush.create({
+    data: {
+      partnerId: partner2.id,
+      startupId: roboHive.id,
+      pushedById: member.id,
+      context:
+        "Petra, RoboHive könnte eure Mischflotte in Odense koordinieren — schau es dir kurz an.",
+    },
+  });
+  const push2 = await prisma.startupPush.create({
+    data: {
+      partnerId: partner.id,
+      startupId: mediGraph.id,
+      pushedById: member2.id,
+      context: "Datenintegration könnte für euer F&E-Team interessant sein.",
+    },
+  });
+  await prisma.checkInReminder.createMany({
+    data: [
+      // Overdue → cron demo should pick this up.
+      {
+        partnerId: partner2.id,
+        startupId: roboHive.id,
+        pushId: push1.id,
+        dueAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        status: "SCHEDULED",
+      },
+      // Upcoming.
+      {
+        partnerId: partner.id,
+        startupId: mediGraph.id,
+        pushId: push2.id,
+        dueAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        status: "SCHEDULED",
+      },
+      // Already sent (history).
+      {
+        partnerId: partner.id,
+        startupId: neuralForge.id,
+        dueAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        status: "SENT",
+        sentAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      },
+    ],
+  });
+
+  // --- Engagements (accelerator-independent collaboration) -----------------
+  await prisma.engagement.create({
+    data: {
+      partnerId: partner.id,
+      startupId: neuralForge.id,
+      createdById: member.id,
+      title: "Zusammenarbeit — NeuralForge × Rheinwerk (Instandhaltung)",
+      status: "ACTIVE",
+      startDate: new Date("2026-05-01"),
+      notes: "Acc-unabhängige Zusammenarbeit jenseits der laufenden Challenge.",
+      kpis: [
+        { name: "Analysierte SPS-Logs", target: 5000, current: 2100, unit: "Logs" },
+        { name: "Erkannte Fehlermuster", target: 12, current: 5, unit: "Muster" },
+      ],
+      milestones: [
+        { title: "Kick-off & Datenzugang", dueDate: "2026-05-05", done: true },
+        { title: "Erste Musteranalyse", dueDate: "2026-06-01", done: true },
+        { title: "Integration ins Wartungssystem", dueDate: "2026-07-15", done: false },
+      ],
+    },
+  });
+  await prisma.engagement.create({
+    data: {
+      partnerId: partner2.id,
+      startupId: voltaic.id,
+      createdById: member2.id,
+      title: "Zusammenarbeit — Voltaic Grid × Helioswerk (Lastmanagement)",
+      status: "ACTIVE",
+      startDate: new Date("2026-06-10"),
+      kpis: [
+        { name: "Reduzierte Lastspitzen", target: 15, current: 4, unit: "%" },
+      ],
+      milestones: [
+        { title: "Messkonzept abgestimmt", dueDate: "2026-06-20", done: true },
+        { title: "Pilotbetrieb gestartet", dueDate: "2026-07-01", done: false },
+      ],
+    },
+  });
+
+  // --- Partner-SSOT content (Notion replacement) ---------------------------
+  await prisma.roadmapItem.createMany({
+    data: [
+      {
+        title: "Demo Day Industrial AI 2026",
+        body: "Pitch-Event der aktuellen Kohorte vor Partnern und Investoren.",
+        phase: "Q3 2026",
+        status: "IN_PROGRESS",
+        audience: "BOTH",
+        sortOrder: 1,
+      },
+      {
+        title: "Use-Case-Matching-Runde",
+        body: "Zuordnung der ausgewählten Startups zu Partner-Use-Cases.",
+        phase: "Q3 2026",
+        status: "PLANNED",
+        audience: "PARTNER",
+        sortOrder: 2,
+      },
+      {
+        title: "Onboarding Venture Platform",
+        body: "Startups erhalten Zugang zu Roadmap, SSOT-Inhalten und Venture-Credits.",
+        phase: "Q4 2026",
+        status: "PLANNED",
+        audience: "STARTUP",
+        sortOrder: 3,
+      },
+      {
+        title: "PoC-Review & Skalierungsentscheidung",
+        body: "Gemeinsame Bewertung der laufenden Piloten.",
+        phase: "Q4 2026",
+        status: "PLANNED",
+        audience: "PARTNER",
+        sortOrder: 4,
+      },
+    ],
+  });
+  await prisma.contentPage.createMany({
+    data: [
+      {
+        slug: "accelerator-ablauf",
+        title: "So läuft unser Accelerator",
+        body: "## Überblick\n\nUnser Accelerator gliedert sich in **Screening**, **Demo Day**, **Use-Case-Matching** und **PoC-Phase**. Als Partner begleitest du Startups von der ersten Einordnung bis zum messbaren Piloten.\n\n### Deine Rolle\n- Longlist sichten und Verdikte abgeben\n- Use-Cases definieren\n- Piloten gemeinsam tracken",
+        audience: "PARTNER",
+        isPublished: true,
+        sortOrder: 1,
+      },
+      {
+        slug: "venture-platform-guide",
+        title: "Venture Platform für Startups",
+        body: "## Willkommen\n\nHier findest du deine **Roadmap**, **SSOT-Inhalte** und dein **Venture-Guthaben**. Pflege dein Profil aktuell, damit Partner dich optimal einordnen können.",
+        audience: "STARTUP",
+        isPublished: true,
+        sortOrder: 1,
+      },
+      {
+        slug: "media-kit-hinweise",
+        title: "Media-Kit & Markenrichtlinien",
+        body: "Logos, Vorlagen und Markenrichtlinien für gemeinsame Kommunikation. Entwurf — noch nicht veröffentlicht.",
+        audience: "BOTH",
+        isPublished: false,
+        sortOrder: 2,
+      },
+    ],
+  });
+  await prisma.mediaAsset.createMany({
+    data: [
+      {
+        name: "Lovedis Logo-Paket (SVG/PNG)",
+        url: "https://example.com/media/lovedis-logos.zip",
+        type: "DOCUMENT",
+        audience: "BOTH",
+      },
+      {
+        name: "Partner-Onepager 2026",
+        url: "https://example.com/media/partner-onepager-2026.pdf",
+        type: "DOCUMENT",
+        audience: "PARTNER",
+      },
+      {
+        name: "Pitch-Deck-Vorlage",
+        url: "https://example.com/media/pitch-template.pptx",
+        type: "DECK",
+        audience: "STARTUP",
+      },
+    ],
+  });
+
+  // --- Venture Credit System -----------------------------------------------
+  // NeuralForge (the logged-in demo startup) has an active credit account.
+  const nfAccount = await prisma.creditAccount.create({
+    data: { startupId: neuralForge.id, balance: 0 },
+  });
+  const nfTx = [
+    { type: "GRANT" as const, amount: 5000, reason: "Onboarding-Gutschrift Accelerator-Kohorte" },
+    { type: "GRANT" as const, amount: 2000, reason: "Bonus: Demo-Day-Teilnahme" },
+    { type: "SPEND" as const, amount: -1500, reason: "Cloud-Credits (Hosting-Partner)" },
+    { type: "SPEND" as const, amount: -800, reason: "Rechtsberatung (Partner-Kanzlei)" },
+  ];
+  for (const tx of nfTx) {
+    await prisma.creditTransaction.create({
+      data: { accountId: nfAccount.id, createdById: member.id, ...tx },
+    });
+  }
+  await prisma.creditAccount.update({
+    where: { id: nfAccount.id },
+    data: { balance: nfTx.reduce((sum, t) => sum + t.amount, 0) },
+  });
+  // A second account with a fresh grant only.
+  const vgAccount = await prisma.creditAccount.create({
+    data: { startupId: voltaic.id, balance: 3000 },
+  });
+  await prisma.creditTransaction.create({
+    data: {
+      accountId: vgAccount.id,
+      createdById: member2.id,
+      type: "GRANT",
+      amount: 3000,
+      reason: "Onboarding-Gutschrift Accelerator-Kohorte",
     },
   });
 
