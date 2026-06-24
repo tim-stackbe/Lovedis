@@ -11,6 +11,7 @@ import {
   GitCompare,
   Handshake,
   Home,
+  Inbox,
   Kanban,
   ListChecks,
   MessageSquare,
@@ -21,6 +22,7 @@ import {
   Settings,
   Share2,
   Sparkles,
+  Store,
   Target,
   Users,
   type LucideIcon,
@@ -100,6 +102,7 @@ const TEAM_SSOT_SECTION: NavSection = {
     { label: "Push & Check-ins", href: "/pushes", icon: Send },
     { label: "SSOT-Pflege", href: "/hub-admin", icon: BookOpen },
     { label: "Venture-Credits", href: "/credits", icon: Coins },
+    { label: "Marktplatz", href: "/marketplace", icon: Store },
   ],
 };
 
@@ -221,6 +224,8 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       title: "Venture Platform",
       items: [
         { label: "Venture Platform", href: "/venture", icon: Sparkles },
+        { label: "Marktplatz", href: "/venture/marketplace", icon: Store },
+        { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: Inbox },
         { label: "Mein Guthaben", href: "/venture/credits", icon: Coins },
       ],
     },
