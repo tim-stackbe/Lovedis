@@ -12,7 +12,7 @@ import { requirePartner } from "@/lib/auth-guards";
 import {
   rankStartupsForChallenge,
   type StartupForMatch,
-} from "@/lib/matching";
+} from "@/lib/use-case-suggestions";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Use-Case-Bewertung" };

@@ -65,7 +65,6 @@ export async function createEngagement(
   });
 
   revalidatePath("/engagements");
-  revalidatePath("/partners");
   redirect(`/engagements/${engagement.id}`);
 }
 
@@ -142,6 +141,5 @@ export async function updateEngagement(
 
   revalidatePath("/engagements");
   revalidatePath(`/engagements/${engagementId}`);
-  revalidatePath("/partners");
   return { success: "Engagement aktualisiert." };
 }

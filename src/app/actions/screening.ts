@@ -122,6 +122,5 @@ export async function submitPartnerVerdict(
   revalidatePath("/screening");
   revalidatePath("/use-cases");
   revalidatePath("/longlist");
-  revalidatePath("/partners");
   return { success: "Verdikt gespeichert." };
 }
