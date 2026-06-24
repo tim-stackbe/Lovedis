@@ -1,23 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* Lovedis color namespace */
+  /* Lovedis color namespace — calibrated against lovedis.de computed styles */
   --color-lv-blue: #2926e5;
   --color-lv-blue-dark: #1f1cb8;
+  --color-lv-blue-mid: #4f46e5;
   --color-lv-blue-soft: #eeedff;
   --color-lv-orange: #ff5736;
   --color-lv-orange-soft: #ffe7e1;
   --color-lv-mint: #c0fcd8;
   --color-lv-mint-deep: #0e7c4a;
   --color-lv-pink: #ffdbf5;
+  --color-lv-pink-wash: #ffe5f8;
   --color-lv-yellow: #ffe9a8;
   --color-lv-yellow-deep: #7a5a00;
   --color-lv-surface: #f4f4f8;
   --color-lv-border: #e5e5ee;
+  --color-lv-ink: #000000;
   --color-lv-text: #0a0a0f;
   --color-lv-secondary: #6b6b7b;
 
-  --radius-card: 16px;
+  --radius-card: 18px;
   --radius-button: 12px;
 
   --shadow-card: 0 1px 2px rgba(10, 10, 15, 0.04),
@@ -30,6 +33,21 @@
     #ff5736 130%
   );
 
+  /* Soft pink/lilac wash echoing the marketing hero backgrounds */
+  --background-image-lv-wash: radial-gradient(
+      120% 120% at 100% 0%,
+      rgba(255, 219, 245, 0.5) 0%,
+      rgba(255, 219, 245, 0) 45%
+    ),
+    radial-gradient(
+      120% 120% at 0% 0%,
+      rgba(238, 237, 255, 0.6) 0%,
+      rgba(238, 237, 255, 0) 40%
+    );
+
+  /* Greed Standard (commercial Displaay face) on lovedis.de → Space Grotesk substitute */
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif,
+    system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -44,16 +62,34 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Display face for headings, echoing the bold grotesque of lovedis.de */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
 ::selection {
   background: var(--color-lv-blue);
   color: #ffffff;
 }
 
-/* Wordmark treatment: uppercase, heavy, widely tracked */
+/* Kicker / eyebrow labels: uppercase, tracked, like the marketing section tags */
 .lv-wordmark {
+  font-family: var(--font-display);
   text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: 0.18em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+/* The LOVEDIS logotype: heavy, tight, display — like the marketing wordmark */
+.lv-logotype {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 /* Thin scrollbars for kanban lanes etc. */

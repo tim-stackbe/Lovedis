@@ -7,15 +7,15 @@ interface WordmarkProps {
 }
 
 const SIZE_CLASSES = {
-  sm: "text-xs gap-1.5",
-  md: "text-sm gap-2",
-  lg: "text-lg gap-2.5",
+  sm: "text-sm gap-1.5",
+  md: "text-lg gap-2",
+  lg: "text-2xl gap-2.5",
 };
 
 const DOT_SIZES = {
   sm: "w-2 h-2",
   md: "w-2.5 h-2.5",
-  lg: "w-3 h-3",
+  lg: "w-3.5 h-3.5",
 };
 
 export function Wordmark({
@@ -26,9 +26,9 @@ export function Wordmark({
   return (
     <span
       className={cn(
-        "lv-wordmark inline-flex items-center",
+        "lv-logotype inline-flex items-center leading-none",
         SIZE_CLASSES[size],
-        variant === "light" ? "text-white" : "text-lv-text",
+        variant === "light" ? "text-white" : "text-lv-blue",
         className
       )}
     >

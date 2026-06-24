@@ -42,7 +42,7 @@ export function AppShell({ userName, role, startups, children }: AppShellProps) 
           onOpenMenu={() => setMobileOpen(true)}
           onOpenPalette={() => setPaletteOpen(true)}
         />
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="flex-1 bg-lv-wash px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-6xl space-y-8">{children}</div>
         </main>
       </div>
