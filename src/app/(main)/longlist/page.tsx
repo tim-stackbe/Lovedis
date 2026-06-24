@@ -1,4 +1,4 @@
-import { ListChecks } from "lucide-react";
+import { ListChecks, Plus } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@/generated/prisma/client";
@@ -9,6 +9,7 @@ import {
   RecommendationBadge,
   SourceTypeBadge,
 } from "@/components/shared/badges";
+import { LinkButton } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
@@ -107,6 +108,12 @@ export default async function LonglistPage({
         kicker="Screening"
         title="Longlist"
         subtitle="Gescoutete Startups je Batch — Erst-Einordnung erfassen und Partner-Feedback nachverfolgen. Interne Sicht."
+        actions={
+          <LinkButton href="/startups/new" variant="white">
+            <Plus className="h-4 w-4" />
+            Neues Startup anlegen
+          </LinkButton>
+        }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
           <BannerStat label="Startups" value={startups.length} />
@@ -158,7 +165,13 @@ export default async function LonglistPage({
         <EmptyState
           icon={ListChecks}
           title="Keine Startups in dieser Auswahl"
-          description="Passe die Batch- oder Pipeline-Filter an, um Kandidaten zu sehen."
+          description="Passe die Batch- oder Pipeline-Filter an, oder lege ein neues Startup für die Longlist an."
+          action={
+            <LinkButton href="/startups/new">
+              <Plus className="h-4 w-4" />
+              Neues Startup anlegen
+            </LinkButton>
+          }
         />
       ) : (
         <TableCard>

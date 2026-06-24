@@ -72,6 +72,11 @@ export default async function StartupDetailPage({
   });
   if (!startup) notFound();
 
+  const campaigns = await prisma.scoutingCampaign.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+
   const latest = startup.evaluations[0];
 
   return (
@@ -430,7 +435,7 @@ export default async function StartupDetailPage({
 
       <section className="space-y-4">
         <SectionLabel number="05" label="Verwalten" title="Startup bearbeiten" />
-        <StartupForm startup={startup} />
+        <StartupForm startup={startup} campaigns={campaigns} />
         <div className="flex justify-end">
           <form action={deleteStartup.bind(null, startup.id)}>
             <Button type="submit" variant="danger" size="sm">

@@ -27,9 +27,10 @@ import {
 
 interface StartupFormProps {
   startup?: Startup;
+  campaigns?: { id: string; name: string }[];
 }
 
-export function StartupForm({ startup }: StartupFormProps) {
+export function StartupForm({ startup, campaigns = [] }: StartupFormProps) {
   const action = startup
     ? updateStartup.bind(null, startup.id)
     : createStartup;
@@ -190,6 +191,21 @@ export function StartupForm({ startup }: StartupFormProps) {
             </Select>
           </Field>
         </div>
+
+        <Field label="Batch / Scouting-Kampagne" htmlFor="campaignId">
+          <Select
+            id="campaignId"
+            name="campaignId"
+            defaultValue={startup?.campaignId ?? ""}
+          >
+            <option value="">— Keinem Batch zugeordnet —</option>
+            {campaigns.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
 
         {state?.error && <ErrorChip>{state.error}</ErrorChip>}
         {state?.success && <SuccessChip>{state.success}</SuccessChip>}

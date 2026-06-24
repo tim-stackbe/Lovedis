@@ -37,6 +37,7 @@ const startupSchema = z.object({
     .enum(RADAR_QUADRANTS as [RadarQuadrant, ...RadarQuadrant[]])
     .optional(),
   radarRing: z.enum(RADAR_RINGS as [RadarRing, ...RadarRing[]]).optional(),
+  campaignId: z.string().min(1).optional(),
 });
 
 function parseStartupForm(formData: FormData) {
@@ -54,6 +55,7 @@ function parseStartupForm(formData: FormData) {
     pipelineStage: formData.get("pipelineStage") ?? "DISCOVERED",
     radarQuadrant: formData.get("radarQuadrant") || undefined,
     radarRing: formData.get("radarRing") || undefined,
+    campaignId: formData.get("campaignId") || undefined,
   });
 }
 
@@ -69,6 +71,7 @@ export async function createStartup(
     data: { ...parsed.data, website: parsed.data.website || null },
   });
   revalidatePath("/startups");
+  revalidatePath("/longlist");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
   redirect(`/startups/${startup.id}`);
@@ -90,10 +93,12 @@ export async function updateStartup(
       website: parsed.data.website || null,
       radarQuadrant: parsed.data.radarQuadrant ?? null,
       radarRing: parsed.data.radarRing ?? null,
+      campaignId: parsed.data.campaignId ?? null,
     },
   });
   revalidatePath("/startups");
   revalidatePath(`/startups/${startupId}`);
+  revalidatePath("/longlist");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
   return { success: "Startup aktualisiert." };

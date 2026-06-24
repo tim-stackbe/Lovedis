@@ -8,15 +8,19 @@ import {
   Coins,
   Compass,
   FlaskConical,
+  GitCompare,
   Handshake,
   Home,
   Inbox,
+  Kanban,
   ListChecks,
   MessageSquare,
   Newspaper,
+  Radar,
   Rocket,
   Send,
   Settings,
+  Share2,
   Sparkles,
   Store,
   Target,
@@ -87,6 +91,23 @@ export interface NavSection {
 }
 
 /**
+ * Internal Venture Scout module: the scouting desk where the team creates and
+ * curates startup entries (the input masks that feed the Longlist), evaluates
+ * them, and tracks pipeline/radar/reports.
+ */
+const SCOUT_SECTION: NavSection = {
+  title: "Venture Scout",
+  items: [
+    { label: "Startups", href: "/startups", icon: Rocket },
+    { label: "Bewertungen", href: "/evaluations", icon: BarChart3 },
+    { label: "Vergleich", href: "/compare", icon: GitCompare },
+    { label: "Pipeline", href: "/pipeline", icon: Kanban },
+    { label: "Radar", href: "/radar", icon: Radar },
+    { label: "Berichte", href: "/reports", icon: Share2 },
+  ],
+};
+
+/**
  * Screening & SSOT workflows owned by the internal team. These create the
  * curated data (Erst-Einordnung screening, pushes, engagements, SSOT content, credits)
  * that partners and startups consume through their low-overload views.
@@ -127,6 +148,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
     },
+    SCOUT_SECTION,
     TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
     SETTINGS_SECTION,
@@ -135,6 +157,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
+    SCOUT_SECTION,
     TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
     SETTINGS_SECTION,
