@@ -1,13 +1,16 @@
 import type {
   ApplicationStatus,
+  BookingStatus,
   ChallengeStatus,
   ContentAudience,
   CreditTxType,
   EngagementStatus,
   IntroStatus,
+  MarketplaceOfferingType,
   PartnerVerdict,
   PipelineStage,
   PoCStatus,
+  ProgramStatus,
   RadarQuadrant,
   RadarRing,
   Recommendation,
@@ -16,6 +19,7 @@ import type {
   ScoreDimension,
   SourceType,
   StartupStage,
+  SupportCategory,
   UpdateCategory,
 } from "@/generated/prisma/enums";
 
@@ -386,4 +390,67 @@ export const CREDIT_TX_TYPE_LABELS: Record<CreditTxType, string> = {
   GRANT: "Gutschrift",
   SPEND: "Verbrauch",
   ADJUSTMENT: "Korrektur",
+};
+
+// ---------------------------------------------------------------------------
+// Startup-Marktplatz — Angebotstypen, Support-Kategorien, Programm-/Buchungsstatus
+// ---------------------------------------------------------------------------
+
+export const MARKETPLACE_OFFERING_TYPES: MarketplaceOfferingType[] = [
+  "PROGRAM",
+  "MENTOR_SESSION",
+  "SUPPORT",
+];
+
+export const MARKETPLACE_OFFERING_TYPE_LABELS: Record<
+  MarketplaceOfferingType,
+  string
+> = {
+  PROGRAM: "Programm",
+  MENTOR_SESSION: "Mentor:innen-Session",
+  SUPPORT: "Support-Angebot",
+};
+
+export const SUPPORT_CATEGORIES: SupportCategory[] = [
+  "FUNDRAISING",
+  "LEGAL",
+  "MARKETING",
+  "PRODUCT_TECH",
+  "SALES",
+  "OTHER",
+];
+
+export const SUPPORT_CATEGORY_LABELS: Record<SupportCategory, string> = {
+  FUNDRAISING: "Fundraising",
+  LEGAL: "Legal",
+  MARKETING: "Marketing",
+  PRODUCT_TECH: "Product & Tech",
+  SALES: "Sales",
+  OTHER: "Sonstiges",
+};
+
+export const PROGRAM_STATUSES: ProgramStatus[] = ["DRAFT", "OPEN", "CLOSED"];
+
+export const PROGRAM_STATUS_LABELS: Record<ProgramStatus, string> = {
+  DRAFT: "Entwurf",
+  OPEN: "Offen",
+  CLOSED: "Geschlossen",
+};
+
+export const BOOKING_STATUSES: BookingStatus[] = [
+  "REQUESTED",
+  "IN_COORDINATION",
+  "CONFIRMED",
+  "COMPLETED",
+  "DECLINED",
+  "CANCELLED",
+];
+
+export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  REQUESTED: "Angefragt",
+  IN_COORDINATION: "In Koordination",
+  CONFIRMED: "Bestätigt",
+  COMPLETED: "Abgeschlossen",
+  DECLINED: "Abgelehnt",
+  CANCELLED: "Storniert",
 };

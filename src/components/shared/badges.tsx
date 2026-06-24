@@ -1,35 +1,43 @@
 import type {
   ApplicationStatus,
+  BookingStatus,
   ChallengeStatus,
   ContentAudience,
   CreditTxType,
   EngagementStatus,
   IntroStatus,
+  MarketplaceOfferingType,
   PartnerVerdict,
   PipelineStage,
   PoCStatus,
+  ProgramStatus,
   Recommendation,
   ReminderStatus,
   RoadmapStatus,
   SourceType,
+  SupportCategory,
   UpdateCategory,
 } from "@/generated/prisma/enums";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import {
   APPLICATION_STATUS_LABELS,
+  BOOKING_STATUS_LABELS,
   CHALLENGE_STATUS_LABELS,
   CONTENT_AUDIENCE_LABELS,
   CREDIT_TX_TYPE_LABELS,
   ENGAGEMENT_STATUS_LABELS,
   INTRO_STATUS_LABELS,
+  MARKETPLACE_OFFERING_TYPE_LABELS,
   PARTNER_VERDICT_LABELS,
   PIPELINE_STAGE_LABELS,
   POC_STATUS_LABELS,
+  PROGRAM_STATUS_LABELS,
   QUADRANT_LABELS,
   RECOMMENDATION_LABELS,
   REMINDER_STATUS_LABELS,
   ROADMAP_STATUS_LABELS,
   SOURCE_TYPE_LABELS,
+  SUPPORT_CATEGORY_LABELS,
   UPDATE_CATEGORY_LABELS,
   type Quadrant,
 } from "@/lib/constants";
@@ -242,6 +250,59 @@ export function CreditTxTypeBadge({ value }: { value: CreditTxType }) {
   return (
     <Badge tone={CREDIT_TX_TYPE_TONES[value]}>
       {CREDIT_TX_TYPE_LABELS[value]}
+    </Badge>
+  );
+}
+
+const BOOKING_STATUS_TONES: Record<BookingStatus, BadgeTone> = {
+  REQUESTED: "yellow",
+  IN_COORDINATION: "blue",
+  CONFIRMED: "mint",
+  COMPLETED: "mint",
+  DECLINED: "orange",
+  CANCELLED: "muted",
+};
+
+export function BookingStatusBadge({ value }: { value: BookingStatus }) {
+  return (
+    <Badge tone={BOOKING_STATUS_TONES[value]}>
+      {BOOKING_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const OFFERING_TYPE_TONES: Record<MarketplaceOfferingType, BadgeTone> = {
+  PROGRAM: "pink",
+  MENTOR_SESSION: "blue",
+  SUPPORT: "mint",
+};
+
+export function OfferingTypeBadge({
+  value,
+}: {
+  value: MarketplaceOfferingType;
+}) {
+  return (
+    <Badge tone={OFFERING_TYPE_TONES[value]}>
+      {MARKETPLACE_OFFERING_TYPE_LABELS[value]}
+    </Badge>
+  );
+}
+
+export function SupportCategoryBadge({ value }: { value: SupportCategory }) {
+  return <Badge tone="blue">{SUPPORT_CATEGORY_LABELS[value]}</Badge>;
+}
+
+const PROGRAM_STATUS_TONES: Record<ProgramStatus, BadgeTone> = {
+  DRAFT: "muted",
+  OPEN: "mint",
+  CLOSED: "orange",
+};
+
+export function ProgramStatusBadge({ value }: { value: ProgramStatus }) {
+  return (
+    <Badge tone={PROGRAM_STATUS_TONES[value]}>
+      {PROGRAM_STATUS_LABELS[value]}
     </Badge>
   );
 }

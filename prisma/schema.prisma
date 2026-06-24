@@ -156,6 +156,38 @@ enum CreditTxType {
   ADJUSTMENT // Korrektur
 }
 
+// --- Startup-Marktplatz (Plan: plan-startup-marketplace) ---
+
+enum MarketplaceOfferingType {
+  PROGRAM        // Exklusive Programme — 0 Credits
+  MENTOR_SESSION // Mentor:innen-Netzwerk — Credits
+  SUPPORT        // Individuelle Support-Angebote — Credits
+}
+
+enum SupportCategory {
+  FUNDRAISING
+  LEGAL
+  MARKETING
+  PRODUCT_TECH
+  SALES
+  OTHER
+}
+
+enum ProgramStatus {
+  DRAFT
+  OPEN   // im Marktplatz sichtbar/anfragbar
+  CLOSED
+}
+
+enum BookingStatus {
+  REQUESTED       // Startup hat angefragt
+  IN_COORDINATION // LOVEDIS koordiniert mit Partner/Mentor
+  CONFIRMED       // Termin bestätigt → Credits werden eingelöst
+  COMPLETED       // Session/Workshop fand statt
+  DECLINED        // Team lehnt ab (kein Credit-Abzug)
+  CANCELLED       // Startup/Team storniert (ggf. Rückbuchung)
+}
+
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------
@@ -193,6 +225,12 @@ model User {
   partnerEngagements Engagement[]              @relation("EngagementPartner")
   createdEngagements Engagement[]              @relation("EngagementCreator")
   creditTxAuthored   CreditTransaction[]       @relation("CreditTxAuthor")
+
+  // Startup-Marktplatz
+  programsCreated    Program[]            @relation("ProgramCreator")
+  mentorProfile      MentorProfile?       @relation("MentorUser")
+  bookingsRequested  MarketplaceBooking[] @relation("BookingRequester")
+  bookingsHandled    MarketplaceBooking[] @relation("BookingHandler")
 
   @@index([role])
   @@index([isActive])
@@ -278,6 +316,9 @@ model Startup {
   reminders      CheckInReminder[]
   engagements    Engagement[]
   creditAccount  CreditAccount?
+
+  // Startup-Marktplatz
+  bookings       MarketplaceBooking[]
 
   @@index([name])
   @@index([industry])
@@ -689,5 +730,117 @@ model CreditTransaction {
   createdBy   User?         @relation("CreditTxAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime      @default(now())
 
+  // 1:1 back-reference: which marketplace booking triggered this SPEND/refund.
+  redeemedBooking MarketplaceBooking? @relation("BookingRedemption")
+
   @@index([accountId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Startup-Marktplatz — Kataloge (Programme, Mentor:innen, Support-Angebote)
+// + Buchungs-Lifecycle mit Verzahnung in den Venture-Credit-Ledger.
+// ---------------------------------------------------------------------------
+
+model Program {
+  id          String        @id @default(cuid())
+  title       String
+  summary     String
+  description String
+  focusTags   String[]      @default([])
+  status      ProgramStatus @default(DRAFT)
+  sortOrder   Int           @default(0)
+  // Programme sind INKLUSIVE → keine Credits (offeringType=PROGRAM ⇒ creditCost=0).
+  createdById String
+  createdBy   User          @relation("ProgramCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  bookings    MarketplaceBooking[]
+
+  @@index([status])
+}
+
+model MentorProfile {
+  id          String   @id @default(cuid())
+  // Optionaler Login-Bezug: Mentor:in kann ein User-Konto haben.
+  userId      String?  @unique
+  user        User?    @relation("MentorUser", fields: [userId], references: [id], onDelete: SetNull)
+  name        String
+  company     String?
+  role        String?
+  expertise   String[] @default([])
+  bio         String?
+  photoUrl    String?
+  creditCost  Int      @default(0)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings    MarketplaceBooking[]
+
+  @@index([isActive])
+}
+
+model SupportOffering {
+  id          String          @id @default(cuid())
+  title       String
+  category    SupportCategory @default(OTHER)
+  summary     String
+  description String
+  format      String?
+  creditCost  Int             @default(0)
+  isActive    Boolean         @default(true)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  bookings    MarketplaceBooking[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model MarketplaceBooking {
+  id            String                  @id @default(cuid())
+  offeringType  MarketplaceOfferingType
+  status        BookingStatus           @default(REQUESTED)
+
+  // Anfragendes Startup (Self-Service)
+  startupId     String
+  startup       Startup                 @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  requestedById String
+  requestedBy   User                    @relation("BookingRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  // Genau EINE Ziel-Referenz ist gesetzt (je nach offeringType).
+  programId     String?
+  program       Program?                @relation(fields: [programId], references: [id], onDelete: SetNull)
+  mentorId      String?
+  mentor        MentorProfile?          @relation(fields: [mentorId], references: [id], onDelete: SetNull)
+  offeringId    String?
+  offering      SupportOffering?        @relation(fields: [offeringId], references: [id], onDelete: SetNull)
+
+  // Anfrage-Formular
+  message       String
+  contactName   String
+  contactEmail  String
+  preferredAt   String?
+
+  // Preis-Snapshot bei Anfrage (Programme: 0). Erst bei CONFIRMED entsteht die
+  // SPEND-CreditTransaction; deren id wird hier verlinkt (volle Nachvollziehbarkeit).
+  creditCost          Int                @default(0)
+  creditTransactionId String?            @unique
+  creditTransaction   CreditTransaction? @relation("BookingRedemption", fields: [creditTransactionId], references: [id], onDelete: SetNull)
+
+  // Team-Koordination
+  handledById     String?
+  handledBy       User?                 @relation("BookingHandler", fields: [handledById], references: [id], onDelete: SetNull)
+  coordinatorNote String?
+
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@index([status])
+  @@index([startupId])
+  @@index([offeringType])
 }
