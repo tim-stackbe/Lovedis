@@ -1,32 +1,38 @@
 import { Coins } from "lucide-react";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { CreditTxTypeBadge } from "@/components/shared/badges";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { BannerStat } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireStartup } from "@/lib/auth-guards";
+import { requireVentureView } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Mein Guthaben" };
 
 export default async function VentureCreditsPage() {
-  const session = await requireStartup();
+  const session = await requireVentureView();
+  const teamMode = isTeamRole(session.user.role);
 
-  const startup = await prisma.startup.findUnique({
-    where: { ownerUserId: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      creditAccount: {
-        include: {
-          transactions: { orderBy: { createdAt: "desc" } },
+  const startup = teamMode
+    ? null
+    : await prisma.startup.findUnique({
+        where: { ownerUserId: session.user.id },
+        select: {
+          id: true,
+          name: true,
+          creditAccount: {
+            include: {
+              transactions: { orderBy: { createdAt: "desc" } },
+            },
+          },
         },
-      },
-    },
-  });
+      });
 
   const balance = startup?.creditAccount?.balance ?? 0;
   const transactions = startup?.creditAccount?.transactions ?? [];
@@ -44,7 +50,20 @@ export default async function VentureCreditsPage() {
         </div>
       </HeroBanner>
 
-      {!startup ? (
+      {teamMode ? (
+        <PreviewBanner>
+          Dies ist die persönliche Guthaben-Ansicht eines Startups (für dein
+          Team-Konto leer). Um einem Startup Venture-Credits zu vergeben oder
+          den gesamten Ledger zu verwalten, nutze die{" "}
+          <Link
+            href="/credits"
+            className="font-semibold underline underline-offset-2"
+          >
+            Venture-Credits-Verwaltung
+          </Link>
+          .
+        </PreviewBanner>
+      ) : !startup ? (
         <EmptyState
           icon={Coins}
           title="Kein Startup-Profil"

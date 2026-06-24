@@ -5,13 +5,15 @@ import {
   OfferingTypeBadge,
   SupportCategoryBadge,
 } from "@/components/shared/badges";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireStartup } from "@/lib/auth-guards";
+import { requireVentureView } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Marktplatz" };
 
@@ -32,7 +34,8 @@ function CreditTag({ cost }: { cost: number }) {
 }
 
 export default async function MarketplacePage() {
-  const session = await requireStartup();
+  const session = await requireVentureView();
+  const teamMode = isTeamRole(session.user.role);
 
   const [startup, programs, mentors, offerings] = await Promise.all([
     prisma.startup.findUnique({
@@ -62,18 +65,46 @@ export default async function MarketplacePage() {
         title="Startup-Marktplatz"
         subtitle="Wachse mit exklusiven Programmen, dem Mentor:innen-Netzwerk und individuellen Support-Angeboten — koordiniert vom Lovedis-Team."
         actions={
-          <LinkButton href="/venture/marketplace/requests" variant="white" size="sm">
-            Meine Anfragen
+          <LinkButton
+            href={teamMode ? "/marketplace" : "/venture/marketplace/requests"}
+            variant="white"
+            size="sm"
+          >
+            {teamMode ? "Zur Koordination" : "Meine Anfragen"}
             <ArrowRight className="h-4 w-4" />
           </LinkButton>
         }
       >
         <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
-          <BannerStat label="Guthaben" value={balance} icon={Coins} />
+          {teamMode ? (
+            <BannerStat
+              label="Programme"
+              value={programs.length}
+              icon={GraduationCap}
+            />
+          ) : (
+            <BannerStat label="Guthaben" value={balance} icon={Coins} />
+          )}
           <BannerStat label="Mentor:innen" value={mentors.length} icon={Users} />
           <BannerStat label="Angebote" value={offerings.length} icon={Sparkles} />
         </div>
       </HeroBanner>
+
+      {teamMode && (
+        <PreviewBanner>
+          Dies ist die Storefront, die Startups sehen — mit allen Partner-,
+          Mentor:innen- und Programm-Karten. Über „Details & Anfrage“ kannst du
+          eine Anfrage im Auftrag eines Startups senden. Credits vergibst du
+          unter{" "}
+          <Link
+            href="/credits"
+            className="font-semibold underline underline-offset-2"
+          >
+            Venture-Credits
+          </Link>
+          .
+        </PreviewBanner>
+      )}
 
       {/* Programme ---------------------------------------------------------- */}
       <section className="space-y-4">

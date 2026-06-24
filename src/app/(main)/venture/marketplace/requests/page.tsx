@@ -6,36 +6,43 @@ import {
   BookingStatusBadge,
   OfferingTypeBadge,
 } from "@/components/shared/badges";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireStartup } from "@/lib/auth-guards";
+import { requireVentureView } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Meine Anfragen" };
 
 export default async function MyBookingsPage() {
-  const session = await requireStartup();
+  const session = await requireVentureView();
+  const teamMode = isTeamRole(session.user.role);
 
-  const startup = await prisma.startup.findUnique({
-    where: { ownerUserId: session.user.id },
-    select: { id: true },
-  });
+  const startup = teamMode
+    ? null
+    : await prisma.startup.findUnique({
+        where: { ownerUserId: session.user.id },
+        select: { id: true },
+      });
 
-  const bookings = startup
-    ? await prisma.marketplaceBooking.findMany({
-        where: { startupId: startup.id },
-        orderBy: { createdAt: "desc" },
-        include: {
-          program: { select: { title: true } },
-          mentor: { select: { name: true } },
-          offering: { select: { title: true } },
-        },
-      })
-    : [];
+  const bookings =
+    teamMode || startup
+      ? await prisma.marketplaceBooking.findMany({
+          where: teamMode ? undefined : { startupId: startup!.id },
+          orderBy: { createdAt: "desc" },
+          include: {
+            program: { select: { title: true } },
+            mentor: { select: { name: true } },
+            offering: { select: { title: true } },
+            startup: { select: { name: true } },
+          },
+        })
+      : [];
 
   const open = bookings.filter(
     (b) => b.status === "REQUESTED" || b.status === "IN_COORDINATION"
@@ -48,8 +55,8 @@ export default async function MyBookingsPage() {
     <>
       <HeroBanner
         kicker="Venture Platform"
-        title="Meine Anfragen & Buchungen"
-        subtitle="Status deiner Marktplatz-Anfragen. Credits werden erst nach Bestätigung durch das Lovedis-Team eingelöst."
+        title={teamMode ? "Anfragen & Buchungen (alle Startups)" : "Meine Anfragen & Buchungen"}
+        subtitle="Status der Marktplatz-Anfragen. Credits werden erst nach Bestätigung durch das Lovedis-Team eingelöst."
         actions={
           <LinkButton href="/venture/marketplace" variant="white" size="sm">
             Zum Marktplatz
@@ -62,6 +69,20 @@ export default async function MyBookingsPage() {
           <BannerStat label="Gesamt" value={bookings.length} />
         </div>
       </HeroBanner>
+
+      {teamMode && (
+        <PreviewBanner>
+          Startup-Sicht auf alle Anfragen. Zum Bestätigen, Ablehnen oder
+          Abschließen nutze die{" "}
+          <Link
+            href="/marketplace"
+            className="font-semibold underline underline-offset-2"
+          >
+            Marktplatz-Koordination
+          </Link>
+          .
+        </PreviewBanner>
+      )}
 
       <SectionLabel number="01" label="Übersicht" title="Anfragen" />
       {bookings.length === 0 ? (
@@ -108,6 +129,11 @@ export default async function MyBookingsPage() {
                     </div>
                     <p className="mt-2 font-semibold text-lv-text">
                       {targetName}
+                      {teamMode && b.startup?.name && (
+                        <span className="ml-1.5 font-normal text-lv-secondary">
+                          ← {b.startup.name}
+                        </span>
+                      )}
                     </p>
                     <p className="mt-1 max-w-2xl text-sm text-lv-secondary">
                       „{b.message}“

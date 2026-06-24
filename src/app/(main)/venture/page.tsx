@@ -2,17 +2,20 @@ import { ArrowRight, Coins } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { HubContent } from "@/components/ssot/HubContent";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireStartup } from "@/lib/auth-guards";
+import { requireVentureView } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { audiencesForRole, getHubContent } from "@/lib/ssot";
 
 export const metadata: Metadata = { title: "Venture Platform" };
 
 export default async function VenturePage() {
-  const session = await requireStartup();
+  const session = await requireVentureView();
+  const teamMode = isTeamRole(session.user.role);
 
   const [startup, hub] = await Promise.all([
     prisma.startup.findUnique({
@@ -31,6 +34,21 @@ export default async function VenturePage() {
         title="Deine Venture Platform"
         subtitle="Roadmap, Ressourcen und dein Venture-Guthaben — deine Single Source of Truth für die Zusammenarbeit mit Lovedis."
       />
+
+      {teamMode && (
+        <PreviewBanner>
+          Startup-Sicht auf die Venture Platform. Das Guthaben unten ist die
+          persönliche Startup-Ansicht (für dein Team-Konto leer). Guthaben
+          vergibst und verwaltest du unter{" "}
+          <Link
+            href="/credits"
+            className="font-semibold underline underline-offset-2"
+          >
+            Venture-Credits
+          </Link>
+          .
+        </PreviewBanner>
+      )}
 
       <SectionLabel number="01" label="Guthaben" title="Venture-Credits" />
       <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
