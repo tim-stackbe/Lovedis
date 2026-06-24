@@ -63,3 +63,50 @@ infrastructure boundary:
 - Attio sync (read and/or write-back).
 - Bulk Notion → SSOT content migration.
 - Automatic credit earn/spend rules (currently manual team bookings only).
+
+## Marktplatz-Entscheidungen
+
+The Startup-Marktplatz (`docs/plan-startup-marketplace.md`) was implemented on
+top of — never duplicating — the existing Mara credit ledger
+(`CreditAccount`/`CreditTransaction`). For each open question in the plan's §8
+the simplest working default was chosen and implemented:
+
+| # | Open question | Decision |
+| --- | --- | --- |
+| 1 | **Credit-Preise je Angebot** | Fixed `creditCost` per `MentorProfile`/`SupportOffering`, maintained by the team in `/marketplace/catalog`. Programs are always 0. Seed uses realistic values (Mentor:innen 250–400, Support 200–350). |
+| 2 | **Reservierung vs. Einlösung** | **Redeem-on-confirm** (plan default). At `REQUESTED` only a soft balance check runs (no charge); the authoritative check + `SPEND` happen atomically at `CONFIRMED`. No fourth "reserved" credit state. |
+| 3 | **Helper-Wiederverwendung** | No reusable `spendCredits()` helper exists in Mara (only the `bookCreditTransaction` form action + a private `ensureAccount`). The redemption is therefore implemented inline inside an interactive `prisma.$transaction` in `confirmBooking`, using the **same ledger fields** (`type`, `amount`, `reason`, `createdById`) and the same cached-`balance` convention. |
+| 4 | **Mentor-Datenpflege** | **Team-maintained** via `/marketplace/catalog`. `MentorProfile.userId` exists for optional later partner login but is unused for now (no mentor self-service). |
+| 5 | **Programme: Bewerbung vs. Teilnahme** | Programs are **bookable through the same request flow** but cost **0 credits and create no `CreditTransaction`** (confirmed without touching the ledger). Keeps one unified lifecycle. |
+| 6 | **Storno-Policy** | **100 % refund** when a `CONFIRMED` paid booking is cancelled, posted as a positive `ADJUSTMENT` transaction (atomic with the balance increment). Cancelling before `CONFIRMED` has no credit effect. |
+| 7 | **Sichtbarkeit** | **All `STARTUP` users** see the marketplace. A missing `CreditAccount` is treated as balance 0; the account is auto-created on first redemption (same pattern as the Mara ledger). |
+| 8 | **Mentor↔Angebot-Überschneidung** | **Separate catalogs** (`MentorProfile` vs. `SupportOffering`), as planned. |
+
+### Booking lifecycle & where credits move
+
+`REQUESTED` (soft balance check only) → `IN_COORDINATION` (team takes it) →
+`CONFIRMED` (**credits redeemed here**: `confirmBooking` creates a `SPEND`
+`CreditTransaction(amount = -creditCost)`, decrements `CreditAccount.balance`,
+and links the tx via `MarketplaceBooking.creditTransactionId`, all in one
+`prisma.$transaction`) → `COMPLETED`. Side states: `DECLINED` (no credit
+effect) and `CANCELLED` (**refund here** if it was `CONFIRMED` & paid: a
+positive `ADJUSTMENT` tx + balance increment). Double-charge is prevented by
+only confirming from `IN_COORDINATION`, re-reading status inside the
+transaction, and refusing to confirm when `creditTransactionId` is already set;
+insufficient balance aborts the confirm.
+
+### New surfaces
+
+- Data model: enums `MarketplaceOfferingType`, `SupportCategory`,
+  `ProgramStatus`, `BookingStatus`; models `Program`, `MentorProfile`,
+  `SupportOffering`, `MarketplaceBooking`; back-relations on `User`, `Startup`,
+  `CreditTransaction` (1:1 `redeemedBooking`).
+- Actions: `src/app/actions/marketplace.ts` (`requestBooking`,
+  `takeBookingIntoCoordination`, `confirmBooking`, `completeBooking`,
+  `declineBooking`, `cancelBooking`, catalog CRUD + toggles).
+- Startup pages: `/venture/marketplace`, `/venture/marketplace/{programs,mentors,support}/[id]`,
+  `/venture/marketplace/requests`.
+- Team pages: `/marketplace` (coordination inbox) and `/marketplace/catalog`.
+- Constants label maps + badges (`BookingStatusBadge`, `OfferingTypeBadge`,
+  `SupportCategoryBadge`, `ProgramStatusBadge`); nav entries for STARTUP and
+  ADMIN/MEMBER with role gating (`requireStartup` / `requireTeam`).
