@@ -106,7 +106,7 @@ export default async function LonglistPage({
       <HeroBanner
         kicker="Screening"
         title="Longlist"
-        subtitle="Gescoutete Startups je Batch — Polina-Einordnung erfassen und Partner-Feedback nachverfolgen. Interne Sicht."
+        subtitle="Gescoutete Startups je Batch — Erst-Einordnung erfassen und Partner-Feedback nachverfolgen. Interne Sicht."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
           <BannerStat label="Startups" value={startups.length} />
@@ -168,7 +168,7 @@ export default async function LonglistPage({
               <Th>Batch</Th>
               <Th>Quelle</Th>
               <Th>Pipeline</Th>
-              <Th>Polina</Th>
+              <Th>Einordnung</Th>
               <Th className="text-right">Partner-Verdikte</Th>
             </tr>
           </THead>

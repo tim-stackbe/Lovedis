@@ -24,7 +24,7 @@ import {
   ScorePill,
   SourceTypeBadge,
 } from "@/components/shared/badges";
-import { PolinaScreenForm } from "@/components/screening/PolinaScreenForm";
+import { InitialAssessmentForm } from "@/components/screening/InitialAssessmentForm";
 import { AttachmentForm } from "@/components/startups/AttachmentForm";
 import { ContactForm } from "@/components/startups/ContactForm";
 import { StartupForm } from "@/components/startups/StartupForm";
@@ -215,13 +215,13 @@ export default async function StartupDetailPage({
         <SectionLabel
           number="01b"
           label="Screening"
-          title="Polina-Erst-Einordnung & Partner-Feedback"
+          title="Erst-Einordnung & Partner-Feedback"
         />
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-xs uppercase tracking-wider text-lv-secondary">
-                Polina-Einordnung
+                Erst-Einordnung
               </p>
               <div className="flex items-center gap-2">
                 {startup.sourceType && (
@@ -234,7 +234,7 @@ export default async function StartupDetailPage({
                 )}
               </div>
             </div>
-            <PolinaScreenForm
+            <InitialAssessmentForm
               startupId={startup.id}
               summary={startup.screenSummary}
               recommendation={startup.screenRecommendation}

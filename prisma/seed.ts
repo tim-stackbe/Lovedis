@@ -52,7 +52,7 @@ interface StartupSeed {
   // Sourcing provenance (Inbound/Outbound screening data)
   sourceType?: "INBOUND" | "OUTBOUND";
   sourceDetail?: string;
-  // Polina "Erst-Einordnung" (lightweight screening)
+  // Internal "Erst-Einordnung" (lightweight screening)
   screenSummary?: string;
   screenRecommendation?: Recommendation;
   // Curated public storefront (marketplace)
@@ -518,7 +518,7 @@ async function main() {
         sourceDetail:
           s.sourceDetail ??
           (i % 2 === 0 ? "Glassdollar" : "Inbound-Form"),
-        // Polina-Erst-Einordnung (only where curated).
+        // Erst-Einordnung (only where curated).
         screenSummary: s.screenSummary ?? null,
         screenRecommendation: s.screenRecommendation ?? null,
         screenedAt: s.screenSummary ? new Date() : null,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { savePolinaScreen } from "@/app/actions/screening";
+import { saveInitialAssessment } from "@/app/actions/screening";
 import type { Recommendation } from "@/generated/prisma/enums";
 import { Button } from "@/components/ui/Button";
 import {
@@ -13,23 +13,23 @@ import {
 } from "@/components/ui/Field";
 import { RECOMMENDATION_LABELS, RECOMMENDATION_ORDER } from "@/lib/constants";
 
-interface PolinaScreenFormProps {
+interface InitialAssessmentFormProps {
   startupId: string;
   summary?: string | null;
   recommendation?: Recommendation | null;
 }
 
 /**
- * Team-side capture of Polina's lightweight "Erst-Einordnung": a short
- * summary plus an Ampel/recommendation. Kept separate from the deep scoring.
+ * Team-side capture of the internal team's lightweight "Erst-Einordnung": a
+ * short summary plus an Ampel/recommendation. Kept separate from deep scoring.
  */
-export function PolinaScreenForm({
+export function InitialAssessmentForm({
   startupId,
   summary,
   recommendation,
-}: PolinaScreenFormProps) {
+}: InitialAssessmentFormProps) {
   const [state, formAction, pending] = useActionState(
-    savePolinaScreen,
+    saveInitialAssessment,
     undefined
   );
 

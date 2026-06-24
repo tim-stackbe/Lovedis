@@ -9,11 +9,11 @@ import { PARTNER_VERDICTS, RECOMMENDATION_ORDER } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
-// Polina "Erst-Einordnung" — set by the internal team on a startup. Lightweight
-// and deliberately separate from the deep Evaluation/Score model.
+// Internal team's lightweight "Erst-Einordnung" — set by the internal team on a
+// startup. Deliberately separate from the deep Evaluation/Score model.
 // ---------------------------------------------------------------------------
 
-const polinaSchema = z.object({
+const initialAssessmentSchema = z.object({
   startupId: z.string().min(1),
   summary: z.string().max(2000).optional(),
   recommendation: z
@@ -21,12 +21,12 @@ const polinaSchema = z.object({
     .optional(),
 });
 
-export async function savePolinaScreen(
+export async function saveInitialAssessment(
   _prevState: ActionState | undefined,
   formData: FormData
 ): Promise<ActionState> {
   const session = await requireTeam();
-  const parsed = polinaSchema.safeParse({
+  const parsed = initialAssessmentSchema.safeParse({
     startupId: formData.get("startupId"),
     summary: formData.get("summary") || undefined,
     recommendation: formData.get("recommendation") || undefined,

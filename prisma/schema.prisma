@@ -285,7 +285,7 @@ model Startup {
   sourceType   SourceType?
   sourceDetail String?     // e.g. "Glassdollar", "Inbound-Form", referrer
 
-  // Polina "Erst-Einordnung" — lightweight, kept separate from deep scoring
+  // Internal "Erst-Einordnung" — lightweight, kept separate from deep scoring
   // (Variante A from the plan: fields directly on the Startup).
   screenSummary        String?
   screenRecommendation Recommendation?

@@ -88,7 +88,7 @@ export interface NavSection {
 
 /**
  * Screening & SSOT workflows owned by the internal team. These create the
- * curated data (Polina screening, pushes, engagements, SSOT content, credits)
+ * curated data (Erst-Einordnung screening, pushes, engagements, SSOT content, credits)
  * that partners and startups consume through their low-overload views.
  */
 const TEAM_SSOT_SECTION: NavSection = {
