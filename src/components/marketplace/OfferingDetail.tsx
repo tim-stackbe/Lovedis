@@ -3,9 +3,11 @@ import Link from "next/link";
 import type { MarketplaceOfferingType } from "@/generated/prisma/enums";
 import { MarketplaceBookingForm } from "@/components/marketplace/MarketplaceBookingForm";
 import { OfferingTypeBadge } from "@/components/shared/badges";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import type { OnBehalfStartup } from "@/lib/marketplace-view";
 
 interface Props {
   offeringType: MarketplaceOfferingType;
@@ -19,6 +21,9 @@ interface Props {
   balance: number;
   defaultName: string;
   defaultEmail: string;
+  /** When true, render the internal-team on-behalf-of booking variant. */
+  teamMode?: boolean;
+  startups?: OnBehalfStartup[];
 }
 
 /** Shared detail + request-form layout for all three offering types. */
@@ -34,6 +39,8 @@ export function OfferingDetail({
   balance,
   defaultName,
   defaultEmail,
+  teamMode = false,
+  startups = [],
 }: Props) {
   return (
     <>
@@ -44,6 +51,14 @@ export function OfferingDetail({
         <ArrowLeft className="h-4 w-4" />
         Zurück zum Marktplatz
       </Link>
+
+      {teamMode && (
+        <PreviewBanner>
+          Du siehst die Startup-Buchungsansicht. Anfragen kannst du im Auftrag
+          eines ausgewählten Startups senden — die Credits werden diesem Startup
+          belastet.
+        </PreviewBanner>
+      )}
 
       <HeroBanner kicker={kicker} title={title} subtitle={subtitle} />
 
@@ -80,6 +95,8 @@ export function OfferingDetail({
               balance={balance}
               defaultName={defaultName}
               defaultEmail={defaultEmail}
+              teamMode={teamMode}
+              startups={startups}
             />
           </Card>
         </section>

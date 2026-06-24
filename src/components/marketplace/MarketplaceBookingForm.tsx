@@ -1,7 +1,7 @@
 "use client";
 
 import { Send } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { MarketplaceOfferingType } from "@/generated/prisma/enums";
 import { requestBooking } from "@/app/actions/marketplace";
 import { Button } from "@/components/ui/Button";
@@ -9,17 +9,28 @@ import {
   ErrorChip,
   Field,
   Input,
+  Select,
   SuccessChip,
   Textarea,
 } from "@/components/ui/Field";
+
+interface OnBehalfStartup {
+  id: string;
+  name: string;
+  balance: number;
+}
 
 interface Props {
   offeringType: MarketplaceOfferingType;
   targetId: string;
   creditCost: number;
+  /** Startup self-service: own balance + prefilled contact. */
   balance: number;
   defaultName: string;
   defaultEmail: string;
+  /** When true, the internal team books on behalf of a selected startup. */
+  teamMode?: boolean;
+  startups?: OnBehalfStartup[];
 }
 
 export function MarketplaceBookingForm({
@@ -29,19 +40,55 @@ export function MarketplaceBookingForm({
   balance,
   defaultName,
   defaultEmail,
+  teamMode = false,
+  startups = [],
 }: Props) {
   const [state, formAction, pending] = useActionState(requestBooking, undefined);
+  const [selectedStartupId, setSelectedStartupId] = useState("");
 
   if (state?.success) {
     return <SuccessChip>{state.success}</SuccessChip>;
   }
 
-  const insufficient = creditCost > 0 && balance < creditCost;
+  // In team mode the relevant balance is the selected startup's balance.
+  const selectedStartup = teamMode
+    ? startups.find((s) => s.id === selectedStartupId)
+    : undefined;
+  const effectiveBalance = teamMode ? selectedStartup?.balance ?? 0 : balance;
+  const showBalance = !teamMode || Boolean(selectedStartup);
+  const insufficient =
+    creditCost > 0 && showBalance && effectiveBalance < creditCost;
+  const blockSubmit = teamMode && !selectedStartupId;
 
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="offeringType" value={offeringType} />
       <input type="hidden" name="targetId" value={targetId} />
+
+      {teamMode && (
+        <Field
+          label="Startup (Anfrage im Auftrag)"
+          htmlFor="onBehalfStartupId"
+          hint="Als Team-Mitglied buchst du im Namen eines Startups. Die Credits werden dem gewählten Startup belastet."
+        >
+          <Select
+            id="onBehalfStartupId"
+            name="onBehalfStartupId"
+            required
+            value={selectedStartupId}
+            onChange={(e) => setSelectedStartupId(e.target.value)}
+          >
+            <option value="" disabled>
+              Startup wählen…
+            </option>
+            {startups.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} · {s.balance} Credits
+              </option>
+            ))}
+          </Select>
+        </Field>
+      )}
 
       <div
         className={
@@ -56,8 +103,16 @@ export function MarketplaceBookingForm({
         {creditCost > 0 ? (
           <>
             <span className="font-semibold">{creditCost} Credits</span> — werden
-            erst nach Bestätigung eingelöst. Dein Guthaben: {balance}.
-            {insufficient && " Dein Guthaben reicht aktuell nicht aus."}
+            erst nach Bestätigung eingelöst.
+            {showBalance ? (
+              <>
+                {" "}
+                Guthaben: {effectiveBalance}.
+                {insufficient && " Das Guthaben reicht aktuell nicht aus."}
+              </>
+            ) : (
+              " Wähle ein Startup, um das Guthaben zu prüfen."
+            )}
           </>
         ) : (
           <>Im Programm enthalten — keine Credits.</>
@@ -110,9 +165,13 @@ export function MarketplaceBookingForm({
       </Field>
 
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" disabled={pending || blockSubmit} className="w-full">
         <Send className="h-4 w-4" />
-        {pending ? "Wird gesendet…" : "Anfrage senden"}
+        {pending
+          ? "Wird gesendet…"
+          : teamMode
+            ? "Anfrage im Auftrag senden"
+            : "Anfrage senden"}
       </Button>
     </form>
   );

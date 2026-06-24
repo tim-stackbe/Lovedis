@@ -7,7 +7,7 @@ import type {
   SupportCategory,
 } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireRole, requireStartup, requireTeam } from "@/lib/auth-guards";
+import { requireRole, requireTeam } from "@/lib/auth-guards";
 import { MARKETPLACE_OFFERING_TYPES, SUPPORT_CATEGORIES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -54,6 +54,8 @@ const requestSchema = z.object({
   contactName: z.string().trim().min(2, "Bitte gib einen Kontaktnamen an.").max(160),
   contactEmail: z.email("Bitte gib eine gültige E-Mail an."),
   preferredAt: z.string().trim().max(280).optional(),
+  // Set only when the internal team books on behalf of a startup ("Admin-Sicht").
+  onBehalfStartupId: z.string().trim().min(1).optional(),
 });
 
 /**
@@ -101,7 +103,10 @@ export async function requestBooking(
   _prevState: ActionState | undefined,
   formData: FormData
 ): Promise<ActionState> {
-  const session = await requireStartup();
+  // Startups book for themselves; the internal team (ADMIN/MEMBER) books on
+  // behalf of a selected startup from the "Admin-Sicht" preview.
+  const session = await requireRole(["ADMIN", "MEMBER", "STARTUP"]);
+  const isTeam = session.user.role === "ADMIN" || session.user.role === "MEMBER";
 
   const parsed = requestSchema.safeParse({
     offeringType: formData.get("offeringType"),
@@ -110,14 +115,28 @@ export async function requestBooking(
     contactName: formData.get("contactName"),
     contactEmail: formData.get("contactEmail"),
     preferredAt: formData.get("preferredAt") || undefined,
+    onBehalfStartupId: formData.get("onBehalfStartupId") || undefined,
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  const startup = await prisma.startup.findUnique({
-    where: { ownerUserId: session.user.id },
-    select: { id: true, creditAccount: { select: { balance: true } } },
-  });
-  if (!startup) return { error: "Lege zuerst dein Startup-Profil an." };
+  const startup = isTeam
+    ? parsed.data.onBehalfStartupId
+      ? await prisma.startup.findUnique({
+          where: { id: parsed.data.onBehalfStartupId },
+          select: { id: true, creditAccount: { select: { balance: true } } },
+        })
+      : null
+    : await prisma.startup.findUnique({
+        where: { ownerUserId: session.user.id },
+        select: { id: true, creditAccount: { select: { balance: true } } },
+      });
+  if (!startup) {
+    return {
+      error: isTeam
+        ? "Bitte wähle das Startup, für das du anfragst."
+        : "Lege zuerst dein Startup-Profil an.",
+    };
+  }
 
   const resolved = await resolveTarget(parsed.data.offeringType, parsed.data.targetId);
   if (!resolved.ok) return { error: resolved.error };

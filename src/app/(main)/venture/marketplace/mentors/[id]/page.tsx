@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { OfferingDetail } from "@/components/marketplace/OfferingDetail";
-import { requireStartup } from "@/lib/auth-guards";
+import { requireVentureView } from "@/lib/auth-guards";
+import { getOnBehalfStartups } from "@/lib/marketplace-view";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Mentor:in" };
 
@@ -12,9 +14,10 @@ export default async function MentorDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await requireStartup();
+  const session = await requireVentureView();
+  const teamMode = isTeamRole(session.user.role);
 
-  const [mentor, user, startup] = await Promise.all([
+  const [mentor, user, startup, startups] = await Promise.all([
     prisma.mentorProfile.findUnique({ where: { id } }),
     prisma.user.findUnique({
       where: { id: session.user.id },
@@ -24,6 +27,7 @@ export default async function MentorDetailPage({
       where: { ownerUserId: session.user.id },
       select: { creditAccount: { select: { balance: true } } },
     }),
+    teamMode ? getOnBehalfStartups() : Promise.resolve([]),
   ]);
 
   if (!mentor || !mentor.isActive) notFound();
@@ -41,6 +45,8 @@ export default async function MentorDetailPage({
       balance={startup?.creditAccount?.balance ?? 0}
       defaultName={user?.name ?? ""}
       defaultEmail={user?.email ?? ""}
+      teamMode={teamMode}
+      startups={startups}
     />
   );
 }
