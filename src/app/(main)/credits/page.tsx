@@ -47,7 +47,7 @@ export default async function CreditsPage() {
       <HeroBanner
         kicker="Venture Platform"
         title="Venture-Credits"
-        subtitle="Vergib und verwalte das Guthaben der Acc-Startups. Jede Buchung landet im Ledger und aktualisiert den Saldo."
+        subtitle="Vergib Startups Venture-Credits und verwalte ihr Guthaben. Jede Buchung landet im Ledger, aktualisiert den Saldo und steht sofort für Marktplatz-Buchungen zur Verfügung."
       >
         <div className="grid grid-cols-2 gap-3 sm:max-w-md">
           <BannerStat label="Konten" value={accounts.length} />
@@ -55,8 +55,18 @@ export default async function CreditsPage() {
         </div>
       </HeroBanner>
 
-      <SectionLabel number="01" label="Buchung" title="Credits buchen" />
-      <Card className="p-6">
+      <SectionLabel
+        number="01"
+        label="Vergabe"
+        title="Venture-Credits an Startup vergeben"
+      />
+      <Card className="space-y-4 p-6">
+        <p className="text-sm text-lv-secondary">
+          Wähle ein Startup, gib den Betrag und einen Grund an und erfasse die
+          Buchung. Für eine Gutschrift bleibt die Art auf{" "}
+          <span className="font-semibold text-lv-text">Gutschrift (GRANT)</span>
+          . Hat das Startup noch kein Konto, wird es automatisch angelegt.
+        </p>
         <CreditBookingForm startups={startupOptions} />
       </Card>
 
