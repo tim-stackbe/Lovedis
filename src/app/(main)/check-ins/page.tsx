@@ -3,20 +3,25 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ReminderStatusBadge } from "@/components/shared/badges";
 import { markReminderDoneForm } from "@/app/actions/pushes";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { Button } from "@/components/ui/Button";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requirePartner } from "@/lib/auth-guards";
-import { getOpenPartnerCheckIns } from "@/lib/reminders";
+import { requirePartnerView } from "@/lib/auth-guards";
+import { getAllOpenCheckIns, getOpenPartnerCheckIns } from "@/lib/reminders";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Check-ins" };
 
 export default async function CheckInsPage() {
-  const session = await requirePartner();
-  const { items, overdue } = await getOpenPartnerCheckIns(session.user.id);
+  const session = await requirePartnerView();
+  const teamMode = isTeamRole(session.user.role);
+  const { items, overdue } = teamMode
+    ? await getAllOpenCheckIns()
+    : await getOpenPartnerCheckIns(session.user.id);
 
   return (
     <>
@@ -30,6 +35,14 @@ export default async function CheckInsPage() {
           <BannerStat label="Überfällig" value={overdue} />
         </div>
       </HeroBanner>
+
+      {teamMode && (
+        <PreviewBanner title="Partner-Sicht – Vorschau">
+          So sieht ein Business Partner seine zugewiesenen Check-ins. Vorschau –
+          angezeigt werden die offenen Check-ins aller Partner; das Abhaken
+          übernimmt der jeweilige Partner.
+        </PreviewBanner>
+      )}
 
       <SectionLabel number="01" label="To-do" title="Anstehende Check-ins" />
       {items.length === 0 ? (
@@ -59,6 +72,13 @@ export default async function CheckInsPage() {
                     )}
                     <ReminderStatusBadge value={r.status} />
                   </div>
+                  {teamMode &&
+                    (r as { partner?: { name: string } }).partner && (
+                      <p className="mt-0.5 text-xs font-medium text-lv-blue">
+                        Partner:{" "}
+                        {(r as { partner?: { name: string } }).partner!.name}
+                      </p>
+                    )}
                   {r.startup?.tagline && (
                     <p className="mt-0.5 text-sm text-lv-secondary">
                       {r.startup.tagline}
@@ -81,12 +101,14 @@ export default async function CheckInsPage() {
                     {r.isOverdue && " · überfällig"}
                   </p>
                 </div>
-                <form action={markReminderDoneForm.bind(null, r.id)}>
-                  <Button type="submit" variant="secondary" size="sm">
-                    <Check className="h-3.5 w-3.5" />
-                    Erledigt
-                  </Button>
-                </form>
+                {!teamMode && (
+                  <form action={markReminderDoneForm.bind(null, r.id)}>
+                    <Button type="submit" variant="secondary" size="sm">
+                      <Check className="h-3.5 w-3.5" />
+                      Erledigt
+                    </Button>
+                  </form>
+                )}
               </div>
             </Card>
           ))}

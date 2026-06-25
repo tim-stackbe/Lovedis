@@ -85,3 +85,27 @@ export async function getOpenPartnerCheckIns(partnerId: string) {
   }));
   return { items, overdue: items.filter((r) => r.isOverdue).length };
 }
+
+/**
+ * Team-preview variant of {@link getOpenPartnerCheckIns}: every partner's open
+ * check-ins (not scoped to one partner), annotated with the owning partner so
+ * the internal "Partner-Sicht – Vorschau" isn't empty. Read-only for the team.
+ */
+export async function getAllOpenCheckIns() {
+  const reminders = await prisma.checkInReminder.findMany({
+    where: { status: { in: ["SCHEDULED", "SENT"] } },
+    orderBy: { dueAt: "asc" },
+    include: {
+      startup: { select: { id: true, name: true, tagline: true } },
+      push: { select: { context: true } },
+      partner: { select: { name: true } },
+    },
+  });
+
+  const now = Date.now();
+  const items = reminders.map((r) => ({
+    ...r,
+    isOverdue: r.dueAt.getTime() < now,
+  }));
+  return { items, overdue: items.filter((r) => r.isOverdue).length };
+}

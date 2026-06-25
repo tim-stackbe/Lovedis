@@ -5,6 +5,7 @@ import type { UserRole } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import {
   MARKETPLACE_ROLES,
+  PARTNER_VIEW_ROLES,
   ROLE_HOMES,
   VENTURE_SCOUT_ROLES,
   VENTURE_VIEW_ROLES,
@@ -87,4 +88,15 @@ export async function requireStartup(): Promise<Session> {
  */
 export async function requireVentureView(): Promise<Session> {
   return requireRole(VENTURE_VIEW_ROLES);
+}
+
+/**
+ * Partner-facing feedback/screening VIEW gate (BUSINESS_PARTNER + ADMIN +
+ * MEMBER). Partners use these masks to give feedback (their own verdict); the
+ * internal team gets the identical surfaces as a fully-visible "Partner-Sicht –
+ * Vorschau". Submission stays partner-only (see `requirePartner` on the verdict
+ * action) — the team preview is view-only. Investors and startups stay out.
+ */
+export async function requirePartnerView(): Promise<Session> {
+  return requireRole(PARTNER_VIEW_ROLES);
 }

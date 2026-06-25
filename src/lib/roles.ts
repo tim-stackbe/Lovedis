@@ -55,6 +55,20 @@ export const VENTURE_SCOUT_ROLES: UserRole[] = ["ADMIN", "MEMBER"];
  */
 export const VENTURE_VIEW_ROLES: UserRole[] = ["STARTUP", "ADMIN", "MEMBER"];
 
+/**
+ * Roles allowed to VIEW the partner-facing feedback/screening masks
+ * (Longlist-Screening, Use-Case-Bewertung, Check-ins, Partner-Hub). Partners
+ * use them to give feedback; the internal team (ADMIN + MEMBER) gets the exact
+ * same surfaces as a fully-visible "Partner-Sicht – Vorschau". The preview is
+ * view-only — only a partner submits their own verdict. Per the product model,
+ * admin must see EVERYTHING.
+ */
+export const PARTNER_VIEW_ROLES: UserRole[] = [
+  "BUSINESS_PARTNER",
+  "ADMIN",
+  "MEMBER",
+];
+
 /** True for the internal Lovedis team (who preview/coordinate on behalf). */
 export function isTeamRole(role: UserRole): boolean {
   return role === "ADMIN" || role === "MEMBER";
@@ -122,6 +136,12 @@ const TEAM_SSOT_SECTION: NavSection = {
     { label: "Venture-Credits", href: "/credits", icon: Coins },
     { label: "Marktplatz-Inbox", href: "/marketplace", icon: Inbox },
     { label: "Marktplatz-Storefront", href: "/venture/marketplace", icon: Store },
+    // Partner-facing feedback masks as a fully-visible "Partner-Sicht" preview
+    // (view-only; only partners submit their own verdict).
+    { label: "Partner-Screening (Vorschau)", href: "/screening", icon: ClipboardCheck },
+    { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: Target },
+    { label: "Partner-Check-ins (Vorschau)", href: "/check-ins", icon: Bell },
+    { label: "Partner-Hub (Vorschau)", href: "/partner-hub", icon: BookOpen },
   ],
 };
 

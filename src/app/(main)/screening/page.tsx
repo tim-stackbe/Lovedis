@@ -2,20 +2,25 @@ import { ClipboardCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { RecommendationBadge } from "@/components/shared/badges";
 import { PartnerVerdictControl } from "@/components/screening/PartnerVerdictControl";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requirePartner } from "@/lib/auth-guards";
+import { requirePartnerView } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Longlist-Screening" };
 
 export default async function ScreeningPage() {
-  const session = await requirePartner();
+  const session = await requirePartnerView();
+  const teamMode = isTeamRole(session.user.role);
 
   // Curated, low-overload longlist: only team-screened startups that are still
   // in play. Internal scores, pipeline and notes are deliberately NOT exposed.
+  // Partners see (and edit) only their own verdict; the internal team preview
+  // sees every partner's verdict, read-only.
   const startups = await prisma.startup.findMany({
     where: {
       screenedAt: { not: null },
@@ -33,14 +38,20 @@ export default async function ScreeningPage() {
       screenSummary: true,
       screenRecommendation: true,
       partnerReviews: {
-        where: { partnerId: session.user.id, challengeId: null },
-        select: { verdict: true, note: true },
+        where: teamMode
+          ? { challengeId: null }
+          : { partnerId: session.user.id, challengeId: null },
+        select: {
+          verdict: true,
+          note: true,
+          partner: { select: { name: true } },
+        },
       },
     },
   });
 
-  const decided = startups.filter(
-    (s) => s.partnerReviews[0] && s.partnerReviews[0].verdict !== "PENDING"
+  const decided = startups.filter((s) =>
+    s.partnerReviews.some((r) => r.verdict !== "PENDING")
   ).length;
   const open = startups.length - decided;
 
@@ -57,6 +68,14 @@ export default async function ScreeningPage() {
           <BannerStat label="Entschieden" value={decided} />
         </div>
       </HeroBanner>
+
+      {teamMode && (
+        <PreviewBanner title="Partner-Sicht – Vorschau">
+          So gibt ein Business Partner Longlist-Feedback ab. Vorschau – nur
+          Partner geben Feedback ab; angezeigt werden die Verdikte aller
+          Partner.
+        </PreviewBanner>
+      )}
 
       <SectionLabel
         number="01"
@@ -104,11 +123,32 @@ export default async function ScreeningPage() {
                 )}
 
                 <div className="mt-5 border-t border-lv-border pt-4">
-                  <PartnerVerdictControl
-                    startupId={s.id}
-                    currentVerdict={review?.verdict}
-                    currentNote={review?.note}
-                  />
+                  {teamMode ? (
+                    s.partnerReviews.length === 0 ? (
+                      <p className="text-sm italic text-lv-secondary">
+                        Noch keine Partner-Rückmeldung.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {s.partnerReviews.map((r, idx) => (
+                          <PartnerVerdictControl
+                            key={idx}
+                            readOnly
+                            startupId={s.id}
+                            currentVerdict={r.verdict}
+                            currentNote={r.note}
+                            partnerName={r.partner?.name}
+                          />
+                        ))}
+                      </div>
+                    )
+                  ) : (
+                    <PartnerVerdictControl
+                      startupId={s.id}
+                      currentVerdict={review?.verdict}
+                      currentNote={review?.note}
+                    />
+                  )}
                 </div>
               </Card>
             );

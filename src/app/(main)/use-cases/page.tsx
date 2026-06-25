@@ -2,13 +2,15 @@ import { Sparkles, Target } from "lucide-react";
 import type { Metadata } from "next";
 import { ApplicationStatusBadge } from "@/components/shared/badges";
 import { PartnerVerdictControl } from "@/components/screening/PartnerVerdictControl";
+import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { StartupLogo } from "@/components/discovery/StartupLogo";
 import { Badge } from "@/components/ui/Badge";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requirePartner } from "@/lib/auth-guards";
+import { requirePartnerView } from "@/lib/auth-guards";
+import { isTeamRole } from "@/lib/roles";
 import {
   rankStartupsForChallenge,
   type StartupForMatch,
@@ -31,11 +33,13 @@ const CANDIDATE_SELECT = {
 } as const;
 
 export default async function UseCasesPage() {
-  const session = await requirePartner();
+  const session = await requirePartnerView();
+  const teamMode = isTeamRole(session.user.role);
 
   const [challenges, candidates] = await Promise.all([
     prisma.challenge.findMany({
-      where: { createdById: session.user.id },
+      // Partners see their own use-cases; the team preview sees every partner's.
+      where: teamMode ? {} : { createdById: session.user.id },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -43,6 +47,7 @@ export default async function UseCasesPage() {
         description: true,
         status: true,
         tags: true,
+        createdBy: { select: { name: true } },
         applications: {
           orderBy: { createdAt: "desc" },
           select: {
@@ -62,8 +67,13 @@ export default async function UseCasesPage() {
           },
         },
         partnerReviews: {
-          where: { partnerId: session.user.id },
-          select: { startupId: true, verdict: true, note: true },
+          where: teamMode ? {} : { partnerId: session.user.id },
+          select: {
+            startupId: true,
+            verdict: true,
+            note: true,
+            partner: { select: { name: true } },
+          },
         },
       },
     }),
@@ -98,6 +108,14 @@ export default async function UseCasesPage() {
         </div>
       </HeroBanner>
 
+      {teamMode && (
+        <PreviewBanner title="Partner-Sicht – Vorschau">
+          So bewertet ein Business Partner Startups je Use-Case. Vorschau – nur
+          Partner geben Feedback ab; angezeigt werden die Use-Cases und Verdikte
+          aller Partner.
+        </PreviewBanner>
+      )}
+
       {challenges.length === 0 ? (
         <EmptyState
           icon={Target}
@@ -120,7 +138,7 @@ export default async function UseCasesPage() {
             <section key={c.id} className="space-y-4">
               <SectionLabel
                 number={String(i + 1).padStart(2, "0")}
-                label="Use-Case"
+                label={teamMode ? `Use-Case · ${c.createdBy.name}` : "Use-Case"}
                 title={c.title}
               />
               <div className="flex flex-wrap items-center gap-2">
@@ -170,6 +188,8 @@ export default async function UseCasesPage() {
                             challengeId={c.id}
                             currentVerdict={review?.verdict}
                             currentNote={review?.note}
+                            readOnly={teamMode}
+                            partnerName={review?.partner?.name}
                           />
                         </div>
                       </Card>
@@ -215,6 +235,8 @@ export default async function UseCasesPage() {
                               challengeId={c.id}
                               currentVerdict={review?.verdict}
                               currentNote={review?.note}
+                              readOnly={teamMode}
+                              partnerName={review?.partner?.name}
                             />
                           </div>
                         </div>
