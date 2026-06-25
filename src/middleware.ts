@@ -11,6 +11,9 @@ const PUBLIC_PATHS = [
   "/api/auth",
   "/api/health",
   "/api/session-clear",
+  // Cron endpoints are reached by external schedulers without a session; the
+  // route's own Bearer (CRON_SECRET) check governs access.
+  "/api/cron",
 ];
 
 function isPublicPath(pathname: string): boolean {
