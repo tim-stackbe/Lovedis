@@ -243,12 +243,19 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
 
   try {
     await prisma.$transaction(async (tx) => {
-      // Re-read the status inside the transaction to avoid a double-confirm race.
-      const current = await tx.marketplaceBooking.findUnique({
-        where: { id: bookingId },
-        select: { status: true, creditTransactionId: true },
+      // Atomically claim the IN_COORDINATION → CONFIRMED transition before
+      // touching the ledger. updateMany takes a row lock under Read Committed,
+      // so two concurrent confirms can't both pass this gate: the loser sees
+      // the row already CONFIRMED (or already linked) and matches 0 rows.
+      const claim = await tx.marketplaceBooking.updateMany({
+        where: {
+          id: bookingId,
+          status: "IN_COORDINATION",
+          creditTransactionId: null,
+        },
+        data: { status: "CONFIRMED", handledById: session.user.id },
       });
-      if (!current || current.status !== "IN_COORDINATION" || current.creditTransactionId) {
+      if (claim.count !== 1) {
         throw new Error("STALE");
       }
 
@@ -275,13 +282,12 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
         where: { id: account.id },
         data: { balance: { decrement: booking.creditCost } },
       });
+      // Status was already flipped to CONFIRMED by the atomic claim above; here
+      // we only link the freshly created SPEND so the booking carries exactly
+      // one ledger transaction.
       await tx.marketplaceBooking.update({
         where: { id: bookingId },
-        data: {
-          status: "CONFIRMED",
-          handledById: session.user.id,
-          creditTransactionId: creditTx.id,
-        },
+        data: { creditTransactionId: creditTx.id },
       });
     });
   } catch (err) {
@@ -377,48 +383,84 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
     return { error: "Diese Buchung ist bereits abgeschlossen." };
   }
 
-  const needsRefund =
-    booking.status === "CONFIRMED" &&
-    booking.creditCost > 0 &&
-    booking.creditTransactionId !== null;
+  // The refund decision and the cancel transition must happen atomically, or
+  // two concurrent cancels of a CONFIRMED booking could each create a refund
+  // ADJUSTMENT. We re-read inside the transaction, atomically claim the cancel
+  // scoped to the observed status (so only one cancel wins the row lock), and
+  // only the winner — if it claimed a paid, CONFIRMED booking — refunds.
+  let refunded = false;
+  try {
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.marketplaceBooking.findUnique({
+        where: { id: bookingId },
+        select: { status: true, creditCost: true, creditTransactionId: true },
+      });
+      if (!current) throw new Error("NOT_FOUND");
+      if (current.status === "CANCELLED" || current.status === "DECLINED") {
+        throw new Error("STALE");
+      }
+      // A startup may only cancel before confirmation (re-checked under the
+      // race); confirmed/completed cancels are team-only.
+      if (
+        !isTeam &&
+        (current.status === "CONFIRMED" || current.status === "COMPLETED")
+      ) {
+        throw new Error("FORBIDDEN");
+      }
 
-  if (!needsRefund) {
-    await prisma.marketplaceBooking.update({
-      where: { id: bookingId },
-      data: { status: "CANCELLED", handledById: isTeam ? session.user.id : undefined },
-    });
-    revalidateMarketplace();
-    return { success: "Buchung storniert." };
-  }
-
-  await prisma.$transaction(async (tx) => {
-    const account = await tx.creditAccount.findUnique({
-      where: { startupId: booking.startupId },
-      select: { id: true },
-    });
-    if (account) {
-      await tx.creditTransaction.create({
+      const claim = await tx.marketplaceBooking.updateMany({
+        where: { id: bookingId, status: current.status },
         data: {
-          accountId: account.id,
-          type: "ADJUSTMENT",
-          amount: booking.creditCost,
-          reason: "Storno-Rückbuchung: Marktplatz-Buchung",
-          createdById: session.user.id,
+          status: "CANCELLED",
+          handledById: isTeam ? session.user.id : undefined,
         },
       });
-      await tx.creditAccount.update({
-        where: { id: account.id },
-        data: { balance: { increment: booking.creditCost } },
-      });
-    }
-    await tx.marketplaceBooking.update({
-      where: { id: bookingId },
-      data: { status: "CANCELLED", handledById: session.user.id },
+      if (claim.count !== 1) throw new Error("STALE");
+
+      const needsRefund =
+        current.status === "CONFIRMED" &&
+        current.creditCost > 0 &&
+        current.creditTransactionId !== null;
+      if (needsRefund) {
+        const account = await tx.creditAccount.findUnique({
+          where: { startupId: booking.startupId },
+          select: { id: true },
+        });
+        if (account) {
+          await tx.creditTransaction.create({
+            data: {
+              accountId: account.id,
+              type: "ADJUSTMENT",
+              amount: current.creditCost,
+              reason: "Storno-Rückbuchung: Marktplatz-Buchung",
+              createdById: session.user.id,
+            },
+          });
+          await tx.creditAccount.update({
+            where: { id: account.id },
+            data: { balance: { increment: current.creditCost } },
+          });
+        }
+        refunded = true;
+      }
     });
-  });
+  } catch (err) {
+    if (err instanceof Error && err.message === "NOT_FOUND") {
+      return { error: "Buchung nicht gefunden." };
+    }
+    if (err instanceof Error && err.message === "FORBIDDEN") {
+      return { error: "Bestätigte Buchungen kann nur das Lovedis-Team stornieren." };
+    }
+    if (err instanceof Error && err.message === "STALE") {
+      return { error: "Diese Buchung ist bereits abgeschlossen." };
+    }
+    throw err;
+  }
 
   revalidateMarketplace();
-  return { success: `Storniert — ${booking.creditCost} Credits zurückgebucht.` };
+  return refunded
+    ? { success: `Storniert — ${booking.creditCost} Credits zurückgebucht.` }
+    : { success: "Buchung storniert." };
 }
 
 // ---------------------------------------------------------------------------

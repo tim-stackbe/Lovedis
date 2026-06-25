@@ -19,18 +19,19 @@ const bookingSchema = z.object({
   reason: z.string().min(1, "Grund ist erforderlich").max(280),
 });
 
-/** Returns the existing account id for a startup, creating one if needed. */
+/**
+ * Returns the existing account id for a startup, creating one if needed.
+ * Uses upsert so two concurrent first-time bookings can't race into a P2002 on
+ * the unique startupId.
+ */
 async function ensureAccount(startupId: string): Promise<string> {
-  const existing = await prisma.creditAccount.findUnique({
+  const account = await prisma.creditAccount.upsert({
     where: { startupId },
+    update: {},
+    create: { startupId },
     select: { id: true },
   });
-  if (existing) return existing.id;
-  const created = await prisma.creditAccount.create({
-    data: { startupId },
-    select: { id: true },
-  });
-  return created.id;
+  return account.id;
 }
 
 export async function bookCreditTransaction(
