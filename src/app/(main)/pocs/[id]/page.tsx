@@ -27,11 +27,14 @@ export default async function PoCDetailPage({
   });
   if (!poc) notFound();
 
+  // Mirror the /pocs list scope: ADMIN sees every PoC, everyone else only the
+  // PoCs they personally track or whose challenge they created. No role (incl.
+  // INVESTOR) may read a PoC without one of those explicit relationships.
   const isManager =
     session.user.role === "ADMIN" ||
     poc.trackedById === session.user.id ||
     poc.application.challenge.createdById === session.user.id;
-  if (!isManager && session.user.role !== "INVESTOR") notFound();
+  if (!isManager) notFound();
 
   return (
     <>
