@@ -83,6 +83,12 @@ export async function submitPartnerVerdict(
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
   // The startup must exist; the optional challenge must be the partner's own.
+  const startup = await prisma.startup.findUnique({
+    where: { id: parsed.data.startupId },
+    select: { id: true },
+  });
+  if (!startup) return { error: "Startup nicht gefunden." };
+
   if (parsed.data.challengeId) {
     const challenge = await prisma.challenge.findFirst({
       where: { id: parsed.data.challengeId, createdById: session.user.id },
@@ -91,32 +97,58 @@ export async function submitPartnerVerdict(
     if (!challenge) return { error: "Use-Case nicht gefunden." };
   }
 
-  // Compound-unique with a nullable column can't be upserted directly, so we
-  // find-then-write (nulls compare as distinct in Postgres).
-  const existing = await prisma.partnerStartupReview.findFirst({
-    where: {
-      partnerId: session.user.id,
-      startupId: parsed.data.startupId,
-      challengeId: parsed.data.challengeId,
-    },
-    select: { id: true },
-  });
+  const partnerId = session.user.id;
+  const { startupId, challengeId, verdict } = parsed.data;
+  const note = parsed.data.note ?? null;
 
-  if (existing) {
-    await prisma.partnerStartupReview.update({
-      where: { id: existing.id },
-      data: { verdict: parsed.data.verdict, note: parsed.data.note ?? null },
+  if (challengeId) {
+    // Keyed (Use-Case) path: the compound unique is fully populated, so a
+    // single upsert dedupes atomically.
+    await prisma.partnerStartupReview.upsert({
+      where: {
+        partnerId_startupId_challengeId: { partnerId, startupId, challengeId },
+      },
+      update: { verdict, note },
+      create: { partnerId, startupId, challengeId, verdict, note },
     });
   } else {
-    await prisma.partnerStartupReview.create({
-      data: {
-        partnerId: session.user.id,
-        startupId: parsed.data.startupId,
-        challengeId: parsed.data.challengeId,
-        verdict: parsed.data.verdict,
-        note: parsed.data.note ?? null,
-      },
-    });
+    // Longlist path: challengeId is null, and Postgres treats nulls as distinct
+    // in the compound unique, so the find-then-write can race into two rows.
+    // Guard it with a Serializable transaction; if two first-time verdicts
+    // collide, the loser hits a write conflict and we retry once into an update.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await prisma.$transaction(
+          async (tx) => {
+            const existing = await tx.partnerStartupReview.findFirst({
+              where: { partnerId, startupId, challengeId: null },
+              select: { id: true },
+            });
+            if (existing) {
+              await tx.partnerStartupReview.update({
+                where: { id: existing.id },
+                data: { verdict, note },
+              });
+            } else {
+              await tx.partnerStartupReview.create({
+                data: { partnerId, startupId, challengeId: null, verdict, note },
+              });
+            }
+          },
+          { isolationLevel: "Serializable" }
+        );
+        break;
+      } catch (err) {
+        // P2034 = write conflict / serialization failure. Retry once; the row
+        // now exists so the second pass updates instead of inserting.
+        const code =
+          typeof err === "object" && err !== null && "code" in err
+            ? (err as { code?: string }).code
+            : undefined;
+        if (code === "P2034" && attempt === 0) continue;
+        throw err;
+      }
+    }
   }
 
   revalidatePath("/screening");

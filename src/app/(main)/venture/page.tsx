@@ -22,7 +22,11 @@ export default async function VenturePage() {
       where: { ownerUserId: session.user.id },
       select: { creditAccount: { select: { balance: true } } },
     }),
-    getHubContent(audiencesForRole(session.user.role)),
+    // In the team preview, pin to the startup audience slice (STARTUP + BOTH)
+    // for a faithful "Startup-Sicht", like partner-hub does for its preview.
+    getHubContent(
+      teamMode ? ["STARTUP", "BOTH"] : audiencesForRole(session.user.role)
+    ),
   ]);
 
   const balance = startup?.creditAccount?.balance ?? 0;

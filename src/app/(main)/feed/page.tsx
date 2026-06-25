@@ -22,7 +22,7 @@ export default async function FeedPage() {
 
   const updates = startupIds.length
     ? await prisma.startupUpdate.findMany({
-        where: { startupId: { in: startupIds } },
+        where: { startupId: { in: startupIds }, startup: { isPublished: true } },
         orderBy: { createdAt: "desc" },
         take: 50,
         select: {

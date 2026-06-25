@@ -165,7 +165,11 @@ export function MarketplaceBookingForm({
       </Field>
 
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
-      <Button type="submit" disabled={pending || blockSubmit} className="w-full">
+      <Button
+        type="submit"
+        disabled={pending || blockSubmit || insufficient}
+        className="w-full"
+      >
         <Send className="h-4 w-4" />
         {pending
           ? "Wird gesendet…"

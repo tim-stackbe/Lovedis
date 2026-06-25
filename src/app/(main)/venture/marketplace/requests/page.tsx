@@ -148,7 +148,9 @@ export default async function MyBookingsPage() {
                       </p>
                     )}
                   </div>
-                  {canCancel && <BookingCancelButton bookingId={b.id} />}
+                  {!teamMode && canCancel && (
+                    <BookingCancelButton bookingId={b.id} />
+                  )}
                 </div>
               </Card>
             );
