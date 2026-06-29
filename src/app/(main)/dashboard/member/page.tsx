@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { DistributionChart } from "@/components/dashboard/Charts";
+import { DistributionChartLazy as DistributionChart } from "@/components/dashboard/ChartsLazy";
 import {
   QuadrantBadge,
   RecommendationBadge,

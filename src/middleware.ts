@@ -8,6 +8,8 @@ const { auth } = NextAuth(authConfig);
 const PUBLIC_PATHS = [
   "/login",
   "/auth",
+  // Hidden Odie Easter-egg route — reachable with or without a session.
+  "/odie",
   "/api/auth",
   "/api/health",
   "/api/session-clear",

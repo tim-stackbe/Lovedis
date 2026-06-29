@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { DistributionChart } from "@/components/dashboard/Charts";
+import { DistributionChartLazy as DistributionChart } from "@/components/dashboard/ChartsLazy";
 import { RecommendationBadge, ScorePill } from "@/components/shared/badges";
 import { BannerStat, Card, ToneCard } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";

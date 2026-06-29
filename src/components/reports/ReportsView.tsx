@@ -1,9 +1,7 @@
 "use client";
 
 import { FileDown, FileSpreadsheet, FileText } from "lucide-react";
-import Papa from "papaparse";
 import { useRef, useState } from "react";
-import * as XLSX from "xlsx";
 import { RecommendationBadge, ScorePill } from "@/components/shared/badges";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -61,9 +59,10 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
   const [exporting, setExporting] = useState<string | null>(null);
   const stamp = new Date().toISOString().slice(0, 10);
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
     setExporting("csv");
     try {
+      const { default: Papa } = await import("papaparse");
       const csv = Papa.unparse(toFlatRows(rows));
       download(
         new Blob([csv], { type: "text/csv;charset=utf-8" }),
@@ -74,9 +73,10 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
     }
   };
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
     setExporting("xlsx");
     try {
+      const XLSX = await import("xlsx");
       const sheet = XLSX.utils.json_to_sheet(toFlatRows(rows));
       const book = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(book, sheet, "Bewertungen");

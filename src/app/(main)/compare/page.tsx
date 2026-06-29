@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import {
-  CompareView,
-  type CompareStartup,
-} from "@/components/compare/CompareView";
+import { CompareViewLazy as CompareView } from "@/components/compare/CompareViewLazy";
+import type { CompareStartup } from "@/components/compare/CompareView";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireScoutModule } from "@/lib/auth-guards";

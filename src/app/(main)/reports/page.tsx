@@ -1,9 +1,7 @@
 import { Share2 } from "lucide-react";
 import type { Metadata } from "next";
-import {
-  ReportsView,
-  type ReportRow,
-} from "@/components/reports/ReportsView";
+import { ReportsViewLazy as ReportsView } from "@/components/reports/ReportsViewLazy";
+import type { ReportRow } from "@/components/reports/ReportsView";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";

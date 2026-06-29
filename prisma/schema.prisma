@@ -1,6 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  // Size-optimized query compiler WASM (~half the size of the default "fast"
+  // build). Keeps the Cloudflare Worker bundle under the size limit; same
+  // base64+WebAssembly.Module loader works under both Node and workerd.
+  compilerBuild = "small"
 }
 
 datasource db {
