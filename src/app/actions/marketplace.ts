@@ -265,7 +265,16 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
         })) ??
         (await tx.creditAccount.create({ data: { startupId: booking.startupId } }));
 
-      if (account.balance < booking.creditCost) {
+      // Atomic, guarded debit: only decrement when the balance still covers the
+      // cost. Two concurrent confirms for the same startup contend on this row;
+      // the conditional updateMany matches 0 rows once the balance would go
+      // negative, so credits can never be overspent (the read-then-update
+      // pattern was racy under Read Committed).
+      const debit = await tx.creditAccount.updateMany({
+        where: { id: account.id, balance: { gte: booking.creditCost } },
+        data: { balance: { decrement: booking.creditCost } },
+      });
+      if (debit.count === 0) {
         throw new InsufficientCreditsError();
       }
 
@@ -277,10 +286,6 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
           reason: `Marktplatz-Buchung: ${targetName}`,
           createdById: session.user.id,
         },
-      });
-      await tx.creditAccount.update({
-        where: { id: account.id },
-        data: { balance: { decrement: booking.creditCost } },
       });
       // Status was already flipped to CONFIRMED by the atomic claim above; here
       // we only link the freshly created SPEND so the booking carries exactly
@@ -382,6 +387,13 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
   if (booking.status === "CANCELLED" || booking.status === "DECLINED") {
     return { error: "Diese Buchung ist bereits abgeschlossen." };
   }
+  // A completed booking's session already happened — cancelling it would keep
+  // the spent credits with no refund path, so block it outright.
+  if (booking.status === "COMPLETED") {
+    return {
+      error: "Abgeschlossene Buchungen können nicht storniert werden.",
+    };
+  }
 
   // The refund decision and the cancel transition must happen atomically, or
   // two concurrent cancels of a CONFIRMED booking could each create a refund
@@ -399,12 +411,15 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
       if (current.status === "CANCELLED" || current.status === "DECLINED") {
         throw new Error("STALE");
       }
+      // Re-checked under the race: never cancel a booking that completed in the
+      // meantime (would strand the spent credits with no refund).
+      if (current.status === "COMPLETED") {
+        throw new Error("COMPLETED");
+      }
       // A startup may only cancel before confirmation (re-checked under the
-      // race); confirmed/completed cancels are team-only.
-      if (
-        !isTeam &&
-        (current.status === "CONFIRMED" || current.status === "COMPLETED")
-      ) {
+      // race); confirmed cancels are team-only. COMPLETED is already rejected
+      // above for everyone.
+      if (!isTeam && current.status === "CONFIRMED") {
         throw new Error("FORBIDDEN");
       }
 
@@ -450,6 +465,11 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
     }
     if (err instanceof Error && err.message === "FORBIDDEN") {
       return { error: "Bestätigte Buchungen kann nur das Lovedis-Team stornieren." };
+    }
+    if (err instanceof Error && err.message === "COMPLETED") {
+      return {
+        error: "Abgeschlossene Buchungen können nicht storniert werden.",
+      };
     }
     if (err instanceof Error && err.message === "STALE") {
       return { error: "Diese Buchung ist bereits abgeschlossen." };

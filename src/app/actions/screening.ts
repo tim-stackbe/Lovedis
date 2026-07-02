@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { PartnerVerdict, Recommendation } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requirePartner, requireTeam } from "@/lib/auth-guards";
+import { isPartnerApproved, requirePartner, requireTeam } from "@/lib/auth-guards";
 import { PARTNER_VERDICTS, RECOMMENDATION_ORDER } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
 // ---------------------------------------------------------------------------
 // Internal team's lightweight "Erst-Einordnung" — set by the internal team on a
@@ -34,15 +35,20 @@ export async function saveInitialAssessment(
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
   const hasContent = Boolean(parsed.data.summary || parsed.data.recommendation);
-  await prisma.startup.update({
-    where: { id: parsed.data.startupId },
-    data: {
-      screenSummary: parsed.data.summary ?? null,
-      screenRecommendation: parsed.data.recommendation ?? null,
-      screenedAt: hasContent ? new Date() : null,
-      screenedById: hasContent ? session.user.id : null,
-    },
-  });
+  try {
+    await prisma.startup.update({
+      where: { id: parsed.data.startupId },
+      data: {
+        screenSummary: parsed.data.summary ?? null,
+        screenRecommendation: parsed.data.recommendation ?? null,
+        screenedAt: hasContent ? new Date() : null,
+        screenedById: hasContent ? session.user.id : null,
+      },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) return { error: "Startup nicht gefunden." };
+    throw err;
+  }
 
   revalidatePath("/longlist");
   revalidatePath("/screening");
@@ -74,6 +80,11 @@ export async function submitPartnerVerdict(
   formData: FormData
 ): Promise<ActionState> {
   const session = await requirePartner();
+  // Defense in depth: a still-pending partner is redirected by the UI gate, but
+  // the write path must refuse independently too.
+  if (!(await isPartnerApproved(session.user.id))) {
+    return { error: "Dein Partner-Konto ist noch nicht freigegeben." };
+  }
   const parsed = verdictSchema.safeParse({
     startupId: ctx.startupId,
     challengeId: ctx.challengeId,

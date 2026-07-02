@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth-guards";
 import { POC_STATUSES } from "@/lib/constants";
 import { kpisSchema, milestonesSchema } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
 const POC_MANAGER_ROLES = ["ADMIN", "BUSINESS_PARTNER", "INVESTOR"] as const;
 
@@ -111,10 +112,15 @@ export async function assignPoCTracker(
   ) {
     return { error: "Tracker muss ein aktiver Partner oder Investor sein." };
   }
-  await prisma.poCPerformance.update({
-    where: { id: pocId },
-    data: { trackedById: trackerId },
-  });
+  try {
+    await prisma.poCPerformance.update({
+      where: { id: pocId },
+      data: { trackedById: trackerId },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) return { error: "PoC nicht gefunden." };
+    throw err;
+  }
   revalidatePath("/pocs");
   revalidatePath(`/pocs/${pocId}`);
   return {};

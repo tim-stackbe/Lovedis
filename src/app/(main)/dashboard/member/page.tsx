@@ -17,11 +17,12 @@ import { prisma } from "@/lib/prisma";
 import { deriveQuadrant } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Scout-Dashboard" };
+export const metadata: Metadata = { title: "Team-Dashboard" };
 
 export default async function MemberDashboard() {
   const session = await requireRole(["MEMBER", "ADMIN"]);
 
+  const now = new Date();
   const [
     startupCount,
     evaluationCount,
@@ -30,6 +31,9 @@ export default async function MemberDashboard() {
     pipelineGroups,
     topStartups,
     myRecent,
+    openBookings,
+    dueCheckIns,
+    screenedForVerdicts,
   ] = await Promise.all([
     prisma.startup.count(),
     prisma.evaluation.count(),
@@ -47,7 +51,29 @@ export default async function MemberDashboard() {
       take: 5,
       include: { startup: { select: { name: true } } },
     }),
+    prisma.marketplaceBooking.count({
+      where: { status: { in: ["REQUESTED", "IN_COORDINATION"] } },
+    }),
+    prisma.checkInReminder.count({
+      where: { status: "SCHEDULED", dueAt: { lte: now } },
+    }),
+    prisma.startup.findMany({
+      where: {
+        screenedAt: { not: null },
+        pipelineStage: { notIn: ["PARTNERED", "PASSED"] },
+      },
+      select: {
+        partnerReviews: {
+          where: { challengeId: null },
+          select: { verdict: true },
+        },
+      },
+    }),
   ]);
+
+  const pendingPartnerVerdicts = screenedForVerdicts.filter(
+    (s) => !s.partnerReviews.some((r) => r.verdict !== "PENDING")
+  ).length;
 
   const pipelineData = PIPELINE_STAGES.map((stage) => ({
     name: PIPELINE_STAGE_LABELS[stage],
@@ -60,9 +86,9 @@ export default async function MemberDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Sektion 00 — Venture Scout"
+        kicker="Sektion 00 — Venture Scout & Mara"
         title={`Schön, dich zu sehen, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Dein Scouting-Desk: entdecke Startups, bewerte sie und beweg sie durch den Funnel."
+        subtitle="Dein Team-Desk: scoute und bewerte Startups — und koordiniere die Mara-Jobs aus SSOT, Screening und Marktplatz."
         actions={
           <LinkButton href="/startups/new" variant="white">
             Startup hinzufügen
@@ -104,16 +130,46 @@ export default async function MemberDashboard() {
         </div>
       </section>
 
+      <section className="space-y-4">
+        <SectionLabel number="02" label="Mara" title="Aktions-Inbox" />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Link href="/marketplace" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={openBookings > 0 ? "attention" : "muted"}
+              label="Offene Marktplatz-Anfragen"
+              value={openBookings}
+              sub="warten auf Koordination →"
+            />
+          </Link>
+          <Link href="/pushes" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={dueCheckIns > 0 ? "warn" : "muted"}
+              label="Fällige Check-in-Erinnerungen"
+              value={dueCheckIns}
+              sub="bereit zum Versand →"
+            />
+          </Link>
+          <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={pendingPartnerVerdicts > 0 ? "info" : "muted"}
+              label="Ausstehende Partner-Verdikte"
+              value={pendingPartnerVerdicts}
+              sub="Startups ohne Partner-Feedback →"
+            />
+          </Link>
+        </div>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <SectionLabel number="02" label="Funnel" title="Pipeline" />
+          <SectionLabel number="03" label="Funnel" title="Pipeline" />
           <Card className="p-5">
             <DistributionChart data={pipelineData} />
           </Card>
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="03" label="Spitze" title="Top-bewertete Startups" />
+          <SectionLabel number="04" label="Spitze" title="Top-bewertete Startups" />
           <TableCard>
             <THead>
               <tr>
@@ -152,7 +208,7 @@ export default async function MemberDashboard() {
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="04" label="Deine" title="Deine letzten Bewertungen" />
+        <SectionLabel number="05" label="Deine" title="Deine letzten Bewertungen" />
         {myRecent.length === 0 ? (
           <Card className="p-6 text-sm text-lv-secondary">
             Du hast noch nichts bewertet — öffne ein Startup-Profil und leg los.

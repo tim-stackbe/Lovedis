@@ -17,6 +17,7 @@ export const metadata: Metadata = { title: "Admin-Dashboard" };
 export default async function AdminDashboard() {
   const session = await requireRole(["ADMIN"]);
 
+  const now = new Date();
   const [
     userCount,
     startupCount,
@@ -28,6 +29,10 @@ export default async function AdminDashboard() {
     shareCount,
     pipelineGroups,
     recentEvaluations,
+    openBookings,
+    dueCheckIns,
+    screenedForVerdicts,
+    pendingPartners,
   ] = await Promise.all([
     prisma.user.count({ where: { isActive: true } }),
     prisma.startup.count(),
@@ -46,7 +51,32 @@ export default async function AdminDashboard() {
       orderBy: { updatedAt: "desc" },
       take: 6,
     }),
+    prisma.marketplaceBooking.count({
+      where: { status: { in: ["REQUESTED", "IN_COORDINATION"] } },
+    }),
+    prisma.checkInReminder.count({
+      where: { status: "SCHEDULED", dueAt: { lte: now } },
+    }),
+    prisma.startup.findMany({
+      where: {
+        screenedAt: { not: null },
+        pipelineStage: { notIn: ["PARTNERED", "PASSED"] },
+      },
+      select: {
+        partnerReviews: {
+          where: { challengeId: null },
+          select: { verdict: true },
+        },
+      },
+    }),
+    prisma.user.count({
+      where: { role: "BUSINESS_PARTNER", approvedAt: null, isActive: true },
+    }),
   ]);
+
+  const pendingPartnerVerdicts = screenedForVerdicts.filter(
+    (s) => !s.partnerReviews.some((r) => r.verdict !== "PENDING")
+  ).length;
 
   const pipelineData = PIPELINE_STAGES.map((stage) => ({
     name: PIPELINE_STAGE_LABELS[stage],
@@ -103,16 +133,58 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
+      <section className="space-y-4">
+        <SectionLabel
+          number="02"
+          label="Mara"
+          title="Aktions-Inbox"
+        />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/users" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={pendingPartners > 0 ? "attention" : "muted"}
+              label="Partner-Freigaben offen"
+              value={pendingPartners}
+              sub="warten auf Freigabe →"
+            />
+          </Link>
+          <Link href="/marketplace" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={openBookings > 0 ? "attention" : "muted"}
+              label="Offene Marktplatz-Anfragen"
+              value={openBookings}
+              sub="warten auf Koordination →"
+            />
+          </Link>
+          <Link href="/pushes" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={dueCheckIns > 0 ? "warn" : "muted"}
+              label="Fällige Check-in-Erinnerungen"
+              value={dueCheckIns}
+              sub="bereit zum Versand →"
+            />
+          </Link>
+          <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={pendingPartnerVerdicts > 0 ? "info" : "muted"}
+              label="Ausstehende Partner-Verdikte"
+              value={pendingPartnerVerdicts}
+              sub="Startups ohne Partner-Feedback →"
+            />
+          </Link>
+        </div>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <SectionLabel number="02" label="Funnel" title="Pipeline-Verteilung" />
+          <SectionLabel number="03" label="Funnel" title="Pipeline-Verteilung" />
           <Card className="p-5">
             <DistributionChart data={pipelineData} />
           </Card>
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="03" label="Aktuell" title="Neueste Bewertungen" />
+          <SectionLabel number="04" label="Aktuell" title="Neueste Bewertungen" />
           <TableCard>
             <THead>
               <tr>

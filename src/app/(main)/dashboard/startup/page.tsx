@@ -21,6 +21,7 @@ export default async function StartupDashboard() {
     prisma.startup.findUnique({
       where: { ownerUserId: session.user.id },
       include: {
+        creditAccount: { select: { balance: true } },
         applications: {
           include: {
             challenge: { select: { id: true, title: true } },
@@ -41,6 +42,7 @@ export default async function StartupDashboard() {
   const applications = startup?.applications ?? [];
   const accepted = applications.filter((a) => a.status === "ACCEPTED").length;
   const pending = applications.filter((a) => a.status === "PENDING").length;
+  const creditBalance = startup?.creditAccount?.balance ?? 0;
 
   const profileChecks = [
     { label: "Unternehmensprofil erstellt", done: Boolean(startup) },
@@ -64,15 +66,27 @@ export default async function StartupDashboard() {
             ? `${startup.name}, willkommen zurück`
             : "Lass uns dein Profil aufsetzen"
         }
-        subtitle="Entdecke Corporate-Challenges, pitche deine Lösung und tracke deine Bewerbungen."
+        subtitle="Entdecke Corporate-Challenges, hol dir Support über den Venture-Marktplatz und tracke deine Bewerbungen."
         actions={
-          <LinkButton href="/challenges" variant="white">
-            Challenges entdecken
-          </LinkButton>
+          startup ? (
+            <>
+              <LinkButton href="/venture/marketplace" variant="white">
+                Zum Marktplatz
+              </LinkButton>
+              <LinkButton href="/challenges" variant="white">
+                Challenges
+              </LinkButton>
+            </>
+          ) : (
+            <LinkButton href="/profile" variant="white">
+              Profil anlegen
+            </LinkButton>
+          )
         }
       >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <BannerStat label="Profil" value={`${completeness}%`} />
+          <BannerStat label="Guthaben" value={creditBalance} />
           <BannerStat label="Bewerbungen" value={applications.length} />
           <BannerStat label="Angenommen" value={accepted} />
           <BannerStat label="Offene Challenges" value={openChallenges.length} />
@@ -172,6 +186,44 @@ export default async function StartupDashboard() {
       <section className="space-y-4">
         <SectionLabel
           number="03"
+          label="Venture Platform"
+          title="Marktplatz & Guthaben"
+        />
+        {startup ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Link href="/venture/credits" className="block transition-transform hover:-translate-y-0.5">
+              <ToneCard
+                tone={creditBalance > 0 ? "success" : "muted"}
+                label="Venture-Guthaben"
+                value={creditBalance}
+                sub="Credits · Historie ansehen →"
+              />
+            </Link>
+            <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
+              <ToneCard
+                tone="info"
+                label="Marktplatz"
+                value="Support finden"
+                sub="Programme, Mentor:innen & Angebote →"
+              />
+            </Link>
+          </div>
+        ) : (
+          <Card className="flex flex-col items-start gap-3 p-6 text-sm text-lv-secondary">
+            <span>
+              Lege zuerst dein Startup-Profil an, um Venture-Credits zu erhalten
+              und den Marktplatz zu nutzen.
+            </span>
+            <LinkButton href="/profile" size="sm" variant="secondary">
+              Profil anlegen
+            </LinkButton>
+          </Card>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <SectionLabel
+          number="04"
           label="Chancen"
           title="Offene Challenges für dich"
         />

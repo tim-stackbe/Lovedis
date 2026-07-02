@@ -406,6 +406,7 @@ async function main() {
           role: "ADMIN",
           company: "Lovedis",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
       prisma.user.create({
@@ -416,6 +417,7 @@ async function main() {
           role: "MEMBER",
           company: "Lovedis",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
       prisma.user.create({
@@ -426,6 +428,7 @@ async function main() {
           role: "BUSINESS_PARTNER",
           company: "Rheinwerk Industries AG",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
       prisma.user.create({
@@ -436,6 +439,7 @@ async function main() {
           role: "INVESTOR",
           company: "Northlight Ventures",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
       prisma.user.create({
@@ -446,6 +450,7 @@ async function main() {
           role: "STARTUP",
           company: "NeuralForge",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
       prisma.user.create({
@@ -456,6 +461,7 @@ async function main() {
           role: "MEMBER",
           company: "Lovedis",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
       prisma.user.create({
@@ -466,6 +472,7 @@ async function main() {
           role: "BUSINESS_PARTNER",
           company: "Helioswerk GmbH",
           passwordHash,
+          approvedAt: new Date(),
         },
       }),
     ]);

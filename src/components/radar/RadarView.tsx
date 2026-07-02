@@ -160,10 +160,18 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
             const { x, y } = blipPosition(s);
             const isHovered = hovered === s.id;
             return (
-              <Link key={s.id} href={`/startups/${s.id}`}>
+              <Link
+                key={s.id}
+                href={`/startups/${s.id}`}
+                aria-label={s.name}
+                className="focus:outline-none"
+                onFocus={() => setHovered(s.id)}
+                onBlur={() => setHovered(null)}
+              >
                 <g
                   onMouseEnter={() => setHovered(s.id)}
                   onMouseLeave={() => setHovered(null)}
+                  onClick={() => setHovered(s.id)}
                   className="cursor-pointer"
                 >
                   <circle

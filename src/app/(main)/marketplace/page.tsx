@@ -73,7 +73,7 @@ export default async function MarketplaceInboxPage() {
           </LinkButton>
         }
       >
-        <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:max-w-lg">
           <BannerStat label="Offen" value={requested} />
           <BannerStat label="In Koordination" value={inCoordination} />
           <BannerStat label="Gesamt" value={bookings.length} />

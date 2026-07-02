@@ -14,6 +14,7 @@ import {
   ROADMAP_STATUSES,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
 const audienceEnum = z.enum(
   CONTENT_AUDIENCES as [ContentAudience, ...ContentAudience[]]
@@ -83,24 +84,35 @@ export async function updateRoadmapItem(
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  await prisma.roadmapItem.update({
-    where: { id },
-    data: {
-      title: parsed.data.title,
-      body: parsed.data.body ?? null,
-      phase: parsed.data.phase ?? null,
-      status: parsed.data.status,
-      audience: parsed.data.audience,
-      sortOrder: parsed.data.sortOrder ?? 0,
-    },
-  });
+  try {
+    await prisma.roadmapItem.update({
+      where: { id },
+      data: {
+        title: parsed.data.title,
+        body: parsed.data.body ?? null,
+        phase: parsed.data.phase ?? null,
+        status: parsed.data.status,
+        audience: parsed.data.audience,
+        sortOrder: parsed.data.sortOrder ?? 0,
+      },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) {
+      return { error: "Roadmap-Eintrag nicht gefunden." };
+    }
+    throw err;
+  }
   revalidateHub();
   return { success: "Roadmap-Eintrag aktualisiert." };
 }
 
 export async function deleteRoadmapItem(id: string): Promise<void> {
   await requireTeam();
-  await prisma.roadmapItem.delete({ where: { id } });
+  try {
+    await prisma.roadmapItem.delete({ where: { id } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidateHub();
 }
 
@@ -177,24 +189,35 @@ export async function updateContentPage(
   });
   if (clash) return { error: "Slug ist bereits vergeben." };
 
-  await prisma.contentPage.update({
-    where: { id },
-    data: {
-      slug: parsed.data.slug,
-      title: parsed.data.title,
-      body: parsed.data.body,
-      audience: parsed.data.audience,
-      isPublished: parsed.data.isPublished,
-      sortOrder: parsed.data.sortOrder ?? 0,
-    },
-  });
+  try {
+    await prisma.contentPage.update({
+      where: { id },
+      data: {
+        slug: parsed.data.slug,
+        title: parsed.data.title,
+        body: parsed.data.body,
+        audience: parsed.data.audience,
+        isPublished: parsed.data.isPublished,
+        sortOrder: parsed.data.sortOrder ?? 0,
+      },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) {
+      return { error: "Inhaltsseite nicht gefunden." };
+    }
+    throw err;
+  }
   revalidateHub();
   return { success: "Inhaltsseite aktualisiert." };
 }
 
 export async function deleteContentPage(id: string): Promise<void> {
   await requireTeam();
-  await prisma.contentPage.delete({ where: { id } });
+  try {
+    await prisma.contentPage.delete({ where: { id } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidateHub();
 }
 
@@ -229,6 +252,10 @@ export async function createMediaAsset(
 
 export async function deleteMediaAsset(id: string): Promise<void> {
   await requireTeam();
-  await prisma.mediaAsset.delete({ where: { id } });
+  try {
+    await prisma.mediaAsset.delete({ where: { id } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidateHub();
 }

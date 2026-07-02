@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface OdieOverlayProps {
   title: string;
@@ -16,6 +16,8 @@ interface OdieOverlayProps {
  */
 export function OdieOverlay({ title, subtitle, badge, onClose }: OdieOverlayProps) {
   const [visible, setVisible] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   const handleClose = useCallback(() => {
     setVisible(false);
@@ -24,13 +26,45 @@ export function OdieOverlay({ title, subtitle, badge, onClose }: OdieOverlayProp
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setVisible(true));
+
+    // Remember the opener and move focus into the dialog (its close button).
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+
+    const focusables = () =>
+      Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      );
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") {
+        handleClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // Trap Tab within the dialog.
+      const items = focusables();
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("keydown", onKey);
+      opener?.focus?.();
     };
   }, [handleClose]);
 
@@ -48,6 +82,7 @@ export function OdieOverlay({ title, subtitle, badge, onClose }: OdieOverlayProp
       onClick={handleClose}
     >
       <div
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-sm overflow-hidden rounded-card bg-white shadow-card"
         style={{
@@ -59,9 +94,10 @@ export function OdieOverlay({ title, subtitle, badge, onClose }: OdieOverlayProp
         }}
       >
         <button
+          ref={closeRef}
           onClick={handleClose}
           aria-label="Schließen"
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-lv-secondary shadow-card transition-colors hover:bg-white hover:text-lv-text"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-lv-secondary shadow-card transition-colors hover:bg-white hover:text-lv-text focus:outline-none focus-visible:ring-2 focus-visible:ring-lv-blue/40"
         >
           ✕
         </button>

@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import type { PaletteStartup } from "@/components/layout/CommandPalette";
-import { requireAuth } from "@/lib/auth-guards";
+import { requireApprovedAccess } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { VENTURE_SCOUT_ROLES } from "@/lib/roles";
 
@@ -9,7 +9,7 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireAuth();
+  const session = await requireApprovedAccess();
   const role = session.user.role;
 
   let startups: PaletteStartup[] = [];

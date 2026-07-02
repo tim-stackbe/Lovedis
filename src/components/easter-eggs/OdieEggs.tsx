@@ -47,7 +47,9 @@ export function OdieEggs() {
 
   // Use a ref for the latest "is an egg showing" flag so listeners stay stable.
   const activeRef = useRef(false);
-  activeRef.current = egg !== null;
+  useEffect(() => {
+    activeRef.current = egg !== null;
+  }, [egg]);
 
   const konamiPos = useRef(0);
   const typedBuffer = useRef("");
@@ -113,7 +115,7 @@ export function OdieEggs() {
     const onClick = (e: MouseEvent) => {
       if (activeRef.current) return;
       const target = e.target as HTMLElement | null;
-      if (!target?.closest(".lv-wordmark")) return;
+      if (!target?.closest("[data-lv-logo]")) return;
 
       const now = Date.now();
       logoClicks.current = [

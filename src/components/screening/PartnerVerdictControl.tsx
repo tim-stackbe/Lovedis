@@ -1,11 +1,12 @@
 "use client";
 
 import { Check, X } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { submitPartnerVerdict } from "@/app/actions/screening";
 import type { PartnerVerdict } from "@/generated/prisma/enums";
 import { PartnerVerdictBadge } from "@/components/shared/badges";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorChip, SuccessChip, Textarea } from "@/components/ui/Field";
 
 interface PartnerVerdictControlProps {
@@ -38,6 +39,15 @@ export function PartnerVerdictControl({
 }: PartnerVerdictControlProps) {
   const action = submitPartnerVerdict.bind(null, { startupId, challengeId });
   const [state, formAction, pending] = useActionState(action, undefined);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [passConfirm, setPassConfirm] = useState(false);
+
+  const submitPass = () => {
+    setPassConfirm(false);
+    const form = formRef.current;
+    const btn = form?.querySelector<HTMLButtonElement>('button[value="PASS"]');
+    form?.requestSubmit(btn ?? undefined);
+  };
 
   if (readOnly) {
     return (
@@ -58,7 +68,7 @@ export function PartnerVerdictControl({
   }
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form ref={formRef} action={formAction} className="space-y-3">
       {currentVerdict && currentVerdict !== "PENDING" && (
         <div className="flex items-center gap-2 text-xs text-lv-secondary">
           <span>Dein Verdikt:</span>
@@ -93,11 +103,26 @@ export function PartnerVerdictControl({
           size="sm"
           disabled={pending}
           className="flex-1"
+          onClick={(e) => {
+            e.preventDefault();
+            setPassConfirm(true);
+          }}
         >
           <X className="h-4 w-4" />
           Nicht weiter
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={passConfirm}
+        title="Nicht weiter verfolgen?"
+        description="Du markierst dieses Startup als „Nicht weiter“. Deine Einordnung wird dem Lovedis-Team übermittelt."
+        confirmLabel="Nicht weiter"
+        tone="danger"
+        pending={pending}
+        onConfirm={submitPass}
+        onCancel={() => setPassConfirm(false)}
+      />
     </form>
   );
 }

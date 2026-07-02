@@ -150,7 +150,34 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
         </Button>
       </div>
 
-      <Card className="overflow-x-auto lv-scroll">
+      {/* Mobile: simplified stacked summary + note (full table is desktop-only) */}
+      <div className="space-y-3 md:hidden">
+        <p className="rounded-button border border-lv-border bg-lv-surface px-3 py-2 text-xs text-lv-secondary">
+          Die vollständige Tabellen-Vorschau ist für die Desktop-Ansicht
+          optimiert. Hier siehst du eine kompakte Zusammenfassung — der Export
+          (PDF, Excel, CSV) enthält alle Spalten.
+        </p>
+        {rows.map((r, i) => (
+          <Card key={i} className="space-y-2 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold">{r.startup}</p>
+                <p className="text-xs text-lv-secondary">{r.industry}</p>
+              </div>
+              <ScorePill score={r.overall} />
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-lv-secondary">
+              <span>
+                {r.evaluator} · {r.date}
+              </span>
+              <RecommendationBadge value={r.recommendation} />
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop: full preview. On mobile kept rendered off-screen so PDF export still works. */}
+      <Card className="overflow-x-auto lv-scroll max-md:pointer-events-none max-md:fixed max-md:left-[-9999px] max-md:top-0">
         <div ref={reportRef} className="min-w-[960px] bg-white p-8">
           <div className="flex items-end justify-between border-b border-lv-border pb-5">
             <div>

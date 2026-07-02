@@ -56,6 +56,21 @@ body {
   letter-spacing: 0.18em;
 }
 
+/* Toast entrance */
+@keyframes lv-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.lv-toast-in {
+  animation: lv-toast-in 0.18s ease-out;
+}
+
 /* Thin scrollbars for kanban lanes etc. */
 .lv-scroll::-webkit-scrollbar {
   height: 8px;

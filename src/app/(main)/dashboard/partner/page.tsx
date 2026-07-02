@@ -14,6 +14,7 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
+import { getOpenPartnerCheckIns } from "@/lib/reminders";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Partner-Dashboard" };
@@ -22,41 +23,60 @@ export default async function PartnerDashboard() {
   const session = await requireRole(["BUSINESS_PARTNER"]);
   const userId = session.user.id;
 
-  const [challenges, pocs, shares, pendingCount] = await Promise.all([
-    prisma.challenge.findMany({
-      where: { createdById: userId },
-      include: { _count: { select: { applications: true } } },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-    }),
-    prisma.poCPerformance.findMany({
-      where: {
-        OR: [
-          { trackedById: userId },
-          { application: { challenge: { createdById: userId } } },
-        ],
-      },
-      include: {
-        application: { include: { startup: { select: { name: true } } } },
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-    }),
-    prisma.sharedScoring.findMany({
-      where: { recipientId: userId },
-      include: {
-        evaluation: { include: { startup: { select: { name: true } } } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.challengeApplication.count({
-      where: { status: "PENDING", challenge: { createdById: userId } },
-    }),
-  ]);
+  const [challenges, pocs, shares, pendingCount, screenedStartups, checkIns] =
+    await Promise.all([
+      prisma.challenge.findMany({
+        where: { createdById: userId },
+        include: { _count: { select: { applications: true } } },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+      }),
+      prisma.poCPerformance.findMany({
+        where: {
+          OR: [
+            { trackedById: userId },
+            { application: { challenge: { createdById: userId } } },
+          ],
+        },
+        include: {
+          application: { include: { startup: { select: { name: true } } } },
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+      }),
+      prisma.sharedScoring.findMany({
+        where: { recipientId: userId },
+        include: {
+          evaluation: { include: { startup: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      }),
+      prisma.challengeApplication.count({
+        where: { status: "PENDING", challenge: { createdById: userId } },
+      }),
+      prisma.startup.findMany({
+        where: {
+          screenedAt: { not: null },
+          pipelineStage: { notIn: ["PARTNERED", "PASSED"] },
+        },
+        select: {
+          partnerReviews: {
+            where: { partnerId: userId, challengeId: null },
+            select: { verdict: true },
+          },
+        },
+      }),
+      getOpenPartnerCheckIns(userId),
+    ]);
 
   const openChallenges = challenges.filter((c) => c.status === "OPEN").length;
   const runningPoCs = pocs.filter((p) => p.status === "RUNNING").length;
+  const toScreen = screenedStartups.filter(
+    (s) => !s.partnerReviews.some((r) => r.verdict !== "PENDING")
+  ).length;
+  const openCheckIns = checkIns.items.length;
+  const overdueCheckIns = checkIns.overdue;
 
   return (
     <>
@@ -102,9 +122,35 @@ export default async function PartnerDashboard() {
         </div>
       </section>
 
+      <section className="space-y-4">
+        <SectionLabel number="02" label="Mara" title="Dein Screening-Desk" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={toScreen > 0 ? "attention" : "muted"}
+              label="Startups zu screenen"
+              value={toScreen}
+              sub="warten auf dein Verdikt →"
+            />
+          </Link>
+          <Link href="/check-ins" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={overdueCheckIns > 0 ? "warn" : openCheckIns > 0 ? "info" : "muted"}
+              label="Offene Check-ins"
+              value={openCheckIns}
+              sub={
+                overdueCheckIns > 0
+                  ? `davon ${overdueCheckIns} überfällig →`
+                  : "anstehende Check-ins →"
+              }
+            />
+          </Link>
+        </div>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <SectionLabel number="02" label="Challenges" title="Deine Challenges" />
+          <SectionLabel number="03" label="Challenges" title="Deine Challenges" />
           {challenges.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
               Noch keine Challenges —{" "}
@@ -154,7 +200,7 @@ export default async function PartnerDashboard() {
         </div>
 
         <div className="space-y-4">
-          <SectionLabel number="03" label="Piloten" title="PoC-Tracking" />
+          <SectionLabel number="04" label="Piloten" title="PoC-Tracking" />
           {pocs.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
               Nimm eine Bewerbung an, um deinen ersten PoC zu starten.
@@ -208,7 +254,7 @@ export default async function PartnerDashboard() {
 
       <section className="space-y-4">
         <SectionLabel
-          number="04"
+          number="05"
           label="Insights"
           title="Mit dir geteilte Scorings"
         />

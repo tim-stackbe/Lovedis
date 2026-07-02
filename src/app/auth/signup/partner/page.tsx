@@ -7,8 +7,8 @@ export const metadata: Metadata = { title: "Partner-Registrierung" };
 export default function PartnerSignupPage() {
   return (
     <AuthLayout
-      headline={["Challenges stellen.", "Startups treffen.", "PoCs bauen."]}
-      subline="Bring deine Innovations-Challenges zu einem kuratierten Pool bewerteter Startups."
+      headline={["Kuratiert screenen.", "Schnell entscheiden.", "Dranbleiben."]}
+      subline="Erhalte vom Lovedis-Team vorsortierte Startups, gib schnelle Verdikte ab und verfolge Check-ins — gebündelt im Partner-Hub."
     >
       <SignupForm kind="partner" />
     </AuthLayout>

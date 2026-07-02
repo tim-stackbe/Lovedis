@@ -5,6 +5,7 @@ import { z } from "zod";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
 const shareSchema = z.object({
   evaluationId: z.string().min(1),
@@ -74,7 +75,11 @@ export async function shareScoring(
 
 export async function revokeSharedScoring(sharingId: string): Promise<void> {
   await requireRole(["ADMIN"]);
-  await prisma.sharedScoring.delete({ where: { id: sharingId } });
+  try {
+    await prisma.sharedScoring.delete({ where: { id: sharingId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath("/sharing");
   revalidatePath("/scorings");
 }

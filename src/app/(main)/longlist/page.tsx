@@ -11,7 +11,7 @@ import {
 } from "@/components/shared/badges";
 import { LinkButton } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { BannerStat } from "@/components/ui/Card";
+import { BannerStat, Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
@@ -174,7 +174,84 @@ export default async function LonglistPage({
           }
         />
       ) : (
-        <TableCard>
+        <>
+          {/* Mobile: stacked cards */}
+          <div className="space-y-3 md:hidden">
+            {startups.map((s) => {
+              const cont = s.partnerReviews.filter(
+                (r) => r.verdict === "CONTINUE"
+              ).length;
+              const pass = s.partnerReviews.filter(
+                (r) => r.verdict === "PASS"
+              ).length;
+              const pending = s.partnerReviews.filter(
+                (r) => r.verdict === "PENDING"
+              ).length;
+              return (
+                <Card key={s.id} className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/startups/${s.id}`}
+                        className="font-semibold hover:text-lv-blue"
+                      >
+                        {s.name}
+                      </Link>
+                      <p className="text-xs text-lv-secondary">{s.industry}</p>
+                    </div>
+                    <PipelineStageBadge value={s.pipelineStage} />
+                  </div>
+                  <dl className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <dt className="text-xs text-lv-secondary">Batch</dt>
+                      <dd>{s.campaign?.name ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-lv-secondary">Quelle</dt>
+                      <dd>
+                        {s.sourceType ? (
+                          <SourceTypeBadge value={s.sourceType} />
+                        ) : (
+                          "—"
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-lv-secondary">Einordnung</dt>
+                      <dd>
+                        {s.screenRecommendation ? (
+                          <RecommendationBadge value={s.screenRecommendation} />
+                        ) : (
+                          <span className="text-lv-secondary">offen</span>
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-lv-secondary">
+                        Partner-Verdikte
+                      </dt>
+                      <dd>
+                        {s.partnerReviews.length === 0 ? (
+                          <span className="text-lv-secondary">—</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {cont > 0 && <PartnerVerdictBadge value="CONTINUE" />}
+                            {pass > 0 && <PartnerVerdictBadge value="PASS" />}
+                            {pending > 0 && (
+                              <PartnerVerdictBadge value="PENDING" />
+                            )}
+                          </div>
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Desktop: table */}
+          <TableCard className="hidden md:block">
           <THead>
             <tr>
               <Th>Startup</Th>
@@ -244,7 +321,8 @@ export default async function LonglistPage({
               );
             })}
           </tbody>
-        </TableCard>
+          </TableCard>
+        </>
       )}
     </>
   );

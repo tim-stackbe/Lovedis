@@ -4,6 +4,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -67,21 +68,41 @@ function StartupCard({
   );
 }
 
-function DraggableCard({ startup }: { startup: PipelineStartup }) {
+function DraggableCard({
+  startup,
+  onMove,
+}: {
+  startup: PipelineStartup;
+  onMove: (id: string, stage: PipelineStage) => void;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: startup.id,
   });
   return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={cn(
-        "cursor-grab touch-none active:cursor-grabbing",
-        isDragging && "opacity-30"
-      )}
-    >
-      <StartupCard startup={startup} />
+    <div ref={setNodeRef} className={cn(isDragging && "opacity-30")}>
+      {/* Drag handle: touch-none only here so vertical page scroll still works elsewhere */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="cursor-grab touch-none active:cursor-grabbing"
+      >
+        <StartupCard startup={startup} />
+      </div>
+      {/* Non-drag fallback for touch / small screens */}
+      <label className="mt-1.5 block md:hidden">
+        <span className="sr-only">Phase ändern</span>
+        <select
+          value={startup.pipelineStage}
+          onChange={(e) => onMove(startup.id, e.target.value as PipelineStage)}
+          className="w-full rounded-button border border-lv-border bg-lv-surface px-2 py-1.5 text-xs font-medium text-lv-text"
+        >
+          {PIPELINE_STAGES.map((s) => (
+            <option key={s} value={s}>
+              {PIPELINE_STAGE_LABELS[s]}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }
@@ -89,9 +110,11 @@ function DraggableCard({ startup }: { startup: PipelineStartup }) {
 function Column({
   stage,
   startups,
+  onMove,
 }: {
   stage: PipelineStage;
   startups: PipelineStartup[];
+  onMove: (id: string, stage: PipelineStage) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
   return (
@@ -117,7 +140,7 @@ function Column({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-2 pt-0">
         {startups.map((s) => (
-          <DraggableCard key={s.id} startup={s} />
+          <DraggableCard key={s.id} startup={s} onMove={onMove} />
         ))}
         {startups.length === 0 && (
           <div className="rounded-button border border-dashed border-lv-border p-4 text-center text-xs text-lv-secondary">
@@ -141,8 +164,22 @@ export function PipelineBoard({ startups }: { startups: PipelineStartup[] }) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    })
   );
+
+  const moveStartup = (id: string, stage: PipelineStage) => {
+    if (!PIPELINE_STAGES.includes(stage)) return;
+    const startup = optimistic.find((s) => s.id === id);
+    if (!startup || startup.pipelineStage === stage) return;
+
+    startTransition(async () => {
+      applyOptimistic({ id: startup.id, stage });
+      await updatePipelineStage(startup.id, stage);
+    });
+  };
 
   const onDragStart = (event: DragStartEvent) => {
     setActiveId(String(event.active.id));
@@ -152,15 +189,7 @@ export function PipelineBoard({ startups }: { startups: PipelineStartup[] }) {
     setActiveId(null);
     const { active, over } = event;
     if (!over) return;
-    const stage = String(over.id) as PipelineStage;
-    if (!PIPELINE_STAGES.includes(stage)) return;
-    const startup = optimistic.find((s) => s.id === String(active.id));
-    if (!startup || startup.pipelineStage === stage) return;
-
-    startTransition(async () => {
-      applyOptimistic({ id: startup.id, stage });
-      await updatePipelineStage(startup.id, stage);
-    });
+    moveStartup(String(active.id), String(over.id) as PipelineStage);
   };
 
   const active = optimistic.find((s) => s.id === activeId);
@@ -173,6 +202,7 @@ export function PipelineBoard({ startups }: { startups: PipelineStartup[] }) {
             key={stage}
             stage={stage}
             startups={optimistic.filter((s) => s.pipelineStage === stage)}
+            onMove={moveStartup}
           />
         ))}
       </div>

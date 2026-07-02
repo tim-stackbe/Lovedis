@@ -204,6 +204,11 @@ model User {
   role         UserRole @default(MEMBER)
   isActive     Boolean  @default(true)
   company      String?
+  // Partner approval gate: self-registered BUSINESS_PARTNER accounts start
+  // null (= pending) and cannot reach partner-facing data until an admin
+  // approves them. All other roles (and admin-created users) are set to now()
+  // at creation, so they are never gated.
+  approvedAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

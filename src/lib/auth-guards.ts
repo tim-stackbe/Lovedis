@@ -31,11 +31,49 @@ export async function requireAuth(): Promise<Session> {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, role: true },
   });
   if (!user || !user.isActive) redirect("/api/session-clear");
 
+  // The JWT carries a role snapshot from login and only refreshes on re-login.
+  // Overwrite it with the freshly-read DB role so privilege changes (e.g. an
+  // admin demoted to member) take effect immediately, on the very next request
+  // — every downstream `requireRole` then authorizes against the current role.
+  session.user.role = user.role;
+
   return session;
+}
+
+/**
+ * App-shell gate for the main authenticated layout. On top of `requireAuth`,
+ * this blocks self-registered business partners whose account is still pending
+ * admin approval (`approvedAt` null) from reaching any partner-facing data and
+ * sends them to `/pending`. Kept OUT of `requireAuth` itself so the standalone
+ * `/pending` page (which uses `requireAuth`) never redirect-loops.
+ */
+export async function requireApprovedAccess(): Promise<Session> {
+  const session = await requireAuth();
+  if (session.user.role === "BUSINESS_PARTNER") {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { approvedAt: true },
+    });
+    if (!user?.approvedAt) redirect("/pending");
+  }
+  return session;
+}
+
+/**
+ * Defense-in-depth check for partner-write actions: returns true unless the
+ * user is a business partner still awaiting approval. Non-partners always pass
+ * (they are approved at creation).
+ */
+export async function isPartnerApproved(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { approvedAt: true },
+  });
+  return user?.approvedAt != null;
 }
 
 /**

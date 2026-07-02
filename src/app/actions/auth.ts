@@ -73,6 +73,9 @@ async function signup(
     return { error: "Ein Konto mit dieser E-Mail existiert bereits." };
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  // Self-registered partners land in the approval queue (approvedAt null =
+  // pending); every other self-signup role is approved immediately so it is
+  // never gated.
   await prisma.user.create({
     data: {
       email,
@@ -80,6 +83,7 @@ async function signup(
       company: parsed.data.company,
       passwordHash,
       role,
+      approvedAt: role === "BUSINESS_PARTNER" ? null : new Date(),
     },
   });
 

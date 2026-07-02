@@ -18,6 +18,7 @@ import {
   STARTUP_STAGES,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
 const startupSchema = z.object({
   name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein").max(160),
@@ -106,7 +107,14 @@ export async function updateStartup(
 
 export async function deleteStartup(startupId: string): Promise<void> {
   await requireScoutModule();
-  await prisma.startup.delete({ where: { id: startupId } });
+  // A stale id (already deleted elsewhere) is a no-op: the desired end state —
+  // the startup being gone — already holds, so we revalidate + redirect rather
+  // than 500 on P2025.
+  try {
+    await prisma.startup.delete({ where: { id: startupId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath("/startups");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
@@ -126,10 +134,15 @@ export async function updatePipelineStage(
   const parsed = stageSchema.safeParse({ startupId, stage });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  await prisma.startup.update({
-    where: { id: parsed.data.startupId },
-    data: { pipelineStage: parsed.data.stage },
-  });
+  try {
+    await prisma.startup.update({
+      where: { id: parsed.data.startupId },
+      data: { pipelineStage: parsed.data.stage },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) return { error: "Startup nicht gefunden." };
+    throw err;
+  }
   revalidatePath("/pipeline");
   revalidatePath("/startups");
   revalidatePath(`/startups/${startupId}`);
@@ -176,7 +189,11 @@ export async function deleteContact(
   startupId: string
 ): Promise<void> {
   await requireScoutModule();
-  await prisma.contact.delete({ where: { id: contactId } });
+  try {
+    await prisma.contact.delete({ where: { id: contactId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath(`/startups/${startupId}`);
 }
 
@@ -214,7 +231,11 @@ export async function deleteAttachment(
   startupId: string
 ): Promise<void> {
   await requireScoutModule();
-  await prisma.attachment.delete({ where: { id: attachmentId } });
+  try {
+    await prisma.attachment.delete({ where: { id: attachmentId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath(`/startups/${startupId}`);
 }
 

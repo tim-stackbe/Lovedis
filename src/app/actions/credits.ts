@@ -12,6 +12,9 @@ import { prisma } from "@/lib/prisma";
 // GRANT adds, SPEND subtracts, ADJUSTMENT applies the signed amount as entered.
 // ---------------------------------------------------------------------------
 
+/** Sentinel thrown inside the booking transaction when a debit would go < 0. */
+class InsufficientBalanceError extends Error {}
+
 const bookingSchema = z.object({
   startupId: z.string().min(1, "Startup ist erforderlich"),
   type: z.enum(["GRANT", "SPEND", "ADJUSTMENT"]),
@@ -66,21 +69,45 @@ export async function bookCreditTransaction(
 
   const accountId = await ensureAccount(startupId);
 
-  await prisma.$transaction([
-    prisma.creditTransaction.create({
-      data: {
-        accountId,
-        type,
-        amount: delta,
-        reason,
-        createdById: session.user.id,
-      },
-    }),
-    prisma.creditAccount.update({
-      where: { id: accountId },
-      data: { balance: { increment: delta } },
-    }),
-  ]);
+  // A negative delta (SPEND, or a negative ADJUSTMENT correction) must never
+  // drive the cached balance below 0. We apply the balance change with a
+  // conditional updateMany guarded on `balance >= |delta|`; if it matches 0
+  // rows the balance is insufficient and we abort the whole transaction so no
+  // orphan ledger entry is written. Positive deltas (GRANT / positive
+  // ADJUSTMENT) apply unconditionally.
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (delta < 0) {
+        const applied = await tx.creditAccount.updateMany({
+          where: { id: accountId, balance: { gte: -delta } },
+          data: { balance: { increment: delta } },
+        });
+        if (applied.count === 0) throw new InsufficientBalanceError();
+      } else {
+        await tx.creditAccount.update({
+          where: { id: accountId },
+          data: { balance: { increment: delta } },
+        });
+      }
+      await tx.creditTransaction.create({
+        data: {
+          accountId,
+          type,
+          amount: delta,
+          reason,
+          createdById: session.user.id,
+        },
+      });
+    });
+  } catch (err) {
+    if (err instanceof InsufficientBalanceError) {
+      return {
+        error:
+          "Buchung nicht möglich — das Guthaben des Startups würde unter 0 fallen.",
+      };
+    }
+    throw err;
+  }
 
   revalidatePath("/credits");
   revalidatePath("/venture/credits");

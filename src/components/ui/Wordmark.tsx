@@ -25,6 +25,7 @@ export function Wordmark({
 }: WordmarkProps) {
   return (
     <span
+      data-lv-logo
       className={cn(
         "lv-wordmark inline-flex items-center",
         SIZE_CLASSES[size],

@@ -42,7 +42,7 @@ export default async function IntrosPage() {
         title="Intro-Anfragen"
         subtitle="Investoren bekunden Interesse an Startups — du stellst die Verbindung her. „Verbinden“ eröffnet einen direkten Chat zwischen Investor und Startup."
       >
-        <div className="grid grid-cols-3 gap-3 sm:max-w-sm">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:max-w-sm">
           <BannerStat label="Offen" value={pending.length} />
           <BannerStat label="Verbunden" value={connected} />
           <BannerStat label="Gesamt" value={requests.length} />

@@ -63,7 +63,7 @@ export default async function MyBookingsPage() {
           </LinkButton>
         }
       >
-        <div className="grid grid-cols-3 gap-3 sm:max-w-md">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:max-w-md">
           <BannerStat label="Offen" value={open} />
           <BannerStat label="Bestätigt" value={confirmed} />
           <BannerStat label="Gesamt" value={bookings.length} />

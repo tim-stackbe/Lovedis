@@ -9,6 +9,5 @@ export function firstZodError(error: {
 }): string {
   const issue = error.issues[0];
   if (!issue) return "Ungültige Eingabe.";
-  const path = issue.path.join(".");
-  return path ? `${path}: ${issue.message}` : issue.message;
+  return issue.message;
 }

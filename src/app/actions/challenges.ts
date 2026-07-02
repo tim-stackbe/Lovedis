@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ChallengeStatus } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireAuth, requireRole } from "@/lib/auth-guards";
+import { isPartnerApproved, requireAuth, requireRole } from "@/lib/auth-guards";
 import { CHALLENGE_STATUSES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -44,6 +44,13 @@ export async function createChallenge(
   formData: FormData
 ): Promise<ActionState> {
   const session = await requireRole(["ADMIN", "BUSINESS_PARTNER"]);
+  // A pending partner cannot create use-cases/challenges until approved.
+  if (
+    session.user.role === "BUSINESS_PARTNER" &&
+    !(await isPartnerApproved(session.user.id))
+  ) {
+    return { error: "Dein Partner-Konto ist noch nicht freigegeben." };
+  }
   const parsed = parseChallengeForm(formData);
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 

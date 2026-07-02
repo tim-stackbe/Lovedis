@@ -8,6 +8,7 @@ import {
 } from "@/components/layout/CommandPalette";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { Toaster } from "@/components/ui/Toaster";
 import { useAppStore } from "@/stores/useAppStore";
 
 interface AppShellProps {
@@ -52,6 +53,7 @@ export function AppShell({ userName, role, startups, children }: AppShellProps) 
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
       />
+      <Toaster />
     </div>
   );
 }

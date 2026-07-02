@@ -24,6 +24,7 @@ import {
   Sparkles,
   Store,
   Target,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -153,6 +154,25 @@ const MARKETPLACE_SECTION: NavSection = {
   ],
 };
 
+/**
+ * Platform-level coordination pages for the internal team. Intro-Anfragen is
+ * shared by ADMIN + MEMBER; ADMIN additionally reaches Nutzerverwaltung and the
+ * Sharing (Geteilte Scorings) admin so those surfaces aren't orphaned.
+ */
+const PLATFORM_SECTION_MEMBER: NavSection = {
+  title: "Plattform",
+  items: [{ label: "Intro-Anfragen", href: "/intros", icon: Handshake }],
+};
+
+const PLATFORM_SECTION_ADMIN: NavSection = {
+  title: "Plattform",
+  items: [
+    { label: "Intro-Anfragen", href: "/intros", icon: Handshake },
+    { label: "Nutzerverwaltung", href: "/users", icon: Users },
+    { label: "Geteilte Scorings", href: "/sharing", icon: Share2 },
+  ],
+};
+
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
   href: "/messages",
@@ -171,6 +191,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     SCOUT_SECTION,
     TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
+    PLATFORM_SECTION_ADMIN,
     SETTINGS_SECTION,
   ],
   MEMBER: [
@@ -180,6 +201,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     SCOUT_SECTION,
     TEAM_SSOT_SECTION,
     MARKETPLACE_SECTION,
+    PLATFORM_SECTION_MEMBER,
     SETTINGS_SECTION,
   ],
   BUSINESS_PARTNER: [

@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Menu, Search } from "lucide-react";
+import { HelpCircle, LogOut, Menu, Search } from "lucide-react";
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { Badge } from "@/components/ui/Badge";
@@ -23,6 +23,9 @@ export function Topbar({
 }: TopbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const FAQ_URL =
+    "https://app.notion.com/p/startmiup-factory1/Eine-Plattform-f-r-die-Darstellung-unseres-Programm-Portfolios-ist-etabliert-Startups-nutzen-das-V-358e06d44d1b80a28aebf902c547f220";
+
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-lv-border bg-white px-4 sm:px-6">
       <button
@@ -44,7 +47,19 @@ export function Topbar({
         </kbd>
       </button>
 
-      <div className="ml-auto relative">
+      <a
+        href={FAQ_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ml-auto flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium text-lv-text hover:bg-lv-surface transition-colors"
+        aria-label="Hilfe"
+        title="Hilfe"
+      >
+        <HelpCircle className="h-5 w-5 shrink-0" />
+        <span className="hidden sm:inline">Hilfe</span>
+      </a>
+
+      <div className="relative">
         <button
           onClick={() => setMenuOpen((o) => !o)}
           className="flex items-center gap-3 rounded-button px-2 py-1.5 hover:bg-lv-surface transition-colors"
