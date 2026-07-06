@@ -7,6 +7,7 @@ import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Pipeline" };
@@ -15,22 +16,20 @@ export default async function PipelinePage() {
   await requireScoutModule();
 
   const startups = await prisma.startup.findMany({
-    include: {
-      evaluations: {
-        orderBy: { updatedAt: "desc" },
-        take: 1,
-        select: { overallScore: true },
-      },
-    },
+    select: { id: true, name: true, industry: true, pipelineStage: true },
     orderBy: { updatedAt: "desc" },
   });
+
+  const consensusByStartup = await getConsensusByStartup(
+    startups.map((s) => s.id)
+  );
 
   const board: PipelineStartup[] = startups.map((s) => ({
     id: s.id,
     name: s.name,
     industry: s.industry,
     pipelineStage: s.pipelineStage,
-    latestScore: s.evaluations[0]?.overallScore ?? null,
+    consensusScore: consensusByStartup.get(s.id)?.weightedTotal ?? null,
   }));
 
   const inEvaluation = board.filter(

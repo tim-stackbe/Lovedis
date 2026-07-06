@@ -7,6 +7,7 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { LinkButton } from "@/components/ui/Button";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import { RADAR_QUADRANTS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -17,21 +18,19 @@ export default async function RadarPage() {
 
   const startups = await prisma.startup.findMany({
     where: { radarQuadrant: { not: null }, radarRing: { not: null } },
-    include: {
-      evaluations: {
-        orderBy: { updatedAt: "desc" },
-        take: 1,
-        select: { overallScore: true },
-      },
-    },
+    select: { id: true, name: true, radarQuadrant: true, radarRing: true },
   });
+
+  const consensusByStartup = await getConsensusByStartup(
+    startups.map((s) => s.id)
+  );
 
   const blips: RadarStartup[] = startups.map((s) => ({
     id: s.id,
     name: s.name,
     quadrant: s.radarQuadrant!,
     ring: s.radarRing!,
-    latestScore: s.evaluations[0]?.overallScore ?? null,
+    consensusScore: consensusByStartup.get(s.id)?.weightedTotal ?? null,
   }));
 
   const adopt = blips.filter((b) => b.ring === "ADOPT").length;

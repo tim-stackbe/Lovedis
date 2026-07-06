@@ -22,17 +22,27 @@ export interface ReportRow {
   industry: string;
   stage: string;
   pipeline: string;
-  evaluator: string;
-  date: string;
+  /** Number of scout-role evaluators behind the consensus row. */
+  evaluatorCount: number;
+  /** Team-consensus mean per criterion (0–5). */
   scores: Record<string, number>;
+  /** Team-consensus weighted total (0–5). */
   overall: number;
   recommendation: Recommendation;
-  /** Challenge-Fit gate triggered (status "Kein Fit (Gate)"). */
+  /** Challenge-Fit gate triggered on the aggregate (status "Kein Fit (Gate)"). */
   gated: boolean;
+  /** Divergence: lowest / highest individual total (null when no evaluators). */
+  minTotal: number | null;
+  maxTotal: number | null;
 }
 
 function statusLabel(r: ReportRow): string {
   return r.gated ? GATE_STATUS_LABEL : RECOMMENDATION_LABELS[r.recommendation];
+}
+
+/** Rounds a criterion mean to one decimal for export/display. */
+function fmt(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function toFlatRows(rows: ReportRow[]) {
@@ -41,12 +51,13 @@ function toFlatRows(rows: ReportRow[]) {
     Branche: r.industry,
     Phase: r.stage,
     Pipeline: r.pipeline,
-    "Bewertet von": r.evaluator,
-    Datum: r.date,
+    Bewertungen: r.evaluatorCount,
     ...Object.fromEntries(
-      SCORE_DIMENSIONS.map((d) => [DIMENSION_LABELS[d], r.scores[d] ?? 0])
+      SCORE_DIMENSIONS.map((d) => [DIMENSION_LABELS[d], fmt(r.scores[d] ?? 0)])
     ),
-    "Gesamt (gewichtet)": r.overall,
+    "Konsens (gewichtet)": r.overall,
+    "Spanne min": r.minTotal ?? "",
+    "Spanne max": r.maxTotal ?? "",
     Empfehlung: RECOMMENDATION_LABELS[r.recommendation],
     Status: statusLabel(r),
   }));
@@ -175,7 +186,8 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
             </div>
             <div className="flex items-center justify-between gap-2 text-xs text-lv-secondary">
               <span>
-                {r.evaluator} · {r.date}
+                {r.evaluatorCount}{" "}
+                {r.evaluatorCount === 1 ? "Bewertung" : "Bewertungen"}
               </span>
               <EvaluationStatusBadge
                 recommendation={r.recommendation}
@@ -196,7 +208,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
                 Portfolio-Bewertungsbericht
               </h2>
               <p className="text-sm text-lv-secondary">
-                {rows.length} Bewertungen · erstellt am {stamp}
+                {rows.length} Startups · Team-Konsens · erstellt am {stamp}
               </p>
             </div>
             <span className="lv-wordmark text-xs text-lv-blue">
@@ -208,8 +220,8 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
             <thead>
               <tr className="bg-lv-surface text-lv-secondary uppercase tracking-wide">
                 <th className="px-2.5 py-2 text-left font-semibold">Startup</th>
-                <th className="px-2.5 py-2 text-left font-semibold">
-                  Bewertet von
+                <th className="px-2.5 py-2 text-center font-semibold">
+                  Bewertungen
                 </th>
                 {SCORE_DIMENSIONS.map((d) => (
                   <th
@@ -220,7 +232,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
                     {DIMENSION_LABELS[d].split(" ")[0]}
                   </th>
                 ))}
-                <th className="px-2.5 py-2 text-right font-semibold">Gesamt</th>
+                <th className="px-2.5 py-2 text-right font-semibold">Konsens</th>
                 <th className="px-2.5 py-2 text-right font-semibold">
                   Empfehlung / Status
                 </th>
@@ -235,16 +247,15 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
                       {r.industry}
                     </span>
                   </td>
-                  <td className="px-2.5 py-2 text-lv-secondary">
-                    {r.evaluator}
-                    <span className="block">{r.date}</span>
+                  <td className="px-2.5 py-2 text-center tabular-nums text-lv-secondary">
+                    {r.evaluatorCount}
                   </td>
                   {SCORE_DIMENSIONS.map((d) => (
                     <td
                       key={d}
                       className="px-2 py-2 text-center tabular-nums"
                     >
-                      {r.scores[d] ?? 0}
+                      {fmt(r.scores[d] ?? 0)}
                     </td>
                   ))}
                   <td className="px-2.5 py-2 text-right">

@@ -17,8 +17,8 @@ export interface RadarStartup {
   name: string;
   quadrant: RadarQuadrant;
   ring: RadarRing;
-  /** Weighted challenge total (0–5) of the latest evaluation, for context. */
-  latestScore: number | null;
+  /** Team-consensus weighted total (0–5) for context (null = not yet scored). */
+  consensusScore: number | null;
 }
 
 const SIZE = 640;
@@ -207,8 +207,8 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                       textAnchor="middle"
                     >
                       {s.name}
-                      {s.latestScore != null
-                        ? ` · ${formatScore(s.latestScore)}`
+                      {s.consensusScore != null
+                        ? ` · ${formatScore(s.consensusScore)}`
                         : ""}
                     </text>
                   )}
@@ -275,10 +275,10 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                 {RADAR_RING_LABELS[hoveredStartup.ring]}
               </p>
               <p className="mt-1 text-xs text-lv-secondary">
-                Gewichteter Score:{" "}
+                Konsens-Score:{" "}
                 <span className="font-semibold text-lv-text">
-                  {hoveredStartup.latestScore != null
-                    ? `${formatScore(hoveredStartup.latestScore)} / 5`
+                  {hoveredStartup.consensusScore != null
+                    ? `${formatScore(hoveredStartup.consensusScore)} / 5`
                     : "—"}
                 </span>
               </p>
@@ -299,8 +299,8 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                     />
                     <span className="truncate">{s.name}</span>
                     <span className="ml-auto text-xs text-lv-secondary">
-                      {s.latestScore != null
-                        ? formatScore(s.latestScore)
+                      {s.consensusScore != null
+                        ? formatScore(s.consensusScore)
                         : RADAR_RING_LABELS[s.ring]}
                     </span>
                   </Link>

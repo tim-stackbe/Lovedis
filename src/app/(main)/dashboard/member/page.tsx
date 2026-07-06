@@ -12,9 +12,9 @@ import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Team-Dashboard" };
@@ -29,7 +29,8 @@ export default async function MemberDashboard() {
     myEvaluationCount,
     onRadar,
     pipelineGroups,
-    topStartups,
+    startupMeta,
+    consensusByStartup,
     myRecent,
     openBookings,
     dueCheckIns,
@@ -40,14 +41,10 @@ export default async function MemberDashboard() {
     prisma.evaluation.count({ where: { evaluatorId: session.user.id } }),
     prisma.startup.count({ where: { radarQuadrant: { not: null } } }),
     prisma.startup.groupBy({ by: ["pipelineStage"], _count: true }),
-    prisma.evaluation.findMany({
-      orderBy: { overallScore: "desc" },
-      take: 5,
-      include: {
-        startup: { select: { id: true, name: true, industry: true } },
-        scores: { select: { dimension: true, value: true } },
-      },
+    prisma.startup.findMany({
+      select: { id: true, name: true, industry: true },
     }),
+    getConsensusByStartup(),
     prisma.evaluation.findMany({
       where: { evaluatorId: session.user.id },
       orderBy: { updatedAt: "desc" },
@@ -77,6 +74,13 @@ export default async function MemberDashboard() {
   const pendingPartnerVerdicts = screenedForVerdicts.filter(
     (s) => !s.partnerReviews.some((r) => r.verdict !== "PENDING")
   ).length;
+
+  // Top startups by team consensus (not by a single evaluation).
+  const topStartups = startupMeta
+    .map((s) => ({ startup: s, consensus: consensusByStartup.get(s.id) }))
+    .filter((row) => row.consensus && row.consensus.evaluatorCount > 0)
+    .sort((a, b) => b.consensus!.weightedTotal - a.consensus!.weightedTotal)
+    .slice(0, 5);
 
   const pipelineData = PIPELINE_STAGES.map((stage) => ({
     name: PIPELINE_STAGE_LABELS[stage],
@@ -182,27 +186,27 @@ export default async function MemberDashboard() {
               </tr>
             </THead>
             <tbody>
-              {topStartups.map((e) => (
-                <Tr key={e.id}>
+              {topStartups.map(({ startup, consensus }) => (
+                <Tr key={startup.id}>
                   <Td>
                     <Link
-                      href={`/startups/${e.startup.id}`}
+                      href={`/startups/${startup.id}`}
                       className="font-semibold hover:text-lv-blue"
                     >
-                      {e.startup.name}
+                      {startup.name}
                     </Link>
                     <p className="text-xs text-lv-secondary">
-                      {e.startup.industry}
+                      {startup.industry}
                     </p>
                   </Td>
                   <Td>
                     <EvaluationStatusBadge
-                      recommendation={e.recommendation}
-                      gated={isChallengeFitGated(scoresToMap(e.scores))}
+                      recommendation={consensus!.recommendation}
+                      gated={consensus!.gated}
                     />
                   </Td>
                   <Td className="text-right">
-                    <ScorePill score={e.overallScore} />
+                    <ScorePill score={consensus!.weightedTotal} />
                   </Td>
                 </Tr>
               ))}

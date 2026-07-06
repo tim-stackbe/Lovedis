@@ -27,10 +27,14 @@ export interface CompareStartup {
   id: string;
   name: string;
   industry: string;
+  /** Team-consensus mean per criterion (0–5). */
   scores: Partial<Record<ScoreDimension, number>>;
+  /** Team-consensus weighted total (0–5). */
   overallScore: number;
   recommendation: Recommendation;
   hasEvaluation: boolean;
+  /** Number of scout-role evaluators behind the consensus. */
+  evaluatorCount: number;
 }
 
 const SERIES_COLORS = ["#2926E5", "#FF5736", "#0E7C4A", "#7A5A00"];
@@ -153,6 +157,10 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
                       className="px-4 py-3 text-right font-semibold"
                     >
                       {s.name}
+                      <span className="block text-[11px] font-normal normal-case text-lv-secondary">
+                        Konsens · {s.evaluatorCount}{" "}
+                        {s.evaluatorCount === 1 ? "Bewertung" : "Bewertungen"}
+                      </span>
                     </th>
                   ))}
                 </tr>

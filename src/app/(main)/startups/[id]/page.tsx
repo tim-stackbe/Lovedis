@@ -28,6 +28,7 @@ import { InitialAssessmentForm } from "@/components/screening/InitialAssessmentF
 import { AttachmentForm } from "@/components/startups/AttachmentForm";
 import { ContactForm } from "@/components/startups/ContactForm";
 import { StartupForm } from "@/components/startups/StartupForm";
+import { TeamConsensusCard } from "@/components/scoring/TeamConsensus";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BannerStat, Card } from "@/components/ui/Card";
@@ -35,6 +36,7 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getStartupConsensus } from "@/lib/consensus-data";
 import {
   RADAR_QUADRANT_LABELS,
   RADAR_RING_LABELS,
@@ -80,7 +82,11 @@ export default async function StartupDetailPage({
     select: { id: true, name: true },
   });
 
-  const latest = startup.evaluations[0];
+  // Aggregated team consensus (scout-role evaluators only, most recent per
+  // evaluator). This is the primary result; the per-evaluator table below shows
+  // the individual breakdown for transparency.
+  const consensus = await getStartupConsensus(startup.id);
+  const hasConsensus = consensus.evaluatorCount > 0;
 
   return (
     <>
@@ -99,8 +105,8 @@ export default async function StartupDetailPage({
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat
-            label="Letzter Score"
-            value={latest ? latest.overallScore.toFixed(1) : "—"}
+            label="Konsens-Score"
+            value={hasConsensus ? consensus.weightedTotal.toFixed(1) : "—"}
           />
           <BannerStat
             label="Phase"
@@ -200,18 +206,18 @@ export default async function StartupDetailPage({
                     : "Nicht platziert"}
                 </span>
               </div>
-              {latest && (
+              {hasConsensus && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-lv-secondary">Status</span>
+                    <span className="text-lv-secondary">Konsens-Status</span>
                     <EvaluationStatusBadge
-                      recommendation={latest.recommendation}
-                      gated={isChallengeFitGated(scoresToMap(latest.scores))}
+                      recommendation={consensus.recommendation}
+                      gated={consensus.gated}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-lv-secondary">Empfehlung</span>
-                    <RecommendationBadge value={latest.recommendation} />
+                    <RecommendationBadge value={consensus.recommendation} />
                   </div>
                 </>
               )}
@@ -289,52 +295,55 @@ export default async function StartupDetailPage({
           label="Bewerten"
           title={`Bewertungen (${startup.evaluations.length})`}
         />
-        {startup.evaluations.length === 0 ? (
-          <Card className="p-6 text-sm text-lv-secondary">
-            Noch keine Bewertungen — starte eine mit dem Button oben.
-          </Card>
-        ) : (
-          <TableCard>
-            <THead>
-              <tr>
-                <Th>Bewertet von</Th>
-                <Th>Aktualisiert</Th>
-                <Th>Empfehlung</Th>
-                <Th>Status</Th>
-                <Th className="text-right">Gesamt</Th>
-              </tr>
-            </THead>
-            <tbody>
-              {startup.evaluations.map((e) => (
-                <Tr key={e.id}>
-                  <Td>
-                    <Link
-                      href={`/evaluations/${e.id}`}
-                      className="font-semibold hover:text-lv-blue"
-                    >
-                      {e.evaluator.name}
-                    </Link>
-                  </Td>
-                  <Td className="text-lv-secondary">
-                    {formatDate(e.updatedAt)}
-                  </Td>
-                  <Td>
-                    <RecommendationBadge value={e.recommendation} />
-                  </Td>
-                  <Td>
-                    <EvaluationStatusBadge
-                      recommendation={e.recommendation}
-                      gated={isChallengeFitGated(scoresToMap(e.scores))}
-                    />
-                  </Td>
-                  <Td className="text-right">
-                    <ScorePill score={e.overallScore} />
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </TableCard>
-        )}
+        <div className="grid gap-4 lg:grid-cols-[340px_1fr] lg:items-start">
+          <TeamConsensusCard consensus={consensus} />
+          {startup.evaluations.length === 0 ? (
+            <Card className="p-6 text-sm text-lv-secondary">
+              Noch keine Bewertungen — starte eine mit dem Button oben.
+            </Card>
+          ) : (
+            <TableCard>
+              <THead>
+                <tr>
+                  <Th>Bewertet von</Th>
+                  <Th>Aktualisiert</Th>
+                  <Th>Empfehlung</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Gesamt</Th>
+                </tr>
+              </THead>
+              <tbody>
+                {startup.evaluations.map((e) => (
+                  <Tr key={e.id}>
+                    <Td>
+                      <Link
+                        href={`/evaluations/${e.id}`}
+                        className="font-semibold hover:text-lv-blue"
+                      >
+                        {e.evaluator.name}
+                      </Link>
+                    </Td>
+                    <Td className="text-lv-secondary">
+                      {formatDate(e.updatedAt)}
+                    </Td>
+                    <Td>
+                      <RecommendationBadge value={e.recommendation} />
+                    </Td>
+                    <Td>
+                      <EvaluationStatusBadge
+                        recommendation={e.recommendation}
+                        gated={isChallengeFitGated(scoresToMap(e.scores))}
+                      />
+                    </Td>
+                    <Td className="text-right">
+                      <ScorePill score={e.overallScore} />
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </TableCard>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">

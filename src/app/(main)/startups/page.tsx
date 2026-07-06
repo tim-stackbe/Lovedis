@@ -13,6 +13,7 @@ import { BannerStat } from "@/components/ui/Card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import {
   PIPELINE_STAGES,
   PIPELINE_STAGE_LABELS,
@@ -58,11 +59,6 @@ export default async function StartupsPage({
     prisma.startup.findMany({
       where,
       include: {
-        evaluations: {
-          orderBy: { updatedAt: "desc" },
-          take: 1,
-          select: { overallScore: true },
-        },
         _count: { select: { evaluations: true } },
       },
       orderBy: { updatedAt: "desc" },
@@ -74,6 +70,11 @@ export default async function StartupsPage({
   const partnered = await prisma.startup.count({
     where: { pipelineStage: "PARTNERED" },
   });
+
+  // Team-consensus score per (filtered) startup for the Score column.
+  const consensusByStartup = await getConsensusByStartup(
+    startups.map((s) => s.id)
+  );
 
   return (
     <>
@@ -198,7 +199,9 @@ export default async function StartupsPage({
                     {s._count.evaluations}
                   </Td>
                   <Td className="text-right">
-                    <ScorePill score={s.evaluations[0]?.overallScore ?? null} />
+                    <ScorePill
+                      score={consensusByStartup.get(s.id)?.weightedTotal ?? null}
+                    />
                   </Td>
                 </Tr>
               ))}

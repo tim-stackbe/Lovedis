@@ -26,7 +26,8 @@ export interface PipelineStartup {
   name: string;
   industry: string;
   pipelineStage: PipelineStage;
-  latestScore: number | null;
+  /** Team-consensus weighted total (0–5), null when not yet scored. */
+  consensusScore: number | null;
 }
 
 const STAGE_ACCENTS: Record<PipelineStage, string> = {
@@ -59,7 +60,7 @@ function StartupCard({
         >
           {startup.name}
         </Link>
-        <ScorePill score={startup.latestScore} />
+        <ScorePill score={startup.consensusScore} />
       </div>
       <Badge tone="pink" className="mt-2">
         {startup.industry}
