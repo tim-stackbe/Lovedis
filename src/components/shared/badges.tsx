@@ -32,14 +32,13 @@ import {
   PIPELINE_STAGE_LABELS,
   POC_STATUS_LABELS,
   PROGRAM_STATUS_LABELS,
-  QUADRANT_LABELS,
+  GATE_STATUS_LABEL,
   RECOMMENDATION_LABELS,
   REMINDER_STATUS_LABELS,
   ROADMAP_STATUS_LABELS,
   SOURCE_TYPE_LABELS,
   SUPPORT_CATEGORY_LABELS,
   UPDATE_CATEGORY_LABELS,
-  type Quadrant,
 } from "@/lib/constants";
 import { cn, formatScore } from "@/lib/utils";
 
@@ -56,6 +55,29 @@ export function RecommendationBadge({ value }: { value: Recommendation }) {
     <Badge tone={RECOMMENDATION_TONES[value]}>
       {RECOMMENDATION_LABELS[value]}
     </Badge>
+  );
+}
+
+/** Status badge shown when the Challenge-Fit hard gate is triggered. */
+export function GateStatusBadge() {
+  return <Badge tone="orange">{GATE_STATUS_LABEL}</Badge>;
+}
+
+/**
+ * Surfaces the evaluation status wherever a recommendation is shown: the
+ * "Kein Fit (Gate)" gate label takes precedence over the recommendation.
+ */
+export function EvaluationStatusBadge({
+  recommendation,
+  gated,
+}: {
+  recommendation: Recommendation;
+  gated: boolean;
+}) {
+  return gated ? (
+    <GateStatusBadge />
+  ) : (
+    <RecommendationBadge value={recommendation} />
   );
 }
 
@@ -114,17 +136,6 @@ const POC_TONES: Record<PoCStatus, BadgeTone> = {
 
 export function PoCStatusBadge({ value }: { value: PoCStatus }) {
   return <Badge tone={POC_TONES[value]}>{POC_STATUS_LABELS[value]}</Badge>;
-}
-
-export const QUADRANT_TONES: Record<Quadrant, BadgeTone> = {
-  MONEY_MAKER: "mint",
-  DREAMER: "pink",
-  SOLID_BET: "blue",
-  PASS: "orange",
-};
-
-export function QuadrantBadge({ value }: { value: Quadrant }) {
-  return <Badge tone={QUADRANT_TONES[value]}>{QUADRANT_LABELS[value]}</Badge>;
 }
 
 export const UPDATE_CATEGORY_TONES: Record<UpdateCategory, BadgeTone> = {

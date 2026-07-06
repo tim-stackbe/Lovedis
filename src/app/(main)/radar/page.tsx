@@ -7,6 +7,7 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { LinkButton } from "@/components/ui/Button";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { RADAR_QUADRANTS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Radar" };
@@ -40,22 +41,22 @@ export default async function RadarPage() {
       <HeroBanner
         kicker="Venture Scout"
         title="Technologie-Radar"
-        subtitle="Wo jedes gescoutete Startup steht — vier thematische Quadranten, vier Reifegrad-Ringe."
+        subtitle="Wo jedes gescoutete Startup steht — Technologiefelder entlang der Challenge-Verticals, vier Reifegrad-Ringe. Manuell klassifiziert, unabhängig vom Score."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
           <BannerStat label="Im Radar" value={blips.length} />
           <BannerStat label="Adopt-Ring" value={adopt} />
-          <BannerStat label="Quadranten" value={4} />
+          <BannerStat label="Felder" value={RADAR_QUADRANTS.length} />
         </div>
       </HeroBanner>
 
-      <SectionLabel number="05" label="Radar" title="Quadrant-×-Ring-Karte" />
+      <SectionLabel number="05" label="Radar" title="Feld-×-Ring-Karte" />
 
       {blips.length === 0 ? (
         <EmptyState
           icon={Radar}
           title="Noch nichts im Radar"
-          description="Weise einem Startup-Profil Quadrant und Ring zu, um es hier zu platzieren."
+          description="Weise einem Startup-Profil ein Technologiefeld und einen Ring zu, um es hier zu platzieren."
           action={<LinkButton href="/startups">Startups durchsuchen</LinkButton>}
         />
       ) : (

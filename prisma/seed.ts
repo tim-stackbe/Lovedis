@@ -22,10 +22,9 @@ import type {
 } from "../src/generated/prisma/enums";
 import { SCORE_DIMENSIONS } from "../src/lib/constants";
 import {
-  computeFeasibility,
   computeOverallScore,
-  computePotential,
   deriveRecommendation,
+  isChallengeFitGated,
   type DimensionScores,
 } from "../src/lib/scoring";
 
@@ -86,8 +85,8 @@ const STARTUPS: StartupSeed[] = [
       "Starker Founder-Market-Fit, klarer Industriebezug. Sehr relevant für unsere Automatisierungs-Partner — weiterverfolgen.",
     screenRecommendation: "STRONG_YES",
     scores: {
-      MARKET: 5, PRODUCT: 4, TRACTION: 4, COMPETITIVE_POSITION: 4,
-      TEAM: 5, BUSINESS_MODEL: 4, STRATEGIC_FIT: 5,
+      CHALLENGE_FIT: 5, MATURITY_FEASIBILITY: 4, TEAM_EXECUTION: 5,
+      MARKET_SCALABILITY: 5, STRATEGIC_ECOSYSTEM_FIT: 5, TRACTION_REFERENCES: 4,
     },
     published: true,
     tagline: "Der Copilot, der SPS-Code schreibt und verifiziert.",
@@ -113,8 +112,8 @@ const STARTUPS: StartupSeed[] = [
     radarQuadrant: "CLIMATE_ENERGY",
     radarRing: "ADOPT",
     scores: {
-      MARKET: 5, PRODUCT: 5, TRACTION: 4, COMPETITIVE_POSITION: 3,
-      TEAM: 4, BUSINESS_MODEL: 5, STRATEGIC_FIT: 4,
+      CHALLENGE_FIT: 5, MATURITY_FEASIBILITY: 5, TEAM_EXECUTION: 4,
+      MARKET_SCALABILITY: 5, STRATEGIC_ECOSYSTEM_FIT: 4, TRACTION_REFERENCES: 4,
     },
     published: true,
     tagline: "Virtuelle Kraftwerke für die Industrie.",
@@ -144,9 +143,11 @@ const STARTUPS: StartupSeed[] = [
     screenSummary:
       "Spannende Technologie, aber sehr früh und Traktion fehlt. Für einen Partner-Piloten noch zu unreif — beobachten.",
     screenRecommendation: "MAYBE",
+    // Challenge-Fit-Gate greift (CHALLENGE_FIT < 3): löst die konkrete
+    // Partner-Challenge noch nicht → Status "Kein Fit (Gate)".
     scores: {
-      MARKET: 5, PRODUCT: 2, TRACTION: 1, COMPETITIVE_POSITION: 3,
-      TEAM: 4, BUSINESS_MODEL: 2, STRATEGIC_FIT: 4,
+      CHALLENGE_FIT: 2, MATURITY_FEASIBILITY: 2, TEAM_EXECUTION: 4,
+      MARKET_SCALABILITY: 5, STRATEGIC_ECOSYSTEM_FIT: 4, TRACTION_REFERENCES: 1,
     },
     published: true,
     tagline: "Direct Air Capture zum Nachrüsten.",
@@ -169,11 +170,11 @@ const STARTUPS: StartupSeed[] = [
     stage: "SERIES_B",
     fundingRaised: 41,
     pipelineStage: "SCREENING",
-    radarQuadrant: "HEALTH_BIO",
+    radarQuadrant: "HEALTH_TECH",
     radarRing: "TRIAL",
     scores: {
-      MARKET: 4, PRODUCT: 4, TRACTION: 5, COMPETITIVE_POSITION: 4,
-      TEAM: 4, BUSINESS_MODEL: 4, STRATEGIC_FIT: 3,
+      CHALLENGE_FIT: 4, MATURITY_FEASIBILITY: 4, TEAM_EXECUTION: 4,
+      MARKET_SCALABILITY: 4, STRATEGIC_ECOSYSTEM_FIT: 3, TRACTION_REFERENCES: 5,
     },
     published: true,
     tagline: "Knowledge Graphs für die Pharma-Forschung.",
@@ -195,11 +196,11 @@ const STARTUPS: StartupSeed[] = [
     stage: "SEED",
     fundingRaised: 3.8,
     pipelineStage: "IN_EVALUATION",
-    radarQuadrant: "HEALTH_BIO",
+    radarQuadrant: "HEALTH_TECH",
     radarRing: "ASSESS",
     scores: {
-      MARKET: 3, PRODUCT: 4, TRACTION: 2, COMPETITIVE_POSITION: 4,
-      TEAM: 4, BUSINESS_MODEL: 3, STRATEGIC_FIT: 4,
+      CHALLENGE_FIT: 4, MATURITY_FEASIBILITY: 3, TEAM_EXECUTION: 4,
+      MARKET_SCALABILITY: 3, STRATEGIC_ECOSYSTEM_FIT: 4, TRACTION_REFERENCES: 2,
     },
     published: true,
     tagline: "Haptisches Feedback für die Tele-Physiotherapie.",
@@ -222,11 +223,11 @@ const STARTUPS: StartupSeed[] = [
     stage: "SERIES_A",
     fundingRaised: 9.5,
     pipelineStage: "PILOT",
-    radarQuadrant: "INDUSTRY_40",
+    radarQuadrant: "INDUSTRY",
     radarRing: "TRIAL",
     scores: {
-      MARKET: 4, PRODUCT: 5, TRACTION: 4, COMPETITIVE_POSITION: 4,
-      TEAM: 4, BUSINESS_MODEL: 4, STRATEGIC_FIT: 5,
+      CHALLENGE_FIT: 5, MATURITY_FEASIBILITY: 5, TEAM_EXECUTION: 4,
+      MARKET_SCALABILITY: 4, STRATEGIC_ECOSYSTEM_FIT: 5, TRACTION_REFERENCES: 4,
     },
     published: true,
     tagline: "Maschinenausfälle hören, bevor sie passieren.",
@@ -249,7 +250,7 @@ const STARTUPS: StartupSeed[] = [
     stage: "SEED",
     fundingRaised: 5.2,
     pipelineStage: "SCREENING",
-    radarQuadrant: "INDUSTRY_40",
+    radarQuadrant: "INDUSTRY",
     radarRing: "ASSESS",
     sourceType: "OUTBOUND",
     sourceDetail: "Glassdollar",
@@ -257,8 +258,8 @@ const STARTUPS: StartupSeed[] = [
       "Herstellerübergreifende Schwarmkoordination ist ein echtes Differenzierungsmerkmal. Passt zu mehreren Logistik-Partnern.",
     screenRecommendation: "YES",
     scores: {
-      MARKET: 4, PRODUCT: 3, TRACTION: 2, COMPETITIVE_POSITION: 3,
-      TEAM: 5, BUSINESS_MODEL: 3, STRATEGIC_FIT: 4,
+      CHALLENGE_FIT: 4, MATURITY_FEASIBILITY: 3, TEAM_EXECUTION: 5,
+      MARKET_SCALABILITY: 4, STRATEGIC_ECOSYSTEM_FIT: 4, TRACTION_REFERENCES: 2,
     },
   },
   {
@@ -276,9 +277,10 @@ const STARTUPS: StartupSeed[] = [
     pipelineStage: "DISCOVERED",
     radarQuadrant: "AI_DATA",
     radarRing: "HOLD",
+    // Challenge-Fit-Gate greift (CHALLENGE_FIT < 3).
     scores: {
-      MARKET: 4, PRODUCT: 2, TRACTION: 1, COMPETITIVE_POSITION: 2,
-      TEAM: 3, BUSINESS_MODEL: 2, STRATEGIC_FIT: 2,
+      CHALLENGE_FIT: 2, MATURITY_FEASIBILITY: 2, TEAM_EXECUTION: 3,
+      MARKET_SCALABILITY: 4, STRATEGIC_ECOSYSTEM_FIT: 2, TRACTION_REFERENCES: 1,
     },
   },
   {
@@ -294,11 +296,12 @@ const STARTUPS: StartupSeed[] = [
     stage: "SERIES_B",
     fundingRaised: 48,
     pipelineStage: "PASSED",
-    radarQuadrant: "INDUSTRY_40",
+    radarQuadrant: "INDUSTRY",
     radarRing: "HOLD",
+    // Challenge-Fit-Gate greift (CHALLENGE_FIT < 3): abgelehnt.
     scores: {
-      MARKET: 3, PRODUCT: 3, TRACTION: 4, COMPETITIVE_POSITION: 2,
-      TEAM: 3, BUSINESS_MODEL: 2, STRATEGIC_FIT: 1,
+      CHALLENGE_FIT: 2, MATURITY_FEASIBILITY: 3, TEAM_EXECUTION: 3,
+      MARKET_SCALABILITY: 3, STRATEGIC_ECOSYSTEM_FIT: 1, TRACTION_REFERENCES: 4,
     },
   },
   {
@@ -330,7 +333,7 @@ const STARTUPS: StartupSeed[] = [
     stage: "SERIES_A",
     fundingRaised: 15,
     pipelineStage: "DISCOVERED",
-    radarQuadrant: "HEALTH_BIO",
+    radarQuadrant: "HEALTH_TECH",
     radarRing: "HOLD",
   },
   {
@@ -562,20 +565,18 @@ async function main() {
     if (!s.scores) continue;
     const scores = s.scores as DimensionScores;
     const overallScore = computeOverallScore(scores);
-    const potential = computePotential(scores);
-    const feasibility = computeFeasibility(scores);
+    const gated = isChallengeFitGated(scores);
     const evaluation = await prisma.evaluation.create({
       data: {
         startupId: startupRecords[i].id,
         evaluatorId: i % 2 === 0 ? member.id : member2.id,
         overallScore,
-        potential,
-        feasibility,
-        recommendation: deriveRecommendation(overallScore),
-        notes:
-          overallScore >= 3.5
-            ? "Starker Kandidat — klarer strategischer Fit und glaubwürdige Umsetzung. Empfehlung: ins Pilotgespräch gehen."
-            : "Interessante Technologie, aber offene Fragen zu Traktion und Geschäftsmodell. Nächstes Quartal erneut prüfen.",
+        recommendation: deriveRecommendation(overallScore, gated),
+        notes: gated
+          ? "Löst die konkrete Challenge (noch) nicht im Kern — Challenge-Fit-Gate greift. Für einen PoC aktuell nicht geeignet."
+          : overallScore >= 3.5
+            ? "Starker Kandidat — trifft die Challenge präzise und wirkt umsetzungsstark. Empfehlung: ins PoC-Gespräch gehen."
+            : "Interessant, aber offene Fragen zu Reife und Traktion. Nächste Runde erneut prüfen.",
         scores: {
           create: SCORE_DIMENSIONS.map((dimension) => ({
             dimension,
@@ -594,19 +595,21 @@ async function main() {
     const tweaked: DimensionScores = Object.fromEntries(
       SCORE_DIMENSIONS.map((d) => [
         d,
-        Math.max(0, Math.min(5, (base[d] ?? 0) - (d === "TRACTION" ? 1 : 0))),
+        Math.max(
+          0,
+          Math.min(5, (base[d] ?? 0) - (d === "TRACTION_REFERENCES" ? 1 : 0))
+        ),
       ])
     );
     const overallScore = computeOverallScore(tweaked);
+    const gated = isChallengeFitGated(tweaked);
     await prisma.evaluation.create({
       data: {
         startupId: startupRecords[idx].id,
         evaluatorId: admin.id,
         overallScore,
-        potential: computePotential(tweaked),
-        feasibility: computeFeasibility(tweaked),
-        recommendation: deriveRecommendation(overallScore),
-        notes: "Zweitmeinung — etwas konservativer bei der Traktion.",
+        recommendation: deriveRecommendation(overallScore, gated),
+        notes: "Zweitmeinung — etwas konservativer bei Traktion & Referenzen.",
         scores: {
           create: SCORE_DIMENSIONS.map((dimension) => ({
             dimension,

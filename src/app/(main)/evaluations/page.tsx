@@ -2,8 +2,7 @@ import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
-  QuadrantBadge,
-  RecommendationBadge,
+  EvaluationStatusBadge,
   ScorePill,
 } from "@/components/shared/badges";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -13,7 +12,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireScoutModule } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { deriveQuadrant } from "@/lib/scoring";
+import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Bewertungen" };
@@ -25,6 +24,7 @@ export default async function EvaluationsPage() {
     include: {
       startup: { select: { id: true, name: true, industry: true } },
       evaluator: { select: { name: true } },
+      scores: { select: { dimension: true, value: true } },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -43,7 +43,7 @@ export default async function EvaluationsPage() {
       <HeroBanner
         kicker="Venture Scout"
         title="Bewertungen"
-        subtitle="Sieben gewichtete Dimensionen pro Startup — von Markt und Produkt bis zum strategischen Fit."
+        subtitle="Sechs gewichtete Challenge-Kriterien pro Startup — vom Challenge Fit bis zu Traktion & Referenzen."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
           <BannerStat label="Gesamt" value={evaluations.length} />
@@ -67,8 +67,7 @@ export default async function EvaluationsPage() {
                 <Th>Startup</Th>
                 <Th>Bewertet von</Th>
                 <Th>Aktualisiert</Th>
-                <Th>Quadrant</Th>
-                <Th>Empfehlung</Th>
+                <Th>Empfehlung / Status</Th>
                 <Th className="text-right">Gesamt</Th>
               </tr>
             </THead>
@@ -91,12 +90,10 @@ export default async function EvaluationsPage() {
                     {formatDate(e.updatedAt)}
                   </Td>
                   <Td>
-                    <QuadrantBadge
-                      value={deriveQuadrant(e.potential, e.feasibility)}
+                    <EvaluationStatusBadge
+                      recommendation={e.recommendation}
+                      gated={isChallengeFitGated(scoresToMap(e.scores))}
                     />
-                  </Td>
-                  <Td>
-                    <RecommendationBadge value={e.recommendation} />
                   </Td>
                   <Td className="text-right">
                     <ScorePill score={e.overallScore} />

@@ -40,11 +40,17 @@ enum PipelineStage {
   PASSED
 }
 
+// Technology-radar fields — aligned to the LOVEDIS Challenge verticals used in
+// the "Strategischer Ökosystem-Fit" criterion. CONSTRUCTION (Bau), HEALTH_TECH
+// and INDUSTRY are the core verticals; AI_DATA (KI & Daten) and CLIMATE_ENERGY
+// (Klima & Energie) are cross-cutting fields. This classification stays MANUAL
+// and is independent of the weighted score.
 enum RadarQuadrant {
   AI_DATA
   CLIMATE_ENERGY
-  HEALTH_BIO
-  INDUSTRY_40
+  CONSTRUCTION
+  HEALTH_TECH
+  INDUSTRY
 }
 
 enum RadarRing {
@@ -54,16 +60,21 @@ enum RadarRing {
   HOLD
 }
 
+// LOVEDIS Challenge Program — 6-criteria weighted matrix (each rated 0–5).
+// Weights live in src/lib/constants.ts (CHALLENGE_WEIGHTS) and must sum to 100%.
 enum ScoreDimension {
-  MARKET
-  PRODUCT
-  TRACTION
-  COMPETITIVE_POSITION
-  TEAM
-  BUSINESS_MODEL
-  STRATEGIC_FIT
+  CHALLENGE_FIT            // 30% — how precisely the startup solves the challenge
+  MATURITY_FEASIBILITY     // 20% — technology/pilot readiness, PoC speed
+  TEAM_EXECUTION           // 15% — competence, completeness, delivery ability
+  MARKET_SCALABILITY       // 15% — market size, transferability, growth
+  STRATEGIC_ECOSYSTEM_FIT  // 10% — fit to verticals & hub partners
+  TRACTION_REFERENCES      // 10% — customers, pilots, revenue, validated cases
 }
 
+// Recommendation is recalculated from the weighted total (see src/lib/scoring.ts).
+// The 4-band challenge scheme uses STRONG_YES / YES / NO / STRONG_NO. MAYBE is
+// retained for backwards compatibility (old data / DB default) but is no longer
+// produced by the scoring engine.
 enum Recommendation {
   STRONG_YES
   YES
@@ -373,9 +384,7 @@ model Evaluation {
   evaluatorId    String
   evaluator      User           @relation("Evaluator", fields: [evaluatorId], references: [id], onDelete: Cascade)
   overallScore   Float          @default(0)
-  potential      Float          @default(0)
-  feasibility    Float          @default(0)
-  recommendation Recommendation @default(MAYBE)
+  recommendation Recommendation @default(STRONG_NO)
   notes          String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

@@ -10,13 +10,14 @@ import {
   RADAR_RINGS,
   RADAR_RING_LABELS,
 } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, formatScore } from "@/lib/utils";
 
 export interface RadarStartup {
   id: string;
   name: string;
   quadrant: RadarQuadrant;
   ring: RadarRing;
+  /** Weighted challenge total (0–5) of the latest evaluation, for context. */
   latestScore: number | null;
 }
 
@@ -24,12 +25,18 @@ const SIZE = 640;
 const CENTER = SIZE / 2;
 const RADIUS = SIZE / 2 - 40;
 
+// One colour per technology field. Placement stays manual and is independent of
+// the weighted score.
 const QUADRANT_COLORS: Record<RadarQuadrant, string> = {
   AI_DATA: "#2926E5",
   CLIMATE_ENERGY: "#0E7C4A",
-  HEALTH_BIO: "#FF5736",
-  INDUSTRY_40: "#7A5A00",
+  CONSTRUCTION: "#7A5A00",
+  HEALTH_TECH: "#FF5736",
+  INDUSTRY: "#8A2BE2",
 };
+
+const SECTOR_COUNT = RADAR_QUADRANTS.length;
+const SECTOR_SPAN = 360 / SECTOR_COUNT;
 
 /** Deterministic hash → [0, 1) so blips keep stable positions. */
 function hash01(input: string): number {
@@ -41,24 +48,30 @@ function hash01(input: string): number {
   return ((h >>> 0) % 10000) / 10000;
 }
 
+/** Point on the circle at `degrees` (0° = top, clockwise) and `radius`. */
+function polar(degrees: number, radius: number): { x: number; y: number } {
+  const rad = (degrees * Math.PI) / 180;
+  return {
+    x: CENTER + radius * Math.sin(rad),
+    y: CENTER - radius * Math.cos(rad),
+  };
+}
+
 function blipPosition(startup: RadarStartup): { x: number; y: number } {
   const qIndex = RADAR_QUADRANTS.indexOf(startup.quadrant);
   const rIndex = RADAR_RINGS.indexOf(startup.ring);
 
-  const angleStart = qIndex * 90 + 8;
-  const angleSpan = 90 - 16;
-  const angle =
-    ((angleStart + hash01(startup.id) * angleSpan) * Math.PI) / 180;
+  const pad = SECTOR_SPAN * 0.12;
+  const angleStart = qIndex * SECTOR_SPAN + pad;
+  const angleSpan = SECTOR_SPAN - pad * 2;
+  const angle = angleStart + hash01(startup.id) * angleSpan;
 
   const ringWidth = RADIUS / RADAR_RINGS.length;
   const rInner = rIndex * ringWidth + ringWidth * 0.2;
   const rSpan = ringWidth * 0.6;
   const radius = rInner + hash01(startup.id + startup.name) * rSpan;
 
-  return {
-    x: CENTER + radius * Math.sin(angle),
-    y: CENTER - radius * Math.cos(angle),
-  };
+  return polar(angle, radius);
 }
 
 export function RadarView({ startups }: { startups: RadarStartup[] }) {
@@ -113,41 +126,42 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
             );
           })}
 
-          {/* Quadrant axes */}
-          <line
-            x1={CENTER}
-            y1={CENTER - RADIUS}
-            x2={CENTER}
-            y2={CENTER + RADIUS}
-            stroke="#E5E5EE"
-            strokeWidth={1.5}
-          />
-          <line
-            x1={CENTER - RADIUS}
-            y1={CENTER}
-            x2={CENTER + RADIUS}
-            y2={CENTER}
-            stroke="#E5E5EE"
-            strokeWidth={1.5}
-          />
-
-          {/* Quadrant labels */}
+          {/* Sector dividers */}
           {RADAR_QUADRANTS.map((q, i) => {
-            const positions = [
-              { x: CENTER + RADIUS * 0.55, y: CENTER - RADIUS - 14 },
-              { x: CENTER + RADIUS * 0.55, y: CENTER + RADIUS + 26 },
-              { x: CENTER - RADIUS * 0.55, y: CENTER + RADIUS + 26 },
-              { x: CENTER - RADIUS * 0.55, y: CENTER - RADIUS - 14 },
-            ];
+            const { x, y } = polar(i * SECTOR_SPAN, RADIUS);
+            return (
+              <line
+                key={`divider-${q}`}
+                x1={CENTER}
+                y1={CENTER}
+                x2={x}
+                y2={y}
+                stroke="#E5E5EE"
+                strokeWidth={1.5}
+              />
+            );
+          })}
+
+          {/* Sector labels (placed just outside each sector's mid-angle) */}
+          {RADAR_QUADRANTS.map((q, i) => {
+            const mid = (i + 0.5) * SECTOR_SPAN;
+            const { x, y } = polar(mid, RADIUS + 18);
+            const anchor =
+              Math.abs(Math.sin((mid * Math.PI) / 180)) < 0.35
+                ? "middle"
+                : mid < 180
+                  ? "start"
+                  : "end";
             return (
               <text
-                key={q}
-                x={positions[i].x}
-                y={positions[i].y}
-                fontSize={13}
+                key={`label-${q}`}
+                x={x}
+                y={y}
+                fontSize={12}
                 fontWeight={700}
                 fill={QUADRANT_COLORS[q]}
-                textAnchor="middle"
+                textAnchor={anchor}
+                dominantBaseline="middle"
                 style={{ letterSpacing: "0.05em" }}
               >
                 {RADAR_QUADRANT_LABELS[q].toUpperCase()}
@@ -193,6 +207,9 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                       textAnchor="middle"
                     >
                       {s.name}
+                      {s.latestScore != null
+                        ? ` · ${formatScore(s.latestScore)}`
+                        : ""}
                     </text>
                   )}
                 </g>
@@ -204,7 +221,9 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
 
       <div className="space-y-4">
         <Card className="p-4">
-          <p className="lv-wordmark mb-3 text-[10px] text-lv-blue">Quadranten</p>
+          <p className="lv-wordmark mb-3 text-[10px] text-lv-blue">
+            Technologiefelder
+          </p>
           <div className="space-y-1">
             <button
               onClick={() => setActiveQuadrant(null)}
@@ -215,7 +234,7 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                   : "hover:bg-lv-surface"
               )}
             >
-              Alle Quadranten ({startups.length})
+              Alle Felder ({startups.length})
             </button>
             {RADAR_QUADRANTS.map((q) => {
               const count = startups.filter((s) => s.quadrant === q).length;
@@ -255,6 +274,14 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                 {RADAR_QUADRANT_LABELS[hoveredStartup.quadrant]} ·{" "}
                 {RADAR_RING_LABELS[hoveredStartup.ring]}
               </p>
+              <p className="mt-1 text-xs text-lv-secondary">
+                Gewichteter Score:{" "}
+                <span className="font-semibold text-lv-text">
+                  {hoveredStartup.latestScore != null
+                    ? `${formatScore(hoveredStartup.latestScore)} / 5`
+                    : "—"}
+                </span>
+              </p>
             </div>
           ) : (
             <ul className="space-y-1.5 text-sm">
@@ -272,7 +299,9 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
                     />
                     <span className="truncate">{s.name}</span>
                     <span className="ml-auto text-xs text-lv-secondary">
-                      {RADAR_RING_LABELS[s.ring]}
+                      {s.latestScore != null
+                        ? formatScore(s.latestScore)
+                        : RADAR_RING_LABELS[s.ring]}
                     </span>
                   </Link>
                 </li>

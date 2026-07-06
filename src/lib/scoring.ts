@@ -3,14 +3,33 @@ import type {
   ScoreDimension,
 } from "@/generated/prisma/enums";
 import {
+  CHALLENGE_FIT_GATE_MIN,
+  CHALLENGE_WEIGHTS,
   DEFAULT_WEIGHTS,
-  MAX_SCORE,
   SCORE_DIMENSIONS,
-  type Quadrant,
 } from "@/lib/constants";
 
 export type DimensionScores = Partial<Record<ScoreDimension, number>>;
 export type Weights = Record<ScoreDimension, number>;
+
+/**
+ * Asserts the challenge weights sum to 1.0 (= 100 %). Throws in dev/test so a
+ * bad edit to CHALLENGE_WEIGHTS is caught immediately; also covered by a unit
+ * test. Uses a small epsilon to tolerate floating-point noise.
+ */
+export function assertWeightsSumToOne(
+  weights: Record<ScoreDimension, number> = CHALLENGE_WEIGHTS
+): void {
+  const sum = SCORE_DIMENSIONS.reduce((acc, d) => acc + (weights[d] ?? 0), 0);
+  if (Math.abs(sum - 1) > 1e-9) {
+    throw new Error(
+      `CHALLENGE_WEIGHTS must sum to 1.0 (100 %), but got ${sum.toFixed(4)}.`
+    );
+  }
+}
+
+// Fail fast on module load if the canonical weights are misconfigured.
+assertWeightsSumToOne();
 
 /** Normalizes a weight map so all weights sum to 1 (guards against bad overrides). */
 export function normalizeWeights(weights: Partial<Weights>): Weights {
@@ -22,7 +41,11 @@ export function normalizeWeights(weights: Partial<Weights>): Weights {
   return normalized;
 }
 
-/** Weighted overall score (0–5) across the 7 dimensions. */
+/**
+ * Weighted total (0–5): sum of each criterion's value × its weight, rounded to
+ * 2 decimals. With the default weights summing to 1 and a max value of 5, the
+ * maximum total is 5.00.
+ */
 export function computeOverallScore(
   scores: DimensionScores,
   weights: Partial<Weights> = DEFAULT_WEIGHTS
@@ -36,57 +59,41 @@ export function computeOverallScore(
 }
 
 /**
- * Potential = upside-oriented dimensions (market, traction, business model).
- * Feasibility = execution-oriented dimensions (product, team, competitive
- * position, strategic fit). Both 0–5.
+ * Challenge-Fit hard gate: true when CHALLENGE_FIT < CHALLENGE_FIT_GATE_MIN.
+ * A gated startup is "Kein Fit (Gate)" regardless of its weighted total.
  */
-export function computePotential(scores: DimensionScores): number {
-  const dims: ScoreDimension[] = ["MARKET", "TRACTION", "BUSINESS_MODEL"];
-  const v = dims.reduce((acc, d) => acc + (scores[d] ?? 0), 0) / dims.length;
-  return Math.round(v * 100) / 100;
+export function isChallengeFitGated(scores: DimensionScores): boolean {
+  return (scores.CHALLENGE_FIT ?? 0) < CHALLENGE_FIT_GATE_MIN;
 }
 
-export function computeFeasibility(scores: DimensionScores): number {
-  const dims: ScoreDimension[] = [
-    "PRODUCT",
-    "TEAM",
-    "COMPETITIVE_POSITION",
-    "STRATEGIC_FIT",
-  ];
-  const v = dims.reduce((acc, d) => acc + (scores[d] ?? 0), 0) / dims.length;
-  return Math.round(v * 100) / 100;
-}
-
-const QUADRANT_THRESHOLD = MAX_SCORE / 2; // 2.5
-
-/** Potential × Feasibility → 4-quadrant matrix. */
-export function deriveQuadrant(
-  potential: number,
-  feasibility: number
-): Quadrant {
-  const highP = potential >= QUADRANT_THRESHOLD;
-  const highF = feasibility >= QUADRANT_THRESHOLD;
-  if (highP && highF) return "MONEY_MAKER";
-  if (highP && !highF) return "DREAMER";
-  if (!highP && highF) return "SOLID_BET";
-  return "PASS";
-}
-
-/** Recommendation mapping from the weighted overall score. */
-export function deriveRecommendation(overallScore: number): Recommendation {
-  if (overallScore >= 4.2) return "STRONG_YES";
-  if (overallScore >= 3.4) return "YES";
-  if (overallScore >= 2.4) return "MAYBE";
-  if (overallScore >= 1.4) return "NO";
+/**
+ * Recommendation from the weighted total, with the Challenge-Fit gate override.
+ * Bands (gate not triggered):
+ *   total >= 4.0        → STRONG_YES  ("Klares Ja")
+ *   3.0 <= total < 4.0  → YES         ("Ja mit Nachfassen")
+ *   2.0 <= total < 3.0  → NO          ("Eher Nein")
+ *   total < 2.0         → STRONG_NO   ("Klares Nein")
+ * Gate triggered         → STRONG_NO  (plus the "Kein Fit (Gate)" status label)
+ *
+ * Note: the 4-band scheme deliberately does NOT emit MAYBE; the enum value is
+ * retained only for legacy rows / the DB default.
+ */
+export function deriveRecommendation(
+  overallScore: number,
+  gated = false
+): Recommendation {
+  if (gated) return "STRONG_NO";
+  if (overallScore >= 4.0) return "STRONG_YES";
+  if (overallScore >= 3.0) return "YES";
+  if (overallScore >= 2.0) return "NO";
   return "STRONG_NO";
 }
 
 export interface EvaluationResult {
   overallScore: number;
-  potential: number;
-  feasibility: number;
-  quadrant: Quadrant;
   recommendation: Recommendation;
+  /** Challenge-Fit gate triggered (status: "Kein Fit (Gate)"). */
+  gated: boolean;
 }
 
 /** Full evaluation derivation used by forms, compare, radar and reports. */
@@ -95,14 +102,11 @@ export function evaluateScores(
   weights: Partial<Weights> = DEFAULT_WEIGHTS
 ): EvaluationResult {
   const overallScore = computeOverallScore(scores, weights);
-  const potential = computePotential(scores);
-  const feasibility = computeFeasibility(scores);
+  const gated = isChallengeFitGated(scores);
   return {
     overallScore,
-    potential,
-    feasibility,
-    quadrant: deriveQuadrant(potential, feasibility),
-    recommendation: deriveRecommendation(overallScore),
+    gated,
+    recommendation: deriveRecommendation(overallScore, gated),
   };
 }
 

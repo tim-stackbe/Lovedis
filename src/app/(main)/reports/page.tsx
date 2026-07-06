@@ -11,7 +11,7 @@ import {
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { scoresToMap } from "@/lib/scoring";
+import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Berichte" };
@@ -28,19 +28,21 @@ export default async function ReportsPage() {
     orderBy: { overallScore: "desc" },
   });
 
-  const rows: ReportRow[] = evaluations.map((e) => ({
-    startup: e.startup.name,
-    industry: e.startup.industry,
-    stage: STARTUP_STAGE_LABELS[e.startup.stage],
-    pipeline: PIPELINE_STAGE_LABELS[e.startup.pipelineStage],
-    evaluator: e.evaluator.name,
-    date: formatDate(e.updatedAt),
-    scores: scoresToMap(e.scores) as Record<string, number>,
-    potential: e.potential,
-    feasibility: e.feasibility,
-    overall: e.overallScore,
-    recommendation: e.recommendation,
-  }));
+  const rows: ReportRow[] = evaluations.map((e) => {
+    const scoreMap = scoresToMap(e.scores);
+    return {
+      startup: e.startup.name,
+      industry: e.startup.industry,
+      stage: STARTUP_STAGE_LABELS[e.startup.stage],
+      pipeline: PIPELINE_STAGE_LABELS[e.startup.pipelineStage],
+      evaluator: e.evaluator.name,
+      date: formatDate(e.updatedAt),
+      scores: scoreMap as Record<string, number>,
+      overall: e.overallScore,
+      recommendation: e.recommendation,
+      gated: isChallengeFitGated(scoreMap),
+    };
+  });
 
   return (
     <>

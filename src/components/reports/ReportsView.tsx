@@ -2,13 +2,17 @@
 
 import { FileDown, FileSpreadsheet, FileText } from "lucide-react";
 import { useRef, useState } from "react";
-import { RecommendationBadge, ScorePill } from "@/components/shared/badges";
+import {
+  EvaluationStatusBadge,
+  ScorePill,
+} from "@/components/shared/badges";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Wordmark } from "@/components/ui/Wordmark";
 import type { Recommendation } from "@/generated/prisma/enums";
 import {
   DIMENSION_LABELS,
+  GATE_STATUS_LABEL,
   RECOMMENDATION_LABELS,
   SCORE_DIMENSIONS,
 } from "@/lib/constants";
@@ -21,10 +25,14 @@ export interface ReportRow {
   evaluator: string;
   date: string;
   scores: Record<string, number>;
-  potential: number;
-  feasibility: number;
   overall: number;
   recommendation: Recommendation;
+  /** Challenge-Fit gate triggered (status "Kein Fit (Gate)"). */
+  gated: boolean;
+}
+
+function statusLabel(r: ReportRow): string {
+  return r.gated ? GATE_STATUS_LABEL : RECOMMENDATION_LABELS[r.recommendation];
 }
 
 function toFlatRows(rows: ReportRow[]) {
@@ -38,10 +46,9 @@ function toFlatRows(rows: ReportRow[]) {
     ...Object.fromEntries(
       SCORE_DIMENSIONS.map((d) => [DIMENSION_LABELS[d], r.scores[d] ?? 0])
     ),
-    Potenzial: r.potential,
-    Machbarkeit: r.feasibility,
-    Gesamt: r.overall,
+    "Gesamt (gewichtet)": r.overall,
     Empfehlung: RECOMMENDATION_LABELS[r.recommendation],
+    Status: statusLabel(r),
   }));
 }
 
@@ -170,7 +177,10 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
               <span>
                 {r.evaluator} · {r.date}
               </span>
-              <RecommendationBadge value={r.recommendation} />
+              <EvaluationStatusBadge
+                recommendation={r.recommendation}
+                gated={r.gated}
+              />
             </div>
           </Card>
         ))}
@@ -212,7 +222,7 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
                 ))}
                 <th className="px-2.5 py-2 text-right font-semibold">Gesamt</th>
                 <th className="px-2.5 py-2 text-right font-semibold">
-                  Empfehlung
+                  Empfehlung / Status
                 </th>
               </tr>
             </thead>
@@ -241,7 +251,10 @@ export function ReportsView({ rows }: { rows: ReportRow[] }) {
                     <ScorePill score={r.overall} />
                   </td>
                   <td className="px-2.5 py-2 text-right">
-                    <RecommendationBadge value={r.recommendation} />
+                    <EvaluationStatusBadge
+                      recommendation={r.recommendation}
+                      gated={r.gated}
+                    />
                   </td>
                 </tr>
               ))}

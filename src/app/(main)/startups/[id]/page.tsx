@@ -17,9 +17,9 @@ import {
 } from "@/app/actions/startups";
 import { createEvaluation } from "@/app/actions/evaluations";
 import {
+  EvaluationStatusBadge,
   PartnerVerdictBadge,
   PipelineStageBadge,
-  QuadrantBadge,
   RecommendationBadge,
   ScorePill,
   SourceTypeBadge,
@@ -41,7 +41,7 @@ import {
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { deriveQuadrant } from "@/lib/scoring";
+import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate, formatMillions } from "@/lib/utils";
 
 export default async function StartupDetailPage({
@@ -58,7 +58,10 @@ export default async function StartupDetailPage({
       contacts: { orderBy: { createdAt: "asc" } },
       attachments: { orderBy: { createdAt: "asc" } },
       evaluations: {
-        include: { evaluator: { select: { name: true } } },
+        include: {
+          evaluator: { select: { name: true } },
+          scores: { select: { dimension: true, value: true } },
+        },
         orderBy: { updatedAt: "desc" },
       },
       campaign: { select: { name: true } },
@@ -200,9 +203,10 @@ export default async function StartupDetailPage({
               {latest && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-lv-secondary">Quadrant</span>
-                    <QuadrantBadge
-                      value={deriveQuadrant(latest.potential, latest.feasibility)}
+                    <span className="text-lv-secondary">Status</span>
+                    <EvaluationStatusBadge
+                      recommendation={latest.recommendation}
+                      gated={isChallengeFitGated(scoresToMap(latest.scores))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -296,8 +300,7 @@ export default async function StartupDetailPage({
                 <Th>Bewertet von</Th>
                 <Th>Aktualisiert</Th>
                 <Th>Empfehlung</Th>
-                <Th className="text-right">Potenzial</Th>
-                <Th className="text-right">Machbarkeit</Th>
+                <Th>Status</Th>
                 <Th className="text-right">Gesamt</Th>
               </tr>
             </THead>
@@ -318,11 +321,11 @@ export default async function StartupDetailPage({
                   <Td>
                     <RecommendationBadge value={e.recommendation} />
                   </Td>
-                  <Td className="text-right tabular-nums">
-                    {e.potential.toFixed(1)}
-                  </Td>
-                  <Td className="text-right tabular-nums">
-                    {e.feasibility.toFixed(1)}
+                  <Td>
+                    <EvaluationStatusBadge
+                      recommendation={e.recommendation}
+                      gated={isChallengeFitGated(scoresToMap(e.scores))}
+                    />
                   </Td>
                   <Td className="text-right">
                     <ScorePill score={e.overallScore} />

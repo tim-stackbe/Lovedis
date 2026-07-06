@@ -27,58 +27,80 @@ import type {
 // Scoring dimensions & default weights
 // ---------------------------------------------------------------------------
 
+// LOVEDIS Challenge Program — 6 challenge-focused criteria (each rated 0–5).
 export const SCORE_DIMENSIONS: ScoreDimension[] = [
-  "MARKET",
-  "PRODUCT",
-  "TRACTION",
-  "COMPETITIVE_POSITION",
-  "TEAM",
-  "BUSINESS_MODEL",
-  "STRATEGIC_FIT",
+  "CHALLENGE_FIT",
+  "MATURITY_FEASIBILITY",
+  "TEAM_EXECUTION",
+  "MARKET_SCALABILITY",
+  "STRATEGIC_ECOSYSTEM_FIT",
+  "TRACTION_REFERENCES",
 ];
 
 export const DIMENSION_LABELS: Record<ScoreDimension, string> = {
-  MARKET: "Markt",
-  PRODUCT: "Produkt",
-  TRACTION: "Traktion",
-  COMPETITIVE_POSITION: "Wettbewerbsposition",
-  TEAM: "Team",
-  BUSINESS_MODEL: "Geschäftsmodell",
-  STRATEGIC_FIT: "Strategischer Fit",
+  CHALLENGE_FIT: "Challenge Fit",
+  MATURITY_FEASIBILITY: "Reife & Machbarkeit",
+  TEAM_EXECUTION: "Team & Umsetzung",
+  MARKET_SCALABILITY: "Marktpotenzial & Skalierbarkeit",
+  STRATEGIC_ECOSYSTEM_FIT: "Strategischer Ökosystem-Fit",
+  TRACTION_REFERENCES: "Traktion & Referenzen",
 };
 
 export const DIMENSION_DESCRIPTIONS: Record<ScoreDimension, string> = {
-  MARKET: "Marktgröße, Wachstum und Timing",
-  PRODUCT: "Produktreife, Differenzierung und Verteidigungsfähigkeit",
-  TRACTION: "Kunden, Umsatz und Wachstumssignale",
-  COMPETITIVE_POSITION: "Burggraben gegenüber aktuellen und künftigen Wettbewerbern",
-  TEAM: "Founder-Market-Fit, Vollständigkeit und Umsetzungsstärke",
-  BUSINESS_MODEL: "Unit Economics, Preissetzungsmacht und Skalierbarkeit",
-  STRATEGIC_FIT: "Passung zu unserer Scouting-These und den Partner-Bedürfnissen",
+  CHALLENGE_FIT:
+    "Wie präzise löst das Startup die konkrete Challenge des Partners und trifft den Kern des Problems?",
+  MATURITY_FEASIBILITY:
+    "Technologiereife, Pilotreife und wie schnell realistisch ein PoC starten kann",
+  TEAM_EXECUTION:
+    "Kompetenz, Vollständigkeit, Erfahrung und Umsetzungsstärke des Teams",
+  MARKET_SCALABILITY:
+    "Marktgröße, Übertragbarkeit über die einzelne Challenge hinaus und Wachstumsperspektive",
+  STRATEGIC_ECOSYSTEM_FIT:
+    "Passung zu den Verticals (Bau, Health Tech, Industrie) und zu weiteren Hub-Partnern",
+  TRACTION_REFERENCES:
+    "Bestehende Kunden, Piloten, Umsatz und validierte Use-Cases",
 };
 
-/** Default dimension weights — must sum to 1. */
-export const DEFAULT_WEIGHTS: Record<ScoreDimension, number> = {
-  MARKET: 0.2,
-  PRODUCT: 0.15,
-  TRACTION: 0.15,
-  COMPETITIVE_POSITION: 0.1,
-  TEAM: 0.2,
-  BUSINESS_MODEL: 0.1,
-  STRATEGIC_FIT: 0.1,
+/**
+ * Default challenge-matrix weights — MUST sum to 1.0 (= 100 %).
+ * This is the single source of truth for the weighted-total formula. Runtime
+ * validation (assertWeightsSumToOne) and a unit test guard the invariant.
+ */
+export const CHALLENGE_WEIGHTS: Record<ScoreDimension, number> = {
+  CHALLENGE_FIT: 0.3,
+  MATURITY_FEASIBILITY: 0.2,
+  TEAM_EXECUTION: 0.15,
+  MARKET_SCALABILITY: 0.15,
+  STRATEGIC_ECOSYSTEM_FIT: 0.1,
+  TRACTION_REFERENCES: 0.1,
 };
+
+/** Alias kept for existing imports (personal weight overrides, previews). */
+export const DEFAULT_WEIGHTS = CHALLENGE_WEIGHTS;
 
 export const MAX_SCORE = 5;
+
+/**
+ * Challenge-Fit is a hard minimum gate: a startup scoring below this on
+ * CHALLENGE_FIT is flagged "Kein Fit (Gate)" regardless of its weighted total,
+ * and its recommendation is overridden to STRONG_NO.
+ */
+export const CHALLENGE_FIT_GATE_MIN = 3;
+
+/** Status label shown when the Challenge-Fit gate is triggered. */
+export const GATE_STATUS_LABEL = "Kein Fit (Gate)";
 
 // ---------------------------------------------------------------------------
 // Recommendation
 // ---------------------------------------------------------------------------
 
+// 4-band challenge scheme. MAYBE is intentionally unused by the scoring engine
+// (kept only for the enum / legacy rows); see src/lib/scoring.ts.
 export const RECOMMENDATION_LABELS: Record<Recommendation, string> = {
   STRONG_YES: "Klares Ja",
-  YES: "Ja",
+  YES: "Ja mit Nachfassen",
   MAYBE: "Vielleicht",
-  NO: "Nein",
+  NO: "Eher Nein",
   STRONG_NO: "Klares Nein",
 };
 
@@ -89,26 +111,6 @@ export const RECOMMENDATION_ORDER: Recommendation[] = [
   "NO",
   "STRONG_NO",
 ];
-
-// ---------------------------------------------------------------------------
-// Quadrants (Potential × Feasibility)
-// ---------------------------------------------------------------------------
-
-export type Quadrant = "MONEY_MAKER" | "DREAMER" | "SOLID_BET" | "PASS";
-
-export const QUADRANT_LABELS: Record<Quadrant, string> = {
-  MONEY_MAKER: "Money Maker",
-  DREAMER: "Dreamer",
-  SOLID_BET: "Solid Bet",
-  PASS: "Pass",
-};
-
-export const QUADRANT_DESCRIPTIONS: Record<Quadrant, string> = {
-  MONEY_MAKER: "Hohes Potenzial, hohe Machbarkeit",
-  DREAMER: "Hohes Potenzial, geringe Machbarkeit",
-  SOLID_BET: "Geringeres Upside, starke Umsetzung",
-  PASS: "Geringes Potenzial, geringe Machbarkeit",
-};
 
 // ---------------------------------------------------------------------------
 // Pipeline
@@ -136,18 +138,23 @@ export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
 // Radar
 // ---------------------------------------------------------------------------
 
+// Technology-radar fields aligned to the challenge verticals. CONSTRUCTION,
+// HEALTH_TECH and INDUSTRY are the core verticals; AI_DATA and CLIMATE_ENERGY
+// are cross-cutting. Placement stays manual (not derived from the score).
 export const RADAR_QUADRANTS: RadarQuadrant[] = [
   "AI_DATA",
   "CLIMATE_ENERGY",
-  "HEALTH_BIO",
-  "INDUSTRY_40",
+  "CONSTRUCTION",
+  "HEALTH_TECH",
+  "INDUSTRY",
 ];
 
 export const RADAR_QUADRANT_LABELS: Record<RadarQuadrant, string> = {
   AI_DATA: "KI & Daten",
   CLIMATE_ENERGY: "Klima & Energie",
-  HEALTH_BIO: "Health & Bio",
-  INDUSTRY_40: "Industrie 4.0",
+  CONSTRUCTION: "Bau",
+  HEALTH_TECH: "Health Tech",
+  INDUSTRY: "Industrie",
 };
 
 export const RADAR_RINGS: RadarRing[] = ["ADOPT", "TRIAL", "ASSESS", "HOLD"];

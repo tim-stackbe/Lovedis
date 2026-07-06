@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { DistributionChartLazy as DistributionChart } from "@/components/dashboard/ChartsLazy";
 import {
-  QuadrantBadge,
+  EvaluationStatusBadge,
   RecommendationBadge,
   ScorePill,
 } from "@/components/shared/badges";
@@ -14,7 +14,7 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { deriveQuadrant } from "@/lib/scoring";
+import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Team-Dashboard" };
@@ -43,7 +43,10 @@ export default async function MemberDashboard() {
     prisma.evaluation.findMany({
       orderBy: { overallScore: "desc" },
       take: 5,
-      include: { startup: { select: { id: true, name: true, industry: true } } },
+      include: {
+        startup: { select: { id: true, name: true, industry: true } },
+        scores: { select: { dimension: true, value: true } },
+      },
     }),
     prisma.evaluation.findMany({
       where: { evaluatorId: session.user.id },
@@ -174,7 +177,7 @@ export default async function MemberDashboard() {
             <THead>
               <tr>
                 <Th>Startup</Th>
-                <Th>Quadrant</Th>
+                <Th>Status</Th>
                 <Th className="text-right">Score</Th>
               </tr>
             </THead>
@@ -193,8 +196,9 @@ export default async function MemberDashboard() {
                     </p>
                   </Td>
                   <Td>
-                    <QuadrantBadge
-                      value={deriveQuadrant(e.potential, e.feasibility)}
+                    <EvaluationStatusBadge
+                      recommendation={e.recommendation}
+                      gated={isChallengeFitGated(scoresToMap(e.scores))}
                     />
                   </Td>
                   <Td className="text-right">

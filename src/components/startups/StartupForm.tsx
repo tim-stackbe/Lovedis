@@ -162,7 +162,7 @@ export function StartupForm({ startup, campaigns = [] }: StartupFormProps) {
               ))}
             </Select>
           </Field>
-          <Field label="Radar-Quadrant" htmlFor="radarQuadrant">
+          <Field label="Radar-Feld" htmlFor="radarQuadrant">
             <Select
               id="radarQuadrant"
               name="radarQuadrant"

@@ -31,9 +31,7 @@ export default async function ComparePage() {
       industry: s.industry,
       scores: latest ? scoresToMap(latest.scores) : {},
       overallScore: latest?.overallScore ?? 0,
-      potential: latest?.potential ?? 0,
-      feasibility: latest?.feasibility ?? 0,
-      recommendation: latest?.recommendation ?? "MAYBE",
+      recommendation: latest?.recommendation ?? "STRONG_NO",
       hasEvaluation: Boolean(latest),
     };
   });
@@ -43,7 +41,7 @@ export default async function ComparePage() {
       <HeroBanner
         kicker="Venture Scout"
         title="Direktvergleich"
-        subtitle="Stelle Startups über alle sieben Scoring-Dimensionen hinweg gegenüber."
+        subtitle="Stelle Startups über alle sechs Challenge-Kriterien hinweg gegenüber."
       />
       <SectionLabel number="03" label="Entscheiden" title="Vergleichs-Workbench" />
       <CompareView startups={compareStartups} />
