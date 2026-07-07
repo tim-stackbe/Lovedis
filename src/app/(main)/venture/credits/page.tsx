@@ -1,6 +1,7 @@
 import { Coins } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
 import { CreditTxTypeBadge } from "@/components/shared/badges";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { BannerStat } from "@/components/ui/Card";
@@ -9,6 +10,7 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireVentureView } from "@/lib/auth-guards";
+import { CREDIT_BUCKET_LABELS, deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
@@ -21,7 +23,7 @@ export default async function VentureCreditsPage() {
 
   const startup = teamMode
     ? null
-    : await prisma.startup.findUnique({
+      : await prisma.startup.findUnique({
         where: { ownerUserId: session.user.id },
         select: {
           id: true,
@@ -34,7 +36,7 @@ export default async function VentureCreditsPage() {
         },
       });
 
-  const balance = startup?.creditAccount?.balance ?? 0;
+  const budget = deriveCreditBudget(startup?.creditAccount);
   const transactions = startup?.creditAccount?.transactions ?? [];
 
   return (
@@ -44,9 +46,19 @@ export default async function VentureCreditsPage() {
         title="Mein Venture-Guthaben"
         subtitle="Dein aktuelles Credit-Guthaben und die komplette Buchungshistorie."
       >
-        <div className="grid grid-cols-2 gap-3 sm:max-w-md">
-          <BannerStat label="Aktuelles Guthaben" value={balance} />
-          <BannerStat label="Buchungen" value={transactions.length} />
+        <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
+          <BannerStat
+            label="Guthaben"
+            value={`${budget.remaining} von ${budget.total}`}
+          />
+          <BannerStat
+            label={CREDIT_BUCKET_LABELS.FIX}
+            value={`${budget.fixRemaining}/${budget.fixTotal}`}
+          />
+          <BannerStat
+            label={CREDIT_BUCKET_LABELS.FLEX}
+            value={`${budget.flexRemaining}/${budget.flexTotal}`}
+          />
         </div>
       </HeroBanner>
 
@@ -71,7 +83,21 @@ export default async function VentureCreditsPage() {
         />
       ) : (
         <>
-          <SectionLabel number="01" label="Historie" title="Buchungen" />
+          <SectionLabel number="01" label="Budget" title="Dein 12-Credit-Budget" />
+          <div className="rounded-card border border-lv-border bg-white p-6">
+            <p className="text-3xl font-bold tracking-tight text-lv-text">
+              {budget.remaining}{" "}
+              <span className="text-lg font-semibold text-lv-secondary">
+                von {budget.total}
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-lv-secondary">
+              Credits verfügbar · {budget.used} genutzt
+            </p>
+            <CreditBudgetBreakdown budget={budget} variant="pills" className="mt-3" />
+          </div>
+
+          <SectionLabel number="02" label="Historie" title="Buchungen" />
           {transactions.length === 0 ? (
             <EmptyState
               icon={Coins}

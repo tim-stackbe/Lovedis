@@ -1,4 +1,5 @@
 import type { SupportCategory } from "@/generated/prisma/enums";
+import { PROGRAM_FIX_CREDIT_COST } from "@/lib/credit-buckets";
 
 // ---------------------------------------------------------------------------
 // Marktplatz-Katalog — 1:1 aus der Notion-Seite „LOVEDIS Startup Support
@@ -6,11 +7,15 @@ import type { SupportCategory } from "@/generated/prisma/enums";
 // (prisma/seed.ts) UND das idempotente Sync-Script
 // (prisma/apply-marketplace-notion.ts).
 //
-// Guardrails (First Slice, kein Schema-Change):
+// Guardrails:
 //   • Credit-Skala = Notion (1 Credit pro Session, 2 für GAL-Digital-1:1-Formate
-//     + „Live Hacking"). Programme bleiben 0-Credit („inklusive").
-//   • Anbieter/Kontakt/Website haben KEINE eigene Spalte → wir betten sie in die
-//     bestehenden Freitextfelder (description/bio) ein, statt Spalten zu ergänzen.
+//     + „Live Hacking"). Programme kosten 0 FLEX-Credits, verbrauchen aber beim
+//     Anmelden das reservierte FIX-Kontingent (Notion: 6 fixe Credits).
+//   • Anbieter/Kontakt/Website/Termin liegen in DEDIZIERTEN Feldern (nicht mehr
+//     im Freitext description/bio): SupportOffering.providerCompany/contactPerson/
+//     website/sessionDate, MentorProfile.website, Program.contactPerson/sessionDate.
+//   • Website-URLs sind in der Notion-Quelle nicht als echte Links hinterlegt →
+//     bewusst leer gelassen (keine erfundenen URLs).
 //   • Natürliche Schlüssel für Idempotenz: Program.title, MentorProfile.name,
 //     SupportOffering (title + category).
 // ---------------------------------------------------------------------------
@@ -21,6 +26,10 @@ export interface ProgramSeed {
   description: string;
   focusTags: string[];
   status: "DRAFT" | "OPEN" | "CLOSED";
+  contactPerson?: string;
+  sessionDate?: string;
+  /** FIX credits an enrolment consumes (Notion: 6 for Sales, Pricing & Growth). */
+  fixCreditCost: number;
   sortOrder: number;
 }
 
@@ -30,6 +39,7 @@ export interface MentorSeed {
   role: string;
   expertise: string[];
   bio: string;
+  website?: string;
   creditCost: number;
   sortOrder: number;
 }
@@ -40,6 +50,10 @@ export interface OfferingSeed {
   summary: string;
   description: string;
   format: string;
+  providerCompany?: string;
+  contactPerson?: string;
+  website?: string;
+  sessionDate?: string;
   creditCost: number;
   sortOrder: number;
 }
@@ -55,10 +69,13 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
       "Exklusives Programm rund um Vertrieb, Pricing und skalierbares Wachstum — 6 fixe Credits, du musst dich nur anmelden.",
     description:
       "Das exklusive LOVEDIS-Programm rund um Sales, Pricing & Growth. Von den 12 Venture Credits sind 6 fix für diese Journey verplant — du musst sie nicht einlösen, sondern dich nur offiziell anmelden.\n\n" +
-      "Session „Sales Foundations: People, Process & Tools — ein Framework für skalierbares GTM“: Online Workshop, 90 Min., Input-Session am 27. August 12:00–13:30 Uhr, Q&A bei Bedarf (Kontakt: Claudia Proß).\n\n" +
+      "Session „Sales Foundations: People, Process & Tools — ein Framework für skalierbares GTM“: Online Workshop, 90 Min., Q&A bei Bedarf.\n\n" +
       "Programmziele: geschärfte Value Proposition & ICP, ein Sales Handbook (Pipeline, GtM, Playbook, Deal Qualification, Skalierung) sowie eine Pricing-Strategie mit validiertem Pricing-Modell.",
     focusTags: ["Sales", "Pricing", "Growth", "GTM"],
     status: "OPEN",
+    contactPerson: "Claudia Proß",
+    sessionDate: "Input-Session am 27. August, 12:00–13:30 Uhr",
+    fixCreditCost: PROGRAM_FIX_CREDIT_COST,
     sortOrder: 1,
   },
 ];
@@ -104,16 +121,12 @@ export const MARKETPLACE_MENTORS: MentorSeed[] = MENTOR_NAMES.map(
 );
 
 // ---------------------------------------------------------------------------
-// Support-Angebote — echte Notion-Angebote je Kategorie. Anbieter/Kontakt sind
-// in die description eingebettet (kein eigenes Feld). Fast alle 1 Credit; die
+// Support-Angebote — echte Notion-Angebote je Kategorie. Anbieter/Kontakt/
+// Website/Termin liegen jetzt in dedizierten Feldern (providerCompany/
+// contactPerson/website/sessionDate) statt im Freitext. Fast alle 1 Credit; die
 // GAL-Digital-1:1-Formate + „Live Hacking" kosten 2. Jede Kategorie hat eine
 // „Individual Expert Session" als Fallback (Bedarf beschreiben → Team matcht).
 // ---------------------------------------------------------------------------
-
-/** Hängt Anbieter/Kontakt-Info an den Beschreibungstext an (kein DB-Feld dafür). */
-function withProvider(description: string, provider: string): string {
-  return `${description}\n\nAnbieter/Kontakt: ${provider}.`;
-}
 
 const FALLBACK_DESCRIPTION =
   "Kein passendes Angebot dabei? Beschreibe deine konkrete Herausforderung — das LOVEDIS-Team vermittelt dir die passende Expert:in aus dem Netzwerk.";
@@ -124,11 +137,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Founder Insights: Vom ersten Fundraising zum Exit",
     category: "FUNDRAISING",
     summary: "Q&A mit einem erfahrenen Founder — vom ersten Raise bis zum Exit.",
-    description: withProvider(
+    description:
       "Offene Q&A-Session zu Fundraising-Realität: erste Runde, Wachstum, Verhandlung und Exit — aus erster Hand.",
-      "Wunderland Capital / Dirk Rudolf"
-    ),
     format: "Online Q&A",
+    providerCompany: "Wunderland Capital",
+    contactPerson: "Dirk Rudolf",
     creditCost: 1,
     sortOrder: 1,
   },
@@ -136,11 +149,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Stakeholdermanagement",
     category: "FUNDRAISING",
     summary: "Workshop zu Erwartungs- und Beziehungsmanagement mit Kapitalgebern.",
-    description: withProvider(
+    description:
       "Wie du Investor:innen, Beirat und weitere Stakeholder entlang der Finanzierungsreise aktiv steuerst und Vertrauen aufbaust.",
-      "LOVEDIS / Polina Kon"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Polina Kon",
     creditCost: 1,
     sortOrder: 2,
   },
@@ -148,11 +161,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Funding Strategy & Insights zu Venture Debt",
     category: "FUNDRAISING",
     summary: "Finanzierungsstrategie inkl. Venture Debt als Baustein.",
-    description: withProvider(
+    description:
       "Wann Eigenkapital, wann Venture Debt? Strategie-Session zu Finanzierungsmix, Timing und Konditionen.",
-      "re:cap Technologies / Lilli Pukall"
-    ),
     format: "Online Workshop (60–90 Min.)",
+    providerCompany: "re:cap Technologies",
+    contactPerson: "Lilli Pukall",
     creditCost: 1,
     sortOrder: 3,
   },
@@ -160,11 +173,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Individuelle Expert:innen Sessions (Investor-Sparring)",
     category: "FUNDRAISING",
     summary: "1:1-Sparring mit Investor:innen aus dem LOVEDIS-Netzwerk.",
-    description: withProvider(
+    description:
       "Direktes Sparring mit Investor:innen zu Story, Runde und Bewertung. Wir matchen die passende Person aus unserem Netzwerk.",
-      "Realyze Ventures, HTGF, re:cap Technologies, Wunderland Capital, Business Angels FrankfurtRheinMain, Futury Capital, Business Angels Mittelhessen"
-    ),
     format: "Sparring Session",
+    providerCompany:
+      "Realyze Ventures, HTGF, re:cap Technologies, Wunderland Capital, Business Angels FrankfurtRheinMain, Futury Capital, Business Angels Mittelhessen",
     creditCost: 1,
     sortOrder: 4,
   },
@@ -183,11 +196,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Geschäftsführerhaftung",
     category: "LEGAL",
     summary: "Haftungsrisiken der Geschäftsführung verstehen und absichern.",
-    description: withProvider(
+    description:
       "Was Geschäftsführer:innen persönlich haftet — und wie du dich und dein Team absicherst.",
-      "Momentum / Philipp Weber"
-    ),
     format: "Online Workshop (~2h)",
+    providerCompany: "Momentum",
+    contactPerson: "Philipp Weber",
     creditCost: 1,
     sortOrder: 6,
   },
@@ -195,11 +208,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "SaaS Contracting",
     category: "LEGAL",
     summary: "Rechtssichere SaaS-Verträge — AGB, SLAs, Datenschutz.",
-    description: withProvider(
+    description:
       "Vertragsgestaltung für SaaS-Produkte: AGB, Service Levels, Haftung und typische Fallstricke.",
-      "Aulinger / Axel Staudt"
-    ),
     format: "Online Workshop (~2h)",
+    providerCompany: "Aulinger",
+    contactPerson: "Axel Staudt",
     creditCost: 1,
     sortOrder: 7,
   },
@@ -207,11 +220,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "AI Act & Datenschutz",
     category: "LEGAL",
     summary: "EU AI Act und DSGVO für KI-Produkte praxisnah eingeordnet.",
-    description: withProvider(
+    description:
       "Was der EU AI Act und die DSGVO für dein KI-Produkt bedeuten — Pflichten, Risiken und pragmatische Umsetzung.",
-      "Aulinger / Axel Staudt"
-    ),
     format: "Online Workshop (~2h)",
+    providerCompany: "Aulinger",
+    contactPerson: "Axel Staudt",
     creditCost: 1,
     sortOrder: 8,
   },
@@ -219,11 +232,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Schutz des geistigen Eigentums / IP-Rechte",
     category: "LEGAL",
     summary: "IP-Strategie: Marken, Patente, Lizenzen richtig aufsetzen.",
-    description: withProvider(
+    description:
       "Wie du dein geistiges Eigentum schützt und eine IP-Strategie entwickelst, die zu deinem Geschäftsmodell passt.",
-      "Aulinger / Axel Staudt"
-    ),
     format: "Online Workshop (~2h)",
+    providerCompany: "Aulinger",
+    contactPerson: "Axel Staudt",
     creditCost: 1,
     sortOrder: 9,
   },
@@ -231,11 +244,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Vorbereitung einer Finanzierungsrunde",
     category: "LEGAL",
     summary: "Rechtliche Readiness für den nächsten Raise.",
-    description: withProvider(
+    description:
       "Datenraum, Cap Table, Verträge und Term Sheet — juristisch vorbereitet in die Finanzierungsrunde gehen.",
-      "Aulinger / Axel Staudt"
-    ),
     format: "Online Workshop (~2h)",
+    providerCompany: "Aulinger",
+    contactPerson: "Axel Staudt",
     creditCost: 1,
     sortOrder: 10,
   },
@@ -243,11 +256,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Exit Readiness & Due Diligence",
     category: "LEGAL",
     summary: "Auf Due Diligence und Exit-Prozesse rechtlich vorbereitet sein.",
-    description: withProvider(
+    description:
       "Woran Deals in der Due Diligence scheitern — und wie du dein Unternehmen frühzeitig exit-ready aufstellst.",
-      "Momentum / Philipp Weber"
-    ),
     format: "Online Workshop (~2h)",
+    providerCompany: "Momentum",
+    contactPerson: "Philipp Weber",
     creditCost: 1,
     sortOrder: 11,
   },
@@ -256,11 +269,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
       "Lunch Learning Session — Wandeldarlehen, SAFE & Venture Debt, VSOP/ESOP",
     category: "LEGAL",
     summary: "Kompakte Session zu Finanzierungsinstrumenten und Beteiligung.",
-    description: withProvider(
+    description:
       "Wandeldarlehen, SAFE, Venture Debt sowie VSOP/ESOP verständlich erklärt — inkl. wann welches Instrument passt.",
-      "Momentum / Philipp Weber"
-    ),
     format: "Lunch Learning Session",
+    providerCompany: "Momentum",
+    contactPerson: "Philipp Weber",
     creditCost: 1,
     sortOrder: 12,
   },
@@ -269,11 +282,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
       "Lunch Learning Session — Finanzierungsrunden aus Gründersicht & Term Sheets",
     category: "LEGAL",
     summary: "Finanzierungsrunden und Term Sheets aus Gründerperspektive.",
-    description: withProvider(
+    description:
       "Term Sheets lesen und verhandeln — die wichtigsten Klauseln aus Gründersicht.",
-      "Momentum / Philipp Weber"
-    ),
     format: "Lunch Learning Session",
+    providerCompany: "Momentum",
+    contactPerson: "Philipp Weber",
     creditCost: 1,
     sortOrder: 13,
   },
@@ -292,11 +305,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Marketing 101",
     category: "MARKETING",
     summary: "Marketing-Grundlagen für Frühphasen-Startups.",
-    description: withProvider(
+    description:
       "Die Basics: Positionierung, Kanäle, Funnel und die ersten Wachstumsschritte.",
-      "LOVEDIS / Hannah Freese"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Hannah Freese",
     creditCost: 1,
     sortOrder: 15,
   },
@@ -304,11 +317,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Brand & Pitch Story",
     category: "MARKETING",
     summary: "Marke und Pitch-Story, die hängen bleiben.",
-    description: withProvider(
+    description:
       "Entwickle eine klare Markenerzählung und eine Pitch-Story, die Investor:innen und Kund:innen überzeugt.",
-      "LOVEDIS / Hannah Freese"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Hannah Freese",
     creditCost: 1,
     sortOrder: 16,
   },
@@ -316,11 +329,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Website-Strategie Starterkit",
     category: "MARKETING",
     summary: "1:1-Workshop für eine konversionsstarke Website.",
-    description: withProvider(
+    description:
       "Individueller 1:1-Workshop: Struktur, Messaging und Conversion-Elemente für deine Website.",
-      "GAL Digital / Tobias Auradniczek"
-    ),
     format: "1:1 Online Workshop",
+    providerCompany: "GAL Digital",
+    contactPerson: "Tobias Auradniczek",
     creditCost: 2,
     sortOrder: 17,
   },
@@ -328,11 +341,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "LinkedIn Visibility Sprint",
     category: "MARKETING",
     summary: "Sichtbarkeit auf LinkedIn systematisch aufbauen.",
-    description: withProvider(
+    description:
       "Content-Formate, Kadenz und Founder-Branding — mehr Reichweite und Inbound über LinkedIn.",
-      "LOVEDIS / Hannah Freese"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Hannah Freese",
     creditCost: 1,
     sortOrder: 18,
   },
@@ -340,11 +353,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Pitching with Impact",
     category: "MARKETING",
     summary: "Überzeugend pitchen — Struktur, Storytelling, Auftritt.",
-    description: withProvider(
+    description:
       "So baust du einen Pitch mit Wirkung: roter Faden, Storytelling und souveräner Auftritt.",
-      "LOVEDIS / Hannah Freese"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Hannah Freese",
     creditCost: 1,
     sortOrder: 19,
   },
@@ -363,11 +376,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Integrating AI in the Enterprise",
     category: "PRODUCT_TECH",
     summary: "KI sinnvoll ins Enterprise-Umfeld integrieren.",
-    description: withProvider(
+    description:
       "Use-Cases, Architektur und Change: wie KI im Unternehmenskontext echten Mehrwert stiftet.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 21,
   },
@@ -375,11 +388,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "IP-AI",
     category: "PRODUCT_TECH",
     summary: "KI und geistiges Eigentum — Chancen und Grenzen.",
-    description: withProvider(
+    description:
       "Was KI-Nutzung für dein IP bedeutet: Trainingsdaten, Outputs und Schutzstrategien.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 22,
   },
@@ -387,11 +400,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Building an AI PoC",
     category: "PRODUCT_TECH",
     summary: "Von der Idee zum belastbaren KI-Proof-of-Concept.",
-    description: withProvider(
+    description:
       "Wie du einen KI-PoC scopest, baust und bewertest — pragmatisch und ergebnisorientiert.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 23,
   },
@@ -399,11 +412,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "AI Agents & Technical Scaling",
     category: "PRODUCT_TECH",
     summary: "Agenten-Architekturen und technische Skalierung.",
-    description: withProvider(
+    description:
       "Sparring zu Agenten-Systemen, Orchestrierung und dem Skalieren deiner technischen Plattform.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Sparring",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 24,
   },
@@ -411,11 +424,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "AI PoC Review & Lessons Learned",
     category: "PRODUCT_TECH",
     summary: "Review eines bestehenden KI-PoC inkl. Learnings.",
-    description: withProvider(
+    description:
       "Wir schauen gemeinsam auf deinen PoC: was funktioniert, was fehlt und wie es produktreif wird.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 25,
   },
@@ -423,11 +436,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Tech Due Diligence Readiness",
     category: "PRODUCT_TECH",
     summary: "Auf technische Due Diligence vorbereitet sein.",
-    description: withProvider(
+    description:
       "Codequalität, Architektur, Security und Doku — so bestehst du die technische DD im Fundraising.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Sparring",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 26,
   },
@@ -435,11 +448,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Tech-Stack Check-up",
     category: "PRODUCT_TECH",
     summary: "1:1-Review deines Tech-Stacks und deiner Architektur.",
-    description: withProvider(
+    description:
       "Individueller 1:1-Check-up: Tech-Stack, Architekturentscheidungen und technische Schuld.",
-      "GAL Digital / Tobias Auradniczek"
-    ),
     format: "1:1 Online Workshop",
+    providerCompany: "GAL Digital",
+    contactPerson: "Tobias Auradniczek",
     creditCost: 2,
     sortOrder: 27,
   },
@@ -447,11 +460,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "MVP Validation & Product Validation",
     category: "PRODUCT_TECH",
     summary: "MVP und Produkthypothesen validieren.",
-    description: withProvider(
+    description:
       "Wie du dein MVP und deine Produktannahmen schnell und günstig am Markt validierst.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Sparring",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 1,
     sortOrder: 28,
   },
@@ -459,11 +472,10 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Cyber Security",
     category: "PRODUCT_TECH",
     summary: "Security-Grundlagen und Härtung für Startups.",
-    description: withProvider(
+    description:
       "Praktische Security-Maßnahmen für dein Produkt und deine Infrastruktur — je nach Bedarf.",
-      "je nach Bedarf (LOVEDIS-Netzwerk)"
-    ),
     format: "Sparring",
+    providerCompany: "LOVEDIS-Netzwerk (je nach Bedarf)",
     creditCost: 1,
     sortOrder: 29,
   },
@@ -471,11 +483,11 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     title: "Live Hacking",
     category: "PRODUCT_TECH",
     summary: "Live-Hacking-Session — Angriffe verstehen, Lücken schließen.",
-    description: withProvider(
+    description:
       "Interaktive Session: reale Angriffsszenarien live demonstriert und daraus abgeleitete Schutzmaßnahmen.",
-      "LOVEDIS / Tim Meggert"
-    ),
     format: "Online Workshop",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
     creditCost: 2,
     sortOrder: 30,
   },

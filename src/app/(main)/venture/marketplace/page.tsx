@@ -1,37 +1,22 @@
-import { ArrowRight, Coins, GraduationCap, Sparkles, Users } from "lucide-react";
+import { GraduationCap, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import {
-  OfferingTypeBadge,
-  SupportCategoryBadge,
-} from "@/components/shared/badges";
+import type { SupportCategory } from "@/generated/prisma/enums";
+import { CardTrack } from "@/components/marketplace/CardTrack";
+import { MarketplaceHero } from "@/components/marketplace/MarketplaceHero";
+import { MentorCard } from "@/components/marketplace/MentorCard";
+import { OfferingCard } from "@/components/marketplace/OfferingCard";
+import { ProgramFeatureCard } from "@/components/marketplace/ProgramFeatureCard";
+import { SectionRow } from "@/components/marketplace/SectionRow";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
-import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { HeroBanner } from "@/components/ui/HeroBanner";
-import { LinkButton } from "@/components/ui/Button";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireVentureView } from "@/lib/auth-guards";
+import { SUPPORT_CATEGORIES, SUPPORT_CATEGORY_LABELS } from "@/lib/constants";
+import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Marktplatz" };
-
-function CreditTag({ cost }: { cost: number }) {
-  if (cost <= 0) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-lv-mint px-2.5 py-0.5 text-xs font-semibold text-lv-mint-deep">
-        Inklusive
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-lv-blue-soft px-2.5 py-0.5 text-xs font-semibold text-lv-blue">
-      <Coins className="h-3 w-3" />
-      {cost} Credits
-    </span>
-  );
-}
 
 export default async function MarketplacePage() {
   const session = await requireVentureView();
@@ -40,7 +25,11 @@ export default async function MarketplacePage() {
   const [startup, programs, mentors, offerings] = await Promise.all([
     prisma.startup.findUnique({
       where: { ownerUserId: session.user.id },
-      select: { creditAccount: { select: { balance: true } } },
+      select: {
+        creditAccount: {
+          select: { balance: true, fixBalance: true, flexBalance: true },
+        },
+      },
     }),
     prisma.program.findMany({
       where: { status: "OPEN" },
@@ -56,39 +45,23 @@ export default async function MarketplacePage() {
     }),
   ]);
 
-  const balance = startup?.creditAccount?.balance ?? 0;
+  const budget = deriveCreditBudget(startup?.creditAccount);
+
+  // Group offerings by category so each category becomes its own editorial row.
+  const offeringsByCategory = SUPPORT_CATEGORIES.map((category) => ({
+    category,
+    items: offerings.filter((o) => o.category === category),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <>
-      <HeroBanner
-        kicker="Venture Platform"
-        title="Startup-Marktplatz"
-        subtitle="Wachse mit exklusiven Programmen, dem Mentor:innen-Netzwerk und individuellen Support-Angeboten — koordiniert vom Lovedis-Team."
-        actions={
-          <LinkButton
-            href={teamMode ? "/marketplace" : "/venture/marketplace/requests"}
-            variant="white"
-            size="sm"
-          >
-            {teamMode ? "Zur Koordination" : "Meine Anfragen"}
-            <ArrowRight className="h-4 w-4" />
-          </LinkButton>
-        }
-      >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:max-w-lg">
-          {teamMode ? (
-            <BannerStat
-              label="Programme"
-              value={programs.length}
-              icon={GraduationCap}
-            />
-          ) : (
-            <BannerStat label="Guthaben" value={balance} icon={Coins} />
-          )}
-          <BannerStat label="Mentor:innen" value={mentors.length} icon={Users} />
-          <BannerStat label="Angebote" value={offerings.length} icon={Sparkles} />
-        </div>
-      </HeroBanner>
+      <MarketplaceHero
+        budget={budget}
+        teamMode={teamMode}
+        programCount={programs.length}
+        mentorCount={mentors.length}
+        offeringCount={offerings.length}
+      />
 
       {teamMode && (
         <PreviewBanner>
@@ -106,13 +79,17 @@ export default async function MarketplacePage() {
         </PreviewBanner>
       )}
 
-      {/* Programme ---------------------------------------------------------- */}
-      <section className="space-y-4">
-        <SectionLabel
-          number="01"
-          label="Inklusive"
-          title="Exklusive Programme"
-        />
+      {/* Exklusive Programme — wide featured card(s) --------------------------- */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
+            Exklusive Programme
+          </h2>
+          <p className="mt-1 text-sm text-lv-secondary">
+            Sorgfältig kuratierte Programme für deinen Wachstumsschub — keine
+            Credits erforderlich.
+          </p>
+        </div>
         {programs.length === 0 ? (
           <EmptyState
             icon={GraduationCap}
@@ -120,140 +97,130 @@ export default async function MarketplacePage() {
             description="Sobald Programme freigeschaltet sind, erscheinen sie hier."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-4">
             {programs.map((p) => (
-              <Card key={p.id} className="flex flex-col p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <OfferingTypeBadge value="PROGRAM" />
-                  <CreditTag cost={0} />
-                </div>
-                <h3 className="mt-3 text-base font-bold text-lv-text">
-                  {p.title}
-                </h3>
-                <p className="mt-1 flex-1 text-sm text-lv-secondary">
-                  {p.summary}
-                </p>
-                {p.focusTags.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {p.focusTags.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full bg-lv-surface px-2 py-0.5 text-xs text-lv-secondary"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <Link
-                  href={`/venture/marketplace/programs/${p.id}`}
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-lv-blue hover:underline"
-                >
-                  Details & Anfrage
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Card>
+              <ProgramFeatureCard
+                key={p.id}
+                program={{
+                  id: p.id,
+                  title: p.title,
+                  summary: p.summary,
+                  focusTags: p.focusTags,
+                  sessionDate: p.sessionDate,
+                  contactPerson: p.contactPerson,
+                }}
+              />
             ))}
           </div>
         )}
       </section>
 
-      {/* Mentor:innen ------------------------------------------------------- */}
-      <section className="space-y-4">
-        <SectionLabel
-          number="02"
-          label="Credits"
-          title="Mentor:innen-Netzwerk"
-        />
-        {mentors.length === 0 ? (
+      {/* Mentor:innen-Netzwerk — horizontal track ----------------------------- */}
+      {mentors.length === 0 ? (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
+              Mentor:innen-Netzwerk
+            </h2>
+            <p className="mt-1 text-sm text-lv-secondary">
+              Erfahrene Expert:innen, die dich weiterbringen.
+            </p>
+          </div>
           <EmptyState
             icon={Users}
             title="Noch keine Mentor:innen"
             description="Das Lovedis-Team kuratiert das Mentor:innen-Netzwerk."
           />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {mentors.map((m) => (
-              <Card key={m.id} className="flex flex-col p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <OfferingTypeBadge value="MENTOR_SESSION" />
-                  <CreditTag cost={m.creditCost} />
-                </div>
-                <h3 className="mt-3 text-base font-bold text-lv-text">
-                  {m.name}
-                </h3>
-                <p className="text-sm text-lv-secondary">
-                  {[m.role, m.company].filter(Boolean).join(" · ")}
-                </p>
-                {m.expertise.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {m.expertise.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full bg-lv-surface px-2 py-0.5 text-xs text-lv-secondary"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <Link
-                  href={`/venture/marketplace/mentors/${m.id}`}
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-lv-blue hover:underline"
-                >
-                  Details & Anfrage
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+        </section>
+      ) : (
+        <SectionRow
+          title="Mentor:innen-Netzwerk"
+          subtitle="Erfahrene Expert:innen, die dich weiterbringen."
+        >
+          {mentors.map((m) => (
+            <MentorCard
+              key={m.id}
+              mentor={{
+                id: m.id,
+                name: m.name,
+                company: m.company,
+                role: m.role,
+                expertise: m.expertise,
+                photoUrl: m.photoUrl,
+                creditCost: m.creditCost,
+              }}
+            />
+          ))}
+        </SectionRow>
+      )}
 
-      {/* Support-Angebote --------------------------------------------------- */}
-      <section className="space-y-4">
-        <SectionLabel
-          number="03"
-          label="Credits"
-          title="Individuelle Support-Angebote"
-        />
-        {offerings.length === 0 ? (
+      {/* Support-Angebote — one row per category ------------------------------ */}
+      <section className="space-y-5">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
+            Support-Angebote
+          </h2>
+          <p className="mt-1 text-sm text-lv-secondary">
+            Die besten Services für jede Phase deines Startups — nach Kategorie.
+          </p>
+        </div>
+        {offeringsByCategory.length === 0 ? (
           <EmptyState
             icon={Sparkles}
             title="Noch keine Angebote"
             description="Workshops und Sparring für Fundraising, Legal, Marketing und mehr folgen."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {offerings.map((o) => (
-              <Card key={o.id} className="flex flex-col p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <SupportCategoryBadge value={o.category} />
-                  <CreditTag cost={o.creditCost} />
-                </div>
-                <h3 className="mt-3 text-base font-bold text-lv-text">
-                  {o.title}
-                </h3>
-                <p className="mt-1 flex-1 text-sm text-lv-secondary">
-                  {o.summary}
-                </p>
-                {o.format && (
-                  <p className="mt-2 text-xs font-medium text-lv-secondary">
-                    Format: {o.format}
-                  </p>
-                )}
-                <Link
-                  href={`/venture/marketplace/support/${o.id}`}
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-lv-blue hover:underline"
-                >
-                  Details & Anfrage
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Card>
-            ))}
-          </div>
+          offeringsByCategory.map(({ category, items }) => (
+            <CategoryRow key={category} category={category} items={items} />
+          ))
         )}
       </section>
     </>
+  );
+}
+
+/** A single support category as a labelled horizontal track. */
+function CategoryRow({
+  category,
+  items,
+}: {
+  category: SupportCategory;
+  items: {
+    id: string;
+    title: string;
+    category: SupportCategory;
+    summary: string;
+    format: string | null;
+    providerCompany: string | null;
+    creditCost: number;
+  }[];
+}) {
+  const label = SUPPORT_CATEGORY_LABELS[category];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-baseline gap-2">
+        <h3 className="text-base font-bold text-lv-text">{label}</h3>
+        <span className="text-xs text-lv-secondary">
+          {items.length} {items.length === 1 ? "Angebot" : "Angebote"}
+        </span>
+      </div>
+      <CardTrack ariaLabel={`Support-Angebote: ${label}`}>
+        {items.map((o) => (
+          <OfferingCard
+            key={o.id}
+            offering={{
+              id: o.id,
+              title: o.title,
+              category: o.category,
+              summary: o.summary,
+              format: o.format,
+              providerCompany: o.providerCompany,
+              creditCost: o.creditCost,
+            }}
+          />
+        ))}
+      </CardTrack>
+    </div>
   );
 }

@@ -1290,6 +1290,9 @@ async function main() {
         description: p.description,
         focusTags: p.focusTags,
         status: p.status,
+        contactPerson: p.contactPerson ?? null,
+        sessionDate: p.sessionDate ?? null,
+        fixCreditCost: p.fixCreditCost,
         sortOrder: p.sortOrder,
         createdById: member.id,
       },
@@ -1306,6 +1309,7 @@ async function main() {
         role: m.role,
         expertise: m.expertise,
         bio: m.bio,
+        website: m.website ?? null,
         creditCost: m.creditCost,
         sortOrder: m.sortOrder,
       },
@@ -1322,6 +1326,10 @@ async function main() {
         summary: o.summary,
         description: o.description,
         format: o.format,
+        providerCompany: o.providerCompany ?? null,
+        contactPerson: o.contactPerson ?? null,
+        website: o.website ?? null,
+        sessionDate: o.sessionDate ?? null,
         creditCost: o.creditCost,
         sortOrder: o.sortOrder,
       },
@@ -1384,19 +1392,24 @@ async function main() {
       handledById: member.id,
     },
   });
-  // CONFIRMED → Credits wurden eingelöst (SPEND-Tx verlinkt, Saldo dekrementiert).
+  // CONFIRMED → FLEX-Credits wurden eingelöst (SPEND-Tx verlinkt, Saldo +
+  // flexBalance dekrementiert).
   const redemptionTx = await prisma.creditTransaction.create({
     data: {
       accountId: nfAccount.id,
       createdById: member.id,
       type: "SPEND",
+      bucket: "FLEX",
       amount: -offeringConfirmed.creditCost,
       reason: `Marktplatz-Buchung: ${offeringConfirmed.title}`,
     },
   });
   await prisma.creditAccount.update({
     where: { id: nfAccount.id },
-    data: { balance: { decrement: offeringConfirmed.creditCost } },
+    data: {
+      balance: { decrement: offeringConfirmed.creditCost },
+      flexBalance: { decrement: offeringConfirmed.creditCost },
+    },
   });
   await prisma.marketplaceBooking.create({
     data: {
@@ -1431,7 +1444,28 @@ async function main() {
         "Aktuell kein passender Slot — wir melden uns im nächsten Quartal erneut.",
     },
   });
-  // COMPLETED Programm (0 Credits, keine Transaktion).
+  // COMPLETED Programm — verbraucht das FIX-Kontingent (0 FLEX-Credits, aber
+  // 6 FIX „durch Anmeldung"). FIX-SPEND-Tx verlinkt, fixBalance dekrementiert.
+  const growthProgram = MARKETPLACE_PROGRAMS.find(
+    (p) => p.title === "Sales, Pricing & Growth"
+  )!;
+  const programFixTx = await prisma.creditTransaction.create({
+    data: {
+      accountId: nfAccount.id,
+      createdById: member.id,
+      type: "SPEND",
+      bucket: "FIX",
+      amount: -growthProgram.fixCreditCost,
+      reason: `Marktplatz-Buchung: ${growthProgram.title}`,
+    },
+  });
+  await prisma.creditAccount.update({
+    where: { id: nfAccount.id },
+    data: {
+      balance: { decrement: growthProgram.fixCreditCost },
+      fixBalance: { decrement: growthProgram.fixCreditCost },
+    },
+  });
   await prisma.marketplaceBooking.create({
     data: {
       offeringType: "PROGRAM",
@@ -1443,7 +1477,9 @@ async function main() {
       contactName: startupUser.name,
       contactEmail: startupUser.email,
       creditCost: 0,
+      fixCreditCost: growthProgram.fixCreditCost,
       handledById: member.id,
+      creditTransactionId: programFixTx.id,
     },
   });
 

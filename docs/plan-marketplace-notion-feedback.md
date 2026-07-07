@@ -301,6 +301,56 @@ eigene Anbieter-/Kontakt-/Website-/Termin-**Spalten** (Empfehlung #3), das **fix
 (`auth.ts`) legt noch kein `Startup` an — deshalb hängt der Grant am Profil-Anlege-Schritt, was
 der saubere bestehende Hook ohne Schema-Änderung ist.
 
+### 6.2 Zweite Iteration „Metadaten + Fix/Flex-Budget" (implementiert, MIT Schema-Change)
+
+Die drei bewusst offengelassenen Themen sind jetzt umgesetzt — **additiv** (nur neue,
+nullable/default-Spalten; kein Breaking Change) und über ein **idempotentes Migrations-Script**
+(`prisma/migrate-credit-buckets.ts`).
+
+**A) Dedizierte Angebots-Metadaten (statt Freitext).** Neue optionale Spalten:
+`SupportOffering.providerCompany/contactPerson/website/sessionDate`, `MentorProfile.website`,
+`Program.contactPerson/sessionDate`. Anbieter/Kontakt/Termin wandern aus der `description`/`bio`
+in eigene Felder (Quelle bleibt `src/lib/marketplace-catalog.ts`). Storefront-Karten +
+Detailseiten (`OfferingDetail`) zeigen Anbieter/Kontakt/Termin/Website, wo vorhanden. Website-URLs
+sind in Notion nicht als echte Links hinterlegt → bewusst leer gelassen (keine erfundenen URLs).
+
+**B) Fix/Flex-Budget (6 fix / 6 flexibel).** Neues Enum `CreditBucket { FIX, FLEX }` und
+`CreditTransaction.bucket` (default `FLEX`). `CreditAccount` behält `balance` als **Gesamtsumme**
+(rückwärtskompatibel) und führt zusätzlich **gecachte Teilsalden** `fixBalance`/`flexBalance` —
+race-safe über dieselbe konditionale `updateMany`-Guard wie bisher, immer atomar im selben
+Statement wie `balance` (Invariante `balance == fixBalance + flexBalance`).
+
+> **INTERPRETATION der Fix/Flex-Semantik (Default — vom Team revidierbar):**
+> - Der 12-Credit-Onboarding-Grant wird in **6 FIX + 6 FLEX** gesplittet
+>   (`grantOnboardingCredits`, weiterhin idempotent, zwei GRANT-Zeilen).
+> - **FIX** ist für das exklusive Programm „Sales, Pricing & Growth" reserviert. „ohne Einlösung,
+>   nur anmelden" ist so modelliert, dass die **Programm-Buchung** beim Bestätigen das FIX-Kontingent
+>   verbraucht (`Program.fixCreditCost`, Default **6** = das ganze earmarked Kontingent auf das eine
+>   Programm; als `MarketplaceBooking.fixCreditCost` gesnapshottet). Der **FLEX-Preis** eines Programms
+>   bleibt 0.
+> - **FLEX** bezahlt Mentor:innen-Sessions + Support-Angebote (1–2 Credits), eingelöst bei `CONFIRMED`
+>   wie bisher.
+> - Beide Töpfe haben einen eigenen Boden bei 0; unzureichender Topf → sauberer Fehler (UI wie bei
+>   „Guthaben reicht nicht"). Storno bucht in **denselben** Topf zurück (aus der verknüpften SPEND-Tx
+>   ermittelt).
+>
+> Offene Team-Entscheidung: Soll ein Programm wirklich alle 6 FIX auf einmal ziehen, oder pro
+> Programm-Session 1 Credit? Aktuell: 6 auf einmal (1:1 zu „6 Credits sind fix verplant").
+
+**C) „X von 12"-Anzeige.** `deriveCreditBudget` (`src/lib/credit-buckets.ts`) leitet aus den
+gecachten Salden „Guthaben: 9 von 12" + „Fix 6/6 · Flexibel 3/6" (Rest/Gesamt je Topf) ab. Angezeigt
+auf `/venture` (Guthaben-Card), `/venture/credits` (Banner + Budget-Card mit Pills),
+`/venture/marketplace` (Banner-Stat) und im Startup-Dashboard. Die Team-Verwaltung `/credits` zeigt
+je Konto Fix/Flexibel/Saldo und erlaubt Buchungen je Topf (neues `bucket`-Feld, Default FLEX).
+
+**Migration / Run-Order** (`prisma/migrate-credit-buckets.ts`, idempotent, LOKAL validiert):
+1. Neuen Code deployen. 2. `DATABASE_URL=<target> npx tsx prisma/migrate-credit-buckets.ts` — führt
+`prisma db push` (fügt Enum/Spalten additiv hinzu) aus, splittet vorhandene Legacy-„+12"-Grants in
+6 FIX + 6 FLEX und rechnet die gecachten Teilsalden aus dem Ledger neu. 3. optional
+`npx tsx prisma/apply-marketplace-notion.ts` für die neuen Metadaten-Spalten.
+**Neon-Test-DB später:** `DATABASE_URL=<neon-test-url> npx tsx prisma/migrate-credit-buckets.ts`
+(mehrfach ausführbar). **Nicht** gegen Produktion ohne Review.
+
 ---
 
 *Dieses Dokument ergänzt `docs/plan-startup-marketplace.md` und

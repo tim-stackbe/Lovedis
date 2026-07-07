@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Building2, CalendarDays, Globe, UserRound } from "lucide-react";
 import Link from "next/link";
 import type { MarketplaceOfferingType } from "@/generated/prisma/enums";
 import { MarketplaceBookingForm } from "@/components/marketplace/MarketplaceBookingForm";
@@ -21,9 +21,48 @@ interface Props {
   balance: number;
   defaultName: string;
   defaultEmail: string;
+  /** Optional Notion-sourced metadata (rendered where present). */
+  providerCompany?: string | null;
+  contactPerson?: string | null;
+  website?: string | null;
+  sessionDate?: string | null;
   /** When true, render the internal-team on-behalf-of booking variant. */
   teamMode?: boolean;
   startups?: OnBehalfStartup[];
+}
+
+/** A single provider/contact/date/website metadata row. */
+function MetaRow({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: typeof Building2;
+  label: string;
+  value: string;
+  href?: string;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-lv-secondary" />
+      <div className="text-sm">
+        <span className="text-lv-secondary">{label}: </span>
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-lv-blue hover:underline"
+          >
+            {value}
+          </a>
+        ) : (
+          <span className="font-medium text-lv-text">{value}</span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /** Shared detail + request-form layout for all three offering types. */
@@ -39,9 +78,16 @@ export function OfferingDetail({
   balance,
   defaultName,
   defaultEmail,
+  providerCompany,
+  contactPerson,
+  website,
+  sessionDate,
   teamMode = false,
   startups = [],
 }: Props) {
+  const hasMeta = Boolean(
+    providerCompany || contactPerson || website || sessionDate
+  );
   return (
     <>
       <Link
@@ -80,6 +126,39 @@ export function OfferingDetail({
                     {t}
                   </span>
                 ))}
+              </div>
+            )}
+            {hasMeta && (
+              <div className="space-y-2 border-t border-lv-border pt-4">
+                {providerCompany && (
+                  <MetaRow
+                    icon={Building2}
+                    label="Anbieter"
+                    value={providerCompany}
+                  />
+                )}
+                {contactPerson && (
+                  <MetaRow
+                    icon={UserRound}
+                    label="Kontakt"
+                    value={contactPerson}
+                  />
+                )}
+                {sessionDate && (
+                  <MetaRow
+                    icon={CalendarDays}
+                    label="Termin"
+                    value={sessionDate}
+                  />
+                )}
+                {website && (
+                  <MetaRow
+                    icon={Globe}
+                    label="Website"
+                    value={website.replace(/^https?:\/\//, "")}
+                    href={website}
+                  />
+                )}
               </div>
             )}
           </Card>

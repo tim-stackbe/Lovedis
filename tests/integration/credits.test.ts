@@ -8,6 +8,7 @@ import { bookCreditTransaction } from "@/app/actions/credits";
 import { requireTeam } from "@/lib/auth-guards";
 import {
   createStartupWithBalance,
+  createStartupWithBuckets,
   createUser,
   prisma,
   resetDb,
@@ -137,5 +138,68 @@ describe("bookCreditTransaction — credit ledger floor", () => {
       form({ startupId: "does-not-exist", type: "GRANT", amount: "10", reason: "X" })
     );
     expect(res.error).toBe("Startup nicht gefunden.");
+  });
+});
+
+describe("bookCreditTransaction — per-bucket floor", () => {
+  it("defaults a manual booking to the FLEX bucket", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 0, flex: 0 });
+
+    const res = await bookCreditTransaction(
+      undefined,
+      form({ startupId: startup.id, type: "GRANT", amount: "5", reason: "Bonus" })
+    );
+
+    expect(res.success).toBeTruthy();
+    const updated = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(updated.flexBalance).toBe(5);
+    expect(updated.fixBalance).toBe(0);
+    expect(updated.balance).toBe(5);
+  });
+
+  it("grants + spends against the FIX bucket and mirrors the cached balances", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 0, flex: 0 });
+
+    const grant = await bookCreditTransaction(
+      undefined,
+      form({ startupId: startup.id, type: "GRANT", bucket: "FIX", amount: "6", reason: "Programm-Kontingent" })
+    );
+    expect(grant.success).toBeTruthy();
+    const spend = await bookCreditTransaction(
+      undefined,
+      form({ startupId: startup.id, type: "SPEND", bucket: "FIX", amount: "4", reason: "Programm" })
+    );
+    expect(spend.success).toBeTruthy();
+
+    const updated = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(updated.fixBalance).toBe(2);
+    expect(updated.flexBalance).toBe(0);
+    expect(updated.balance).toBe(2);
+  });
+
+  it("blocks a FIX spend that exceeds the FIX bucket, even if the total balance would cover it", async () => {
+    // FLEX has plenty (10) but FIX is empty: a FIX spend must be rejected and
+    // write no ledger row.
+    const { startup, account } = await createStartupWithBuckets({ fix: 0, flex: 10 });
+
+    const res = await bookCreditTransaction(
+      undefined,
+      form({ startupId: startup.id, type: "SPEND", bucket: "FIX", amount: "3", reason: "Zu viel Fix" })
+    );
+
+    expect(res.error).toContain("unter 0 fallen");
+    const updated = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(updated.fixBalance).toBe(0);
+    expect(updated.flexBalance).toBe(10);
+    expect(updated.balance).toBe(10);
+    expect(
+      await prisma.creditTransaction.count({ where: { accountId: account.id } })
+    ).toBe(0);
   });
 });

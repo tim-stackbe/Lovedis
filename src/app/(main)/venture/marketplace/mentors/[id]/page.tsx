@@ -45,6 +45,8 @@ export default async function MentorDetailPage({
       balance={startup?.creditAccount?.balance ?? 0}
       defaultName={user?.name ?? ""}
       defaultEmail={user?.email ?? ""}
+      providerCompany={mentor.company}
+      website={mentor.website}
       teamMode={teamMode}
       startups={startups}
     />

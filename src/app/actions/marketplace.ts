@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type {
+  CreditBucket,
   MarketplaceOfferingType,
   SupportCategory,
 } from "@/generated/prisma/enums";
@@ -60,24 +61,36 @@ const requestSchema = z.object({
 
 /**
  * Resolves the catalog target for an offering type and returns the target id
- * field + the (snapshotted) credit cost. Programs always cost 0.
+ * field + the snapshotted costs. `creditCost` is the FLEX price (mentor/support);
+ * `fixCreditCost` is the FIX consumption (programs only, otherwise 0). Programs
+ * never cost FLEX credits but consume from the reserved FIX bucket on enrolment.
  */
 async function resolveTarget(
   offeringType: MarketplaceOfferingType,
   targetId: string
 ): Promise<
-  | { ok: true; data: { creditCost: number; field: "programId" | "mentorId" | "offeringId" } }
+  | {
+      ok: true;
+      data: {
+        creditCost: number;
+        fixCreditCost: number;
+        field: "programId" | "mentorId" | "offeringId";
+      };
+    }
   | { ok: false; error: string }
 > {
   if (offeringType === "PROGRAM") {
     const program = await prisma.program.findUnique({
       where: { id: targetId },
-      select: { status: true },
+      select: { status: true, fixCreditCost: true },
     });
     if (!program || program.status !== "OPEN") {
       return { ok: false, error: "Programm nicht gefunden." };
     }
-    return { ok: true, data: { creditCost: 0, field: "programId" } };
+    return {
+      ok: true,
+      data: { creditCost: 0, fixCreditCost: program.fixCreditCost, field: "programId" },
+    };
   }
   if (offeringType === "MENTOR_SESSION") {
     const mentor = await prisma.mentorProfile.findUnique({
@@ -87,7 +100,10 @@ async function resolveTarget(
     if (!mentor || !mentor.isActive) {
       return { ok: false, error: "Mentor:in nicht gefunden." };
     }
-    return { ok: true, data: { creditCost: mentor.creditCost, field: "mentorId" } };
+    return {
+      ok: true,
+      data: { creditCost: mentor.creditCost, fixCreditCost: 0, field: "mentorId" },
+    };
   }
   const offering = await prisma.supportOffering.findUnique({
     where: { id: targetId },
@@ -96,7 +112,10 @@ async function resolveTarget(
   if (!offering || !offering.isActive) {
     return { ok: false, error: "Angebot nicht gefunden." };
   }
-  return { ok: true, data: { creditCost: offering.creditCost, field: "offeringId" } };
+  return {
+    ok: true,
+    data: { creditCost: offering.creditCost, fixCreditCost: 0, field: "offeringId" },
+  };
 }
 
 export async function requestBooking(
@@ -119,16 +138,21 @@ export async function requestBooking(
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
+  const accountSelect = {
+    balance: true,
+    fixBalance: true,
+    flexBalance: true,
+  } as const;
   const startup = isTeam
     ? parsed.data.onBehalfStartupId
       ? await prisma.startup.findUnique({
           where: { id: parsed.data.onBehalfStartupId },
-          select: { id: true, creditAccount: { select: { balance: true } } },
+          select: { id: true, creditAccount: { select: accountSelect } },
         })
       : null
     : await prisma.startup.findUnique({
         where: { ownerUserId: session.user.id },
-        select: { id: true, creditAccount: { select: { balance: true } } },
+        select: { id: true, creditAccount: { select: accountSelect } },
       });
   if (!startup) {
     return {
@@ -141,15 +165,24 @@ export async function requestBooking(
   const resolved = await resolveTarget(parsed.data.offeringType, parsed.data.targetId);
   if (!resolved.ok) return { error: resolved.error };
 
-  const { creditCost, field } = resolved.data;
+  const { creditCost, fixCreditCost, field } = resolved.data;
 
-  // Soft balance check at request time (no charge yet). Credits are only
-  // redeemed on CONFIRMED; the final, authoritative check happens there.
+  // Soft per-bucket balance check at request time (no charge yet). Credits are
+  // only redeemed on CONFIRMED; the final, authoritative check happens there.
+  // Mentor/Support draw FLEX; program enrolment draws the reserved FIX bucket.
   if (creditCost > 0) {
-    const balance = startup.creditAccount?.balance ?? 0;
-    if (balance < creditCost) {
+    const flex = startup.creditAccount?.flexBalance ?? 0;
+    if (flex < creditCost) {
       return {
-        error: `Dein Guthaben (${balance}) reicht für dieses Angebot (${creditCost} Credits) nicht aus.`,
+        error: `Dein flexibles Guthaben (${flex}) reicht für dieses Angebot (${creditCost} Credits) nicht aus.`,
+      };
+    }
+  }
+  if (fixCreditCost > 0) {
+    const fix = startup.creditAccount?.fixBalance ?? 0;
+    if (fix < fixCreditCost) {
+      return {
+        error: `Dein Fix-Kontingent (${fix}) reicht für die Anmeldung zu diesem Programm (${fixCreditCost} Credits) nicht aus.`,
       };
     }
   }
@@ -165,6 +198,7 @@ export async function requestBooking(
       contactEmail: parsed.data.contactEmail,
       preferredAt: parsed.data.preferredAt ?? null,
       creditCost,
+      fixCreditCost,
     },
   });
 
@@ -228,8 +262,14 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
     return { error: "Diese Buchung wurde bereits abgerechnet." };
   }
 
-  // Programs (cost 0) confirm without touching the ledger.
-  if (booking.creditCost <= 0) {
+  // Which bucket the redemption draws from + how much. Program enrolment
+  // consumes the reserved FIX contingent; mentor/support draw flexible FLEX.
+  const bucket: CreditBucket =
+    booking.offeringType === "PROGRAM" ? "FIX" : "FLEX";
+  const cost = bucket === "FIX" ? booking.fixCreditCost : booking.creditCost;
+
+  // Cost 0 (inclusive program without a FIX contingent) confirms without ledger.
+  if (cost <= 0) {
     await prisma.marketplaceBooking.update({
       where: { id: bookingId },
       data: { status: "CONFIRMED", handledById: session.user.id },
@@ -265,14 +305,21 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
         })) ??
         (await tx.creditAccount.create({ data: { startupId: booking.startupId } }));
 
-      // Atomic, guarded debit: only decrement when the balance still covers the
-      // cost. Two concurrent confirms for the same startup contend on this row;
-      // the conditional updateMany matches 0 rows once the balance would go
-      // negative, so credits can never be overspent (the read-then-update
-      // pattern was racy under Read Committed).
+      // Atomic, guarded debit scoped to the target bucket: only decrement when
+      // that bucket still covers the cost. Two concurrent confirms for the same
+      // startup contend on this row; the conditional updateMany matches 0 rows
+      // once the bucket would go negative, so credits can never be overspent.
+      // The cached total `balance` is decremented in lock-step to preserve the
+      // balance == fixBalance + flexBalance invariant.
       const debit = await tx.creditAccount.updateMany({
-        where: { id: account.id, balance: { gte: booking.creditCost } },
-        data: { balance: { decrement: booking.creditCost } },
+        where:
+          bucket === "FIX"
+            ? { id: account.id, fixBalance: { gte: cost } }
+            : { id: account.id, flexBalance: { gte: cost } },
+        data:
+          bucket === "FIX"
+            ? { fixBalance: { decrement: cost }, balance: { decrement: cost } }
+            : { flexBalance: { decrement: cost }, balance: { decrement: cost } },
       });
       if (debit.count === 0) {
         throw new InsufficientCreditsError();
@@ -282,7 +329,8 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
         data: {
           accountId: account.id,
           type: "SPEND",
-          amount: -booking.creditCost,
+          bucket,
+          amount: -cost,
           reason: `Marktplatz-Buchung: ${targetName}`,
           createdById: session.user.id,
         },
@@ -297,7 +345,12 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
     });
   } catch (err) {
     if (err instanceof InsufficientCreditsError) {
-      return { error: "Guthaben des Startups reicht nicht aus — Bestätigung abgebrochen." };
+      return {
+        error:
+          bucket === "FIX"
+            ? "Das Fix-Kontingent des Startups reicht nicht aus — Bestätigung abgebrochen."
+            : "Guthaben des Startups reicht nicht aus — Bestätigung abgebrochen.",
+      };
     }
     if (err instanceof Error && err.message === "STALE") {
       return { error: "Status hat sich geändert. Bitte neu laden." };
@@ -307,7 +360,7 @@ export async function confirmBooking(bookingId: string): Promise<ActionState> {
 
   revalidateMarketplace();
   return {
-    success: `Bestätigt — ${booking.creditCost} Credits eingelöst.`,
+    success: `Bestätigt — ${cost} Credits eingelöst.`,
   };
 }
 
@@ -401,11 +454,19 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
   // scoped to the observed status (so only one cancel wins the row lock), and
   // only the winner — if it claimed a paid, CONFIRMED booking — refunds.
   let refunded = false;
+  let refundedAmount = 0;
   try {
     await prisma.$transaction(async (tx) => {
       const current = await tx.marketplaceBooking.findUnique({
         where: { id: bookingId },
-        select: { status: true, creditCost: true, creditTransactionId: true },
+        select: {
+          status: true,
+          creditCost: true,
+          creditTransactionId: true,
+          // Read the linked SPEND to refund exactly what was spent, into the
+          // same bucket it came from (FLEX for mentor/support, FIX for program).
+          creditTransaction: { select: { bucket: true, amount: true } },
+        },
       });
       if (!current) throw new Error("NOT_FOUND");
       if (current.status === "CANCELLED" || current.status === "DECLINED") {
@@ -432,11 +493,17 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
       });
       if (claim.count !== 1) throw new Error("STALE");
 
+      // Refund iff a CONFIRMED booking carries a linked SPEND (covers both the
+      // FLEX mentor/support redemptions and the FIX program consumption).
+      const spent = current.creditTransaction;
       const needsRefund =
         current.status === "CONFIRMED" &&
-        current.creditCost > 0 &&
-        current.creditTransactionId !== null;
+        current.creditTransactionId !== null &&
+        spent !== null &&
+        spent.amount < 0;
       if (needsRefund) {
+        const bucket: CreditBucket = spent.bucket;
+        const amount = Math.abs(spent.amount);
         const account = await tx.creditAccount.findUnique({
           where: { startupId: booking.startupId },
           select: { id: true },
@@ -446,17 +513,22 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
             data: {
               accountId: account.id,
               type: "ADJUSTMENT",
-              amount: current.creditCost,
+              bucket,
+              amount,
               reason: "Storno-Rückbuchung: Marktplatz-Buchung",
               createdById: session.user.id,
             },
           });
           await tx.creditAccount.update({
             where: { id: account.id },
-            data: { balance: { increment: current.creditCost } },
+            data:
+              bucket === "FIX"
+                ? { fixBalance: { increment: amount }, balance: { increment: amount } }
+                : { flexBalance: { increment: amount }, balance: { increment: amount } },
           });
         }
         refunded = true;
+        refundedAmount = amount;
       }
     });
   } catch (err) {
@@ -479,7 +551,7 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
 
   revalidateMarketplace();
   return refunded
-    ? { success: `Storniert — ${booking.creditCost} Credits zurückgebucht.` }
+    ? { success: `Storniert — ${refundedAmount} Credits zurückgebucht.` }
     : { success: "Buchung storniert." };
 }
 

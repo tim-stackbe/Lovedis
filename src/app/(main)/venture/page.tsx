@@ -1,12 +1,14 @@
 import { ArrowRight, Coins } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
 import { HubContent } from "@/components/ssot/HubContent";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireVentureView } from "@/lib/auth-guards";
+import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
 import { audiencesForRole, getHubContent } from "@/lib/ssot";
@@ -20,7 +22,11 @@ export default async function VenturePage() {
   const [startup, hub] = await Promise.all([
     prisma.startup.findUnique({
       where: { ownerUserId: session.user.id },
-      select: { creditAccount: { select: { balance: true } } },
+      select: {
+        creditAccount: {
+          select: { balance: true, fixBalance: true, flexBalance: true },
+        },
+      },
     }),
     // In the team preview, pin to the startup audience slice (STARTUP + BOTH)
     // for a faithful "Startup-Sicht", like partner-hub does for its preview.
@@ -29,7 +35,7 @@ export default async function VenturePage() {
     ),
   ]);
 
-  const balance = startup?.creditAccount?.balance ?? 0;
+  const budget = deriveCreditBudget(startup?.creditAccount);
 
   return (
     <>
@@ -62,9 +68,13 @@ export default async function VenturePage() {
           </div>
           <div>
             <p className="text-3xl font-bold tracking-tight text-lv-text">
-              {balance}
+              {budget.remaining}{" "}
+              <span className="text-lg font-semibold text-lv-secondary">
+                von {budget.total}
+              </span>
             </p>
-            <p className="text-sm text-lv-secondary">Aktuelles Guthaben</p>
+            <p className="text-sm text-lv-secondary">Guthaben verfügbar</p>
+            <CreditBudgetBreakdown budget={budget} className="mt-1" />
           </div>
         </div>
         <Link

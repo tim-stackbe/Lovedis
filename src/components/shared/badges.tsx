@@ -304,6 +304,32 @@ export function SupportCategoryBadge({ value }: { value: SupportCategory }) {
   return <Badge tone="blue">{SUPPORT_CATEGORY_LABELS[value]}</Badge>;
 }
 
+/**
+ * Credit-cost badge for marketplace cards. Cost 0 renders the mint "Inklusive"
+ * chip; any positive cost renders an orange "N Credit(s)" chip. The number is
+ * always derived from the offering data (never hardcoded).
+ */
+export function CreditCostBadge({
+  cost,
+  className,
+}: {
+  cost: number;
+  className?: string;
+}) {
+  if (cost <= 0) {
+    return (
+      <Badge tone="mint" className={className}>
+        Inklusive
+      </Badge>
+    );
+  }
+  return (
+    <Badge tone="orange" className={className}>
+      {cost} {cost === 1 ? "Credit" : "Credits"}
+    </Badge>
+  );
+}
+
 const PROGRAM_STATUS_TONES: Record<ProgramStatus, BadgeTone> = {
   DRAFT: "muted",
   OPEN: "mint",

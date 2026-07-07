@@ -9,6 +9,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
+import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
 import { formatDate, truncate } from "@/lib/utils";
 
@@ -21,7 +22,9 @@ export default async function StartupDashboard() {
     prisma.startup.findUnique({
       where: { ownerUserId: session.user.id },
       include: {
-        creditAccount: { select: { balance: true } },
+        creditAccount: {
+          select: { balance: true, fixBalance: true, flexBalance: true },
+        },
         applications: {
           include: {
             challenge: { select: { id: true, title: true } },
@@ -43,6 +46,7 @@ export default async function StartupDashboard() {
   const accepted = applications.filter((a) => a.status === "ACCEPTED").length;
   const pending = applications.filter((a) => a.status === "PENDING").length;
   const creditBalance = startup?.creditAccount?.balance ?? 0;
+  const creditBudget = deriveCreditBudget(startup?.creditAccount);
 
   const profileChecks = [
     { label: "Unternehmensprofil erstellt", done: Boolean(startup) },
@@ -86,7 +90,10 @@ export default async function StartupDashboard() {
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <BannerStat label="Profil" value={`${completeness}%`} />
-          <BannerStat label="Guthaben" value={creditBalance} />
+          <BannerStat
+            label="Guthaben"
+            value={`${creditBudget.remaining} von ${creditBudget.total}`}
+          />
           <BannerStat label="Bewerbungen" value={applications.length} />
           <BannerStat label="Angenommen" value={accepted} />
           <BannerStat label="Offene Challenges" value={openChallenges.length} />
@@ -195,8 +202,8 @@ export default async function StartupDashboard() {
               <ToneCard
                 tone={creditBalance > 0 ? "success" : "muted"}
                 label="Venture-Guthaben"
-                value={creditBalance}
-                sub="Credits · Historie ansehen →"
+                value={`${creditBudget.remaining} von ${creditBudget.total}`}
+                sub={`Fix ${creditBudget.fixRemaining}/${creditBudget.fixTotal} · Flexibel ${creditBudget.flexRemaining}/${creditBudget.flexTotal} · Historie →`}
               />
             </Link>
             <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">

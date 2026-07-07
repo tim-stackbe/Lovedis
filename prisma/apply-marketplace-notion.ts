@@ -7,8 +7,10 @@
  * duplicates offerings/mentors/programs (upsert by a stable natural key) and
  * never double-grants credits (guard on an existing onboarding GRANT).
  *
- * NO schema changes — only existing columns are written. Provider/contact info
- * is embedded in description/bio (see src/lib/marketplace-catalog.ts).
+ * Writes the dedicated Notion-metadata columns (providerCompany/contactPerson/
+ * website/sessionDate on offerings, website on mentors, contactPerson/sessionDate/
+ * fixCreditCost on programs). Run AFTER `prisma db push` so the columns exist —
+ * or run prisma/migrate-credit-buckets.ts which pushes + backfills first.
  *
  * Usage (point DATABASE_URL at the target DB first):
  *   export PATH="$PWD/.tools/node/bin:$PATH"
@@ -58,6 +60,9 @@ async function main() {
         description: p.description,
         focusTags: p.focusTags,
         status: p.status,
+        contactPerson: p.contactPerson ?? null,
+        sessionDate: p.sessionDate ?? null,
+        fixCreditCost: p.fixCreditCost,
         sortOrder: p.sortOrder,
       };
       if (existing) {
@@ -83,6 +88,7 @@ async function main() {
       role: m.role,
       expertise: m.expertise,
       bio: m.bio,
+      website: m.website ?? null,
       creditCost: m.creditCost,
       sortOrder: m.sortOrder,
       isActive: true,
@@ -106,6 +112,10 @@ async function main() {
       summary: o.summary,
       description: o.description,
       format: o.format,
+      providerCompany: o.providerCompany ?? null,
+      contactPerson: o.contactPerson ?? null,
+      website: o.website ?? null,
+      sessionDate: o.sessionDate ?? null,
       creditCost: o.creditCost,
       sortOrder: o.sortOrder,
       isActive: true,

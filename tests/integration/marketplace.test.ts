@@ -11,7 +11,10 @@ import { requireRole, requireTeam } from "@/lib/auth-guards";
 import {
   createMentor,
   createMentorBooking,
+  createProgram,
+  createProgramBooking,
   createStartupWithBalance,
+  createStartupWithBuckets,
   createUser,
   prisma,
   resetDb,
@@ -224,6 +227,184 @@ describe("confirmBooking — redeem-on-confirm debit", () => {
         where: { accountId: account.id, type: "SPEND" },
       })
     ).toBe(1);
+  });
+});
+
+describe("confirmBooking — FIX vs FLEX buckets", () => {
+  it("spends a mentor session from the FLEX bucket only (FIX untouched)", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 6, flex: 6 });
+    const mentor = await createMentor(2);
+    const booking = await createMentorBooking({
+      startupId: startup.id,
+      mentorId: mentor.id,
+      requestedById: teamUserId,
+      status: "IN_COORDINATION",
+      creditCost: 2,
+    });
+
+    const res = await confirmBooking(booking.id);
+
+    expect(res.success).toBeTruthy();
+    const after = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(after.fixBalance).toBe(6); // untouched
+    expect(after.flexBalance).toBe(4); // 6 - 2
+    expect(after.balance).toBe(10);
+    const spend = await prisma.creditTransaction.findFirstOrThrow({
+      where: { accountId: account.id, type: "SPEND" },
+    });
+    expect(spend.bucket).toBe("FLEX");
+    expect(spend.amount).toBe(-2);
+  });
+
+  it("consumes the FIX bucket when a program is enrolled (FLEX untouched), links a FIX SPEND", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 6, flex: 6 });
+    const program = await createProgram({ createdById: teamUserId, fixCreditCost: 6 });
+    const booking = await createProgramBooking({
+      startupId: startup.id,
+      programId: program.id,
+      requestedById: teamUserId,
+      status: "IN_COORDINATION",
+      fixCreditCost: 6,
+    });
+
+    const res = await confirmBooking(booking.id);
+
+    expect(res.success).toBeTruthy();
+    const after = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(after.fixBalance).toBe(0); // 6 - 6
+    expect(after.flexBalance).toBe(6); // untouched
+    expect(after.balance).toBe(6);
+    const bookingAfter = await prisma.marketplaceBooking.findUniqueOrThrow({
+      where: { id: booking.id },
+    });
+    expect(bookingAfter.creditTransactionId).not.toBeNull();
+    const spend = await prisma.creditTransaction.findFirstOrThrow({
+      where: { accountId: account.id, type: "SPEND" },
+    });
+    expect(spend.bucket).toBe("FIX");
+    expect(spend.amount).toBe(-6);
+  });
+
+  it("confirms a 0-FIX inclusive program without touching the ledger", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 6, flex: 6 });
+    const program = await createProgram({ createdById: teamUserId, fixCreditCost: 0 });
+    const booking = await createProgramBooking({
+      startupId: startup.id,
+      programId: program.id,
+      requestedById: teamUserId,
+      status: "IN_COORDINATION",
+      fixCreditCost: 0,
+    });
+
+    const res = await confirmBooking(booking.id);
+
+    expect(res.success).toBeTruthy();
+    expect(
+      await prisma.creditTransaction.count({ where: { accountId: account.id } })
+    ).toBe(0);
+    const after = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(after.fixBalance).toBe(6);
+    expect(after.flexBalance).toBe(6);
+  });
+
+  it("refuses a FLEX redemption when FLEX is exhausted even though FIX has budget", async () => {
+    // FIX full (6) but FLEX empty (0): a 1-credit mentor session must fail.
+    const { startup, account } = await createStartupWithBuckets({ fix: 6, flex: 0 });
+    const mentor = await createMentor(1);
+    const booking = await createMentorBooking({
+      startupId: startup.id,
+      mentorId: mentor.id,
+      requestedById: teamUserId,
+      status: "IN_COORDINATION",
+      creditCost: 1,
+    });
+
+    const res = await confirmBooking(booking.id);
+
+    expect(res.error).toContain("reicht nicht aus");
+    const after = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(after.fixBalance).toBe(6);
+    expect(after.flexBalance).toBe(0);
+    expect(
+      await prisma.creditTransaction.count({ where: { accountId: account.id } })
+    ).toBe(0);
+    expect(
+      (await prisma.marketplaceBooking.findUniqueOrThrow({ where: { id: booking.id } }))
+        .status
+    ).toBe("IN_COORDINATION");
+  });
+
+  it("refuses a program enrolment when the FIX bucket is insufficient (FLEX has budget)", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 2, flex: 6 });
+    const program = await createProgram({ createdById: teamUserId, fixCreditCost: 6 });
+    const booking = await createProgramBooking({
+      startupId: startup.id,
+      programId: program.id,
+      requestedById: teamUserId,
+      status: "IN_COORDINATION",
+      fixCreditCost: 6,
+    });
+
+    const res = await confirmBooking(booking.id);
+
+    expect(res.error).toContain("Fix-Kontingent");
+    const after = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(after.fixBalance).toBe(2);
+    expect(after.flexBalance).toBe(6);
+    expect(
+      await prisma.creditTransaction.count({ where: { accountId: account.id } })
+    ).toBe(0);
+  });
+});
+
+describe("cancelBooking — bucket-aware refunds", () => {
+  it("refunds a cancelled program enrolment back into the FIX bucket", async () => {
+    const { startup, account } = await createStartupWithBuckets({ fix: 0, flex: 6 });
+    // Post-confirm state: FIX already spent (6), a FIX SPEND linked.
+    const spend = await prisma.creditTransaction.create({
+      data: {
+        accountId: account.id,
+        type: "SPEND",
+        bucket: "FIX",
+        amount: -6,
+        reason: "Marktplatz-Buchung",
+        createdById: teamUserId,
+      },
+    });
+    const program = await createProgram({ createdById: teamUserId, fixCreditCost: 6 });
+    const booking = await createProgramBooking({
+      startupId: startup.id,
+      programId: program.id,
+      requestedById: teamUserId,
+      status: "CONFIRMED",
+      fixCreditCost: 6,
+      creditTransactionId: spend.id,
+    });
+
+    const res = await cancelBooking(booking.id);
+
+    expect(res.success).toContain("zurückgebucht");
+    const after = await prisma.creditAccount.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(after.fixBalance).toBe(6); // refunded to FIX
+    expect(after.flexBalance).toBe(6); // untouched
+    expect(after.balance).toBe(12);
+    const adj = await prisma.creditTransaction.findFirstOrThrow({
+      where: { accountId: account.id, type: "ADJUSTMENT" },
+    });
+    expect(adj.bucket).toBe("FIX");
+    expect(adj.amount).toBe(6);
   });
 });
 

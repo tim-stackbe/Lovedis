@@ -60,7 +60,11 @@ export async function createUser(overrides: {
   });
 }
 
-/** Creates a startup plus a credit account seeded to `balance`. */
+/**
+ * Creates a startup plus a credit account seeded to `balance`. The whole balance
+ * is treated as FLEX (the free contingent) so mentor/support redemptions work by
+ * default; use `createStartupWithBuckets` when a FIX split is needed.
+ */
 export async function createStartupWithBalance(balance: number) {
   const startup = await prisma.startup.create({
     data: {
@@ -70,9 +74,81 @@ export async function createStartupWithBalance(balance: number) {
     },
   });
   const account = await prisma.creditAccount.create({
-    data: { startupId: startup.id, balance },
+    data: { startupId: startup.id, balance, flexBalance: balance },
   });
   return { startup, account };
+}
+
+/** Creates a startup + account with explicit FIX/FLEX bucket balances. */
+export async function createStartupWithBuckets(opts: {
+  fix: number;
+  flex: number;
+}) {
+  const startup = await prisma.startup.create({
+    data: {
+      name: `Startup ${Math.random().toString(36).slice(2, 8)}`,
+      description: "Test startup",
+      industry: "AI",
+    },
+  });
+  const account = await prisma.creditAccount.create({
+    data: {
+      startupId: startup.id,
+      balance: opts.fix + opts.flex,
+      fixBalance: opts.fix,
+      flexBalance: opts.flex,
+    },
+  });
+  return { startup, account };
+}
+
+/** Creates an OPEN program with a given FIX credit cost. */
+export async function createProgram(opts: {
+  createdById: string;
+  fixCreditCost?: number;
+}) {
+  return prisma.program.create({
+    data: {
+      title: `Programm ${Math.random().toString(36).slice(2, 8)}`,
+      summary: "Test-Programm",
+      description: "Ein Test-Programm.",
+      status: "OPEN",
+      fixCreditCost: opts.fixCreditCost ?? 0,
+      createdById: opts.createdById,
+    },
+  });
+}
+
+/** Creates a marketplace PROGRAM booking in a given status. */
+export async function createProgramBooking(opts: {
+  startupId: string;
+  programId: string;
+  requestedById: string;
+  status:
+    | "REQUESTED"
+    | "IN_COORDINATION"
+    | "CONFIRMED"
+    | "COMPLETED"
+    | "DECLINED"
+    | "CANCELLED";
+  fixCreditCost: number;
+  creditTransactionId?: string | null;
+}) {
+  return prisma.marketplaceBooking.create({
+    data: {
+      offeringType: "PROGRAM",
+      status: opts.status,
+      startupId: opts.startupId,
+      requestedById: opts.requestedById,
+      programId: opts.programId,
+      message: "Bitte um Aufnahme ins Programm.",
+      contactName: "Test Contact",
+      contactEmail: "contact@test.local",
+      creditCost: 0,
+      fixCreditCost: opts.fixCreditCost,
+      creditTransactionId: opts.creditTransactionId ?? null,
+    },
+  });
 }
 
 /** Creates an active mentor profile with the given credit cost. */

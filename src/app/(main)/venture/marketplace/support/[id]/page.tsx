@@ -49,6 +49,10 @@ export default async function SupportDetailPage({
       balance={startup?.creditAccount?.balance ?? 0}
       defaultName={user?.name ?? ""}
       defaultEmail={user?.email ?? ""}
+      providerCompany={offering.providerCompany}
+      contactPerson={offering.contactPerson}
+      website={offering.website}
+      sessionDate={offering.sessionDate}
       teamMode={teamMode}
       startups={startups}
     />

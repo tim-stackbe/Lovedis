@@ -171,6 +171,18 @@ enum CreditTxType {
   ADJUSTMENT // Korrektur
 }
 
+// Zwei zweckgebundene Töpfe des 12-Credit-Onboarding-Budgets (Notion-Modell):
+//   FIX  — 6 Credits, reserviert für das exklusive Programm „Sales, Pricing &
+//          Growth" (Verbrauch durch Anmeldung/Programm-Buchung, nicht flexibel).
+//   FLEX — 6 Credits, frei einsetzbar für Mentor:innen-Sessions + Support-Angebote.
+// Jede CreditTransaction gehört genau zu einem Topf; die gecachten Teilsalden
+// (CreditAccount.fixBalance/flexBalance) werden atomar mitgeführt, `balance`
+// bleibt die (rückwärtskompatible) Gesamtsumme.
+enum CreditBucket {
+  FIX
+  FLEX
+}
+
 // --- Startup-Marktplatz (Plan: plan-startup-marketplace) ---
 
 enum MarketplaceOfferingType {
@@ -730,7 +742,13 @@ model CreditAccount {
   id        String   @id @default(cuid())
   startupId String   @unique
   startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
-  balance   Int      @default(0) // cached running total of transactions
+  balance   Int      @default(0) // cached running total of ALL transactions (FIX + FLEX)
+  // Cached per-bucket balances. Kept race-safe with the same conditional
+  // `updateMany` guard used for `balance`, and always updated atomically in the
+  // same statement/transaction that touches `balance`. Invariant:
+  // balance == fixBalance + flexBalance.
+  fixBalance  Int    @default(0) // reserviertes Programm-Kontingent (FIX)
+  flexBalance Int    @default(0) // frei einsetzbares Kontingent (FLEX)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -742,6 +760,8 @@ model CreditTransaction {
   accountId   String
   account     CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   type        CreditTxType
+  // Zweckbindung: FLEX (Standard) für Mentor:innen/Support, FIX fürs Programm.
+  bucket      CreditBucket @default(FLEX)
   amount      Int // positive = grant, negative = spend
   reason      String
   createdById String?
@@ -767,7 +787,14 @@ model Program {
   focusTags   String[]      @default([])
   status      ProgramStatus @default(DRAFT)
   sortOrder   Int           @default(0)
-  // Programme sind INKLUSIVE → keine Credits (offeringType=PROGRAM ⇒ creditCost=0).
+  // Notion-Metadaten (dedizierte Felder statt Freitext im description).
+  contactPerson String?     // Kontaktperson lt. Notion
+  sessionDate   String?     // Termin/Datum der Programm-Session (Freitext)
+  // Programme kosten KEINE flexiblen Credits (offeringType=PROGRAM ⇒ creditCost=0),
+  // verbrauchen aber beim Anmelden/Buchen einen Teil des FIX-Kontingents. Notion:
+  // 6 fixe Credits für „Sales, Pricing & Growth". `fixCreditCost` modelliert das
+  // explizit; 0 = klassisches inklusives Programm ohne FIX-Verbrauch.
+  fixCreditCost Int         @default(0)
   createdById String
   createdBy   User          @relation("ProgramCreator", fields: [createdById], references: [id], onDelete: Cascade)
   createdAt   DateTime      @default(now())
@@ -789,6 +816,7 @@ model MentorProfile {
   expertise   String[] @default([])
   bio         String?
   photoUrl    String?
+  website     String?  // Profil-/Unternehmens-Link (Notion: URL)
   creditCost  Int      @default(0)
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -807,6 +835,11 @@ model SupportOffering {
   summary     String
   description String
   format      String?
+  // Notion-Metadaten (dedizierte Felder statt Freitext im description).
+  providerCompany String?     // Anbieter/Unternehmen lt. Notion
+  contactPerson   String?     // Kontaktperson lt. Notion
+  website         String?     // Website/Link lt. Notion
+  sessionDate     String?     // Termin/Datum lt. Notion (Freitext)
   creditCost  Int             @default(0)
   isActive    Boolean         @default(true)
   sortOrder   Int             @default(0)
@@ -844,9 +877,13 @@ model MarketplaceBooking {
   contactEmail  String
   preferredAt   String?
 
-  // Preis-Snapshot bei Anfrage (Programme: 0). Erst bei CONFIRMED entsteht die
-  // SPEND-CreditTransaction; deren id wird hier verlinkt (volle Nachvollziehbarkeit).
+  // Preis-Snapshot bei Anfrage. `creditCost` = FLEX-Preis (Mentor:innen/Support;
+  // Programme: 0). `fixCreditCost` = FIX-Verbrauch (nur Programme, sonst 0) —
+  // beim Anmelden aus Program.fixCreditCost übernommen. Erst bei CONFIRMED
+  // entsteht die SPEND-CreditTransaction (im passenden Topf); ihre id wird hier
+  // verlinkt (volle Nachvollziehbarkeit, ermöglicht Storno-Rückbuchung).
   creditCost          Int                @default(0)
+  fixCreditCost       Int                @default(0)
   creditTransactionId String?            @unique
   creditTransaction   CreditTransaction? @relation("BookingRedemption", fields: [creditTransactionId], references: [id], onDelete: SetNull)
 

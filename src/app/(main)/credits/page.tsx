@@ -83,6 +83,8 @@ export default async function CreditsPage() {
             <tr>
               <Th>Startup</Th>
               <Th>Buchungen</Th>
+              <Th className="text-right">Fix</Th>
+              <Th className="text-right">Flexibel</Th>
               <Th className="text-right">Saldo</Th>
             </tr>
           </THead>
@@ -98,6 +100,12 @@ export default async function CreditsPage() {
                   </Link>
                 </Td>
                 <Td className="text-lv-secondary">{a._count.transactions}</Td>
+                <Td className="text-right tabular-nums text-lv-secondary">
+                  {a.fixBalance}
+                </Td>
+                <Td className="text-right tabular-nums text-lv-secondary">
+                  {a.flexBalance}
+                </Td>
                 <Td className="text-right font-semibold tabular-nums">
                   {a.balance}
                 </Td>

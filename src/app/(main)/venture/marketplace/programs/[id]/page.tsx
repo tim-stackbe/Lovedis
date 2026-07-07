@@ -45,6 +45,8 @@ export default async function ProgramDetailPage({
       balance={startup?.creditAccount?.balance ?? 0}
       defaultName={user?.name ?? ""}
       defaultEmail={user?.email ?? ""}
+      contactPerson={program.contactPerson}
+      sessionDate={program.sessionDate}
       teamMode={teamMode}
       startups={startups}
     />
