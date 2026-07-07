@@ -17,6 +17,7 @@ import {
   RADAR_RINGS,
   STARTUP_STAGES,
 } from "@/lib/constants";
+import { grantOnboardingCredits } from "@/lib/onboarding-credits";
 import { prisma } from "@/lib/prisma";
 import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
@@ -286,11 +287,16 @@ export async function upsertOwnStartupProfile(
   if (existing) {
     await prisma.startup.update({ where: { id: existing.id }, data });
   } else {
-    await prisma.startup.create({
+    const created = await prisma.startup.create({
       data: { ...data, ownerUserId: session.user.id },
     });
+    // Newly onboarded startups receive the 12-credit onboarding balance
+    // ("sponsored by LOVEDIS") via the existing ledger. Idempotent: the helper
+    // guards on an existing onboarding GRANT, so this never double-grants.
+    await grantOnboardingCredits(prisma, created.id, session.user.id);
   }
   revalidatePath("/profile");
   revalidatePath("/dashboard/startup");
+  revalidatePath("/venture/credits");
   return { success: "Profil gespeichert." };
 }

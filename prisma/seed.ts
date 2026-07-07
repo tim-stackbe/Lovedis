@@ -22,6 +22,12 @@ import type {
 } from "../src/generated/prisma/enums";
 import { SCORE_DIMENSIONS } from "../src/lib/constants";
 import {
+  MARKETPLACE_MENTORS,
+  MARKETPLACE_OFFERINGS,
+  MARKETPLACE_PROGRAMS,
+} from "../src/lib/marketplace-catalog";
+import { grantOnboardingCredits } from "../src/lib/onboarding-credits";
+import {
   computeOverallScore,
   deriveRecommendation,
   isChallengeFitGated,
@@ -1272,190 +1278,95 @@ async function main() {
     ],
   });
 
-  // --- Venture Credit System -----------------------------------------------
-  // NeuralForge (the logged-in demo startup) has an active credit account.
-  const nfAccount = await prisma.creditAccount.create({
-    data: { startupId: neuralForge.id, balance: 0 },
-  });
-  const nfTx = [
-    { type: "GRANT" as const, amount: 5000, reason: "Onboarding-Gutschrift Accelerator-Kohorte" },
-    { type: "GRANT" as const, amount: 2000, reason: "Bonus: Demo-Day-Teilnahme" },
-    { type: "SPEND" as const, amount: -1500, reason: "Cloud-Credits (Hosting-Partner)" },
-    { type: "SPEND" as const, amount: -800, reason: "Rechtsberatung (Partner-Kanzlei)" },
-  ];
-  for (const tx of nfTx) {
-    await prisma.creditTransaction.create({
-      data: { accountId: nfAccount.id, createdById: member.id, ...tx },
+  // --- Startup-Marktplatz: Kataloge (echte Notion-Angebote) ----------------
+  // Katalog stammt 1:1 aus src/lib/marketplace-catalog.ts (geteilte Quelle mit
+  // dem idempotenten Sync-Script prisma/apply-marketplace-notion.ts).
+  const programByTitle = new Map<string, string>();
+  for (const p of MARKETPLACE_PROGRAMS) {
+    const created = await prisma.program.create({
+      data: {
+        title: p.title,
+        summary: p.summary,
+        description: p.description,
+        focusTags: p.focusTags,
+        status: p.status,
+        sortOrder: p.sortOrder,
+        createdById: member.id,
+      },
     });
+    programByTitle.set(p.title, created.id);
   }
-  await prisma.creditAccount.update({
-    where: { id: nfAccount.id },
-    data: { balance: nfTx.reduce((sum, t) => sum + t.amount, 0) },
-  });
-  // A second account with a fresh grant only.
-  const vgAccount = await prisma.creditAccount.create({
-    data: { startupId: voltaic.id, balance: 3000 },
-  });
-  await prisma.creditTransaction.create({
-    data: {
-      accountId: vgAccount.id,
-      createdById: member2.id,
-      type: "GRANT",
-      amount: 3000,
-      reason: "Onboarding-Gutschrift Accelerator-Kohorte",
-    },
+
+  const mentorByName = new Map<string, string>();
+  for (const m of MARKETPLACE_MENTORS) {
+    const created = await prisma.mentorProfile.create({
+      data: {
+        name: m.name,
+        company: m.company,
+        role: m.role,
+        expertise: m.expertise,
+        bio: m.bio,
+        creditCost: m.creditCost,
+        sortOrder: m.sortOrder,
+      },
+    });
+    mentorByName.set(m.name, created.id);
+  }
+
+  const offeringByKey = new Map<string, string>();
+  for (const o of MARKETPLACE_OFFERINGS) {
+    const created = await prisma.supportOffering.create({
+      data: {
+        title: o.title,
+        category: o.category,
+        summary: o.summary,
+        description: o.description,
+        format: o.format,
+        creditCost: o.creditCost,
+        sortOrder: o.sortOrder,
+      },
+    });
+    offeringByKey.set(`${o.category}::${o.title}`, created.id);
+  }
+
+  // --- Venture Credit System -----------------------------------------------
+  // Jedes Startup erhält das 12-Credit-Onboarding-Guthaben („sponsored by
+  // LOVEDIS") über den bestehenden Ledger (GRANT). Idempotent — nie doppelt.
+  for (const s of startupRecords) {
+    await grantOnboardingCredits(prisma, s.id, member.id);
+  }
+
+  const nfAccount = await prisma.creditAccount.findUniqueOrThrow({
+    where: { startupId: neuralForge.id },
   });
 
-  // --- Startup-Marktplatz: Kataloge + Buchungen ----------------------------
-  // Exklusive Programme (0 Credits, "Inklusive").
-  const programGrowth = await prisma.program.create({
-    data: {
-      title: "Sales, Pricing & Growth",
-      summary: "Thematisches Programm an den Wachstumshebeln Vertrieb und Pricing.",
-      description:
-        "Über sechs Wochen arbeitest du mit Expert:innen aus dem LOVEDIS-Netzwerk an deinem Go-to-Market: Pricing-Strategie, Sales-Playbook, Pipeline-Aufbau und Growth-Loops. Inklusive im Programm — keine Credits.",
-      focusTags: ["Vertrieb", "Pricing", "Growth"],
-      status: "OPEN",
-      sortOrder: 1,
-      createdById: member.id,
-    },
-  });
-  await prisma.program.create({
-    data: {
-      title: "KI & Tech",
-      summary: "Technische Tiefe: KI-Einsatz, Architektur und Skalierung.",
-      description:
-        "Hands-on-Sessions zu KI-Integration, Datenstrategie, Architektur-Reviews und technischer Skalierung mit erfahrenen CTOs aus der Bau- und Immobilienbranche. Inklusive im Programm — keine Credits.",
-      focusTags: ["KI", "Architektur", "Skalierung"],
-      status: "OPEN",
-      sortOrder: 2,
-      createdById: member.id,
-    },
-  });
-  await prisma.program.create({
-    data: {
-      title: "Fundraising-Readiness",
-      summary: "In Vorbereitung — bald im Marktplatz verfügbar.",
-      description:
-        "Programm-Entwurf: Vorbereitung auf die nächste Finanzierungsrunde — Story, Datenraum und Investorenansprache.",
-      focusTags: ["Fundraising"],
-      status: "DRAFT",
-      sortOrder: 3,
-      createdById: member.id,
-    },
-  });
+  // Referenzen für die Demo-Buchungen (aus dem echten Notion-Katalog).
+  const programGrowthId = programByTitle.get("Sales, Pricing & Growth")!;
+  const mentorRequestedId = mentorByName.get(MARKETPLACE_MENTORS[0].name)!;
+  const mentorDeclinedId = mentorByName.get(MARKETPLACE_MENTORS[1].name)!;
+  const offeringCoordId = offeringByKey.get(
+    "FUNDRAISING::Individuelle Expert:innen Sessions (Investor-Sparring)"
+  )!;
+  const offeringConfirmedKey = "LEGAL::SaaS Contracting";
+  const offeringConfirmedId = offeringByKey.get(offeringConfirmedKey)!;
+  const offeringConfirmed = MARKETPLACE_OFFERINGS.find(
+    (o) => `${o.category}::${o.title}` === offeringConfirmedKey
+  )!;
 
-  // Mentor:innen-Netzwerk (Credits, vom Team gepflegt).
-  const mentorBauer = await prisma.mentorProfile.create({
-    data: {
-      name: "Dr. Katrin Bauer",
-      company: "Rheinwerk Industries AG",
-      role: "CFO",
-      expertise: ["Finance", "Skalierung", "M&A"],
-      bio: "20 Jahre Industrie-Finance, begleitet Wachstums-Startups bei Unit Economics und Finanzierungsstrategie.",
-      creditCost: 300,
-      sortOrder: 1,
-    },
-  });
-  const mentorVogel = await prisma.mentorProfile.create({
-    data: {
-      name: "Markus Vogel",
-      company: "Helioswerk GmbH",
-      role: "Head of Operations",
-      expertise: ["Operations", "Lieferketten", "Bau"],
-      bio: "Operativer Sparringspartner für Skalierung in der Bau- und Immobilienbranche.",
-      creditCost: 250,
-      sortOrder: 2,
-    },
-  });
-  await prisma.mentorProfile.create({
-    data: {
-      name: "Sophie Lang",
-      company: "Baumann Real Estate",
-      role: "Geschäftsführerin",
-      expertise: ["Immobilien", "Vertrieb", "Partnerschaften"],
-      bio: "Ehrliches Feedback zu Markteintritt und Vertrieb im Immobiliensektor.",
-      creditCost: 400,
-      sortOrder: 3,
-    },
-  });
-
-  // Individuelle Support-Angebote (Credits).
-  const offeringCapTable = await prisma.supportOffering.create({
-    data: {
-      title: "Cap-Table-Sparring",
-      category: "FUNDRAISING",
-      summary: "1:1-Sparring zu Cap Table, Verwässerung und Runden-Szenarien.",
-      description:
-        "Gemeinsam gehen wir deinen Cap Table durch, simulieren Finanzierungsrunden und identifizieren Verwässerungsfallen vor dem nächsten Raise.",
-      format: "Sparring-Session",
-      creditCost: 200,
-      sortOrder: 1,
-    },
-  });
-  const offeringTermSheet = await prisma.supportOffering.create({
-    data: {
-      title: "Term-Sheet-Review",
-      category: "LEGAL",
-      summary: "Juristische Einordnung deines Term Sheets durch eine Partner-Kanzlei.",
-      description:
-        "Eine Partner-Kanzlei prüft dein Term Sheet, erklärt kritische Klauseln und gibt Verhandlungsempfehlungen.",
-      format: "Workshop",
-      creditCost: 250,
-      sortOrder: 2,
-    },
-  });
-  await prisma.supportOffering.create({
-    data: {
-      title: "Go-to-Market-Workshop",
-      category: "MARKETING",
-      summary: "Positionierung, Messaging und Kanalstrategie in einem Tag.",
-      description:
-        "Intensiv-Workshop zur Schärfung von Positionierung, Messaging und Kanalstrategie für deinen Markteintritt.",
-      format: "Workshop",
-      creditCost: 300,
-      sortOrder: 3,
-    },
-  });
-  await prisma.supportOffering.create({
-    data: {
-      title: "Architektur-Review",
-      category: "PRODUCT_TECH",
-      summary: "Technisches Review von Architektur und Skalierbarkeit.",
-      description:
-        "Erfahrene Tech-Leads reviewen deine Systemarchitektur und geben konkrete Empfehlungen zu Skalierbarkeit und technischer Schuld.",
-      format: "1:1",
-      creditCost: 350,
-      sortOrder: 4,
-    },
-  });
-  await prisma.supportOffering.create({
-    data: {
-      title: "Sales-Pipeline-Audit",
-      category: "SALES",
-      summary: "Audit deiner Vertriebspipeline und Conversion-Schritte.",
-      description:
-        "Wir durchleuchten deine Pipeline-Stufen, Conversion-Raten und Forecast-Qualität und priorisieren die größten Hebel.",
-      format: "Sparring-Session",
-      creditCost: 200,
-      sortOrder: 5,
-    },
-  });
-
-  // Buchungen in verschiedenen Zuständen für NeuralForge (Demo-Startup).
+  // --- Buchungen in verschiedenen Zuständen für NeuralForge (Demo-Startup) --
   await prisma.marketplaceBooking.create({
     data: {
       offeringType: "MENTOR_SESSION",
       status: "REQUESTED",
       startupId: neuralForge.id,
       requestedById: startupUser.id,
-      mentorId: mentorBauer.id,
+      mentorId: mentorRequestedId,
       message:
-        "Wir bereiten unsere Series B vor und würden gern Unit Economics und Finanzierungsstrategie mit Dr. Bauer durchgehen.",
+        "Wir bereiten unsere Series B vor und würden gern Unit Economics und Finanzierungsstrategie im 1:1-Sparring durchgehen.",
       contactName: startupUser.name,
       contactEmail: startupUser.email,
       preferredAt: "Nächste Woche Di/Mi nachmittags",
-      creditCost: mentorBauer.creditCost,
+      creditCost: MARKETPLACE_MENTORS[0].creditCost,
     },
   });
   await prisma.marketplaceBooking.create({
@@ -1464,11 +1375,12 @@ async function main() {
       status: "IN_COORDINATION",
       startupId: neuralForge.id,
       requestedById: startupUser.id,
-      offeringId: offeringCapTable.id,
-      message: "Vor dem nächsten Raise möchten wir unseren Cap Table sauber aufstellen.",
+      offeringId: offeringCoordId,
+      message:
+        "Vor dem nächsten Raise möchten wir unsere Story mit Investor:innen schärfen.",
       contactName: startupUser.name,
       contactEmail: startupUser.email,
-      creditCost: offeringCapTable.creditCost,
+      creditCost: 1,
       handledById: member.id,
     },
   });
@@ -1478,13 +1390,13 @@ async function main() {
       accountId: nfAccount.id,
       createdById: member.id,
       type: "SPEND",
-      amount: -offeringTermSheet.creditCost,
-      reason: `Marktplatz-Buchung: ${offeringTermSheet.title}`,
+      amount: -offeringConfirmed.creditCost,
+      reason: `Marktplatz-Buchung: ${offeringConfirmed.title}`,
     },
   });
   await prisma.creditAccount.update({
     where: { id: nfAccount.id },
-    data: { balance: { decrement: offeringTermSheet.creditCost } },
+    data: { balance: { decrement: offeringConfirmed.creditCost } },
   });
   await prisma.marketplaceBooking.create({
     data: {
@@ -1492,11 +1404,12 @@ async function main() {
       status: "CONFIRMED",
       startupId: neuralForge.id,
       requestedById: startupUser.id,
-      offeringId: offeringTermSheet.id,
-      message: "Bitte um juristische Einordnung unseres aktuellen Term Sheets.",
+      offeringId: offeringConfirmedId,
+      message:
+        "Bitte um rechtssichere Einordnung unserer SaaS-Verträge (AGB, SLAs).",
       contactName: startupUser.name,
       contactEmail: startupUser.email,
-      creditCost: offeringTermSheet.creditCost,
+      creditCost: offeringConfirmed.creditCost,
       handledById: member.id,
       creditTransactionId: redemptionTx.id,
     },
@@ -1508,11 +1421,11 @@ async function main() {
       status: "DECLINED",
       startupId: neuralForge.id,
       requestedById: startupUser.id,
-      mentorId: mentorVogel.id,
-      message: "Würden gern über Lieferketten in der Bauzulieferung sprechen.",
+      mentorId: mentorDeclinedId,
+      message: "Würden gern über den Markteintritt in der Bauzulieferung sprechen.",
       contactName: startupUser.name,
       contactEmail: startupUser.email,
-      creditCost: mentorVogel.creditCost,
+      creditCost: MARKETPLACE_MENTORS[1].creditCost,
       handledById: member.id,
       coordinatorNote:
         "Aktuell kein passender Slot — wir melden uns im nächsten Quartal erneut.",
@@ -1525,7 +1438,7 @@ async function main() {
       status: "COMPLETED",
       startupId: neuralForge.id,
       requestedById: startupUser.id,
-      programId: programGrowth.id,
+      programId: programGrowthId,
       message: "Wir möchten an unserem Pricing und Sales-Playbook arbeiten.",
       contactName: startupUser.name,
       contactEmail: startupUser.email,
