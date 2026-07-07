@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MARKETPLACE_MENTORS,
   MARKETPLACE_OFFERINGS,
   MARKETPLACE_PROGRAMS,
 } from "@/lib/marketplace-catalog";
@@ -79,5 +80,47 @@ describe("marketplace catalog — Notion metadata in dedicated fields", () => {
 
   it("keeps the onboarding split summing to 12", () => {
     expect(ONBOARDING_FIX_CREDITS + ONBOARDING_FLEX_CREDITS).toBe(12);
+  });
+});
+
+describe("marketplace catalog — only real Notion entries", () => {
+  it("contains the 30 real Notion offerings (no fabricated fallbacks)", () => {
+    expect(MARKETPLACE_OFFERINGS).toHaveLength(30);
+  });
+
+  it("keeps the real 'Individual Expert Session' only in Legal, Marketing & Product/Tech", () => {
+    const categories = MARKETPLACE_OFFERINGS.filter(
+      (o) => o.title === "Individual Expert Session"
+    )
+      .map((o) => o.category)
+      .sort();
+    expect(categories).toEqual(["LEGAL", "MARKETING", "PRODUCT_TECH"]);
+  });
+
+  it("has no standalone Sales support offerings (only the Sales program)", () => {
+    expect(MARKETPLACE_OFFERINGS.filter((o) => o.category === "SALES")).toHaveLength(0);
+  });
+
+  it("uses the real per-mentor company/role/website from Notion (no round-robin)", () => {
+    expect(MARKETPLACE_MENTORS).toHaveLength(8);
+    const elena = MARKETPLACE_MENTORS.find((m) => m.name === "Elena Tiegs");
+    expect(elena?.company).toBe("Weimer");
+    expect(elena?.website).toBe("https://www.weimer-bau.de");
+    // Notion provides no expertise tags or bio for mentors → left empty.
+    expect(MARKETPLACE_MENTORS.every((m) => m.expertise.length === 0)).toBe(true);
+    expect(MARKETPLACE_MENTORS.every((m) => m.bio == null)).toBe(true);
+    // Every mentor keeps its curated local photo.
+    expect(MARKETPLACE_MENTORS.every((m) => Boolean(m.photoUrl))).toBe(true);
+  });
+
+  it("only spends 2 credits on the GAL-Digital 1:1 formats + Live Hacking", () => {
+    const twoCredit = MARKETPLACE_OFFERINGS.filter((o) => o.creditCost === 2)
+      .map((o) => o.title)
+      .sort();
+    expect(twoCredit).toEqual([
+      "Live Hacking",
+      "Tech-Stack Check-up",
+      "Website-Strategie Starterkit",
+    ]);
   });
 });

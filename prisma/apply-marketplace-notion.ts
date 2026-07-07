@@ -87,8 +87,9 @@ async function main() {
       company: m.company,
       role: m.role,
       expertise: m.expertise,
-      bio: m.bio,
+      bio: m.bio ?? null,
       website: m.website ?? null,
+      photoUrl: m.photoUrl ?? null,
       creditCost: m.creditCost,
       sortOrder: m.sortOrder,
       isActive: true,
@@ -130,6 +131,103 @@ async function main() {
     offeringUpserts++;
   }
 
+  // 3b) PRUNE — remove DB rows that are NO LONGER in the catalog so stale
+  // test/demo entries don't linger on a synced DB.
+  //
+  // Safety model (preserves referential integrity):
+  //   • If a MarketplaceBooking still references the row, we DEACTIVATE instead
+  //     of delete (offering/mentor: isActive=false; program: status=CLOSED) so
+  //     it drops out of the storefront (which filters on isActive / status=OPEN)
+  //     while the booking history stays intact.
+  //   • If nothing references it, we DELETE it.
+  // The prune is strictly scoped to the CURRENT catalog set (by natural key), is
+  // idempotent, and never touches rows that are in the catalog — so a future
+  // real Notion addition is safe as soon as it lives in marketplace-catalog.ts.
+  const catalogProgramTitles = new Set(MARKETPLACE_PROGRAMS.map((p) => p.title));
+  const catalogMentorNames = new Set(MARKETPLACE_MENTORS.map((m) => m.name));
+  const catalogOfferingKeys = new Set(
+    MARKETPLACE_OFFERINGS.map((o) => `${o.category}::${o.title}`)
+  );
+
+  let programsDeleted = 0;
+  let programsDeactivated = 0;
+  const dbPrograms = await prisma.program.findMany({
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      _count: { select: { bookings: true } },
+    },
+  });
+  for (const p of dbPrograms) {
+    if (catalogProgramTitles.has(p.title)) continue;
+    if (p._count.bookings > 0) {
+      if (p.status !== "CLOSED") {
+        await prisma.program.update({
+          where: { id: p.id },
+          data: { status: "CLOSED" },
+        });
+      }
+      programsDeactivated++;
+    } else {
+      await prisma.program.delete({ where: { id: p.id } });
+      programsDeleted++;
+    }
+  }
+
+  let mentorsDeleted = 0;
+  let mentorsDeactivated = 0;
+  const dbMentors = await prisma.mentorProfile.findMany({
+    select: {
+      id: true,
+      name: true,
+      isActive: true,
+      _count: { select: { bookings: true } },
+    },
+  });
+  for (const m of dbMentors) {
+    if (catalogMentorNames.has(m.name)) continue;
+    if (m._count.bookings > 0) {
+      if (m.isActive) {
+        await prisma.mentorProfile.update({
+          where: { id: m.id },
+          data: { isActive: false },
+        });
+      }
+      mentorsDeactivated++;
+    } else {
+      await prisma.mentorProfile.delete({ where: { id: m.id } });
+      mentorsDeleted++;
+    }
+  }
+
+  let offeringsDeleted = 0;
+  let offeringsDeactivated = 0;
+  const dbOfferings = await prisma.supportOffering.findMany({
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      isActive: true,
+      _count: { select: { bookings: true } },
+    },
+  });
+  for (const o of dbOfferings) {
+    if (catalogOfferingKeys.has(`${o.category}::${o.title}`)) continue;
+    if (o._count.bookings > 0) {
+      if (o.isActive) {
+        await prisma.supportOffering.update({
+          where: { id: o.id },
+          data: { isActive: false },
+        });
+      }
+      offeringsDeactivated++;
+    } else {
+      await prisma.supportOffering.delete({ where: { id: o.id } });
+      offeringsDeleted++;
+    }
+  }
+
   // 4) 12-credit onboarding grant for every startup — idempotent (never double).
   const startups = await prisma.startup.findMany({ select: { id: true } });
   let granted = 0;
@@ -143,6 +241,12 @@ async function main() {
       `${offeringUpserts} Support-Angebote synchronisiert; ` +
       `${granted}/${startups.length} Startups neu mit 12-Credit-Onboarding versehen ` +
       `(der Rest hatte den Grant bereits).`
+  );
+  console.log(
+    `Prune (nicht mehr im Katalog): ` +
+      `Programme ${programsDeleted} gelöscht / ${programsDeactivated} deaktiviert (CLOSED), ` +
+      `Mentor:innen ${mentorsDeleted} gelöscht / ${mentorsDeactivated} deaktiviert, ` +
+      `Support-Angebote ${offeringsDeleted} gelöscht / ${offeringsDeactivated} deaktiviert.`
   );
 }
 

@@ -3,19 +3,27 @@ import { PROGRAM_FIX_CREDIT_COST } from "@/lib/credit-buckets";
 
 // ---------------------------------------------------------------------------
 // Marktplatz-Katalog — 1:1 aus der Notion-Seite „LOVEDIS Startup Support
-// Marketplace" (Stand Juli 2026). Single source of truth für den Seed
-// (prisma/seed.ts) UND das idempotente Sync-Script
-// (prisma/apply-marketplace-notion.ts).
+// Marketplace" (Stand Juli 2026, re-verifiziert gegen die Notion-Datenbanken).
+// Single source of truth für den Seed (prisma/seed.ts) UND das idempotente
+// Sync-Script (prisma/apply-marketplace-notion.ts).
 //
 // Guardrails:
-//   • Credit-Skala = Notion (1 Credit pro Session, 2 für GAL-Digital-1:1-Formate
-//     + „Live Hacking"). Programme kosten 0 FLEX-Credits, verbrauchen aber beim
-//     Anmelden das reservierte FIX-Kontingent (Notion: 6 fixe Credits).
-//   • Anbieter/Kontakt/Website/Termin liegen in DEDIZIERTEN Feldern (nicht mehr
-//     im Freitext description/bio): SupportOffering.providerCompany/contactPerson/
-//     website/sessionDate, MentorProfile.website, Program.contactPerson/sessionDate.
-//   • Website-URLs sind in der Notion-Quelle nicht als echte Links hinterlegt →
-//     bewusst leer gelassen (keine erfundenen URLs).
+//   • NUR echte Notion-Einträge — keine erfundenen Angebote, Programme oder
+//     Mentor:innen-Metadaten. Fehlt ein Wert in Notion, bleibt das Feld leer
+//     (null), statt Platzhalter zu erfinden.
+//   • Credit-Skala = Notion (1 Credit pro Session, 2 für die GAL-Digital-
+//     1:1-Formate + „Live Hacking"). Programme kosten 0 FLEX-Credits,
+//     verbrauchen aber beim Anmelden das reservierte FIX-Kontingent
+//     (Notion: 6 fixe Credits).
+//   • Anbieter/Kontakt/Website/Termin liegen in DEDIZIERTEN Feldern (nicht im
+//     Freitext description/bio): SupportOffering.providerCompany/contactPerson/
+//     website/sessionDate, MentorProfile.company/role/website, Program.
+//     contactPerson/sessionDate.
+//   • Website-URLs stammen aus den Notion-„Website"-Feldern der jeweiligen
+//     Einträge (echte Links). Wo Notion keinen Link führt, bleibt das Feld leer.
+//   • „Individual Expert Session" existiert in Notion NUR in Legal, Marketing
+//     und AI/Product & Tech — dort echt gelistet. Fundraising nutzt stattdessen
+//     die echte Investor-Sparring-Datenbank; Sales hat kein Fallback-Angebot.
 //   • Natürliche Schlüssel für Idempotenz: Program.title, MentorProfile.name,
 //     SupportOffering (title + category).
 // ---------------------------------------------------------------------------
@@ -35,11 +43,18 @@ export interface ProgramSeed {
 
 export interface MentorSeed {
   name: string;
+  /** Unternehmen laut Notion (LOVEDIS-Unternehmenspartner). */
   company: string;
+  /** Position/Rolle laut Notion. */
   role: string;
+  /** Notion liefert keine Expertise-Tags → leer. */
   expertise: string[];
-  bio: string;
+  /** Notion liefert keine Bio → optional/leer (kein Platzhalter). */
+  bio?: string;
+  /** Unternehmens-Link laut Notion („URL"-Feld). */
   website?: string;
+  /** Local (public/) path to the mentor photo; null → initials fallback. */
+  photoUrl?: string;
   creditCost: number;
   sortOrder: number;
 }
@@ -81,55 +96,109 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Mentor:innen — Sparring mit Führungskräften der LOVEDIS-Unternehmenspartner
-// (Bau-/Immobilienbranche). Notion nennt KEINEN Credit-Preis → Entscheidung:
-// 1 Credit (analog zur Session-Skala). Notion mappt Mentor:in→Partnerfirma
-// nicht explizit → die 5 Partnerfirmen sind kuratiert round-robin zugeordnet.
+// Mentor:innen — Führungskräfte/Expert:innen der LOVEDIS-Unternehmenspartner.
+// Company (Unternehmen), role (Position) und website (URL) stammen 1:1 aus der
+// Notion-Mentor:innen-Datenbank. Notion nennt KEINEN Credit-Preis → Entscheidung:
+// 1 Credit (analog zur Session-Skala). Notion liefert weder Expertise-Tags noch
+// eine Bio → bewusst leer (keine erfundenen Werte). Fotos liegen lokal unter
+// public/mentors/ (stabile Slugs, umlaut-transliteriert; Notion-Signed-URLs
+// laufen ab); die Endung entspricht dem tatsächlichen Bildformat der Quelle.
 // ---------------------------------------------------------------------------
 
-const MENTOR_PARTNER_FIRMS = [
-  "Fingerhaus",
-  "Lupp Living GmbH & Co. KG",
-  "Weimer",
-  "Sälzer",
-  "Innexis",
-] as const;
-
-const MENTOR_NAMES = [
-  "Elena Tiegs",
-  "Thomas Pregla",
-  "Marie Bender",
-  "Robin Sinemli",
-  "Henri Böwingloh",
-  "Celin Winter",
-  "Louisa Cronau",
-  "Dr. Alexandra Hofmockel",
-] as const;
-
-export const MARKETPLACE_MENTORS: MentorSeed[] = MENTOR_NAMES.map(
-  (name, i) => ({
-    name,
-    company: MENTOR_PARTNER_FIRMS[i % MENTOR_PARTNER_FIRMS.length],
-    role: "Mentor:in · Führungskraft LOVEDIS-Unternehmenspartner",
-    expertise: ["Sparring", "Strategie", "Bau & Immobilien", "Skalierung"],
-    bio:
-      `Hauptansprechpartner:in aus dem LOVEDIS-Partnernetzwerk (${MENTOR_PARTNER_FIRMS[i % MENTOR_PARTNER_FIRMS.length]}). ` +
-      "Trägt Startup-Themen ins eigene Unternehmen und steht für 1:1-Sparring zu Wachstum, Vertrieb und Zusammenarbeit mit der Bau- und Immobilienbranche zur Verfügung.",
+export const MARKETPLACE_MENTORS: MentorSeed[] = [
+  {
+    name: "Elena Tiegs",
+    company: "Weimer",
+    role: "Umwelt-, Hygiene- und Sicherheitsingenieurwesen",
+    expertise: [],
+    website: "https://www.weimer-bau.de",
+    photoUrl: "/mentors/elena-tiegs.jpg",
     creditCost: 1,
-    sortOrder: i + 1,
-  })
-);
+    sortOrder: 1,
+  },
+  {
+    name: "Thomas Pregla",
+    company: "Sälzer",
+    role: "Head of Technology & Product-Development",
+    expertise: [],
+    website: "https://www.saelzer-security.com",
+    photoUrl: "/mentors/thomas-pregla.avif",
+    creditCost: 1,
+    sortOrder: 2,
+  },
+  {
+    name: "Marie Bender",
+    company: "Weimer",
+    role: "Digitalisierung & HR",
+    expertise: [],
+    website: "https://www.weimer-bau.de",
+    photoUrl: "/mentors/marie-bender.jpg",
+    creditCost: 1,
+    sortOrder: 3,
+  },
+  {
+    name: "Robin Sinemli",
+    company: "Lupp Living GmbH & Co. KG",
+    role: "Geschäftsführer",
+    expertise: [],
+    website: "https://www.lupp.de",
+    photoUrl: "/mentors/robin-sinemli.avif",
+    creditCost: 1,
+    sortOrder: 4,
+  },
+  {
+    name: "Henri Böwingloh",
+    company: "Sälzer",
+    role: "Project Manager Training & Innovation",
+    expertise: [],
+    website: "https://www.saelzer-security.com",
+    photoUrl: "/mentors/henri-boewingloh.jpg",
+    creditCost: 1,
+    sortOrder: 5,
+  },
+  {
+    name: "Celin Winter",
+    company: "Innexis",
+    role: "Product Manager Facilities",
+    expertise: [],
+    website: "https://www.innexis.com",
+    photoUrl: "/mentors/celin-winter.jpg",
+    creditCost: 1,
+    sortOrder: 6,
+  },
+  {
+    name: "Louisa Cronau",
+    company: "Fingerhaus",
+    role: "Geschäftsführerin",
+    expertise: [],
+    website: "https://www.fingerhaus.de",
+    photoUrl: "/mentors/louisa-cronau.avif",
+    creditCost: 1,
+    sortOrder: 7,
+  },
+  {
+    name: "Dr. Alexandra Hofmockel",
+    company: "Innexis",
+    role: "Business Development and Mergers & Acquisitions",
+    expertise: [],
+    website: "https://www.innexis.com",
+    photoUrl: "/mentors/dr-alexandra-hofmockel.png",
+    creditCost: 1,
+    sortOrder: 8,
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Support-Angebote — echte Notion-Angebote je Kategorie. Anbieter/Kontakt/
-// Website/Termin liegen jetzt in dedizierten Feldern (providerCompany/
-// contactPerson/website/sessionDate) statt im Freitext. Fast alle 1 Credit; die
-// GAL-Digital-1:1-Formate + „Live Hacking" kosten 2. Jede Kategorie hat eine
-// „Individual Expert Session" als Fallback (Bedarf beschreiben → Team matcht).
+// Website/Termin liegen in dedizierten Feldern. Fast alle 1 Credit; die
+// GAL-Digital-1:1-Formate + „Live Hacking" kosten 2. Die „Individual Expert
+// Session" ist ein echter Notion-Eintrag in Legal, Marketing und AI/Product &
+// Tech (Bedarf beschreiben → Team matcht passende Expert:innen).
 // ---------------------------------------------------------------------------
 
-const FALLBACK_DESCRIPTION =
-  "Kein passendes Angebot dabei? Beschreibe deine konkrete Herausforderung — das LOVEDIS-Team vermittelt dir die passende Expert:in aus dem Netzwerk.";
+// Echter Notion-Text der „Individual Expert Session"-Einträge.
+const INDIVIDUAL_EXPERT_DESCRIPTION =
+  "Dein Thema wird aktuell durch keines der verfügbaren Angebote vollständig abgedeckt? Beschreibe deine Herausforderung und wir vermitteln dir passende Expert:innen aus unserem Netzwerk.";
 
 export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
   // --- 💰 Fundraising ------------------------------------------------------
@@ -142,6 +211,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Q&A",
     providerCompany: "Wunderland Capital",
     contactPerson: "Dirk Rudolf",
+    website: "https://wunderland.capital",
     creditCost: 1,
     sortOrder: 1,
   },
@@ -154,6 +224,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Polina Kon",
+    website: "https://lovedis.de",
     creditCost: 1,
     sortOrder: 2,
   },
@@ -166,6 +237,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (60–90 Min.)",
     providerCompany: "re:cap Technologies",
     contactPerson: "Lilli Pukall",
+    website: "https://www.re-cap.com",
     creditCost: 1,
     sortOrder: 3,
   },
@@ -181,15 +253,6 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     creditCost: 1,
     sortOrder: 4,
   },
-  {
-    title: "Individual Expert Session",
-    category: "FUNDRAISING",
-    summary: "Fallback: Beschreibe deinen Bedarf, wir vermitteln die passende Expert:in.",
-    description: FALLBACK_DESCRIPTION,
-    format: "Sparring",
-    creditCost: 1,
-    sortOrder: 5,
-  },
 
   // --- ⚖️ Legal (alle 1 Credit, Online Workshop ~2h) ----------------------
   {
@@ -201,8 +264,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (~2h)",
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
+    website: "https://www.momentum-partner.de/",
     creditCost: 1,
-    sortOrder: 6,
+    sortOrder: 5,
   },
   {
     title: "SaaS Contracting",
@@ -213,8 +277,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (~2h)",
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
+    website: "https://www.aulinger.eu",
     creditCost: 1,
-    sortOrder: 7,
+    sortOrder: 6,
   },
   {
     title: "AI Act & Datenschutz",
@@ -225,8 +290,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (~2h)",
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
+    website: "https://www.aulinger.eu",
     creditCost: 1,
-    sortOrder: 8,
+    sortOrder: 7,
   },
   {
     title: "Schutz des geistigen Eigentums / IP-Rechte",
@@ -237,8 +303,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (~2h)",
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
+    website: "https://www.aulinger.eu",
     creditCost: 1,
-    sortOrder: 9,
+    sortOrder: 8,
   },
   {
     title: "Vorbereitung einer Finanzierungsrunde",
@@ -249,8 +316,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (~2h)",
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
+    website: "https://www.aulinger.eu",
     creditCost: 1,
-    sortOrder: 10,
+    sortOrder: 9,
   },
   {
     title: "Exit Readiness & Due Diligence",
@@ -261,8 +329,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop (~2h)",
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
+    website: "https://www.momentum-partner.de/",
     creditCost: 1,
-    sortOrder: 11,
+    sortOrder: 10,
   },
   {
     title:
@@ -274,8 +343,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Lunch Learning Session",
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
+    website: "https://www.momentum-partner.de/",
     creditCost: 1,
-    sortOrder: 12,
+    sortOrder: 11,
   },
   {
     title:
@@ -287,17 +357,19 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Lunch Learning Session",
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
+    website: "https://www.momentum-partner.de/",
     creditCost: 1,
-    sortOrder: 13,
+    sortOrder: 12,
   },
   {
     title: "Individual Expert Session",
     category: "LEGAL",
-    summary: "Fallback: Beschreibe deinen Bedarf, wir vermitteln die passende Expert:in.",
-    description: FALLBACK_DESCRIPTION,
+    summary:
+      "Kein passendes Angebot dabei? Beschreibe deinen Bedarf — wir vermitteln passende Expert:innen.",
+    description: INDIVIDUAL_EXPERT_DESCRIPTION,
     format: "Sparring",
     creditCost: 1,
-    sortOrder: 14,
+    sortOrder: 13,
   },
 
   // --- 📣 Marketing --------------------------------------------------------
@@ -310,8 +382,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Hannah Freese",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 15,
+    sortOrder: 14,
   },
   {
     title: "Brand & Pitch Story",
@@ -322,8 +395,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Hannah Freese",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 16,
+    sortOrder: 15,
   },
   {
     title: "Website-Strategie Starterkit",
@@ -334,8 +408,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "1:1 Online Workshop",
     providerCompany: "GAL Digital",
     contactPerson: "Tobias Auradniczek",
+    website: "https://www.gal-digital.de",
     creditCost: 2,
-    sortOrder: 17,
+    sortOrder: 16,
   },
   {
     title: "LinkedIn Visibility Sprint",
@@ -346,8 +421,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Hannah Freese",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 18,
+    sortOrder: 17,
   },
   {
     title: "Pitching with Impact",
@@ -358,17 +434,19 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Hannah Freese",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 19,
+    sortOrder: 18,
   },
   {
     title: "Individual Expert Session",
     category: "MARKETING",
-    summary: "Fallback: Beschreibe deinen Bedarf, wir vermitteln die passende Expert:in.",
-    description: FALLBACK_DESCRIPTION,
+    summary:
+      "Kein passendes Angebot dabei? Beschreibe deinen Bedarf — wir vermitteln passende Expert:innen.",
+    description: INDIVIDUAL_EXPERT_DESCRIPTION,
     format: "Sparring",
     creditCost: 1,
-    sortOrder: 20,
+    sortOrder: 19,
   },
 
   // --- 🛠️ AI, Product & Tech (→ PRODUCT_TECH) -----------------------------
@@ -381,8 +459,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 21,
+    sortOrder: 20,
   },
   {
     title: "IP-AI",
@@ -393,8 +472,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 22,
+    sortOrder: 21,
   },
   {
     title: "Building an AI PoC",
@@ -405,8 +485,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 23,
+    sortOrder: 22,
   },
   {
     title: "AI Agents & Technical Scaling",
@@ -417,8 +498,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Sparring",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 24,
+    sortOrder: 23,
   },
   {
     title: "AI PoC Review & Lessons Learned",
@@ -429,8 +511,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 25,
+    sortOrder: 24,
   },
   {
     title: "Tech Due Diligence Readiness",
@@ -441,8 +524,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Sparring",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 26,
+    sortOrder: 25,
   },
   {
     title: "Tech-Stack Check-up",
@@ -453,8 +537,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "1:1 Online Workshop",
     providerCompany: "GAL Digital",
     contactPerson: "Tobias Auradniczek",
+    website: "https://www.gal-digital.de",
     creditCost: 2,
-    sortOrder: 27,
+    sortOrder: 26,
   },
   {
     title: "MVP Validation & Product Validation",
@@ -465,8 +550,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Sparring",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 1,
-    sortOrder: 28,
+    sortOrder: 27,
   },
   {
     title: "Cyber Security",
@@ -475,9 +561,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     description:
       "Praktische Security-Maßnahmen für dein Produkt und deine Infrastruktur — je nach Bedarf.",
     format: "Sparring",
-    providerCompany: "LOVEDIS-Netzwerk (je nach Bedarf)",
+    providerCompany: "je nach Bedarf",
     creditCost: 1,
-    sortOrder: 29,
+    sortOrder: 28,
   },
   {
     title: "Live Hacking",
@@ -488,27 +574,18 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
     creditCost: 2,
-    sortOrder: 30,
+    sortOrder: 29,
   },
   {
     title: "Individual Expert Session",
     category: "PRODUCT_TECH",
-    summary: "Fallback: Beschreibe deinen Bedarf, wir vermitteln die passende Expert:in.",
-    description: FALLBACK_DESCRIPTION,
+    summary:
+      "Kein passendes Angebot dabei? Beschreibe deinen Bedarf — wir vermitteln passende Expert:innen.",
+    description: INDIVIDUAL_EXPERT_DESCRIPTION,
     format: "Sparring",
     creditCost: 1,
-    sortOrder: 31,
-  },
-
-  // --- 🚀 Sales (Fallback zusätzlich zum exklusiven Programm) --------------
-  {
-    title: "Individual Expert Session",
-    category: "SALES",
-    summary: "Fallback: Beschreibe deinen Sales-Bedarf, wir vermitteln die passende Expert:in.",
-    description: FALLBACK_DESCRIPTION,
-    format: "Sparring",
-    creditCost: 1,
-    sortOrder: 32,
+    sortOrder: 30,
   },
 ];
