@@ -98,7 +98,7 @@ export default async function MatchMatrixPage() {
       <HeroBanner
         kicker="Venture Scout"
         title="Match-Matrix"
-        subtitle="Beidseitige Passung zwischen Startups und Partnern auf einen Blick — Startup-Relevanz (S) und Partner-Relevanz (P), möglicher Use-Case und nächster Schritt je Paarung."
+        subtitle="Beidseitige Passung zwischen Startups und Partnern auf einen Blick — die Zellfarbe zeigt die gegenseitige Passung, Details je Paarung per Klick."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:max-w-2xl">
           <BannerStat label="Startups" value={rows.length} />

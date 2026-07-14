@@ -102,6 +102,44 @@ export function isTopMatch(
   return startupRelevance === "HIGH" && partnerRelevance === "HIGH";
 }
 
+// --- Mutual-fit heatmap encoding -------------------------------------------
+//
+// The matrix is read heatmap-first: instead of crowding each cell with two
+// relevance pills, we collapse Startup- + Partner-Relevanz into a single
+// "mutual fit" signal that drives the cell's colour intensity. The individual
+// S/P levels are still surfaced as a tiny two-dot indicator and in the detail
+// drawer.
+
+export type MutualFitLevel = "top" | "strong" | "moderate" | "weak" | "none";
+
+const RELEVANCE_SCORE: Record<RelevanceLevel, number> = {
+  HIGH: 3,
+  MEDIUM: 2,
+  LOW: 1,
+};
+
+/**
+ * Collapses the two-sided relevance into one heatmap tier:
+ * - `top`      — both sides Hoch (the Top-Match, strongest mint).
+ * - `strong`   — one side Hoch, the other Mittel (score ≥ 5).
+ * - `moderate` — solid overlap, e.g. Mittel/Mittel or Hoch/Niedrig (score ≥ 3).
+ * - `weak`     — thin / one-sided-low signal (score ≥ 1).
+ * - `none`     — neither side rated.
+ */
+export function mutualFitLevel(
+  startupRelevance: RelevanceLevel | null | undefined,
+  partnerRelevance: RelevanceLevel | null | undefined
+): MutualFitLevel {
+  if (!startupRelevance && !partnerRelevance) return "none";
+  if (isTopMatch(startupRelevance, partnerRelevance)) return "top";
+  const score =
+    (startupRelevance ? RELEVANCE_SCORE[startupRelevance] : 0) +
+    (partnerRelevance ? RELEVANCE_SCORE[partnerRelevance] : 0);
+  if (score >= 5) return "strong";
+  if (score >= 3) return "moderate";
+  return "weak";
+}
+
 // --- View model + filtering -------------------------------------------------
 
 /** A single (startup × partner) cell as consumed by the UI. */
