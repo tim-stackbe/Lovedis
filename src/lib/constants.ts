@@ -7,8 +7,11 @@ import type {
   EngagementStatus,
   IntroStatus,
   MarketplaceOfferingType,
+  MatchContactStatus,
+  MatchUseCaseType,
   PartnerVerdict,
   PipelineStage,
+  RelevanceLevel,
   PoCStatus,
   ProgramStatus,
   RadarQuadrant,
@@ -460,4 +463,49 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   COMPLETED: "Abgeschlossen",
   DECLINED: "Abgelehnt",
   CANCELLED: "Storniert",
+};
+
+// ---------------------------------------------------------------------------
+// Match-Matrix — Relevanz, Use-Case-Typen & Kontakt-Status
+// ---------------------------------------------------------------------------
+
+export const RELEVANCE_LEVELS: RelevanceLevel[] = ["HIGH", "MEDIUM", "LOW"];
+
+export const RELEVANCE_LABELS: Record<RelevanceLevel, string> = {
+  HIGH: "Hoch",
+  MEDIUM: "Mittel",
+  LOW: "Niedrig",
+};
+
+export const MATCH_USE_CASE_TYPES: MatchUseCaseType[] = [
+  "PILOT",
+  "CO_DEVELOPMENT",
+  "CUSTOMER_RELATION",
+  "WHITE_LABEL",
+  "TECH_LICENSE",
+  "SPARRING",
+];
+
+// Kurzlabels — bewusst kompakt, passend zu den Use-Case-Chips der Matrix.
+export const MATCH_USE_CASE_LABELS: Record<MatchUseCaseType, string> = {
+  PILOT: "Pilot",
+  CO_DEVELOPMENT: "Co-Dev",
+  CUSTOMER_RELATION: "Kundenbez.",
+  WHITE_LABEL: "White-label",
+  TECH_LICENSE: "Tech-Lizenz",
+  SPARRING: "Sparring",
+};
+
+export const MATCH_CONTACT_STATUSES: MatchContactStatus[] = [
+  "NONE",
+  "IN_CONTACT",
+  "FOLLOW_UP",
+  "PILOT_AGREED",
+];
+
+export const MATCH_CONTACT_STATUS_LABELS: Record<MatchContactStatus, string> = {
+  NONE: "Offen",
+  IN_CONTACT: "In Kontakt",
+  FOLLOW_UP: "Folgetermin",
+  PILOT_AGREED: "Pilot vereinbart",
 };

@@ -26,6 +26,7 @@ import {
   MARKETPLACE_OFFERINGS,
   MARKETPLACE_PROGRAMS,
 } from "../src/lib/marketplace-catalog";
+import { applyMatchMatrix } from "../src/lib/match-matrix-import";
 import { grantOnboardingCredits } from "../src/lib/onboarding-credits";
 import {
   computeOverallScore,
@@ -371,6 +372,8 @@ async function main() {
   console.log("Datenbank wird geseedet…");
 
   // Wipe in dependency order (idempotent re-seeds).
+  await prisma.partnerStartupMatch.deleteMany();
+  await prisma.partnerCompany.deleteMany();
   await prisma.marketplaceBooking.deleteMany();
   await prisma.program.deleteMany();
   await prisma.mentorProfile.deleteMany();
@@ -1483,6 +1486,17 @@ async function main() {
       creditTransactionId: programFixTx.id,
     },
   });
+
+  // --- Match-Matrix (beidseitige Passung Startups × Partner-Unternehmen) ----
+  // Quelle: prisma/data/match-matrix.csv (geteilte „Matrix"-Tabelle). Legt die
+  // 5 Partner-Unternehmen an und importiert die Zellen; Sheet-Startups, die es
+  // noch nicht gibt, werden als minimale Startup-Rows angelegt.
+  const matrix = await applyMatchMatrix(prisma, member.id);
+  console.log(
+    `Match-Matrix: ${matrix.companies} Partner-Unternehmen, ${matrix.matches} Zellen ` +
+      `für ${matrix.startupsProcessed} Startups (${matrix.startupsCreated.length} neu angelegt). ` +
+      `Ohne Daten übersprungen: ${matrix.skipped.join(", ") || "—"}.`
+  );
 
   console.log("Seed abgeschlossen.");
   console.log("\nDemo-Konten (Passwort: %s)", PASSWORD);

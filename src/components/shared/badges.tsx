@@ -7,8 +7,11 @@ import type {
   EngagementStatus,
   IntroStatus,
   MarketplaceOfferingType,
+  MatchContactStatus,
+  MatchUseCaseType,
   PartnerVerdict,
   PipelineStage,
+  RelevanceLevel,
   PoCStatus,
   ProgramStatus,
   Recommendation,
@@ -28,8 +31,11 @@ import {
   ENGAGEMENT_STATUS_LABELS,
   INTRO_STATUS_LABELS,
   MARKETPLACE_OFFERING_TYPE_LABELS,
+  MATCH_CONTACT_STATUS_LABELS,
+  MATCH_USE_CASE_LABELS,
   PARTNER_VERDICT_LABELS,
   PIPELINE_STAGE_LABELS,
+  RELEVANCE_LABELS,
   POC_STATUS_LABELS,
   PROGRAM_STATUS_LABELS,
   GATE_STATUS_LABEL,
@@ -340,6 +346,50 @@ export function ProgramStatusBadge({ value }: { value: ProgramStatus }) {
   return (
     <Badge tone={PROGRAM_STATUS_TONES[value]}>
       {PROGRAM_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Match-Matrix badges
+// ---------------------------------------------------------------------------
+
+// Relevance colour scale mirrors the Match-Matrix legend: Hoch = mint,
+// Mittel = yellow, Niedrig = neutral surface.
+const RELEVANCE_TONES: Record<RelevanceLevel, BadgeTone> = {
+  HIGH: "mint",
+  MEDIUM: "yellow",
+  LOW: "muted",
+};
+
+export function RelevanceBadge({ value }: { value: RelevanceLevel }) {
+  return <Badge tone={RELEVANCE_TONES[value]}>{RELEVANCE_LABELS[value]}</Badge>;
+}
+
+/** Use-case chip — matches the blue Badge look used across the app. */
+export function MatchUseCaseBadge({ value }: { value: MatchUseCaseType }) {
+  return (
+    <Badge tone="blue" className="px-2 py-0 text-[11px]">
+      {MATCH_USE_CASE_LABELS[value]}
+    </Badge>
+  );
+}
+
+const MATCH_CONTACT_STATUS_TONES: Record<MatchContactStatus, BadgeTone> = {
+  NONE: "muted",
+  IN_CONTACT: "blue",
+  FOLLOW_UP: "yellow",
+  PILOT_AGREED: "mint",
+};
+
+export function MatchContactStatusBadge({
+  value,
+}: {
+  value: MatchContactStatus;
+}) {
+  return (
+    <Badge tone={MATCH_CONTACT_STATUS_TONES[value]}>
+      {MATCH_CONTACT_STATUS_LABELS[value]}
     </Badge>
   );
 }

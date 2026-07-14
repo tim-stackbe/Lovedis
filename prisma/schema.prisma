@@ -215,6 +215,35 @@ enum BookingStatus {
   CANCELLED       // Startup/Team storniert (ggf. Rückbuchung)
 }
 
+// --- Match-Matrix (Plan: plan-match-matrix) ---
+
+// Beidseitige Passung Hoch/Mittel/Niedrig (Startup-Sicht + Partner-Sicht).
+enum RelevanceLevel {
+  HIGH   // Hoch
+  MEDIUM // Mittel
+  LOW    // Niedrig
+}
+
+// Möglicher Kooperations-Use-Case je Paarung. Eine Paarung kann mehrere Typen
+// kombinieren (z. B. „Pilotprojekt, Co-Development"). Der Original-Freitext aus
+// dem Sheet bleibt zusätzlich in PartnerStartupMatch.useCaseNote erhalten.
+enum MatchUseCaseType {
+  PILOT             // Pilotprojekt
+  CO_DEVELOPMENT    // Co-Development
+  CUSTOMER_RELATION // Kundenbeziehung
+  WHITE_LABEL       // White-label
+  TECH_LICENSE      // Technologielizenz
+  SPARRING          // Sparring
+}
+
+// Kontakt-/Intro-Status je Paarung (aus „Intro Mail / Calls" + „Next steps").
+enum MatchContactStatus {
+  NONE         // kein Kontakt / offen
+  IN_CONTACT   // bereits in Kontakt
+  FOLLOW_UP    // Folgetermin / Call geplant
+  PILOT_AGREED // Pilotprojekt vereinbart
+}
+
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------
@@ -263,6 +292,9 @@ model User {
   mentorProfile      MentorProfile?       @relation("MentorUser")
   bookingsRequested  MarketplaceBooking[] @relation("BookingRequester")
   bookingsHandled    MarketplaceBooking[] @relation("BookingHandler")
+
+  // Match-Matrix — welche Team-Person eine Zelle zuletzt gepflegt hat.
+  matchCellUpdates   PartnerStartupMatch[] @relation("MatchUpdater")
 
   @@index([role])
   @@index([isActive])
@@ -351,6 +383,9 @@ model Startup {
 
   // Startup-Marktplatz
   bookings       MarketplaceBooking[]
+
+  // Match-Matrix (beidseitige Passung je Partner-Unternehmen)
+  matches        PartnerStartupMatch[]
 
   @@index([name])
   @@index([industry])
@@ -898,4 +933,57 @@ model MarketplaceBooking {
   @@index([status])
   @@index([startupId])
   @@index([offeringType])
+}
+
+// ---------------------------------------------------------------------------
+// Match-Matrix — beidseitige Passung zwischen Startups und Partner-Unternehmen
+// (Plan: plan-match-matrix). Spiegelt die geteilte „Matrix"-Tabelle wider und
+// wird vom internen Team gepflegt (requireScoutModule). Enthält interne
+// Cross-Partner-Daten und ist NICHT für Partner/Startups/Investoren sichtbar.
+//
+// Partner-Identität: Die Sheet-Partner (FingerHaus, Lupp, Weimer, INNEXIS,
+// Sälzer) sind UNTERNEHMEN, keine (zwingend existierenden) User-Konten. Wir
+// modellieren sie deshalb als eigenständiges, leichtgewichtiges PartnerCompany
+// (name/slug), auf das die Matrix referenziert. So funktioniert die Matrix
+// unabhängig davon, ob es Partner-User-Accounts gibt. (Das getrennte
+// PartnerStartupReview — das Screening-Verdikt eines Partner-USERS — bleibt
+// unangetastet.)
+// ---------------------------------------------------------------------------
+
+model PartnerCompany {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0) // Spaltenreihenfolge in der Matrix
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matches PartnerStartupMatch[]
+
+  @@index([sortOrder])
+}
+
+model PartnerStartupMatch {
+  id               String              @id @default(cuid())
+  partnerId        String // -> PartnerCompany (Unternehmen, nicht User)
+  partner          PartnerCompany      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId        String
+  startup          Startup             @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  startupRelevance RelevanceLevel? // Sicht des Startups auf diesen Partner
+  partnerRelevance RelevanceLevel? // Sicht des Partners auf dieses Startup
+  useCaseTypes     MatchUseCaseType[]  @default([])
+  useCaseNote      String? // Original-Freitext zum Use-Case aus dem Sheet
+  nextSteps        String?
+  contactStatus    MatchContactStatus  @default(NONE)
+  // Letzte pflegende Team-Person (SetNull, damit Löschen eines Users die
+  // Matrix-Zelle nicht mitreißt).
+  updatedById      String?
+  updatedBy        User?               @relation("MatchUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@unique([partnerId, startupId])
+  @@index([startupId])
+  @@index([partnerId])
+  @@index([contactStatus])
 }

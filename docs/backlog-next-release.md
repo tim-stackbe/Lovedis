@@ -20,5 +20,21 @@ Kennzahlen, Website. Mehr ausgefüllte Profile → besseres Matching & Discovery
 
 ---
 
+## 💡 Maybe / später (noch nicht eingeplant)
+
+### Calendly-Anbindung für Mentor:innen
+Mentor:innen ihr Calendly anbinden, um Terminbuchung zu vereinfachen/automatisieren.
+Drei mögliche Stufen:
+- **Stufe 1 (S):** Feld `calendlyUrl` je Mentor:in + „Termin buchen"-Button auf der
+  Detailseite; Credits bleiben team-bestätigt.
+- **Stufe 2 (M):** Calendly-Widget eingebettet; Buchungs-/Credit-Flow wie heute.
+- **Stufe 3 (L):** Vollautomatisch via Calendly-Webhook (Termin → Buchung +
+  Credit-Abzug automatisch).
+- **Zielkonflikt:** umgeht den bewusst team-gebrokerten Flow (Credits werden heute
+  erst bei „Bestätigen" abgebucht) und berührt die Leitplanke „keine reine
+  Buchungs-/Kommunikationsplattform". Vor Umsetzung Credit-Logik klären.
+
+---
+
 _Details/Erklärungen zu diesen und weiteren Ideen: siehe
 `docs/plan-improvements-benchmark.md`._
