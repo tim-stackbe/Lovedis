@@ -5,12 +5,14 @@ import { z } from "zod";
 import type {
   AttachmentType,
   ContentAudience,
+  KnowledgeResourceType,
   RoadmapStatus,
 } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import { requireTeam } from "@/lib/auth-guards";
 import {
   CONTENT_AUDIENCES,
+  KNOWLEDGE_RESOURCE_TYPES,
   ROADMAP_STATUSES,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
@@ -254,6 +256,70 @@ export async function deleteMediaAsset(id: string): Promise<void> {
   await requireTeam();
   try {
     await prisma.mediaAsset.delete({ where: { id } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
+  revalidateHub();
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge-Board resources (curated book/video/article recommendations)
+// ---------------------------------------------------------------------------
+
+const knowledgeSchema = z.object({
+  title: z.string().min(2).max(200),
+  url: z.url("Bitte gib eine gültige URL an").optional().or(z.literal("")),
+  author: z.string().max(160).optional(),
+  type: z.enum(
+    KNOWLEDGE_RESOURCE_TYPES as [
+      KnowledgeResourceType,
+      ...KnowledgeResourceType[],
+    ]
+  ),
+  note: z.string().max(2000).optional(),
+  audience: audienceEnum,
+  sortOrder: z.coerce.number().int().min(0).max(9999).optional(),
+});
+
+function parseKnowledge(formData: FormData) {
+  return knowledgeSchema.safeParse({
+    title: formData.get("title"),
+    url: formData.get("url") || undefined,
+    author: formData.get("author") || undefined,
+    type: formData.get("type") ?? "ARTICLE",
+    note: formData.get("note") || undefined,
+    audience: formData.get("audience") ?? "BOTH",
+    sortOrder: formData.get("sortOrder") || undefined,
+  });
+}
+
+export async function createKnowledgeResource(
+  _prevState: ActionState | undefined,
+  formData: FormData
+): Promise<ActionState> {
+  await requireTeam();
+  const parsed = parseKnowledge(formData);
+  if (!parsed.success) return { error: firstZodError(parsed.error) };
+
+  await prisma.knowledgeResource.create({
+    data: {
+      title: parsed.data.title,
+      url: parsed.data.url ? parsed.data.url : null,
+      author: parsed.data.author ?? null,
+      type: parsed.data.type,
+      note: parsed.data.note ?? null,
+      audience: parsed.data.audience,
+      sortOrder: parsed.data.sortOrder ?? 0,
+    },
+  });
+  revalidateHub();
+  return { success: "Empfehlung hinzugefügt." };
+}
+
+export async function deleteKnowledgeResource(id: string): Promise<void> {
+  await requireTeam();
+  try {
+    await prisma.knowledgeResource.delete({ where: { id } });
   } catch (err) {
     if (!isRecordNotFoundError(err)) throw err;
   }

@@ -6,9 +6,10 @@ import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { LinkButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { requireScoutModule } from "@/lib/auth-guards";
 import { getConsensusByStartup } from "@/lib/consensus-data";
-import { RADAR_QUADRANTS } from "@/lib/constants";
+import { RADAR_PURPOSE, RADAR_QUADRANTS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Radar" };
@@ -50,6 +51,11 @@ export default async function RadarPage() {
       </HeroBanner>
 
       <SectionLabel number="05" label="Radar" title="Feld-×-Ring-Karte" />
+
+      <Card className="border-l-4 border-l-lv-blue p-4 text-sm text-lv-secondary">
+        <span className="font-semibold text-lv-text">Ziel des Radars: </span>
+        {RADAR_PURPOSE}
+      </Card>
 
       {blips.length === 0 ? (
         <EmptyState

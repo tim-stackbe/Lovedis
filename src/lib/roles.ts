@@ -14,6 +14,7 @@ import {
   Inbox,
   Kanban,
   LayoutGrid,
+  Library,
   ListChecks,
   MessageSquare,
   Newspaper,
@@ -106,45 +107,74 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/**
- * Internal Venture Scout module: the scouting desk where the team creates and
- * curates startup entries (the input masks that feed the Longlist), evaluates
- * them, and tracks pipeline/radar/reports.
- */
-const SCOUT_SECTION: NavSection = {
-  title: "Venture Scout",
+// ---------------------------------------------------------------------------
+// Team navigation — grouped into thematic "Spaces" (Sourcing, Matchmaking,
+// Zusammenarbeit, Roadmap/Wissen, Marktplatz, Tracking) instead of one long
+// flat list, so the internal team navigates by journey stage / category. All
+// hrefs are existing routes; this is an information-architecture regrouping.
+// ---------------------------------------------------------------------------
+
+/** Discover → screen → longlist: the top of the scouting funnel. */
+const SOURCING_SECTION: NavSection = {
+  title: "Sourcing & Screening",
   items: [
     { label: "Startups", href: "/startups", icon: Rocket },
+    { label: "Longlist", href: "/longlist", icon: ListChecks },
     { label: "Bewertungen", href: "/evaluations", icon: BarChart3 },
     { label: "Vergleich", href: "/compare", icon: GitCompare },
-    { label: "Match-Matrix", href: "/match-matrix", icon: LayoutGrid },
-    { label: "Pipeline", href: "/pipeline", icon: Kanban },
     { label: "Radar", href: "/radar", icon: Radar },
-    { label: "Berichte", href: "/reports", icon: Share2 },
+  ],
+};
+
+/** Two-sided fit: the Match-Matrix plus the partner use-case verdicts. */
+const MATCHMAKING_SECTION: NavSection = {
+  title: "Matchmaking & Use-Cases",
+  items: [
+    { label: "Match-Matrix", href: "/match-matrix", icon: LayoutGrid },
+    { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: Target },
   ],
 };
 
 /**
- * Screening & SSOT workflows owned by the internal team. These create the
- * curated data (Erst-Einordnung screening, pushes, engagements, SSOT content, credits)
- * that partners and startups consume through their low-overload views.
+ * Collaboration & communication status: engagements, the Team→Partner push
+ * with check-in reminders, and the partner-facing feedback masks as a
+ * fully-visible "Partner-Sicht" preview (view-only; only partners submit).
  */
-const TEAM_SSOT_SECTION: NavSection = {
-  title: "Screening & SSOT",
+const COLLAB_SECTION: NavSection = {
+  title: "Zusammenarbeit & Kommunikation",
   items: [
-    { label: "Longlist", href: "/longlist", icon: ListChecks },
     { label: "Engagements", href: "/engagements", icon: Handshake },
     { label: "Push & Check-ins", href: "/pushes", icon: Send },
+    { label: "Partner-Screening (Vorschau)", href: "/screening", icon: ClipboardCheck },
+    { label: "Partner-Check-ins (Vorschau)", href: "/check-ins", icon: Bell },
+  ],
+};
+
+/** Roadmap / Info-Space / Knowledge — the SSOT the team curates + preview. */
+const SPACE_SECTION: NavSection = {
+  title: "Roadmap & Wissen (SSOT)",
+  items: [
     { label: "SSOT-Pflege", href: "/hub-admin", icon: BookOpen },
+    { label: "Partner-Hub (Vorschau)", href: "/partner-hub", icon: Library },
+  ],
+};
+
+/** Marketplace & venture credits (team-side inbox + storefront + grants). */
+const MARKET_SECTION: NavSection = {
+  title: "Marktplatz & Credits",
+  items: [
     { label: "Venture-Credits", href: "/credits", icon: Coins },
     { label: "Marktplatz-Inbox", href: "/marketplace", icon: Inbox },
     { label: "Marktplatz-Storefront", href: "/venture/marketplace", icon: Store },
-    // Partner-facing feedback masks as a fully-visible "Partner-Sicht" preview
-    // (view-only; only partners submit their own verdict).
-    { label: "Partner-Screening (Vorschau)", href: "/screening", icon: ClipboardCheck },
-    { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: Target },
-    { label: "Partner-Check-ins (Vorschau)", href: "/check-ins", icon: Bell },
-    { label: "Partner-Hub (Vorschau)", href: "/partner-hub", icon: BookOpen },
+  ],
+};
+
+/** Internal status tracking — the funnel board + reporting. */
+const TRACKING_SECTION: NavSection = {
+  title: "Tracking (intern)",
+  items: [
+    { label: "Pipeline", href: "/pipeline", icon: Kanban },
+    { label: "Berichte", href: "/reports", icon: Share2 },
   ],
 };
 
@@ -190,8 +220,12 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
     },
-    SCOUT_SECTION,
-    TEAM_SSOT_SECTION,
+    SOURCING_SECTION,
+    MATCHMAKING_SECTION,
+    COLLAB_SECTION,
+    SPACE_SECTION,
+    MARKET_SECTION,
+    TRACKING_SECTION,
     MARKETPLACE_SECTION,
     PLATFORM_SECTION_ADMIN,
     SETTINGS_SECTION,
@@ -200,8 +234,12 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
     },
-    SCOUT_SECTION,
-    TEAM_SSOT_SECTION,
+    SOURCING_SECTION,
+    MATCHMAKING_SECTION,
+    COLLAB_SECTION,
+    SPACE_SECTION,
+    MARKET_SECTION,
+    TRACKING_SECTION,
     MARKETPLACE_SECTION,
     PLATFORM_SECTION_MEMBER,
     SETTINGS_SECTION,

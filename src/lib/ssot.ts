@@ -12,11 +12,12 @@ export function audiencesForRole(role: UserRole): ContentAudience[] {
 }
 
 /**
- * Read-only SSOT bundle (Notion replacement): roadmap, published content pages
- * and media assets filtered to the audiences the viewer is allowed to see.
+ * Read-only SSOT bundle (Notion replacement): roadmap, published content pages,
+ * media assets and Knowledge-Board recommendations, filtered to the audiences
+ * the viewer is allowed to see.
  */
 export async function getHubContent(audiences: ContentAudience[]) {
-  const [roadmap, pages, media] = await Promise.all([
+  const [roadmap, pages, media, knowledge] = await Promise.all([
     prisma.roadmapItem.findMany({
       where: { audience: { in: audiences } },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -29,6 +30,10 @@ export async function getHubContent(audiences: ContentAudience[]) {
       where: { audience: { in: audiences } },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.knowledgeResource.findMany({
+      where: { audience: { in: audiences } },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
   ]);
-  return { roadmap, pages, media };
+  return { roadmap, pages, media, knowledge };
 }

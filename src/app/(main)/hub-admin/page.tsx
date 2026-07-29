@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import {
   deleteContentPage,
+  deleteKnowledgeResource,
   deleteMediaAsset,
   deleteRoadmapItem,
 } from "@/app/actions/ssot";
@@ -10,6 +11,7 @@ import {
   RoadmapStatusBadge,
 } from "@/components/shared/badges";
 import { ContentPageForm } from "@/components/ssot/ContentPageForm";
+import { KnowledgeResourceForm } from "@/components/ssot/KnowledgeResourceForm";
 import { MediaAssetForm } from "@/components/ssot/MediaAssetForm";
 import { RoadmapItemForm } from "@/components/ssot/RoadmapItemForm";
 import { Badge } from "@/components/ui/Badge";
@@ -17,6 +19,7 @@ import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireTeam } from "@/lib/auth-guards";
+import { KNOWLEDGE_RESOURCE_TYPE_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "SSOT-Pflege" };
@@ -38,7 +41,7 @@ function DeleteButton({ action }: { action: () => Promise<void> }) {
 export default async function HubAdminPage() {
   await requireTeam();
 
-  const [roadmap, pages, media] = await Promise.all([
+  const [roadmap, pages, media, knowledge] = await Promise.all([
     prisma.roadmapItem.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
@@ -46,6 +49,9 @@ export default async function HubAdminPage() {
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
     }),
     prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.knowledgeResource.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
   ]);
 
   return (
@@ -161,6 +167,53 @@ export default async function HubAdminPage() {
             Neues Asset
           </p>
           <MediaAssetForm />
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <SectionLabel
+          number="04"
+          label="Knowledge-Board"
+          title="Empfehlungen (Bücher, Videos …)"
+        />
+        <Card className="divide-y divide-lv-border">
+          {knowledge.map((res) => (
+            <div key={res.id} className="flex items-center gap-3 p-4">
+              <div className="min-w-0 flex-1">
+                {res.url ? (
+                  <a
+                    href={res.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-semibold hover:text-lv-blue"
+                  >
+                    {res.title}
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold">{res.title}</span>
+                )}
+                <p className="text-xs text-lv-secondary">
+                  {KNOWLEDGE_RESOURCE_TYPE_LABELS[res.type]}
+                  {res.author ? ` · ${res.author}` : ""}
+                </p>
+              </div>
+              <ContentAudienceBadge value={res.audience} />
+              <DeleteButton
+                action={deleteKnowledgeResource.bind(null, res.id)}
+              />
+            </div>
+          ))}
+          {knowledge.length === 0 && (
+            <p className="p-4 text-sm text-lv-secondary">
+              Noch keine Empfehlungen.
+            </p>
+          )}
+        </Card>
+        <Card className="p-6">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-lv-secondary">
+            Neue Empfehlung
+          </p>
+          <KnowledgeResourceForm />
         </Card>
       </section>
     </>

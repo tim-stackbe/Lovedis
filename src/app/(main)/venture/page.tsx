@@ -86,7 +86,12 @@ export default async function VenturePage() {
         </Link>
       </Card>
 
-      <HubContent roadmap={hub.roadmap} pages={hub.pages} media={hub.media} />
+      <HubContent
+        roadmap={hub.roadmap}
+        pages={hub.pages}
+        media={hub.media}
+        knowledge={hub.knowledge}
+      />
     </>
   );
 }

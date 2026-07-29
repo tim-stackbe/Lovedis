@@ -8,6 +8,7 @@ import {
   RADAR_QUADRANTS,
   RADAR_QUADRANT_LABELS,
   RADAR_RINGS,
+  RADAR_RING_DESCRIPTIONS,
   RADAR_RING_LABELS,
 } from "@/lib/constants";
 import { cn, formatScore } from "@/lib/utils";
@@ -261,6 +262,30 @@ export function RadarView({ startups }: { startups: RadarStartup[] }) {
               );
             })}
           </div>
+        </Card>
+
+        <Card className="p-4">
+          <p className="lv-wordmark mb-3 text-[10px] text-lv-blue">
+            Ringe — so liest du sie
+          </p>
+          <ul className="space-y-2">
+            {RADAR_RINGS.map((ring, i) => (
+              <li key={ring} className="flex gap-2 text-xs">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-lv-blue-soft text-[9px] font-bold text-lv-blue">
+                  {i + 1}
+                </span>
+                <span>
+                  <span className="font-semibold text-lv-text">
+                    {RADAR_RING_LABELS[ring]}
+                  </span>
+                  <span className="text-lv-secondary">
+                    {" "}
+                    — {RADAR_RING_DESCRIPTIONS[ring]}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </Card>
 
         <Card className="p-4">

@@ -90,6 +90,17 @@ enum AttachmentType {
   OTHER
 }
 
+// Curated Knowledge-Board recommendations (books, videos, articles, …) that
+// live in the SSOT hub next to roadmap/content/media.
+enum KnowledgeResourceType {
+  BOOK
+  VIDEO
+  ARTICLE
+  PODCAST
+  TOOL
+  COURSE
+}
+
 enum ChallengeStatus {
   DRAFT
   OPEN
@@ -767,6 +778,25 @@ model MediaAsset {
   createdAt DateTime        @default(now())
 
   @@index([audience])
+}
+
+// Knowledge-Board: curated learning recommendations (books, videos, articles,
+// podcasts, tools, courses) with an optional "why we recommend it" note.
+// Audience-filtered exactly like the rest of the SSOT hub.
+model KnowledgeResource {
+  id        String                @id @default(cuid())
+  title     String
+  url       String?
+  author    String?
+  type      KnowledgeResourceType @default(ARTICLE)
+  note      String?
+  audience  ContentAudience       @default(BOTH)
+  sortOrder Int                   @default(0)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([audience])
+  @@index([type])
 }
 
 // ---------------------------------------------------------------------------

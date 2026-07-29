@@ -6,6 +6,7 @@ import type {
   CreditTxType,
   EngagementStatus,
   IntroStatus,
+  KnowledgeResourceType,
   MarketplaceOfferingType,
   MatchContactStatus,
   MatchUseCaseType,
@@ -168,6 +169,27 @@ export const RADAR_RING_LABELS: Record<RadarRing, string> = {
   ASSESS: "Assess",
   HOLD: "Hold",
 };
+
+/**
+ * What each ring means as an internal *recommendation to act* (ThoughtWorks-
+ * style tech-radar semantics, adapted to startup adoption). This is the
+ * "Definition der Stages" the radar was missing — the ring encodes how far the
+ * team recommends going with a startup right now, set MANUALLY and independent
+ * of the weighted score. From ADOPT (act now) inward-out to HOLD (wait).
+ */
+export const RADAR_RING_DESCRIPTIONS: Record<RadarRing, string> = {
+  ADOPT:
+    "Reif & überzeugend — aktiv für Piloten/Partnerschaften vorantreiben. Höchste Priorität.",
+  TRIAL:
+    "Vielversprechend — in einem konkreten, abgegrenzten Piloten testen und Erfahrung sammeln.",
+  ASSESS:
+    "Beobachten — Potenzial vorhanden, aber noch prüfen. Noch kein aktiver Piloten-Einsatz.",
+  HOLD: "Zurückhalten — aktuell kein aktives Vorgehen; später neu bewerten.",
+};
+
+/** One-line purpose of the radar (internal strategic tool, team-only). */
+export const RADAR_PURPOSE =
+  "Interne Strategie-Landkarte des Teams: Wo steht jedes gescoutete Startup je Technologiefeld und wie weit empfehlen wir aktuell zu gehen? Manuell klassifiziert, unabhängig vom Score — aktuell team-intern.";
 
 // ---------------------------------------------------------------------------
 // Startup stage
@@ -372,6 +394,27 @@ export const ROADMAP_STATUS_LABELS: Record<RoadmapStatus, string> = {
   PLANNED: "Geplant",
   IN_PROGRESS: "In Arbeit",
   DONE: "Erledigt",
+};
+
+export const KNOWLEDGE_RESOURCE_TYPES: KnowledgeResourceType[] = [
+  "BOOK",
+  "VIDEO",
+  "ARTICLE",
+  "PODCAST",
+  "TOOL",
+  "COURSE",
+];
+
+export const KNOWLEDGE_RESOURCE_TYPE_LABELS: Record<
+  KnowledgeResourceType,
+  string
+> = {
+  BOOK: "Buch",
+  VIDEO: "Video",
+  ARTICLE: "Artikel",
+  PODCAST: "Podcast",
+  TOOL: "Tool",
+  COURSE: "Kurs",
 };
 
 export const CONTENT_AUDIENCES: ContentAudience[] = [

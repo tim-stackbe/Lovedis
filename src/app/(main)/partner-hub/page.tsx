@@ -14,7 +14,7 @@ export default async function PartnerHubPage() {
 
   // In the team preview, show exactly the partner's audience slice (PARTNER +
   // BOTH) rather than the team's full audience — a faithful "Partner-Sicht".
-  const { roadmap, pages, media } = await getHubContent(
+  const { roadmap, pages, media, knowledge } = await getHubContent(
     teamMode ? ["PARTNER", "BOTH"] : audiencesForRole(session.user.role)
   );
 
@@ -31,7 +31,12 @@ export default async function PartnerHubPage() {
           Media-Kit für die Partner-Zielgruppe).
         </PreviewBanner>
       )}
-      <HubContent roadmap={roadmap} pages={pages} media={media} />
+      <HubContent
+        roadmap={roadmap}
+        pages={pages}
+        media={media}
+        knowledge={knowledge}
+      />
     </>
   );
 }

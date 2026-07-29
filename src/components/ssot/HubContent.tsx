@@ -1,19 +1,23 @@
-import { Download, FileText, Map } from "lucide-react";
+import { BookOpen, Download, FileText, Lightbulb, Map } from "lucide-react";
 import type {
   ContentPageModel,
+  KnowledgeResourceModel,
   MediaAssetModel,
   RoadmapItemModel,
 } from "@/generated/prisma/models";
+import { Badge } from "@/components/ui/Badge";
 import { RoadmapStatusBadge } from "@/components/shared/badges";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Markdown } from "@/components/ssot/Markdown";
+import { KNOWLEDGE_RESOURCE_TYPE_LABELS } from "@/lib/constants";
 
 interface HubContentProps {
   roadmap: RoadmapItemModel[];
   pages: ContentPageModel[];
   media: MediaAssetModel[];
+  knowledge?: KnowledgeResourceModel[];
   /** Section numbers start here (so callers can compose multiple sections). */
   startNumber?: number;
 }
@@ -23,6 +27,7 @@ export function HubContent({
   roadmap,
   pages,
   media,
+  knowledge = [],
   startNumber = 1,
 }: HubContentProps) {
   const n = (offset: number) => String(startNumber + offset).padStart(2, "0");
@@ -119,6 +124,58 @@ export function HubContent({
               </div>
             ))}
           </Card>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <SectionLabel
+          number={n(3)}
+          label="Knowledge-Board"
+          title="Empfehlungen: Bücher, Videos & mehr"
+        />
+        {knowledge.length === 0 ? (
+          <EmptyState
+            icon={Lightbulb}
+            title="Noch keine Empfehlungen"
+            description="Hier erscheinen kuratierte Bücher, Videos, Artikel und Tools."
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {knowledge.map((res) => {
+              const Title = res.url ? "a" : "span";
+              return (
+                <Card key={res.id} className="flex flex-col gap-2 p-5">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge tone="blue">
+                      {KNOWLEDGE_RESOURCE_TYPE_LABELS[res.type]}
+                    </Badge>
+                    <BookOpen className="h-4 w-4 shrink-0 text-lv-secondary" />
+                  </div>
+                  <Title
+                    {...(res.url
+                      ? {
+                          href: res.url,
+                          target: "_blank",
+                          rel: "noreferrer",
+                        }
+                      : {})}
+                    className={
+                      "text-sm font-bold text-lv-text" +
+                      (res.url ? " hover:text-lv-blue" : "")
+                    }
+                  >
+                    {res.title}
+                  </Title>
+                  {res.author && (
+                    <p className="text-xs text-lv-secondary">{res.author}</p>
+                  )}
+                  {res.note && (
+                    <p className="text-sm text-lv-secondary">{res.note}</p>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
         )}
       </section>
     </>
