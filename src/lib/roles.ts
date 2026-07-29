@@ -107,6 +107,12 @@ export interface NavSection {
   items: NavItem[];
 }
 
+const MESSAGES_ITEM: NavItem = {
+  label: "Nachrichten",
+  href: "/messages",
+  icon: MessageSquare,
+};
+
 // ---------------------------------------------------------------------------
 // Team navigation — grouped into thematic "Spaces" (Sourcing, Matchmaking,
 // Zusammenarbeit, Roadmap/Wissen, Marktplatz, Tracking) instead of one long
@@ -187,6 +193,44 @@ const MARKETPLACE_SECTION: NavSection = {
 };
 
 /**
+ * Cross-role access for the internal team: the partner-native surfaces the
+ * admin (and member) must be able to open and work on, clearly labelled as a
+ * partner view. Screening/Use-Cases/Check-ins/Partner-Hub already live in the
+ * team spaces above (as "Vorschau"), so they are intentionally NOT duplicated
+ * here — this section only surfaces the partner tabs the team nav was missing.
+ * Data is scoped to the logged-in user, so the team sees safe empty states.
+ */
+const PARTNER_FUNCTIONS_SECTION: NavSection = {
+  title: "Partner-Funktionen (Admin-Sicht)",
+  items: [
+    { label: "Partner-Dashboard", href: "/dashboard/partner", icon: Handshake },
+    { label: "Meine Challenges", href: "/challenges", icon: Target },
+    { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
+    { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
+    MESSAGES_ITEM,
+  ],
+};
+
+/**
+ * Cross-role access for the internal team: the startup-native surfaces the
+ * admin (and member) must be able to open and work on, clearly labelled as a
+ * startup view. The Marktplatz-Storefront (/venture/marketplace) already lives
+ * in "Marktplatz & Credits" above, so it is intentionally NOT duplicated here.
+ * Data is scoped to the logged-in user, so the team sees safe empty states.
+ */
+const STARTUP_FUNCTIONS_SECTION: NavSection = {
+  title: "Startup-Funktionen (Admin-Sicht)",
+  items: [
+    { label: "Startup-Dashboard", href: "/dashboard/startup", icon: Home },
+    { label: "Meine Bewerbungen", href: "/applications", icon: Building2 },
+    { label: "Mein Profil", href: "/profile", icon: Rocket },
+    { label: "Venture Platform", href: "/venture", icon: Sparkles },
+    { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: Inbox },
+    { label: "Mein Guthaben", href: "/venture/credits", icon: Coins },
+  ],
+};
+
+/**
  * Platform-level coordination pages for the internal team. Intro-Anfragen is
  * shared by ADMIN + MEMBER; ADMIN additionally reaches Nutzerverwaltung and the
  * Sharing (Geteilte Scorings) admin so those surfaces aren't orphaned.
@@ -205,12 +249,6 @@ const PLATFORM_SECTION_ADMIN: NavSection = {
   ],
 };
 
-const MESSAGES_ITEM: NavItem = {
-  label: "Nachrichten",
-  href: "/messages",
-  icon: MessageSquare,
-};
-
 const SETTINGS_SECTION: NavSection = {
   items: [{ label: "Einstellungen", href: "/settings", icon: Settings }],
 };
@@ -227,6 +265,8 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     MARKET_SECTION,
     TRACKING_SECTION,
     MARKETPLACE_SECTION,
+    PARTNER_FUNCTIONS_SECTION,
+    STARTUP_FUNCTIONS_SECTION,
     PLATFORM_SECTION_ADMIN,
     SETTINGS_SECTION,
   ],
@@ -241,6 +281,8 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     MARKET_SECTION,
     TRACKING_SECTION,
     MARKETPLACE_SECTION,
+    PARTNER_FUNCTIONS_SECTION,
+    STARTUP_FUNCTIONS_SECTION,
     PLATFORM_SECTION_MEMBER,
     SETTINGS_SECTION,
   ],

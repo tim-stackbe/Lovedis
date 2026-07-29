@@ -16,7 +16,7 @@ import { formatDate, truncate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Startup-Dashboard" };
 
 export default async function StartupDashboard() {
-  const session = await requireRole(["STARTUP"]);
+  const session = await requireRole(["STARTUP", "ADMIN", "MEMBER"]);
 
   const [startup, openChallenges] = await Promise.all([
     prisma.startup.findUnique({

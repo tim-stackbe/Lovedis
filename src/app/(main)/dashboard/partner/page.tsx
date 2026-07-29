@@ -20,7 +20,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Partner-Dashboard" };
 
 export default async function PartnerDashboard() {
-  const session = await requireRole(["BUSINESS_PARTNER"]);
+  const session = await requireRole(["BUSINESS_PARTNER", "ADMIN", "MEMBER"]);
   const userId = session.user.id;
 
   const [challenges, pocs, shares, pendingCount, screenedStartups, checkIns] =

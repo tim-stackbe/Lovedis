@@ -20,7 +20,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Mein Profil" };
 
 export default async function ProfilePage() {
-  const session = await requireRole(["STARTUP"]);
+  const session = await requireRole(["STARTUP", "ADMIN", "MEMBER"]);
 
   const startup = await prisma.startup.findUnique({
     where: { ownerUserId: session.user.id },
