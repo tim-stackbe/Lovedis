@@ -93,9 +93,9 @@ export default async function ChallengesPage() {
         subtitle={COPY[role].subtitle}
         actions={
           canCreate ? (
-            <LinkButton href="/challenges/new" variant="white">
+            <LinkButton href="/challenges/new" variant="white" size="lg">
               <Plus className="h-4 w-4" />
-              Neue Challenge
+              Challenge erstellen
             </LinkButton>
           ) : undefined
         }
@@ -120,7 +120,7 @@ export default async function ChallengesPage() {
             canCreate ? (
               <LinkButton href="/challenges/new">
                 <Plus className="h-4 w-4" />
-                Neue Challenge
+                Challenge erstellen
               </LinkButton>
             ) : undefined
           }
