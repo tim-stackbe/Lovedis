@@ -15,19 +15,26 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Challenges" };
 
 const COPY = {
   ADMIN: {
-    title: "Alle Challenges",
-    subtitle: "Plattformweiter Überblick über jede Partner-Challenge.",
+    title: "Challenges (Use-Cases)",
+    subtitle:
+      "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
+  },
+  MEMBER: {
+    title: "Challenges (Use-Cases)",
+    subtitle:
+      "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
   },
   BUSINESS_PARTNER: {
     title: "Meine Challenges",
     subtitle:
-      "Stelle Innovations-Challenges und prüfe die Startups, die sich bewerben.",
+      "Deine vom Lovedis-Team betreuten Use-Cases und die Startups, die sich bewerben.",
   },
   STARTUP: {
     title: "Offene Challenges",
@@ -37,7 +44,12 @@ const COPY = {
 } as const;
 
 export default async function ChallengesPage() {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "STARTUP"]);
+  const session = await requireRole([
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "STARTUP",
+  ]);
   const role = session.user.role as keyof typeof COPY;
 
   const where: Prisma.ChallengeWhereInput =
@@ -70,7 +82,8 @@ export default async function ChallengesPage() {
     );
   }
 
-  const canCreate = role === "ADMIN" || role === "BUSINESS_PARTNER";
+  // Only the Lovedis team creates/manages challenges (on behalf of partners).
+  const canCreate = isTeamRole(session.user.role);
 
   return (
     <>

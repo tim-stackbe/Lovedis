@@ -34,11 +34,13 @@ import {
   isPartnerApproved,
   requirePartner,
   requireRole,
+  requireTeam,
 } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 const mockRequireRole = vi.mocked(requireRole);
 const mockRequirePartner = vi.mocked(requirePartner);
+const mockRequireTeam = vi.mocked(requireTeam);
 const mockIsApproved = vi.mocked(isPartnerApproved);
 const mockUser = vi.mocked(prisma.user);
 const mockChallenge = vi.mocked(prisma.challenge);
@@ -110,26 +112,28 @@ describe("admin-created users are approved immediately", () => {
   });
 });
 
-describe("write actions refuse unapproved partners", () => {
-  it("createChallenge refuses a pending partner and creates nothing", async () => {
-    mockRequireRole.mockResolvedValue({
-      user: { id: "p1", role: "BUSINESS_PARTNER" },
-    } as never);
-    mockIsApproved.mockResolvedValue(false);
+describe("createChallenge — Lovedis-team-only management", () => {
+  it("rejects a business partner (requireTeam redirects) and creates nothing", async () => {
+    // requireTeam redirects non-team roles to their home, mirroring requireRole.
+    mockRequireTeam.mockRejectedValue(new Error("REDIRECT:/dashboard/partner"));
 
-    const res = await createChallenge(
-      undefined,
-      form({
-        title: "A valid title",
-        description: "A description long enough to pass validation.",
-        status: "DRAFT",
-      })
-    );
+    await expect(
+      createChallenge(
+        undefined,
+        form({
+          partnerId: "p1",
+          title: "A valid title",
+          description: "A description long enough to pass validation.",
+          status: "DRAFT",
+        })
+      )
+    ).rejects.toThrow("REDIRECT:/dashboard/partner");
 
-    expect(res.error).toContain("noch nicht freigegeben");
     expect(mockChallenge.create).not.toHaveBeenCalled();
   });
+});
 
+describe("write actions refuse unapproved partners", () => {
   it("submitPartnerVerdict refuses a pending partner and writes nothing", async () => {
     mockRequirePartner.mockResolvedValue({
       user: { id: "p1", role: "BUSINESS_PARTNER" },

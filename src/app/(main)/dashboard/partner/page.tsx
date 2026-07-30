@@ -8,7 +8,6 @@ import {
 } from "@/components/shared/badges";
 import { BannerStat, Card, ToneCard } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
-import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
@@ -84,11 +83,6 @@ export default async function PartnerDashboard() {
         kicker="Sektion 00 — Business Partner"
         title={`Hallo, ${session.user.name?.split(" ")[0]}`}
         subtitle="Deine Challenges, die Startups, die sich bewerben, und die PoCs, die du betreust."
-        actions={
-          <LinkButton href="/challenges/new" variant="white">
-            Neue Challenge
-          </LinkButton>
-        }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat label="Challenges" value={challenges.length} />
@@ -153,11 +147,8 @@ export default async function PartnerDashboard() {
           <SectionLabel number="03" label="Challenges" title="Deine Challenges" />
           {challenges.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
-              Noch keine Challenges —{" "}
-              <Link href="/challenges/new" className="font-semibold text-lv-blue">
-                veröffentliche deine erste
-              </Link>
-              .
+              Noch keine Challenges — das Lovedis-Team legt deine Use-Cases für
+              dich an.
             </Card>
           ) : (
             <TableCard>

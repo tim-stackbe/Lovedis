@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 export default async function ChallengeDetailPage({
@@ -25,7 +26,12 @@ export default async function ChallengeDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "STARTUP"]);
+  const session = await requireRole([
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "STARTUP",
+  ]);
   const { id } = await params;
 
   const challenge = await prisma.challenge.findUnique({
@@ -44,12 +50,21 @@ export default async function ChallengeDetailPage({
   if (!challenge) notFound();
 
   const role = session.user.role;
-  const isManager =
-    role === "ADMIN" ||
-    (role === "BUSINESS_PARTNER" && challenge.createdById === session.user.id);
+  // Managing a challenge (edit/delete, deciding applications) is a Lovedis-team
+  // affordance. Partners get a read-only view of their attributed use-cases.
+  const isManager = isTeamRole(role);
 
   // Startup view: hide draft challenges entirely.
   if (role === "STARTUP" && challenge.status === "DRAFT") notFound();
+
+  // Partner-owned challenges the team manages need the partner selector.
+  const partners = isManager
+    ? await prisma.user.findMany({
+        where: { role: "BUSINESS_PARTNER" },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, company: true },
+      })
+    : [];
 
   const myStartup =
     role === "STARTUP"
@@ -202,7 +217,7 @@ export default async function ChallengeDetailPage({
 
           <section className="space-y-4">
             <SectionLabel number="03" label="Verwalten" title="Challenge bearbeiten" />
-            <ChallengeForm challenge={challenge} />
+            <ChallengeForm challenge={challenge} partners={partners} />
             <div className="flex justify-end">
               <form action={deleteChallenge.bind(null, challenge.id)}>
                 <Button type="submit" variant="danger" size="sm">

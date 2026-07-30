@@ -204,7 +204,7 @@ const PARTNER_FUNCTIONS_SECTION: NavSection = {
   title: "Partner-Funktionen (Admin-Sicht)",
   items: [
     { label: "Partner-Dashboard", href: "/dashboard/partner", icon: Handshake },
-    { label: "Meine Challenges", href: "/challenges", icon: Target },
+    { label: "Challenges (Use-Cases)", href: "/challenges", icon: Target },
     { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
     { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
     MESSAGES_ITEM,
