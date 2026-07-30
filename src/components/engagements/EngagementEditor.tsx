@@ -19,7 +19,14 @@ import {
   ENGAGEMENT_STATUSES,
   ENGAGEMENT_STATUS_LABELS,
 } from "@/lib/constants";
-import { kpiProgress, type Kpi, type Milestone } from "@/lib/pocs";
+import {
+  kpiProgress,
+  type Kpi,
+  type KpiDraft,
+  type Milestone,
+  normalizeKpi,
+  parseNumberInput,
+} from "@/lib/pocs";
 import { cn } from "@/lib/utils";
 
 interface EngagementEditorProps {
@@ -41,10 +48,10 @@ export function EngagementEditor({
 }: EngagementEditorProps) {
   const action = updateEngagement.bind(null, engagementId);
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [kpis, setKpis] = useState<Kpi[]>(initial.kpis);
+  const [kpis, setKpis] = useState<KpiDraft[]>(initial.kpis);
   const [milestones, setMilestones] = useState<Milestone[]>(initial.milestones);
 
-  const setKpi = (i: number, patch: Partial<Kpi>) =>
+  const setKpi = (i: number, patch: Partial<KpiDraft>) =>
     setKpis((ks) => ks.map((k, idx) => (idx === i ? { ...k, ...patch } : k)));
   const setMilestone = (i: number, patch: Partial<Milestone>) =>
     setMilestones((ms) =>
@@ -53,7 +60,11 @@ export function EngagementEditor({
 
   return (
     <form action={formAction} className="space-y-6">
-      <input type="hidden" name="kpis" value={JSON.stringify(kpis)} />
+      <input
+        type="hidden"
+        name="kpis"
+        value={JSON.stringify(kpis.map(normalizeKpi))}
+      />
       <input
         type="hidden"
         name="milestones"
@@ -130,7 +141,7 @@ export function EngagementEditor({
             <p className="text-sm text-lv-secondary">Noch keine KPIs definiert.</p>
           )}
           {kpis.map((kpi, i) => {
-            const progress = kpiProgress(kpi);
+            const progress = kpiProgress(normalizeKpi(kpi));
             return (
               <div
                 key={i}
@@ -146,7 +157,7 @@ export function EngagementEditor({
                     type="number"
                     value={kpi.current}
                     onChange={(e) =>
-                      setKpi(i, { current: Number(e.target.value) })
+                      setKpi(i, { current: parseNumberInput(e.target.value) })
                     }
                     placeholder="Aktuell"
                   />
@@ -154,7 +165,7 @@ export function EngagementEditor({
                     type="number"
                     value={kpi.target}
                     onChange={(e) =>
-                      setKpi(i, { target: Number(e.target.value) })
+                      setKpi(i, { target: parseNumberInput(e.target.value) })
                     }
                     placeholder="Ziel"
                   />
