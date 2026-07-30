@@ -5,7 +5,6 @@ import { z } from "zod";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import { requireRole, requireTeam } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { processDueReminders } from "@/lib/reminders";
 
 // ---------------------------------------------------------------------------
 // Accelerator-independent push: the team assigns a startup to a partner
@@ -166,20 +165,4 @@ export async function markReminderDoneForm(reminderId: string): Promise<void> {
 
 export async function cancelReminderForm(reminderId: string): Promise<void> {
   await cancelReminder(reminderId);
-}
-
-/** Manual "jetzt fällige Erinnerungen verarbeiten" trigger (team). */
-export async function runDueReminders(): Promise<ActionState> {
-  await requireTeam();
-  const result = await processDueReminders();
-  revalidatePath("/pushes");
-  revalidatePath("/check-ins");
-  if (result.processed === 0) {
-    return { success: "Keine fälligen Erinnerungen." };
-  }
-  return {
-    success: `${result.sent} Erinnerung(en) versendet${
-      result.failed > 0 ? `, ${result.failed} fehlgeschlagen` : ""
-    }.`,
-  };
 }

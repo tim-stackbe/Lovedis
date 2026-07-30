@@ -5,7 +5,6 @@ import {
   SourceTypeBadge,
 } from "@/components/shared/badges";
 import { PushCreateForm } from "@/components/pushes/PushCreateForm";
-import { RunRemindersButton } from "@/components/pushes/RunRemindersButton";
 import { Button } from "@/components/ui/Button";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -58,7 +57,6 @@ export default async function PushesPage() {
         kicker="Acc-unabhängig"
         title="Startup-Pushes"
         subtitle="Weise Partnern gezielt Startups zu — mit Kontext und optionaler Check-in-Erinnerung. Keine Bewertungspflicht."
-        actions={<RunRemindersButton />}
       >
         <div className="grid grid-cols-2 gap-3 sm:max-w-md">
           <BannerStat label="Pushes" value={pushes.length} />
