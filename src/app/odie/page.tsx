@@ -13,7 +13,7 @@ export const metadata: Metadata = {
  */
 export default function OdiePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-lv-cover px-6 py-16 text-center text-white">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-lv-cover px-6 py-16 text-center text-white">
       <div className="w-full max-w-md rounded-card bg-white/10 p-8 shadow-card backdrop-blur-sm">
         <p className="lv-wordmark mb-4 text-[11px] text-white/80">
           Lovedis · Office Dog

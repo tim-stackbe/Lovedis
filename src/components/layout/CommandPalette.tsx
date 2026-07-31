@@ -61,7 +61,7 @@ export function CommandPalette({
           <Command.Input
             autoFocus
             placeholder="Seiten und Startups durchsuchen…"
-            className="w-full border-b border-lv-border px-4 py-3.5 text-sm outline-none placeholder:text-lv-secondary/60"
+            className="w-full border-b border-lv-border px-4 py-3.5 text-base sm:text-sm outline-none placeholder:text-lv-secondary/60"
           />
           <Command.List className="max-h-80 overflow-y-auto p-2 lv-scroll">
             <Command.Empty className="px-3 py-8 text-center text-sm text-lv-secondary">

@@ -29,14 +29,14 @@ export function AppShell({ userName, role, startups, children }: AppShellProps) 
   }, []);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-dvh">
       <Sidebar
         role={role}
         userName={userName}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <Topbar
           userName={userName}
           role={role}

@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 /** Split-screen auth shell: brand cover left, white form card right. */
 export function AuthLayout({ headline, subline, children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="min-h-dvh grid lg:grid-cols-2">
       <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-lv-cover p-12">
         <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-lv-orange/40 blur-3xl pointer-events-none" />
