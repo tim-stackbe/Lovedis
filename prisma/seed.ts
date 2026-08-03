@@ -403,7 +403,9 @@ async function main() {
   await prisma.contact.deleteMany();
   await prisma.startup.deleteMany();
   await prisma.scoutingCampaign.deleteMany();
+  await prisma.invitation.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.company.deleteMany();
 
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
@@ -488,6 +490,52 @@ async function main() {
         },
       }),
     ]);
+
+  // --- Company accounts (Partner organisations) --------------------------
+  // Each Partner is an OWNER of their company. Rheinwerk gets a second employee
+  // (company ADMIN) plus a pending invitation to exercise the whole team view.
+  const [rheinwerk, helioswerk] = await Promise.all([
+    prisma.company.create({
+      data: { name: "Rheinwerk Industries AG", website: "rheinwerk.example" },
+    }),
+    prisma.company.create({
+      data: { name: "Helioswerk GmbH", website: "helioswerk.example" },
+    }),
+  ]);
+
+  await Promise.all([
+    prisma.user.update({
+      where: { id: partner.id },
+      data: { companyId: rheinwerk.id, companyRole: "OWNER" },
+    }),
+    prisma.user.update({
+      where: { id: partner2.id },
+      data: { companyId: helioswerk.id, companyRole: "OWNER" },
+    }),
+    prisma.user.create({
+      data: {
+        id: "usr_partner_admin",
+        email: "lena@rheinwerk.dev",
+        name: "Lena Rheinwerk",
+        role: "BUSINESS_PARTNER",
+        company: "Rheinwerk Industries AG",
+        companyId: rheinwerk.id,
+        companyRole: "ADMIN",
+        passwordHash,
+        approvedAt: new Date(),
+      },
+    }),
+    prisma.invitation.create({
+      data: {
+        companyId: rheinwerk.id,
+        email: "neu@rheinwerk.dev",
+        role: "MEMBER",
+        token: "seed-invite-rheinwerk",
+        invitedByUserId: partner.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    }),
+  ]);
 
   // --- Campaigns ---------------------------------------------------------
   const campaign = await prisma.scoutingCampaign.create({

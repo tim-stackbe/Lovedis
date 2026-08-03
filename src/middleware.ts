@@ -37,11 +37,14 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Authenticated users hitting "/" or the auth pages → role home.
+  // Authenticated users hitting "/" or the auth pages → role home. The invite
+  // accept flow is exempt: an already-logged-in user may still open a tokenized
+  // invite link to join a company, so it must render for authenticated users.
   if (
-    nextUrl.pathname === "/" ||
-    nextUrl.pathname === "/login" ||
-    nextUrl.pathname.startsWith("/auth/")
+    (nextUrl.pathname === "/" ||
+      nextUrl.pathname === "/login" ||
+      nextUrl.pathname.startsWith("/auth/")) &&
+    !nextUrl.pathname.startsWith("/auth/invite/")
   ) {
     return NextResponse.redirect(new URL(ROLE_HOMES[user.role], nextUrl));
   }

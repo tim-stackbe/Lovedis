@@ -23,6 +23,24 @@ enum UserRole {
   STARTUP
 }
 
+// Company-scoped role — an ORTHOGONAL dimension to the platform-level `UserRole`
+// above. It only governs what a user may do *inside their own Company account*
+// (managing employees + invitations). The platform superadmin is still the
+// platform-level `UserRole.ADMIN`; company OWNER/ADMIN never grant any
+// cross-company or platform power. Every Company must keep at least one OWNER.
+enum CompanyRole {
+  OWNER  // highest company role — manages employees, invites & other admins
+  ADMIN  // manages employees & invitations, cannot remove/demote the last owner
+  MEMBER // regular employee, no management rights
+}
+
+enum InvitationStatus {
+  PENDING  // sent, awaiting accept — the only redeemable state
+  ACCEPTED // redeemed → the invitee is now a company member
+  REVOKED  // withdrawn by a company manager before it was accepted
+  EXPIRED  // past expiresAt (lazily flipped on read / accept attempt)
+}
+
 enum StartupStage {
   PRE_SEED
   SEED
@@ -266,14 +284,28 @@ model User {
   name         String
   role         UserRole @default(MEMBER)
   isActive     Boolean  @default(true)
+  // Legacy free-text company name. Superseded by the `company` relation below
+  // (Company account) but kept for backwards compatibility / display; the
+  // migration backfills a real Company from these values.
   company      String?
   // Partner approval gate: self-registered BUSINESS_PARTNER accounts start
   // null (= pending) and cannot reach partner-facing data until an admin
   // approves them. All other roles (and admin-created users) are set to now()
   // at creation, so they are never gated.
   approvedAt   DateTime?
+  // Last successful credentials login (set in auth.ts on authorize). Surfaced
+  // in the team/company member lists.
+  lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // Company account membership. A user belongs to at most one Company; the
+  // company-scoped role (OWNER/ADMIN/MEMBER) is a separate dimension from the
+  // platform `role`. SetNull so removing a Company doesn't delete its people.
+  companyId    String?
+  companyRel   Company?     @relation("CompanyMembers", fields: [companyId], references: [id], onDelete: SetNull)
+  companyRole  CompanyRole?
+  sentInvitations Invitation[] @relation("InvitationInviter")
 
   ownedStartup       Startup?              @relation("StartupOwner")
   evaluations        Evaluation[]          @relation("Evaluator")
@@ -309,6 +341,58 @@ model User {
 
   @@index([role])
   @@index([isActive])
+  @@index([companyId])
+}
+
+// ---------------------------------------------------------------------------
+// Company accounts (Partner organisations) + employee invitations
+//
+// A Company is the top-level Partner account. It has many employee Users
+// (User.companyRel) each carrying a company-scoped role. This is DISTINct from
+// `PartnerCompany` further down, which is a lightweight match-matrix column
+// (cross-partner internal data), not a login/account entity.
+// ---------------------------------------------------------------------------
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  // Optional short profile fields, mirroring other account-ish models.
+  website   String?
+  // Optional seat cap. null = unlimited. Enforced when inviting/adding members.
+  seatLimit Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     User[]       @relation("CompanyMembers")
+  invitations Invitation[] @relation("CompanyInvitations")
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model Invitation {
+  id            String           @id @default(cuid())
+  email         String
+  companyId     String
+  company       Company          @relation("CompanyInvitations", fields: [companyId], references: [id], onDelete: Cascade)
+  // Company role the invitee receives on accept (never OWNER via invite; owner
+  // promotion is an explicit management action).
+  role          CompanyRole      @default(MEMBER)
+  token         String           @unique
+  status        InvitationStatus @default(PENDING)
+  invitedByUserId String?
+  invitedBy       User?          @relation("InvitationInviter", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // At most one live (PENDING) invite per email+company is enforced in the
+  // action layer (re-invite refreshes the existing row). The index keeps the
+  // "does a pending invite already exist?" lookup fast.
+  @@index([companyId, status])
+  @@index([email])
 }
 
 // ---------------------------------------------------------------------------

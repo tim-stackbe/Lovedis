@@ -35,10 +35,19 @@ function parseChallengeForm(formData: FormData) {
   });
 }
 
-/** Verifies the chosen owner is an existing Business Partner user. */
+/**
+ * Verifies the chosen owner is an existing Business Partner user that is still
+ * active and approved — inactive or pending-approval partners must not be
+ * assignable as a use-case owner.
+ */
 async function assertPartner(partnerId: string): Promise<boolean> {
   const partner = await prisma.user.findFirst({
-    where: { id: partnerId, role: "BUSINESS_PARTNER" },
+    where: {
+      id: partnerId,
+      role: "BUSINESS_PARTNER",
+      isActive: true,
+      approvedAt: { not: null },
+    },
     select: { id: true },
   });
   return partner != null;

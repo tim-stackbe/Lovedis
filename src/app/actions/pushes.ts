@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireRole, requireTeam } from "@/lib/auth-guards";
+import { isPartnerApproved, requireRole, requireTeam } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
@@ -126,7 +126,12 @@ async function getActionableReminder(reminderId: string) {
   if (!reminder) return null;
   const isTeam =
     session.user.role === "ADMIN" || session.user.role === "MEMBER";
-  if (!isTeam && reminder.partnerId !== session.user.id) return null;
+  if (!isTeam) {
+    // Per-reminder ownership: a partner may only touch their own reminders.
+    if (reminder.partnerId !== session.user.id) return null;
+    // Parity with submitPartnerVerdict: still-pending partners cannot write.
+    if (!(await isPartnerApproved(session.user.id))) return null;
+  }
   return reminder;
 }
 

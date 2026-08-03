@@ -244,6 +244,7 @@ const PLATFORM_SECTION_ADMIN: NavSection = {
   title: "Plattform",
   items: [
     { label: "Intro-Anfragen", href: "/intros", icon: Handshake },
+    { label: "Unternehmen", href: "/companies", icon: Building2 },
     { label: "Nutzerverwaltung", href: "/users", icon: Users },
     { label: "Geteilte Scorings", href: "/sharing", icon: Share2 },
   ],
@@ -312,6 +313,10 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Wissen",
       items: [{ label: "Partner-Hub", href: "/partner-hub", icon: BookOpen }],
+    },
+    {
+      title: "Unternehmen",
+      items: [{ label: "Team", href: "/team", icon: Users }],
     },
     SETTINGS_SECTION,
   ],
