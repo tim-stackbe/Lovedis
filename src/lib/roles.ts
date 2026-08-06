@@ -88,6 +88,17 @@ export const MARKETPLACE_ROLES: UserRole[] = [
   "BUSINESS_PARTNER",
 ];
 
+/**
+ * Roles allowed into the shared ecosystem Feed only. This is intentionally a
+ * SUPERSET of MARKETPLACE_ROLES with STARTUP added: startups get full feed
+ * access (official Lovedis broadcasts + updates of startups they follow)
+ * WITHOUT unlocking the rest of the marketplace. Discover listing, startup
+ * detail, the follow toggle and investor intro requests stay gated by
+ * MARKETPLACE_ROLES (which excludes STARTUP), so this does not open any other
+ * marketplace feature for startups.
+ */
+export const FEED_ROLES: UserRole[] = [...MARKETPLACE_ROLES, "STARTUP"];
+
 export const ROLE_HOMES: Record<UserRole, string> = {
   ADMIN: "/dashboard/admin",
   MEMBER: "/dashboard/member",
@@ -338,6 +349,11 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
   STARTUP: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/startup", icon: Home }],
+    },
+    {
+      // Feed only — Discover/follow stay marketplace-gated (see FEED_ROLES).
+      title: "Ökosystem",
+      items: [{ label: "Feed", href: "/feed", icon: Newspaper }],
     },
     {
       title: "Chancen",

@@ -112,7 +112,7 @@ export default async function InvestorDashboard() {
     body: u.body,
     category: u.category,
     createdAt: u.createdAt,
-    startup: u.startup,
+    startup: u.startup ?? undefined,
   }));
 
   return (

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import {
+  FEED_ROLES,
   MARKETPLACE_ROLES,
   PARTNER_VIEW_ROLES,
   ROLE_HOMES,
@@ -96,6 +97,16 @@ export async function requireScoutModule(): Promise<Session> {
 /** Ecosystem marketplace gate (investors, partners + internal team preview). */
 export async function requireMarketplace(): Promise<Session> {
   return requireRole(MARKETPLACE_ROLES);
+}
+
+/**
+ * Shared ecosystem Feed gate. Same audience as the marketplace PLUS startups —
+ * startups may read the feed (official broadcasts + followed-startup updates)
+ * but this does NOT grant the other marketplace surfaces (Discover, follow
+ * toggle, intro requests), which keep using `requireMarketplace`.
+ */
+export async function requireFeed(): Promise<Session> {
+  return requireRole(FEED_ROLES);
 }
 
 /**

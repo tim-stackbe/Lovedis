@@ -696,17 +696,25 @@ model StartupFollow {
 
 model StartupUpdate {
   id        String         @id @default(cuid())
-  startupId String
-  startup   Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  // Optional startup origin. Regular startup updates carry a startupId; official
+  // Lovedis-team broadcasts (isOfficial=true) have none — they are not tied to a
+  // single startup. Nullable is an additive change; existing rows keep their id.
+  startupId String?
+  startup   Startup?       @relation(fields: [startupId], references: [id], onDelete: Cascade)
   authorId  String
   author    User           @relation("UpdateAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   title     String
   body      String
   category  UpdateCategory @default(GENERAL)
+  // Broadcast/"official" Lovedis-team post. When true, the update appears in
+  // EVERY user's feed regardless of follows (de-facto: everyone follows the
+  // official Lovedis feed). Only the internal team (requireTeam) can set this.
+  isOfficial Boolean       @default(false)
   createdAt DateTime       @default(now())
 
   @@index([startupId, createdAt])
   @@index([createdAt])
+  @@index([isOfficial, createdAt])
 }
 
 model IntroRequest {

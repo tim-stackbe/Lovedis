@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { UpdateCategory } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireMarketplace, requireRole } from "@/lib/auth-guards";
+import { requireMarketplace, requireRole, requireTeam } from "@/lib/auth-guards";
 import { UPDATE_CATEGORIES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -236,6 +236,47 @@ export async function deleteStartupUpdate(updateId: string): Promise<void> {
   });
   revalidatePath("/profile");
   revalidatePath(`/discover/${startup.id}`);
+  revalidatePath("/feed");
+}
+
+// ---------------------------------------------------------------------------
+// Official Lovedis-team broadcasts (appear in EVERY user's feed, no follow
+// needed). Only the internal team (requireTeam = ADMIN + MEMBER) may post them.
+// Modelled as a StartupUpdate with isOfficial=true and no startupId.
+// ---------------------------------------------------------------------------
+
+export async function postOfficialUpdate(
+  _prevState: ActionState | undefined,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await requireTeam();
+
+  const parsed = updateSchema.safeParse({
+    title: formData.get("title"),
+    body: formData.get("body"),
+    category: formData.get("category") ?? "GENERAL",
+  });
+  if (!parsed.success) return { error: firstZodError(parsed.error) };
+
+  await prisma.startupUpdate.create({
+    data: {
+      authorId: session.user.id,
+      title: parsed.data.title,
+      body: parsed.data.body,
+      category: parsed.data.category,
+      isOfficial: true,
+    },
+  });
+
+  revalidatePath("/feed");
+  return { success: "Offizielle Ankündigung an alle gesendet." };
+}
+
+export async function deleteOfficialUpdate(updateId: string): Promise<void> {
+  await requireTeam();
+  await prisma.startupUpdate.deleteMany({
+    where: { id: updateId, isOfficial: true },
+  });
   revalidatePath("/feed");
 }
 
