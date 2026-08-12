@@ -26,7 +26,7 @@ import {
   MARKETPLACE_OFFERINGS,
   MARKETPLACE_PROGRAMS,
 } from "../src/lib/marketplace-catalog";
-import { applyMatchMatrix } from "../src/lib/match-matrix-import";
+import { applyMatchMatrix, ensureBatch } from "../src/lib/match-matrix-import";
 import { grantOnboardingCredits } from "../src/lib/onboarding-credits";
 import {
   computeOverallScore,
@@ -369,7 +369,19 @@ const STARTUPS: StartupSeed[] = [
 ];
 
 async function main() {
-  console.log("Datenbank wird geseedet…");
+  // Guard: this seed creates DEMO/fake data and WIPES the database first. The
+  // platform now runs on real data only (imported from the matchmaking sheet),
+  // so demo seeding is opt-in and must NEVER run in production. Set SEED_DEMO=1
+  // to explicitly re-create the demo universe on a local/dev database.
+  if (process.env.SEED_DEMO !== "1") {
+    console.log(
+      "Demo-Seed übersprungen (SEED_DEMO≠1). Setze SEED_DEMO=1 nur lokal, um " +
+        "die Demo-Daten neu anzulegen. Produktion nutzt ausschließlich echte Daten."
+    );
+    return;
+  }
+
+  console.log("Datenbank wird geseedet (DEMO, SEED_DEMO=1)…");
 
   // Wipe in dependency order (idempotent re-seeds).
   await prisma.partnerStartupMatch.deleteMany();
@@ -1539,7 +1551,13 @@ async function main() {
   // Quelle: prisma/data/match-matrix.csv (geteilte „Matrix"-Tabelle). Legt die
   // 5 Partner-Unternehmen an und importiert die Zellen; Sheet-Startups, die es
   // noch nicht gibt, werden als minimale Startup-Rows angelegt.
-  const matrix = await applyMatchMatrix(prisma, member.id);
+  const demoBatchId = await ensureBatch(
+    prisma,
+    "Love Disruption 2026",
+    "ACCELERATOR",
+    "Demo-Batch (Seed)."
+  );
+  const matrix = await applyMatchMatrix(prisma, member.id, demoBatchId);
   console.log(
     `Match-Matrix: ${matrix.companies} Partner-Unternehmen, ${matrix.matches} Zellen ` +
       `für ${matrix.startupsProcessed} Startups (${matrix.startupsCreated.length} neu angelegt). ` +

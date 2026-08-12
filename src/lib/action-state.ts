@@ -2,6 +2,8 @@
 export interface ActionState {
   error?: string;
   success?: string;
+  /** Optional client-side navigation target after a successful action. */
+  redirectTo?: string;
 }
 
 export function firstZodError(error: {

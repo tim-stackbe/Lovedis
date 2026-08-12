@@ -34,6 +34,7 @@ import {
   mutualFitLevel,
   type MatchCellView,
   type MatchRowView,
+  type MatchSideInput,
   type MutualFitLevel,
 } from "@/lib/match-matrix";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export interface PartnerColumn {
 }
 
 interface MatchMatrixBoardProps {
+  batchId: string;
   partners: PartnerColumn[];
   rows: MatchRowView[];
 }
@@ -265,10 +267,88 @@ function CellDetails({ cell }: { cell: MatchCellView | null }) {
   );
 }
 
+function yesNoDash(v: boolean | null | undefined): string {
+  return v === true ? "Ja" : v === false ? "Nein" : "—";
+}
+
+/** Read-only summary of one self-service side (startup or partner). */
+function SideSummary({
+  title,
+  side,
+}: {
+  title: string;
+  side: MatchSideInput | null | undefined;
+}) {
+  const has =
+    side &&
+    (side.relevance !== null ||
+      side.useCaseTypes.length > 0 ||
+      Boolean(side.useCaseNote) ||
+      Boolean(side.openQuestions) ||
+      Boolean(side.notes) ||
+      side.followUp !== null ||
+      side.contacted !== null);
+  return (
+    <div className="space-y-2 rounded-card border border-lv-border p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-lv-secondary">
+          {title}
+        </p>
+        {side?.updatedAt && (
+          <span className="text-[10px] text-lv-secondary">
+            {new Date(side.updatedAt).toLocaleDateString("de-DE")}
+          </span>
+        )}
+      </div>
+      {!has ? (
+        <p className="text-xs text-lv-secondary">Keine Selbstauskunft.</p>
+      ) : (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            {side!.relevance ? (
+              <RelevanceBadge value={side!.relevance} />
+            ) : (
+              <span className="text-xs text-lv-secondary">Relevanz —</span>
+            )}
+            <span className="text-[11px] text-lv-secondary">
+              Kontakt: {yesNoDash(side!.contacted)} · Folgetermin:{" "}
+              {yesNoDash(side!.followUp)}
+            </span>
+          </div>
+          {side!.useCaseTypes.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {side!.useCaseTypes.map((uc) => (
+                <MatchUseCaseBadge key={uc} value={uc} />
+              ))}
+            </div>
+          )}
+          {side!.useCaseNote && (
+            <p className="text-xs text-lv-text">{side!.useCaseNote}</p>
+          )}
+          {side!.openQuestions && (
+            <p className="text-xs text-lv-text">
+              <span className="text-lv-secondary">Offene Fragen: </span>
+              {side!.openQuestions}
+            </p>
+          )}
+          {side!.notes && (
+            <p className="text-xs text-lv-text">
+              <span className="text-lv-secondary">Anmerkung: </span>
+              {side!.notes}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EditCellDialog({
+  batchId,
   target,
   onClose,
 }: {
+  batchId: string;
   target: EditTarget;
   onClose: () => void;
 }) {
@@ -330,14 +410,25 @@ function EditCellDialog({
         <div className="space-y-5 px-6 py-5">
           <CellDetails cell={cell} />
 
+          <div className="space-y-2">
+            <p className="lv-wordmark text-xs text-lv-blue">
+              Selbstauskunft beider Seiten
+            </p>
+            <div className="grid gap-2">
+              <SideSummary title="Startup-Seite" side={cell?.startupSide} />
+              <SideSummary title="Partner-Seite" side={cell?.partnerSide} />
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <span className="lv-wordmark text-xs text-lv-blue shrink-0">
-              Bearbeiten
+              Team-Bearbeitung
             </span>
             <span className="h-px flex-1 bg-lv-border" />
           </div>
 
           <form action={formAction} className="space-y-4">
+            <input type="hidden" name="batchId" value={batchId} />
             <input type="hidden" name="partnerId" value={target.partner.id} />
             <input type="hidden" name="startupId" value={target.startupId} />
 
@@ -451,7 +542,11 @@ function EditCellDialog({
   );
 }
 
-export function MatchMatrixBoard({ partners, rows }: MatchMatrixBoardProps) {
+export function MatchMatrixBoard({
+  batchId,
+  partners,
+  rows,
+}: MatchMatrixBoardProps) {
   const [partnerSlug, setPartnerSlug] = useState<string | null>(null);
   const [useCase, setUseCase] = useState<MatchUseCaseType | null>(null);
   const [onlyTopMatch, setOnlyTopMatch] = useState(false);
@@ -760,6 +855,7 @@ export function MatchMatrixBoard({ partners, rows }: MatchMatrixBoardProps) {
       {editTarget && (
         <EditCellDialog
           key={`${editTarget.startupId}-${editTarget.partner.id}`}
+          batchId={batchId}
           target={editTarget}
           onClose={() => setEditTarget(null)}
         />

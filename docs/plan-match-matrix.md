@@ -115,13 +115,133 @@ kombiniert + „Pilotprojket"-Tippfehler), Kontakt-Status-Ableitung, Top-Match
 (beide HIGH), Filter-Logik, und `parseMatchMatrixCsv` gegen das echte Sheet
 (Anzahl, übersprungene Startups, konkrete Mappings).
 
-## Phase 2 — Follow-ups (bewusst NICHT in diesem Iteration)
+## Phase 2 — Zwei-seitige Matrix (UMGESETZT)
 
-- **Beidseitiges Self-Input**: Partner bewerten Startups selbst (Partner-Relevanz +
-  Use-Case-Wunsch) und Startups bewerten Partner selbst (Startup-Relevanz) über
-  eigene, low-overload Masken — mit eigenen Guards (`requirePartner` /
-  `requireStartup`) und ggf. einem Merge-/Freigabe-Schritt durchs Team. Die
-  Team-gepflegte Matrix bleibt die konsolidierte Sicht.
-- Verknüpfung `PartnerCompany` ↔ Partner-`User`s (Zuordnung von Accounts zu
-  Unternehmen), sobald Self-Input kommt.
-- Historie/Änderungslog je Zelle.
+Aus der team-only Matrix wurde ein **beidseitiges Matchmaking-Tool**: Partner und
+Startups pflegen jeweils **ihre eigene Seite**, isoliert von den Stimmen anderer
+Partner. Das Team sieht beide Seiten + Audit und teilt Longlists gezielt.
+
+### Datenmodell (additiv, `prisma/schema.prisma`)
+
+`PartnerStartupMatch` behält die Team-Sicht (`useCaseTypes`, `useCaseNote`,
+`nextSteps`, `contactStatus`) und `startupRelevance`/`partnerRelevance` als
+Headline und bekommt **zwei getrennte Self-Service-Gruppen**:
+
+- Startup-Seite: `startupUseCaseTypes[]`, `startupUseCaseNote`, `startupFollowUp`,
+  `startupOpenQuestions`, `startupNotes`, `startupContacted`, `startupUpdatedAt`,
+  `startupUpdatedById`.
+- Partner-Seite: analog `partner*`.
+
+Weiter:
+- `PartnerCompany.companyId String? @unique → Company` (verknüpft eine Matrix-
+  Spalte mit einem echten Partner-Login-Konto; `Company.matrixColumn` Gegenseite).
+- `model MatrixShare { partnerCompanyId, startupId, sharedById?, note?, @@unique }`
+  — Team teilt eine Longlist von Startups mit **einem** Partner (spiegelt
+  `SharedScoring`).
+
+Migration: `prisma/migrate-two-sided-matrix.ts` (`prisma db push --accept-data-loss`
+für den neuen UNIQUE auf der all-null-Spalte `companyId`, dann Backfill der
+Startup-Seite aus den Team-Feldern).
+
+### Zugriff & Isolation
+
+- **Team** (`/match-matrix`, `requireScoutModule`): volles Grid, beide Seiten +
+  Audit-Zeitstempel im Detail-Drawer, plus **Longlist-Freigabe-Toggle** je Zelle.
+- **Partner** (`/matrix`): sieht nur die ihm **freigegebenen** Startups (via
+  `MatrixShare` oder bereits vorhandene Zelle) und pflegt ausschließlich seine
+  Partner-Seite; sieht die Startup-Seite der eigenen Paarungen (das gegenseitige
+  Bild), **nie** andere Partner. Auflösung `Company → PartnerCompany`.
+- **Startup** (`/matrix`): sieht alle Partner-Unternehmen, pflegt seine
+  Startup-Seite, sieht die Partner-Seite der eigenen Paarungen.
+
+Guards: `src/lib/matrix-guards.ts` (`requireMatrixPartner`/`requireMatrixStartup`
+als Page-Guards, `authorizeMatrixPartner`/`authorizeMatrixStartup` als
+Action-Guards). Server Actions: `src/app/actions/matrix.ts`
+(`upsertPartnerSideCell`, `upsertStartupSideCell` — die editierende Partei wird
+**aus der Session** aufgelöst, nie aus dem Formular; `shareStartupWithPartner`,
+`unshareStartupFromPartner`). Reusable UI: `src/components/matrix/SelfServiceMatrix.tsx`.
+
+### Matching
+
+Kombiniert über `mutualFitLevel()`/`isTopMatch()` (beide HIGH). Neue reine Helfer
+in `src/lib/match-matrix.ts`: `MatchSideInput`, `sideHasInput`, `coordState`
+(`matched`/`awaiting`/`todo`/`none`) — unit-getestet.
+
+## Echt-Daten-Cutover (nur echte Daten)
+
+- `prisma/import-matrix-sheet.ts`: importiert die **Live-Tabs** des Sheets
+  `Matrix_Matchmaking_TMC_2026` (MATRIX-Master via `applyMatchMatrix`, 12
+  Startup-Fragebögen → Startup-Seite, 3 Partner-Fragebögen → Partner-Seite).
+  Spalten werden per **Header-Text** aufgelöst (Layouts unterscheiden sich),
+  Helfer (`parseQuestionnaireTable`, `parseTriBool`, `resolvePartnerSlug`,
+  `normalizeMatchKey`) liegen in `match-matrix-import.ts` und sind unit-getestet.
+- `prisma/link-partner-companies.ts`: legt je `PartnerCompany` ein echtes
+  `Company`-Konto an und verknüpft es (Partner-Personen kommen über den
+  bestehenden Invite-Flow herein).
+- `prisma/cleanup-demo-data.ts` (nur mit `CONFIRM_CLEANUP=1`): **behält** Admin
+  (`admin@lovedis.dev`), die verknüpften Partner-`Company`s, die Matrix-Startups
+  und alle `PartnerStartupMatch`/`MatrixShare`; **löscht** alle übrigen Demo-Nutzer,
+  Demo-Startups und ihre abhängigen Datensätze, Demo-Firmen, den Marktplatz-
+  Katalog und die SSOT-Demo-Inhalte.
+- `prisma/seed.ts` ist hinter `SEED_DEMO=1` gated (Default aus), damit Fake-Daten
+  nicht erneut entstehen; Produktion führt den Seed nie aus.
+
+Reihenfolge (lokal verifiziert):
+```
+export PATH="$PWD/.tools/node/bin:$PATH"
+DATABASE_URL=<ziel> npx tsx prisma/migrate-two-sided-matrix.ts
+DATABASE_URL=<ziel> npx tsx prisma/import-matrix-sheet.ts
+DATABASE_URL=<ziel> npx tsx prisma/link-partner-companies.ts
+# Backup zuerst! Dann:
+CONFIRM_CLEANUP=1 DATABASE_URL=<ziel> npx tsx prisma/cleanup-demo-data.ts
+```
+
+## Tests (erweitert)
+
+Zusätzlich zu den bisherigen: `sideHasInput`, `coordState`, `parseTriBool`,
+`resolvePartnerSlug` und `parseQuestionnaireTable` (Startup- **und** Partner-Tab-
+Layout inkl. verschobener „Sonstige Anmerkungen"-Spalte).
+
+## Phase 3 — Batch-scoped Matrices (Dedalus)
+
+Jede Match-Matrix gehört jetzt zu genau **einem Batch** (Programm) — Accelerator,
+Industrieprogramm oder Sonstiges. Nur die einem Batch zugewiesenen Startups
+werden von den diesem Batch zugewiesenen Partner-Unternehmen bewertet.
+
+Datenmodell:
+- `BatchType`-Enum (`ACCELERATOR`, `INDUSTRIEPROGRAMM`, `SONSTIGES`) auf
+  `ScoutingCampaign` (= „Batch"); zusätzlich `ScoutingCampaign.type`.
+- Neue M:N-Join-Tabellen `BatchStartup` (Zeilen der Matrix) und `BatchPartner`
+  (Spalten, mit `sortOrder`).
+- `PartnerStartupMatch.batchId` (required) + neuer Unique-Key
+  `@@unique([batchId, partnerId, startupId])` — dieselbe Paarung kann in mehreren
+  Batches unabhängig bewertet werden.
+- `MatrixShare` entfällt: die frühere „Longlist-Freigabe" ist jetzt die
+  Batch-Mitgliedschaft (Admin weist Startups **und** Partner je Batch zu).
+
+Autorisierung (`src/lib/matrix-guards.ts`): jede Self-Service-Bearbeitung ist an
+die Batch-Mitgliedschaft gebunden (`batchHasPartner` / `batchHasStartup`).
+Partner sehen weiterhin nur ihre eigene Spalte, Startups nur ihre eigene Zeile.
+
+Oberflächen:
+- Admin: `/batches` (Liste + Anlegen) und `/batches/[id]` (Eckdaten, Startups &
+  Partner zuweisen). Actions in `src/app/actions/matrix.ts`:
+  `createBatch`, `updateBatch`, `deleteBatch`, `setBatchStartup`, `setBatchPartner`.
+- Team: `/match-matrix?batch=<id>` mit Batch-Auswahl; das Grid ist batch-scoped.
+- Partner/Startup: `/matrix` gruppiert die Matrix je Batch, dem man angehört.
+
+Migration (`prisma/migrate-batch-matrices.ts`, idempotent):
+```
+export PATH="$PWD/.tools/node/bin:$PATH"
+DATABASE_URL=<ziel> npx tsx prisma/migrate-batch-matrices.ts
+```
+Bootstrappt `batchId` NULLABLE, legt den Standard-Batch „Love Disruption 2026"
+an, ordnet alle bestehenden Zellen zu, setzt `NOT NULL`, führt dann `prisma db
+push` aus (Join-Tabellen, FK, Unique-Key-Tausch, Drop `MatrixShare`) und trägt
+zuletzt die Batch-Mitgliedschaften aus den vorhandenen Zellen nach.
+
+## Phase 4 — Follow-ups
+
+- Historie/Änderungslog je Zelle (aktuell nur `*UpdatedAt`-Zeitstempel).
+- Fehlende Partner-Fragebögen (FingerHaus, Lupp) importieren, sobald im Sheet gepflegt.
+- Batch-übergreifende Auswertung (z. B. „welche Startups sind in mehreren Batches Top-Match?").

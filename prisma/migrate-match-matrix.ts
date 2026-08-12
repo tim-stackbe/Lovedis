@@ -30,7 +30,7 @@
 import { execSync } from "node:child_process";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { applyMatchMatrix } from "../src/lib/match-matrix-import";
+import { applyMatchMatrix, ensureBatch } from "../src/lib/match-matrix-import";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -56,7 +56,11 @@ async function main() {
       select: { id: true },
     })) ?? (await prisma.user.findFirst({ select: { id: true } }));
 
-  const result = await applyMatchMatrix(prisma, teamUser?.id ?? null);
+  const batchId = await ensureBatch(
+    prisma,
+    process.env.BATCH_NAME ?? "Love Disruption 2026"
+  );
+  const result = await applyMatchMatrix(prisma, teamUser?.id ?? null, batchId);
 
   console.log(
     `Fertig: ${result.companies} Partner-Unternehmen, ${result.matches} Zellen ` +

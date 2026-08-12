@@ -30,6 +30,7 @@ const relevanceEnum = z.enum(
 );
 
 const upsertSchema = z.object({
+  batchId: z.string().min(1, "Batch ist erforderlich."),
   partnerId: z.string().min(1, "Partner ist erforderlich."),
   startupId: z.string().min(1, "Startup ist erforderlich."),
   // Empty select → null (clears the relevance).
@@ -51,9 +52,10 @@ function optionalRelevance(value: FormDataEntryValue | null): RelevanceLevel | n
 }
 
 /**
- * Upserts a single (partner × startup) matrix cell on the
- * @@unique([partnerId, startupId]) key — atomic and idempotent. Records which
- * team member last touched it (updatedById). Guarded by requireScoutModule.
+ * Upserts a single (batch × partner × startup) matrix cell on the
+ * @@unique([batchId, partnerId, startupId]) key — atomic and idempotent.
+ * Records which team member last touched it (updatedById). The partner and
+ * startup must both be members of the batch. Guarded by requireScoutModule.
  */
 export async function upsertMatchCell(
   _prevState: ActionState | undefined,
@@ -62,6 +64,7 @@ export async function upsertMatchCell(
   const session = await requireScoutModule();
 
   const parsed = upsertSchema.safeParse({
+    batchId: formData.get("batchId"),
     partnerId: formData.get("partnerId"),
     startupId: formData.get("startupId"),
     startupRelevance: optionalRelevance(formData.get("startupRelevance")),
@@ -73,22 +76,22 @@ export async function upsertMatchCell(
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  const { partnerId, startupId } = parsed.data;
+  const { batchId, partnerId, startupId } = parsed.data;
 
-  // Verify both foreign keys up front so a bad id surfaces as a friendly
+  // Verify FKs + batch membership up front so a bad id surfaces as a friendly
   // message rather than an FK violation.
-  const [partner, startup] = await Promise.all([
-    prisma.partnerCompany.findUnique({
-      where: { id: partnerId },
+  const [partnerIn, startupIn] = await Promise.all([
+    prisma.batchPartner.findUnique({
+      where: { batchId_partnerCompanyId: { batchId, partnerCompanyId: partnerId } },
       select: { id: true },
     }),
-    prisma.startup.findUnique({
-      where: { id: startupId },
+    prisma.batchStartup.findUnique({
+      where: { batchId_startupId: { batchId, startupId } },
       select: { id: true },
     }),
   ]);
-  if (!partner) return { error: "Partner-Unternehmen nicht gefunden." };
-  if (!startup) return { error: "Startup nicht gefunden." };
+  if (!partnerIn) return { error: "Partner gehört nicht zu diesem Batch." };
+  if (!startupIn) return { error: "Startup gehört nicht zu diesem Batch." };
 
   const data = {
     startupRelevance: parsed.data.startupRelevance,
@@ -102,9 +105,11 @@ export async function upsertMatchCell(
 
   try {
     await prisma.partnerStartupMatch.upsert({
-      where: { partnerId_startupId: { partnerId, startupId } },
+      where: {
+        batchId_partnerId_startupId: { batchId, partnerId, startupId },
+      },
       update: data,
-      create: { partnerId, startupId, ...data },
+      create: { batchId, partnerId, startupId, ...data },
     });
   } catch (err) {
     if (isRecordNotFoundError(err)) {

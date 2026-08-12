@@ -2,16 +2,25 @@ import { describe, expect, it } from "vitest";
 import {
   cellHasData,
   cellPassesContentFilters,
+  coordState,
   filterRows,
   isTopMatch,
   PARTNER_COMPANIES,
   parseContactStatus,
   parseRelevance,
   parseUseCaseTypes,
+  sideHasInput,
   type MatchCellView,
   type MatchRowView,
+  type MatchSideInput,
 } from "@/lib/match-matrix";
-import { parseMatchMatrixCsv } from "@/lib/match-matrix-import";
+import {
+  parseMatchMatrixCsv,
+  parseQuestionnaireTable,
+  parseTriBool,
+  resolvePartnerSlug,
+} from "@/lib/match-matrix-import";
+import { BATCH_TYPES, BATCH_TYPE_LABELS } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Relevance mapping (Hoch/Mittel/Niedrig → enum)
@@ -130,6 +139,53 @@ describe("isTopMatch", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Two-sided self-service helpers
+// ---------------------------------------------------------------------------
+
+function side(overrides: Partial<MatchSideInput> = {}): MatchSideInput {
+  return {
+    relevance: null,
+    useCaseTypes: [],
+    useCaseNote: null,
+    followUp: null,
+    openQuestions: null,
+    notes: null,
+    contacted: null,
+    updatedAt: null,
+    ...overrides,
+  };
+}
+
+describe("sideHasInput", () => {
+  it("is false for null / fully empty sides", () => {
+    expect(sideHasInput(null)).toBe(false);
+    expect(sideHasInput(side())).toBe(false);
+  });
+  it("is true when any field carries input", () => {
+    expect(sideHasInput(side({ relevance: "LOW" }))).toBe(true);
+    expect(sideHasInput(side({ useCaseTypes: ["PILOT"] }))).toBe(true);
+    expect(sideHasInput(side({ followUp: false }))).toBe(true);
+    expect(sideHasInput(side({ contacted: false }))).toBe(true);
+    expect(sideHasInput(side({ notes: "x" }))).toBe(true);
+  });
+});
+
+describe("coordState", () => {
+  it("is matched only when both sides rated", () => {
+    expect(coordState("HIGH", "LOW")).toBe("matched");
+  });
+  it("awaiting when only own side rated", () => {
+    expect(coordState("HIGH", null)).toBe("awaiting");
+  });
+  it("todo when only the other side rated", () => {
+    expect(coordState(null, "HIGH")).toBe("todo");
+  });
+  it("none when neither side rated", () => {
+    expect(coordState(null, null)).toBe("none");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Filtering
 // ---------------------------------------------------------------------------
 
@@ -242,6 +298,122 @@ describe("filterRows", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Questionnaire tab parsing (two-sided sheet import)
+// ---------------------------------------------------------------------------
+
+describe("parseTriBool", () => {
+  it("maps Ja/Nein and leaves nuance null", () => {
+    expect(parseTriBool("Ja")).toBe(true);
+    expect(parseTriBool("Nein")).toBe(false);
+    expect(parseTriBool("aber ich benötige weitere Infos")).toBeNull();
+    expect(parseTriBool("")).toBeNull();
+    expect(parseTriBool(null)).toBeNull();
+  });
+});
+
+describe("resolvePartnerSlug", () => {
+  it("fuzzy-matches partner firma to a slug, diacritics-aware", () => {
+    expect(resolvePartnerSlug("FingerHaus")).toBe("fingerhaus");
+    expect(resolvePartnerSlug("Weimer Gruppe")).toBe("weimer");
+    expect(resolvePartnerSlug("Sälzer Security")).toBe("saelzer");
+    expect(resolvePartnerSlug("INNEXIS")).toBe("innexis");
+    expect(resolvePartnerSlug("Weitere Industrie Partner")).toBeNull();
+  });
+});
+
+describe("parseQuestionnaireTable", () => {
+  // Startup-tab layout (9 columns; "Sonstige Anmerkungen" at index 8).
+  const startupTab: string[][] = [
+    ["", "", "", "", "", "", "", "", ""],
+    [
+      "Firma",
+      "Sub-Industrie",
+      "Gespräch / Erstkontakt stattgefunden",
+      "Einschätzung: Relevanz des Partners für euch",
+      "Folgegespräch erwünscht",
+      "Welche Fragen sind offen geblieben?",
+      "Einschätzung: Welche Art der Partnerschaft könnt ihr euch mit dem Partner vorstellen?",
+      "Welche konkreten use-cases könnt ihr euch mit dem Partner vorstellen?",
+      "Sonstige Anmerkungen",
+    ],
+    [
+      "FingerHaus",
+      "Fertighaus Bau",
+      "Ja",
+      "Hoch",
+      "Ja",
+      "Konkrete nächste Schritte",
+      "Pilotprojekt (PoC), Kundenbeziehung",
+      "Machbarkeitstool-Integration",
+      "Sehr interessiert",
+    ],
+    ["Weitere Industrie Partner", "", "", "", "", "", "", "", ""],
+  ];
+
+  // Partner-tab layout has EXTRA columns (Ansprechpartner + Email) so
+  // "Sonstige Anmerkungen" moves to index 10 — header-based mapping must cope.
+  const partnerTab: string[][] = [
+    ["", "", "", "", "", "", "", "", "extra", "", ""],
+    [
+      "Firma",
+      "Sub-Thema",
+      "Gespräch / Erstkontakt stattgefunden",
+      "Einschätzung: Relevanz des Startups für euch",
+      "Folgegespräch erwünscht",
+      "Welche Info benötigt ihr? Welche Fragen sind offen geblieben?",
+      "Einschätzung: Welche Art der Partnerschaft könnt ihr euch mit dem Startup vorstellen?",
+      "Welche konkreten use-cases könnt ihr euch mit dem Startup vorstellen?",
+      "Wer ist bei euch zuständig?",
+      "Email Adresse",
+      "Sonstige Anmerkungen",
+    ],
+    [
+      "NEOBIM",
+      "Generative Planung",
+      "Ja",
+      "Hoch",
+      "Ja",
+      "Sehr relevant",
+      "Pilotprojekt (PoC)",
+      "Weiterentwicklung der Software",
+      "Elena Tiegs",
+      "elena@example.com",
+      "Top-Kandidat",
+    ],
+  ];
+
+  it("parses a startup tab and skips the placeholder row", () => {
+    const rows = parseQuestionnaireTable(startupTab);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      counterparty: "FingerHaus",
+      relevance: "HIGH",
+      contacted: true,
+      followUp: true,
+      useCaseTypes: ["PILOT", "CUSTOMER_RELATION"],
+      openQuestions: "Konkrete nächste Schritte",
+      notes: "Sehr interessiert",
+    });
+  });
+
+  it("resolves shifted columns in a partner tab by header text", () => {
+    const rows = parseQuestionnaireTable(partnerTab);
+    expect(rows).toHaveLength(1);
+    // "Sonstige Anmerkungen" is at index 10 here, not 8 — must still be read.
+    expect(rows[0]).toMatchObject({
+      counterparty: "NEOBIM",
+      relevance: "HIGH",
+      useCaseTypes: ["PILOT"],
+      notes: "Top-Kandidat",
+    });
+  });
+
+  it("returns [] when there is no Firma header", () => {
+    expect(parseQuestionnaireTable([["foo", "bar"], ["a", "b"]])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // CSV import parsing (against the real bundled sheet)
 // ---------------------------------------------------------------------------
 
@@ -290,6 +462,26 @@ describe("parseMatchMatrixCsv (bundled sheet)", () => {
       "CUSTOMER_RELATION",
       "WHITE_LABEL",
       "TECH_LICENSE",
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Batch types (labels cover every enum value)
+// ---------------------------------------------------------------------------
+
+describe("BATCH_TYPES / BATCH_TYPE_LABELS", () => {
+  it("has a human label for every batch type", () => {
+    for (const t of BATCH_TYPES) {
+      expect(BATCH_TYPE_LABELS[t]).toBeTruthy();
+    }
+  });
+
+  it("includes the expected batch kinds", () => {
+    expect(BATCH_TYPES).toEqual([
+      "ACCELERATOR",
+      "INDUSTRIEPROGRAMM",
+      "SONSTIGES",
     ]);
   });
 });

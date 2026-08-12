@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import Papa from "papaparse";
 import type { PrismaClient } from "@/generated/prisma/client";
 import type {
+  BatchType,
   MatchContactStatus,
   MatchUseCaseType,
   RelevanceLevel,
@@ -146,6 +147,102 @@ export function parseMatchMatrixCsv(csv: string = loadMatchMatrixCsv()): ParsedM
   return { rows, skipped };
 }
 
+// ---------------------------------------------------------------------------
+// Questionnaire tabs (the per-startup / per-partner Google-Sheet tabs).
+//
+// Unlike the master "Matrix" grid above, each questionnaire tab is one party's
+// view: rows are the counterparties, columns are the self-service fields. The
+// two layouts (startup tab vs partner tab) share most columns but NOT their
+// order, so columns are resolved by HEADER TEXT. Pure + node-safe (no fetch)
+// so scripts fetch the CSV and the unit tests exercise the parser directly.
+// ---------------------------------------------------------------------------
+
+/** Diacritic-folded, alphanumeric-only, lower-cased key for fuzzy matching. */
+export function normalizeMatchKey(s: string): string {
+  return (s ?? "")
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/** "Ja…" → true, "Nein…" → false, anything else → null. */
+export function parseTriBool(raw: string | null | undefined): boolean | null {
+  const v = normalizeMatchKey(raw ?? "");
+  if (v.startsWith("ja")) return true;
+  if (v.startsWith("nein")) return false;
+  return null;
+}
+
+/** Maps a free-text "Firma" cell to one of the five partner slugs (or null). */
+export function resolvePartnerSlug(firma: string): string | null {
+  const n = normalizeMatchKey(firma);
+  return PARTNER_COMPANIES.find((p) => n.includes(p.slug))?.slug ?? null;
+}
+
+export interface ParsedQuestionnaireRow {
+  counterparty: string;
+  relevance: RelevanceLevel | null;
+  useCaseTypes: MatchUseCaseType[];
+  useCaseNote: string | null;
+  followUp: boolean | null;
+  openQuestions: string | null;
+  notes: string | null;
+  contacted: boolean | null;
+}
+
+/**
+ * Parses a questionnaire tab (startup OR partner) into per-row side input,
+ * resolving columns by header text so the differing layouts both work. Skips
+ * the "Weitere …" placeholder rows the sheet keeps for future entries.
+ */
+export function parseQuestionnaireTable(
+  table: string[][]
+): ParsedQuestionnaireRow[] {
+  const headerIdx = table.findIndex(
+    (r) => normalizeMatchKey(r[0] ?? "") === "firma"
+  );
+  if (headerIdx === -1) return [];
+  const header = table[headerIdx].map((c) => normalizeMatchKey(c));
+
+  const find = (...keys: string[]) =>
+    header.findIndex((h) => keys.some((k) => h.includes(k)));
+
+  const col = {
+    contacted: find("erstkontakt", "gespraech"),
+    relevance: find("relevanz"),
+    followUp: find("folgegespraech"),
+    openQuestions: find("offengeblieben", "welcheinfo", "welchefragen"),
+    useCaseTypes: find("artderpartnerschaft"),
+    useCaseNote: find("konkreteusecases", "usecases"),
+    notes: find("sonstigeanmerkungen"),
+  };
+
+  const rows: ParsedQuestionnaireRow[] = [];
+  for (let r = headerIdx + 1; r < table.length; r++) {
+    const record = table[r];
+    const counterparty = clean(record[0]);
+    if (!counterparty) continue;
+    const nn = normalizeMatchKey(counterparty);
+    if (nn.startsWith("weitere") || nn.startsWith("weiteres")) continue;
+
+    const at = (i: number) => (i >= 0 ? clean(record[i]) : "");
+    rows.push({
+      counterparty,
+      relevance: parseRelevance(at(col.relevance)),
+      useCaseTypes: parseUseCaseTypes(at(col.useCaseTypes)),
+      useCaseNote: at(col.useCaseNote) || null,
+      followUp: parseTriBool(at(col.followUp)),
+      openQuestions: at(col.openQuestions) || null,
+      notes: at(col.notes) || null,
+      contacted: parseTriBool(at(col.contacted)),
+    });
+  }
+  return rows;
+}
+
 export interface ApplyMatchMatrixResult {
   companies: number;
   matches: number;
@@ -156,19 +253,45 @@ export interface ApplyMatchMatrixResult {
 }
 
 /**
- * Idempotently applies the parsed matrix to a database: upserts the five
- * PartnerCompany rows (natural key = slug), find-or-creates each sheet startup
- * by name, and upserts one PartnerStartupMatch per (company, startup) cell.
- * Safe to re-run; shared by prisma/seed.ts and prisma/apply-match-matrix.ts.
+ * Idempotently applies the parsed matrix to a database for ONE batch: upserts
+ * the five PartnerCompany rows (natural key = slug) and adds them as the batch's
+ * columns (BatchPartner), find-or-creates each sheet startup by name and adds it
+ * to the batch (BatchStartup), and upserts one PartnerStartupMatch per (batch,
+ * company, startup) cell. Safe to re-run; shared by prisma/seed.ts and
+ * prisma/apply-match-matrix.ts.
  */
+/**
+ * Find-or-create a batch by name (idempotent). Used by the importer/seed to get
+ * a target batch for applyMatchMatrix without duplicating rows on re-run.
+ */
+export async function ensureBatch(
+  db: PrismaClient,
+  name: string,
+  type: BatchType = "ACCELERATOR",
+  description?: string
+): Promise<string> {
+  const existing = await db.scoutingCampaign.findFirst({
+    where: { name },
+    select: { id: true },
+  });
+  if (existing) return existing.id;
+  const created = await db.scoutingCampaign.create({
+    data: { name, type, description: description ?? null },
+    select: { id: true },
+  });
+  return created.id;
+}
+
 export async function applyMatchMatrix(
   db: PrismaClient,
   updatedById: string | null,
+  batchId: string,
   csv?: string
 ): Promise<ApplyMatchMatrixResult> {
   const { rows, skipped } = parseMatchMatrixCsv(csv);
 
-  // 1) Partner companies (natural key: slug), sortOrder = column order.
+  // 1) Partner companies (natural key: slug), sortOrder = column order; each is
+  //    also a column of this batch's matrix.
   const slugToId = new Map<string, string>();
   for (const [index, company] of PARTNER_COMPANIES.entries()) {
     const record = await db.partnerCompany.upsert({
@@ -178,9 +301,16 @@ export async function applyMatchMatrix(
       select: { id: true },
     });
     slugToId.set(company.slug, record.id);
+    await db.batchPartner.upsert({
+      where: {
+        batchId_partnerCompanyId: { batchId, partnerCompanyId: record.id },
+      },
+      update: { sortOrder: index },
+      create: { batchId, partnerCompanyId: record.id, sortOrder: index },
+    });
   }
 
-  // 2) Startups + match cells.
+  // 2) Startups + batch membership + match cells.
   const startupsCreated: string[] = [];
   const startupsMatched: string[] = [];
   let matches = 0;
@@ -207,12 +337,22 @@ export async function applyMatchMatrix(
       startupsCreated.push(row.startupName);
     }
 
+    await db.batchStartup.upsert({
+      where: { batchId_startupId: { batchId, startupId: startup.id } },
+      update: {},
+      create: { batchId, startupId: startup.id, addedById: updatedById },
+    });
+
     for (const cell of row.cells) {
       const partnerId = slugToId.get(cell.partnerSlug);
       if (!partnerId) continue;
       await db.partnerStartupMatch.upsert({
         where: {
-          partnerId_startupId: { partnerId, startupId: startup.id },
+          batchId_partnerId_startupId: {
+            batchId,
+            partnerId,
+            startupId: startup.id,
+          },
         },
         update: {
           startupRelevance: cell.startupRelevance,
@@ -224,6 +364,7 @@ export async function applyMatchMatrix(
           updatedById,
         },
         create: {
+          batchId,
           partnerId,
           startupId: startup.id,
           startupRelevance: cell.startupRelevance,

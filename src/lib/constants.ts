@@ -1,5 +1,6 @@
 import type {
   ApplicationStatus,
+  BatchType,
   BookingStatus,
   ChallengeStatus,
   ContentAudience,
@@ -511,6 +512,18 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
 // ---------------------------------------------------------------------------
 // Match-Matrix — Relevanz, Use-Case-Typen & Kontakt-Status
 // ---------------------------------------------------------------------------
+
+export const BATCH_TYPES: BatchType[] = [
+  "ACCELERATOR",
+  "INDUSTRIEPROGRAMM",
+  "SONSTIGES",
+];
+
+export const BATCH_TYPE_LABELS: Record<BatchType, string> = {
+  ACCELERATOR: "Accelerator",
+  INDUSTRIEPROGRAMM: "Industrieprogramm",
+  SONSTIGES: "Sonstiges Programm",
+};
 
 export const RELEVANCE_LEVELS: RelevanceLevel[] = ["HIGH", "MEDIUM", "LOW"];
 

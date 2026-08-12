@@ -31,6 +31,9 @@ next-env.d.ts
 /architecture-reference/
 /design-reference/
 
+# database backups (may contain real/sensitive data — never commit)
+/backups/
+
 # misc
 .DS_Store
 *.pem

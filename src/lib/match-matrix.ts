@@ -140,6 +140,61 @@ export function mutualFitLevel(
   return "weak";
 }
 
+// --- Two-sided self-service side model --------------------------------------
+//
+// Each pairing carries two independent inputs: the STARTUP side (the startup's
+// questionnaire about a partner) and the PARTNER side (the partner's about a
+// startup). Both are collected self-service and combined into the mutual fit.
+
+/** One party's self-service input for a single (startup × partner) pairing. */
+export interface MatchSideInput {
+  relevance: RelevanceLevel | null;
+  useCaseTypes: MatchUseCaseType[];
+  useCaseNote: string | null;
+  followUp: boolean | null;
+  openQuestions: string | null;
+  notes: string | null;
+  contacted: boolean | null;
+  updatedAt: Date | null;
+}
+
+/** True when a party has entered any input at all on their side. */
+export function sideHasInput(side: MatchSideInput | null | undefined): boolean {
+  if (!side) return false;
+  return (
+    side.relevance !== null ||
+    side.useCaseTypes.length > 0 ||
+    Boolean(side.useCaseNote) ||
+    side.followUp !== null ||
+    Boolean(side.openQuestions) ||
+    Boolean(side.notes) ||
+    side.contacted !== null
+  );
+}
+
+/**
+ * Coordination state of a pairing from the perspective of the two self-service
+ * sides — drives the "waiting on the other side" hints in the partner/startup
+ * masks (distinct from `mutualFitLevel`, which grades the fit once both rate).
+ * - `matched`  — both sides submitted a relevance.
+ * - `awaiting` — this side submitted, the other has not yet.
+ * - `todo`     — this side has not submitted its relevance yet.
+ * - `none`     — neither side has any input.
+ */
+export type MatchCoordState = "matched" | "awaiting" | "todo" | "none";
+
+export function coordState(
+  ownRelevance: RelevanceLevel | null | undefined,
+  otherRelevance: RelevanceLevel | null | undefined
+): MatchCoordState {
+  const own = Boolean(ownRelevance);
+  const other = Boolean(otherRelevance);
+  if (own && other) return "matched";
+  if (own && !other) return "awaiting";
+  if (!own && other) return "todo";
+  return "none";
+}
+
 // --- View model + filtering -------------------------------------------------
 
 /** A single (startup × partner) cell as consumed by the UI. */
@@ -153,12 +208,16 @@ export interface MatchCellView {
   useCaseNote: string | null;
   nextSteps: string | null;
   contactStatus: MatchContactStatus;
+  // --- Optional self-service context for the team board (read-only). Present
+  // only where the two-sided data has been loaded; absent in the CSV/tests.
+  startupSide?: MatchSideInput | null;
+  partnerSide?: MatchSideInput | null;
 }
 
 export interface MatchRowView {
   startupId: string;
   startupName: string;
-  /** One cell per partner, in PARTNER_COMPANIES order (null = no data). */
+  /** One cell per partner, in the batch's BatchPartner column order (null = no data). */
   cells: (MatchCellView | null)[];
 }
 

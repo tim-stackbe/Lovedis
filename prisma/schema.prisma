@@ -168,6 +168,13 @@ enum SourceType {
   OUTBOUND
 }
 
+// Kind of batch/program a Match-Matrix belongs to.
+enum BatchType {
+  ACCELERATOR
+  INDUSTRIEPROGRAMM
+  SONSTIGES
+}
+
 enum ReminderStatus {
   SCHEDULED
   SENT
@@ -366,6 +373,8 @@ model Company {
 
   members     User[]       @relation("CompanyMembers")
   invitations Invitation[] @relation("CompanyInvitations")
+  // Optional match-matrix column this partner org owns (self-service side).
+  matrixColumn PartnerCompany? @relation("CompanyMatrixColumn")
 
   @@index([name])
   @@index([isActive])
@@ -399,18 +408,62 @@ model Invitation {
 // Venture Scout module
 // ---------------------------------------------------------------------------
 
+// A "Batch" / program (Accelerator, Industrieprogramm, …). Each batch defines
+// its own Match-Matrix: the startups assigned to it (BatchStartup) evaluated by
+// the partner companies assigned to it (BatchPartner). The legacy `startups`
+// back-relation (Startup.campaignId) is the sourcing origin and is kept
+// separate from matrix membership.
 model ScoutingCampaign {
   id          String    @id @default(cuid())
   name        String
   description String?
+  type        BatchType @default(SONSTIGES)
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Legacy: startups sourced under this campaign (Startup.campaignId).
   startups Startup[]
 
+  // Matrix membership (many-to-many, admin-curated).
+  batchStartups BatchStartup[]
+  batchPartners BatchPartner[]
+  matches       PartnerStartupMatch[]
+
   @@index([name])
+  @@index([type])
+}
+
+// A startup assigned to a batch's matrix (admin-curated). A startup can belong
+// to several batches; each batch evaluates it independently.
+model BatchStartup {
+  id        String           @id @default(cuid())
+  batchId   String
+  batch     ScoutingCampaign @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  startupId String
+  startup   Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  addedById String? // team member who added it (scalar audit; no back-relation)
+  createdAt DateTime         @default(now())
+
+  @@unique([batchId, startupId])
+  @@index([batchId])
+  @@index([startupId])
+}
+
+// A partner company assigned as a column of a batch's matrix (admin-curated).
+model BatchPartner {
+  id               String           @id @default(cuid())
+  batchId          String
+  batch            ScoutingCampaign @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  partnerCompanyId String
+  partnerCompany   PartnerCompany   @relation(fields: [partnerCompanyId], references: [id], onDelete: Cascade)
+  sortOrder        Int              @default(0) // column order within the batch
+  createdAt        DateTime         @default(now())
+
+  @@unique([batchId, partnerCompanyId])
+  @@index([batchId])
+  @@index([partnerCompanyId])
 }
 
 model Startup {
@@ -479,8 +532,9 @@ model Startup {
   // Startup-Marktplatz
   bookings       MarketplaceBooking[]
 
-  // Match-Matrix (beidseitige Passung je Partner-Unternehmen)
+  // Match-Matrix (beidseitige Passung je Partner-Unternehmen, je Batch)
   matches        PartnerStartupMatch[]
+  batchStartups  BatchStartup[]
 
   @@index([name])
   @@index([industry])
@@ -1080,23 +1134,63 @@ model PartnerCompany {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  matches PartnerStartupMatch[]
+  // Optional link to a real Company login account. When set, that company's
+  // OWNER/ADMIN/MEMBER users can self-service their own matrix column (their
+  // partner-side relevance + use-cases per startup) via /matrix. SetNull so
+  // deleting the Company keeps the matrix column (team-managed) intact.
+  companyId String?  @unique
+  company   Company? @relation("CompanyMatrixColumn", fields: [companyId], references: [id], onDelete: SetNull)
+
+  matches       PartnerStartupMatch[]
+  batchPartners BatchPartner[]
 
   @@index([sortOrder])
 }
 
 model PartnerStartupMatch {
   id               String              @id @default(cuid())
+  // Batch (program/accelerator) this evaluation belongs to. The same
+  // (partner, startup) pair can be evaluated independently in several batches.
+  batchId          String
+  batch            ScoutingCampaign    @relation(fields: [batchId], references: [id], onDelete: Cascade)
   partnerId        String // -> PartnerCompany (Unternehmen, nicht User)
   partner          PartnerCompany      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   startupId        String
   startup          Startup             @relation(fields: [startupId], references: [id], onDelete: Cascade)
   startupRelevance RelevanceLevel? // Sicht des Startups auf diesen Partner
   partnerRelevance RelevanceLevel? // Sicht des Partners auf dieses Startup
+
+  // Team-curated / consolidated view (the original master-sheet columns). Kept
+  // for the internal team board + CSV import; both self-service sides below are
+  // separate so partner and startup can coordinate independently.
   useCaseTypes     MatchUseCaseType[]  @default([])
   useCaseNote      String? // Original-Freitext zum Use-Case aus dem Sheet
   nextSteps        String?
   contactStatus    MatchContactStatus  @default(NONE)
+
+  // --- Startup-side self-service (the startup's questionnaire about THIS
+  // partner: mirrors the shared Google-Sheet tab). startupRelevance above is
+  // the headline; these enrich it.
+  startupUseCaseTypes   MatchUseCaseType[] @default([])
+  startupUseCaseNote    String?
+  startupFollowUp       Boolean?           // "Folgegespräch erwünscht?"
+  startupOpenQuestions  String?            // "Welche Fragen sind offen geblieben?"
+  startupNotes          String?            // "Sonstige Anmerkungen"
+  startupContacted      Boolean?           // "Gespräch / Erstkontakt stattgefunden?"
+  startupUpdatedAt      DateTime?          // when the startup last edited its side
+  startupUpdatedById    String?            // scalar audit; no back-relation
+
+  // --- Partner-side self-service (the partner's questionnaire about THIS
+  // startup). partnerRelevance above is the headline.
+  partnerUseCaseTypes   MatchUseCaseType[] @default([])
+  partnerUseCaseNote    String?
+  partnerFollowUp       Boolean?
+  partnerOpenQuestions  String?
+  partnerNotes          String?
+  partnerContacted      Boolean?
+  partnerUpdatedAt      DateTime?          // when the partner last edited its side
+  partnerUpdatedById    String?            // scalar audit; no back-relation
+
   // Letzte pflegende Team-Person (SetNull, damit Löschen eines Users die
   // Matrix-Zelle nicht mitreißt).
   updatedById      String?
@@ -1104,7 +1198,8 @@ model PartnerStartupMatch {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  @@unique([partnerId, startupId])
+  @@unique([batchId, partnerId, startupId])
+  @@index([batchId])
   @@index([startupId])
   @@index([partnerId])
   @@index([contactStatus])

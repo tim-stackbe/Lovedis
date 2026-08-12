@@ -13,6 +13,7 @@ import {
   Home,
   Inbox,
   Kanban,
+  Layers,
   LayoutGrid,
   Library,
   ListChecks,
@@ -147,6 +148,7 @@ const SOURCING_SECTION: NavSection = {
 const MATCHMAKING_SECTION: NavSection = {
   title: "Matchmaking & Use-Cases",
   items: [
+    { label: "Batches", href: "/batches", icon: Layers },
     { label: "Match-Matrix", href: "/match-matrix", icon: LayoutGrid },
     { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: Target },
   ],
@@ -306,6 +308,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Screening",
       items: [
+        { label: "Match-Matrix", href: "/matrix", icon: LayoutGrid },
         { label: "Longlist-Screening", href: "/screening", icon: ClipboardCheck },
         { label: "Use-Case-Bewertung", href: "/use-cases", icon: Target },
         { label: "Check-ins", href: "/check-ins", icon: Bell },
@@ -358,6 +361,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Chancen",
       items: [
+        { label: "Match-Matrix", href: "/matrix", icon: LayoutGrid },
         { label: "Challenges", href: "/challenges", icon: Target },
         { label: "Meine Bewerbungen", href: "/applications", icon: Building2 },
         { label: "Mein Profil", href: "/profile", icon: Rocket },
