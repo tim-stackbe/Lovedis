@@ -117,7 +117,7 @@ export default async function PartnerDashboard() {
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="02" label="Mara" title="Dein Screening-Desk" />
+        <SectionLabel number="02" label="Screening" title="Dein Screening-Desk" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard

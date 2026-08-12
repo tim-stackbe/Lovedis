@@ -20,6 +20,7 @@ import {
   batchHasPartner,
   batchHasStartup,
 } from "@/lib/matrix-guards";
+import { recomputePartnerAggregate } from "@/lib/partner-votes";
 import { prisma } from "@/lib/prisma";
 import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
@@ -75,21 +76,23 @@ function parseSide(formData: FormData) {
   });
 }
 
-// --- Partner side -----------------------------------------------------------
+// --- Partner side: per-employee votes ---------------------------------------
 
 /**
- * Partner fills their side for one startup within a specific batch. The partner
- * (PartnerCompany) id is resolved from the session; the batch + startup come
- * from the form and BOTH the partner and the startup must be members of that
- * batch — a partner can only rate startups in a batch they participate in.
+ * A partner EMPLOYEE casts (or updates) their own vote on one startup within a
+ * batch. The partner company is resolved from the session; ANY active member of
+ * that company may vote (owner + sub-accounts), each with exactly one vote per
+ * (batch, partner, startup). After saving we recompute the partner-side
+ * aggregate (majority "Interesse: Ja") onto the shared matrix cell.
  */
-export async function upsertPartnerSideCell(
+export async function castPartnerVote(
   _prev: ActionState | undefined,
   formData: FormData
 ): Promise<ActionState> {
   const authz = await authorizeMatrixPartner();
   if (!authz.ok) return { error: authz.error };
   const partnerId = authz.ctx.partnerCompany.id;
+  const voterId = authz.ctx.session.user.id;
 
   const batchId = String(formData.get("batchId") ?? "");
   const startupId = String(formData.get("startupId") ?? "");
@@ -98,6 +101,7 @@ export async function upsertPartnerSideCell(
 
   const parsed = parseSide(formData);
   if (!parsed.success) return { error: firstZodError(parsed.error) };
+  const interested = triBool(formData.get("interested"));
 
   // Authorize: this partner must be a column of the batch AND the startup a row.
   const [partnerIn, startupIn] = await Promise.all([
@@ -111,33 +115,34 @@ export async function upsertPartnerSideCell(
 
   const s = parsed.data;
   const data = {
-    partnerRelevance: s.relevance,
-    partnerUseCaseTypes: s.useCaseTypes,
-    partnerUseCaseNote: s.useCaseNote ?? null,
-    partnerOpenQuestions: s.openQuestions ?? null,
-    partnerNotes: s.notes ?? null,
-    partnerFollowUp: s.followUp,
-    partnerContacted: s.contacted,
-    partnerUpdatedAt: new Date(),
-    partnerUpdatedById: authz.ctx.session.user.id,
+    interested,
+    relevance: s.relevance,
+    useCaseTypes: s.useCaseTypes,
+    useCaseNote: s.useCaseNote ?? null,
+    openQuestions: s.openQuestions ?? null,
+    notes: s.notes ?? null,
+    followUp: s.followUp,
+    contacted: s.contacted,
   };
 
-  try {
-    await prisma.partnerStartupMatch.upsert({
-      where: {
-        batchId_partnerId_startupId: { batchId, partnerId, startupId },
+  await prisma.partnerVote.upsert({
+    where: {
+      batchId_partnerId_startupId_voterId: {
+        batchId,
+        partnerId,
+        startupId,
+        voterId,
       },
-      update: data,
-      create: { batchId, partnerId, startupId, ...data },
-    });
-  } catch (err) {
-    if (isRecordNotFoundError(err)) return { error: "Eintrag nicht gefunden." };
-    throw err;
-  }
+    },
+    update: data,
+    create: { batchId, partnerId, startupId, voterId, ...data },
+  });
+
+  await recomputePartnerAggregate(prisma, { batchId, partnerId, startupId });
 
   revalidatePath("/matrix");
   revalidatePath("/match-matrix");
-  return { success: "Deine Einschätzung wurde gespeichert." };
+  return { success: "Deine Stimme wurde gespeichert." };
 }
 
 // --- Startup side -----------------------------------------------------------

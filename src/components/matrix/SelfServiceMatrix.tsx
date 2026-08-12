@@ -47,6 +47,15 @@ export interface SideView {
   openQuestions: string | null;
   notes: string | null;
   contacted: boolean | null;
+  /** Partner side only: "Interesse: Ja/Nein" (null = noch offen). */
+  interested?: boolean | null;
+}
+
+/** Aggregated partner-company outcome for one pairing (majority of "Ja"). */
+export interface VoteTally {
+  yes: number;
+  no: number;
+  outcome: boolean | null;
 }
 
 export interface CounterpartyRow {
@@ -59,6 +68,8 @@ export interface CounterpartyRow {
   own: SideView;
   /** The counterparty's side (read-only — the mutual picture). */
   other: SideView;
+  /** Aggregated partner-company outcome (the company's vote result). */
+  tally?: VoteTally;
 }
 
 interface SelfServiceMatrixProps {
@@ -80,6 +91,8 @@ interface SelfServiceMatrixProps {
   title?: string;
   /** Section number badge (for stacking several batches). */
   sectionNumber?: string;
+  /** Partner mode: render the "Interesse: Ja/Nein" vote field + company tally. */
+  showInterest?: boolean;
 }
 
 const FIT_LABEL: Record<MutualFitLevel, string> = {
@@ -149,6 +162,31 @@ function CoordChip({ state }: { state: MatchCoordState }) {
   );
 }
 
+/** Aggregated company outcome chip: "positiv 8:2" / "negativ 2:3" / "offen". */
+function OutcomeChip({ tally }: { tally: VoteTally }) {
+  const total = tally.yes + tally.no;
+  if (tally.outcome === null || total === 0) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-lv-surface px-2.5 py-0.5 text-[11px] font-semibold text-lv-secondary">
+        Abstimmung offen
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+        tally.outcome
+          ? "bg-lv-mint/60 text-lv-mint-deep"
+          : "bg-lv-orange-soft text-lv-orange"
+      )}
+      title={`${tally.yes} Ja · ${tally.no} Nein`}
+    >
+      {tally.outcome ? "positiv" : "negativ"} {tally.yes}:{tally.no}
+    </span>
+  );
+}
+
 function triDefault(v: boolean | null): string {
   return v === true ? "true" : v === false ? "false" : "";
 }
@@ -174,12 +212,27 @@ function OtherSide({
       <p className="text-[11px] font-semibold uppercase tracking-wider text-lv-secondary">
         {title}
       </p>
-      {empty ? (
+      {empty && side.interested == null ? (
         <p className="text-sm text-lv-secondary">
           Noch keine Rückmeldung der Gegenseite.
         </p>
       ) : (
         <div className="space-y-3">
+          {side.interested != null && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-lv-secondary">Interesse:</span>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                  side.interested
+                    ? "bg-lv-mint/60 text-lv-mint-deep"
+                    : "bg-lv-orange-soft text-lv-orange"
+                )}
+              >
+                {side.interested ? "positiv" : "negativ"}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-xs text-lv-secondary">Relevanz:</span>
             {side.relevance ? (
@@ -221,6 +274,7 @@ function EditSideDialog({
   counterpartyField,
   action,
   onClose,
+  showInterest,
 }: {
   mode: "partner" | "startup";
   batchId: string;
@@ -228,6 +282,7 @@ function EditSideDialog({
   counterpartyField: "startupId" | "partnerId";
   action: SelfServiceMatrixProps["action"];
   onClose: () => void;
+  showInterest?: boolean;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -289,9 +344,18 @@ function EditSideDialog({
         <div className="space-y-5 px-6 py-5">
           <OtherSide side={other} title={otherTitle} />
 
+          {showInterest && target.row.tally && (
+            <div className="flex items-center justify-between gap-3 rounded-card border border-lv-border px-4 py-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-lv-secondary">
+                Ergebnis eures Unternehmens
+              </span>
+              <OutcomeChip tally={target.row.tally} />
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <span className="lv-wordmark text-xs text-lv-blue shrink-0">
-              Deine Einschätzung
+              {showInterest ? "Deine Stimme" : "Deine Einschätzung"}
             </span>
             <span className="h-px flex-1 bg-lv-border" />
           </div>
@@ -303,6 +367,20 @@ function EditSideDialog({
               name={counterpartyField}
               value={target.row.id}
             />
+
+            {showInterest && (
+              <Field label="Interesse an diesem Startup?" htmlFor="mx-interested">
+                <Select
+                  id="mx-interested"
+                  name="interested"
+                  defaultValue={triDefault(own.interested ?? null)}
+                >
+                  <option value="">— (noch offen)</option>
+                  <option value="true">Ja</option>
+                  <option value="false">Nein</option>
+                </Select>
+              </Field>
+            )}
 
             <Field label="Relevanz für euch" htmlFor="mx-rel">
               <Select
@@ -428,6 +506,7 @@ export function SelfServiceMatrix({
   counterpartyLabel,
   title,
   sectionNumber = "01",
+  showInterest,
 }: SelfServiceMatrixProps) {
   const [target, setTarget] = useState<EditTarget | null>(null);
 
@@ -476,8 +555,9 @@ export function SelfServiceMatrix({
                     {row.sub}
                   </span>
                 )}
-                <span className="mt-1 inline-flex">
+                <span className="mt-1 inline-flex flex-wrap gap-1.5">
                   <CoordChip state={coord} />
+                  {row.tally && <OutcomeChip tally={row.tally} />}
                 </span>
               </span>
               <span className="flex items-center gap-2">
@@ -531,7 +611,11 @@ export function SelfServiceMatrix({
                 </Td>
                 <Td className="align-middle">
                   <span className="flex flex-wrap items-center gap-1.5">
-                    <CoordChip state={coord} />
+                    {row.tally ? (
+                      <OutcomeChip tally={row.tally} />
+                    ) : (
+                      <CoordChip state={coord} />
+                    )}
                     {fit === "top" && <FitChip level={fit} />}
                   </span>
                 </Td>
@@ -542,7 +626,7 @@ export function SelfServiceMatrix({
                     size="sm"
                     onClick={() => setTarget({ row })}
                   >
-                    Bewerten
+                    {showInterest ? "Abstimmen" : "Bewerten"}
                   </Button>
                 </Td>
               </Tr>
@@ -552,9 +636,11 @@ export function SelfServiceMatrix({
       </TableCard>
 
       <p className="text-xs text-lv-secondary">
-        Deine Einschätzungen sind nur für dich und das Lovedis-Team sichtbar —
-        andere{" "}
-        {mode === "partner" ? "Partner sehen sie nicht" : "Startups sehen sie nicht"}.
+        {showInterest
+          ? "Jede Person aus eurem Unternehmen stimmt einzeln ab; das Ergebnis ergibt sich aus der Mehrheit. Andere Partner sehen eure Stimmen nicht."
+          : mode === "partner"
+            ? "Deine Einschätzungen sind nur für dich und das Lovedis-Team sichtbar — andere Partner sehen sie nicht."
+            : "Deine Einschätzungen sind nur für dich und das Lovedis-Team sichtbar — andere Startups sehen sie nicht."}
       </p>
 
       {target && (
@@ -566,6 +652,7 @@ export function SelfServiceMatrix({
           counterpartyField={counterpartyField}
           action={action}
           onClose={() => setTarget(null)}
+          showInterest={showInterest}
         />
       )}
     </>

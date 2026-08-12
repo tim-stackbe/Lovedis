@@ -212,6 +212,25 @@ export interface MatchCellView {
   // only where the two-sided data has been loaded; absent in the CSV/tests.
   startupSide?: MatchSideInput | null;
   partnerSide?: MatchSideInput | null;
+  // --- Aggregated partner-company vote (majority of member "Ja"). partnerSide
+  // holds the aggregate; these expose the tally + per-voter breakdown for the
+  // internal team board only.
+  partnerTally?: PartnerTally | null;
+}
+
+/** Aggregated partner-company vote result + individual member breakdown. */
+export interface PartnerTally {
+  yes: number;
+  no: number;
+  /** Majority "Ja" (ties = positiv); null when nobody voted yet. */
+  outcome: boolean | null;
+  votes: PartnerVoteBreakdown[];
+}
+
+export interface PartnerVoteBreakdown {
+  voterName: string;
+  interested: boolean | null;
+  relevance: RelevanceLevel | null;
 }
 
 export interface MatchRowView {

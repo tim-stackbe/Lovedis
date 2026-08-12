@@ -336,6 +336,7 @@ model User {
   partnerEngagements Engagement[]              @relation("EngagementPartner")
   createdEngagements Engagement[]              @relation("EngagementCreator")
   creditTxAuthored   CreditTransaction[]       @relation("CreditTxAuthor")
+  partnerVotes       PartnerVote[]             @relation("PartnerVoter")
 
   // Startup-Marktplatz
   programsCreated    Program[]            @relation("ProgramCreator")
@@ -430,6 +431,7 @@ model ScoutingCampaign {
   batchStartups BatchStartup[]
   batchPartners BatchPartner[]
   matches       PartnerStartupMatch[]
+  partnerVotes  PartnerVote[]
 
   @@index([name])
   @@index([type])
@@ -535,6 +537,7 @@ model Startup {
   // Match-Matrix (beidseitige Passung je Partner-Unternehmen, je Batch)
   matches        PartnerStartupMatch[]
   batchStartups  BatchStartup[]
+  partnerVotes   PartnerVote[]
 
   @@index([name])
   @@index([industry])
@@ -1143,6 +1146,7 @@ model PartnerCompany {
 
   matches       PartnerStartupMatch[]
   batchPartners BatchPartner[]
+  partnerVotes  PartnerVote[]
 
   @@index([sortOrder])
 }
@@ -1180,15 +1184,20 @@ model PartnerStartupMatch {
   startupUpdatedAt      DateTime?          // when the startup last edited its side
   startupUpdatedById    String?            // scalar audit; no back-relation
 
-  // --- Partner-side self-service (the partner's questionnaire about THIS
-  // startup). partnerRelevance above is the headline.
-  partnerUseCaseTypes   MatchUseCaseType[] @default([])
+  // --- Partner-side AGGREGATE (computed from the individual PartnerVote rows
+  // of all voting members of the partner company; see src/lib/partner-votes.ts).
+  // partnerRelevance above holds the aggregated (most-common) Relevanz; these
+  // enrich it. Recomputed on every vote change; never edited directly.
+  partnerUseCaseTypes   MatchUseCaseType[] @default([]) // union of voters' use-cases
   partnerUseCaseNote    String?
-  partnerFollowUp       Boolean?
+  partnerFollowUp       Boolean?           // any voter "Ja"
   partnerOpenQuestions  String?
   partnerNotes          String?
-  partnerContacted      Boolean?
-  partnerUpdatedAt      DateTime?          // when the partner last edited its side
+  partnerContacted      Boolean?           // any voter "Ja"
+  partnerInterested     Boolean?           // aggregated outcome: majority "Ja" (ties = positiv)
+  partnerVotesYes       Int                @default(0)
+  partnerVotesNo        Int                @default(0)
+  partnerUpdatedAt      DateTime?          // latest vote timestamp
   partnerUpdatedById    String?            // scalar audit; no back-relation
 
   // Letzte pflegende Team-Person (SetNull, damit Löschen eines Users die
@@ -1203,4 +1212,37 @@ model PartnerStartupMatch {
   @@index([startupId])
   @@index([partnerId])
   @@index([contactStatus])
+}
+
+// One partner EMPLOYEE's vote on a startup within a batch. Every active member
+// of the partner company (owner + sub-accounts) may cast exactly one vote per
+// (batch, partner, startup); the votes are aggregated into the partner side of
+// PartnerStartupMatch (majority "Interesse: Ja" = positiv). Mirrors the shared
+// Excel where several people from a partner rated the same startup.
+model PartnerVote {
+  id        String           @id @default(cuid())
+  batchId   String
+  batch     ScoutingCampaign @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  partnerId String // -> PartnerCompany
+  partner   PartnerCompany   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId String
+  startup   Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  voterId   String // -> User (a member of the partner company)
+  voter     User             @relation("PartnerVoter", fields: [voterId], references: [id], onDelete: Cascade)
+
+  interested    Boolean? // "Interesse: Ja/Nein" — the aggregated signal (null = noch offen)
+  relevance     RelevanceLevel?
+  useCaseTypes  MatchUseCaseType[] @default([])
+  useCaseNote   String?
+  followUp      Boolean?
+  openQuestions String?
+  notes         String?
+  contacted     Boolean?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([batchId, partnerId, startupId, voterId])
+  @@index([batchId, partnerId, startupId])
+  @@index([voterId])
 }

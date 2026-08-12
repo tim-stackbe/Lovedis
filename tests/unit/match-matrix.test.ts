@@ -21,6 +21,10 @@ import {
   resolvePartnerSlug,
 } from "@/lib/match-matrix-import";
 import { BATCH_TYPES, BATCH_TYPE_LABELS } from "@/lib/constants";
+import {
+  aggregatePartnerVotes,
+  type PartnerVoteLike,
+} from "@/lib/partner-votes";
 
 // ---------------------------------------------------------------------------
 // Relevance mapping (Hoch/Mittel/Niedrig → enum)
@@ -483,5 +487,103 @@ describe("BATCH_TYPES / BATCH_TYPE_LABELS", () => {
       "INDUSTRIEPROGRAMM",
       "SONSTIGES",
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Partner multi-employee vote aggregation
+// ---------------------------------------------------------------------------
+
+describe("aggregatePartnerVotes", () => {
+  const vote = (over: Partial<PartnerVoteLike> = {}): PartnerVoteLike => ({
+    interested: null,
+    relevance: null,
+    useCaseTypes: [],
+    followUp: null,
+    contacted: null,
+    ...over,
+  });
+
+  it("returns a neutral aggregate for no votes", () => {
+    const agg = aggregatePartnerVotes([]);
+    expect(agg).toEqual({
+      votesYes: 0,
+      votesNo: 0,
+      interested: null,
+      relevance: null,
+      useCaseTypes: [],
+      followUp: null,
+      contacted: null,
+    });
+  });
+
+  it("is positiv when the majority votes Ja (8 Ja / 2 Nein)", () => {
+    const votes = [
+      ...Array.from({ length: 8 }, () => vote({ interested: true })),
+      ...Array.from({ length: 2 }, () => vote({ interested: false })),
+    ];
+    const agg = aggregatePartnerVotes(votes);
+    expect(agg.votesYes).toBe(8);
+    expect(agg.votesNo).toBe(2);
+    expect(agg.interested).toBe(true);
+  });
+
+  it("counts a tie as positiv", () => {
+    const votes = [
+      vote({ interested: true }),
+      vote({ interested: false }),
+    ];
+    expect(aggregatePartnerVotes(votes).interested).toBe(true);
+  });
+
+  it("is negativ when Nein has the majority", () => {
+    const votes = [
+      vote({ interested: false }),
+      vote({ interested: false }),
+      vote({ interested: true }),
+    ];
+    expect(aggregatePartnerVotes(votes).interested).toBe(false);
+  });
+
+  it("ignores abstentions (interested = null) in the tally", () => {
+    const votes = [
+      vote({ interested: true }),
+      vote({ interested: null }),
+      vote({ interested: null }),
+    ];
+    const agg = aggregatePartnerVotes(votes);
+    expect(agg.votesYes).toBe(1);
+    expect(agg.votesNo).toBe(0);
+    expect(agg.interested).toBe(true);
+  });
+
+  it("picks the most-common relevance, favouring the higher on ties", () => {
+    // 2×HIGH, 2×MEDIUM → tie → HIGH wins.
+    const tie = aggregatePartnerVotes([
+      vote({ relevance: "HIGH" }),
+      vote({ relevance: "HIGH" }),
+      vote({ relevance: "MEDIUM" }),
+      vote({ relevance: "MEDIUM" }),
+    ]);
+    expect(tie.relevance).toBe("HIGH");
+
+    // clear MEDIUM majority.
+    const clear = aggregatePartnerVotes([
+      vote({ relevance: "HIGH" }),
+      vote({ relevance: "MEDIUM" }),
+      vote({ relevance: "MEDIUM" }),
+    ]);
+    expect(clear.relevance).toBe("MEDIUM");
+  });
+
+  it("unions use-cases in canonical order and ORs follow-up/contacted", () => {
+    const agg = aggregatePartnerVotes([
+      vote({ useCaseTypes: ["CO_DEVELOPMENT"], contacted: true }),
+      vote({ useCaseTypes: ["PILOT"], followUp: true }),
+      vote({ useCaseTypes: ["PILOT"] }),
+    ]);
+    expect(agg.useCaseTypes).toEqual(["PILOT", "CO_DEVELOPMENT"]);
+    expect(agg.followUp).toBe(true);
+    expect(agg.contacted).toBe(true);
   });
 });

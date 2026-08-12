@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
-  upsertPartnerSideCell,
+  castPartnerVote,
   upsertStartupSideCell,
 } from "@/app/actions/matrix";
 import {
@@ -20,45 +20,6 @@ import { ROLE_HOMES } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Matrix" };
 
-// Fields we read off a PartnerStartupMatch to build both sides.
-const matchSelect = {
-  startupId: true,
-  partnerId: true,
-  startupRelevance: true,
-  partnerRelevance: true,
-  startupUseCaseTypes: true,
-  startupUseCaseNote: true,
-  startupFollowUp: true,
-  startupOpenQuestions: true,
-  startupNotes: true,
-  startupContacted: true,
-  partnerUseCaseTypes: true,
-  partnerUseCaseNote: true,
-  partnerFollowUp: true,
-  partnerOpenQuestions: true,
-  partnerNotes: true,
-  partnerContacted: true,
-} as const;
-
-type MatchRow = {
-  startupId: string;
-  partnerId: string;
-  startupRelevance: SideView["relevance"];
-  partnerRelevance: SideView["relevance"];
-  startupUseCaseTypes: SideView["useCaseTypes"];
-  startupUseCaseNote: string | null;
-  startupFollowUp: boolean | null;
-  startupOpenQuestions: string | null;
-  startupNotes: string | null;
-  startupContacted: boolean | null;
-  partnerUseCaseTypes: SideView["useCaseTypes"];
-  partnerUseCaseNote: string | null;
-  partnerFollowUp: boolean | null;
-  partnerOpenQuestions: string | null;
-  partnerNotes: string | null;
-  partnerContacted: boolean | null;
-};
-
 const EMPTY_SIDE: SideView = {
   relevance: null,
   useCaseTypes: [],
@@ -67,9 +28,20 @@ const EMPTY_SIDE: SideView = {
   openQuestions: null,
   notes: null,
   contacted: null,
+  interested: null,
 };
 
-function startupSide(m: MatchRow | undefined): SideView {
+type StartupSideRow = {
+  startupRelevance: SideView["relevance"];
+  startupUseCaseTypes: SideView["useCaseTypes"];
+  startupUseCaseNote: string | null;
+  startupFollowUp: boolean | null;
+  startupOpenQuestions: string | null;
+  startupNotes: string | null;
+  startupContacted: boolean | null;
+};
+
+function startupSide(m: StartupSideRow | undefined): SideView {
   if (!m) return EMPTY_SIDE;
   return {
     relevance: m.startupRelevance,
@@ -79,19 +51,7 @@ function startupSide(m: MatchRow | undefined): SideView {
     openQuestions: m.startupOpenQuestions,
     notes: m.startupNotes,
     contacted: m.startupContacted,
-  };
-}
-
-function partnerSide(m: MatchRow | undefined): SideView {
-  if (!m) return EMPTY_SIDE;
-  return {
-    relevance: m.partnerRelevance,
-    useCaseTypes: m.partnerUseCaseTypes,
-    useCaseNote: m.partnerUseCaseNote,
-    followUp: m.partnerFollowUp,
-    openQuestions: m.partnerOpenQuestions,
-    notes: m.partnerNotes,
-    contacted: m.partnerContacted,
+    interested: null,
   };
 }
 
@@ -114,7 +74,8 @@ function Stats({ rows }: { rows: CounterpartyRow[] }) {
 }
 
 async function PartnerMatrix() {
-  const { partnerCompany } = await requireMatrixPartner();
+  const { partnerCompany, session } = await requireMatrixPartner();
+  const voterId = session.user.id;
 
   const batches = await prisma.scoutingCampaign.findMany({
     where: { batchPartners: { some: { partnerCompanyId: partnerCompany.id } } },
@@ -126,26 +87,72 @@ async function PartnerMatrix() {
       batchStartups: {
         select: { startup: { select: { id: true, name: true, industry: true } } },
       },
+      // The aggregated cell (startup side + partner tally) per startup.
       matches: {
         where: { partnerId: partnerCompany.id },
-        select: matchSelect,
+        select: {
+          startupId: true,
+          startupRelevance: true,
+          startupUseCaseTypes: true,
+          startupUseCaseNote: true,
+          startupFollowUp: true,
+          startupOpenQuestions: true,
+          startupNotes: true,
+          startupContacted: true,
+          partnerVotesYes: true,
+          partnerVotesNo: true,
+          partnerInterested: true,
+        },
+      },
+      // THIS member's individual votes.
+      partnerVotes: {
+        where: { partnerId: partnerCompany.id, voterId },
+        select: {
+          startupId: true,
+          interested: true,
+          relevance: true,
+          useCaseTypes: true,
+          useCaseNote: true,
+          followUp: true,
+          openQuestions: true,
+          notes: true,
+          contacted: true,
+        },
       },
     },
   });
 
   const sections = batches.map((b) => {
-    const byStartup = new Map<string, MatchRow>();
-    for (const m of b.matches) byStartup.set(m.startupId, m);
+    const matchByStartup = new Map(b.matches.map((m) => [m.startupId, m]));
+    const myVoteByStartup = new Map(b.partnerVotes.map((v) => [v.startupId, v]));
     const rows: CounterpartyRow[] = [...b.batchStartups]
       .sort((a, z) => a.startup.name.localeCompare(z.startup.name, "de"))
       .map((bs) => {
-        const match = byStartup.get(bs.startup.id);
+        const match = matchByStartup.get(bs.startup.id);
+        const vote = myVoteByStartup.get(bs.startup.id);
+        const own: SideView = vote
+          ? {
+              relevance: vote.relevance,
+              useCaseTypes: vote.useCaseTypes,
+              useCaseNote: vote.useCaseNote,
+              followUp: vote.followUp,
+              openQuestions: vote.openQuestions,
+              notes: vote.notes,
+              contacted: vote.contacted,
+              interested: vote.interested,
+            }
+          : { ...EMPTY_SIDE };
         return {
           id: bs.startup.id,
           name: bs.startup.name,
           sub: bs.startup.industry,
-          own: partnerSide(match),
+          own,
           other: startupSide(match),
+          tally: {
+            yes: match?.partnerVotesYes ?? 0,
+            no: match?.partnerVotesNo ?? 0,
+            outcome: match?.partnerInterested ?? null,
+          },
         };
       });
     return { batch: b, rows };
@@ -158,7 +165,7 @@ async function PartnerMatrix() {
       <HeroBanner
         kicker={partnerCompany.name}
         title="Startup-Matrix"
-        subtitle="Bewerte je Batch die dir zugewiesenen Startups nach eurer Passung — Relevanz, mögliche Partnerschaft und konkrete Use-Cases. Andere Partner sehen deine Angaben nicht."
+        subtitle="Jede Person aus eurem Unternehmen stimmt je Startup einzeln ab (Interesse Ja/Nein). Das Ergebnis ergibt sich aus der Mehrheit. Andere Partner sehen eure Stimmen nicht."
       >
         <Stats rows={allRows} />
       </HeroBanner>
@@ -176,10 +183,11 @@ async function PartnerMatrix() {
             batchId={s.batch.id}
             rows={s.rows}
             counterpartyField="startupId"
-            action={upsertPartnerSideCell}
+            action={castPartnerVote}
             counterpartyLabel="Startup"
             sectionNumber={String(i + 1).padStart(2, "0")}
             title={`${s.batch.name} · ${BATCH_TYPE_LABELS[s.batch.type]}`}
+            showInterest
           />
         ))
       )}
@@ -203,21 +211,63 @@ async function StartupMatrix() {
       },
       matches: {
         where: { startupId: startup.id },
-        select: matchSelect,
+        select: {
+          partnerId: true,
+          // Startup's own side.
+          startupRelevance: true,
+          startupUseCaseTypes: true,
+          startupUseCaseNote: true,
+          startupFollowUp: true,
+          startupOpenQuestions: true,
+          startupNotes: true,
+          startupContacted: true,
+          // Partner aggregate side (from the partner company's votes).
+          partnerRelevance: true,
+          partnerUseCaseTypes: true,
+          partnerInterested: true,
+          partnerVotesYes: true,
+          partnerVotesNo: true,
+        },
       },
     },
   });
 
   const sections = batches.map((b) => {
-    const byPartner = new Map<string, MatchRow>();
-    for (const m of b.matches) byPartner.set(m.partnerId, m);
+    const byPartner = new Map(b.matches.map((m) => [m.partnerId, m]));
     const rows: CounterpartyRow[] = b.batchPartners.map((bp) => {
       const match = byPartner.get(bp.partnerCompany.id);
+      const own: SideView = match
+        ? {
+            relevance: match.startupRelevance,
+            useCaseTypes: match.startupUseCaseTypes,
+            useCaseNote: match.startupUseCaseNote,
+            followUp: match.startupFollowUp,
+            openQuestions: match.startupOpenQuestions,
+            notes: match.startupNotes,
+            contacted: match.startupContacted,
+            interested: null,
+          }
+        : { ...EMPTY_SIDE };
+      const other: SideView = {
+        relevance: match?.partnerRelevance ?? null,
+        useCaseTypes: match?.partnerUseCaseTypes ?? [],
+        useCaseNote: null,
+        followUp: null,
+        openQuestions: null,
+        notes: null,
+        contacted: null,
+        interested: match?.partnerInterested ?? null,
+      };
       return {
         id: bp.partnerCompany.id,
         name: bp.partnerCompany.name,
-        own: startupSide(match),
-        other: partnerSide(match),
+        own,
+        other,
+        tally: {
+          yes: match?.partnerVotesYes ?? 0,
+          no: match?.partnerVotesNo ?? 0,
+          outcome: match?.partnerInterested ?? null,
+        },
       };
     });
     return { batch: b, rows };
@@ -230,7 +280,7 @@ async function StartupMatrix() {
       <HeroBanner
         kicker={startup.name}
         title="Partner-Matrix"
-        subtitle="Bewerte je Batch die Partner-Unternehmen nach eurer Passung — Relevanz, mögliche Partnerschaft und konkrete Use-Cases. Deine Angaben sehen nur das Lovedis-Team und der jeweilige Partner."
+        subtitle="Bewerte je Batch die Partner-Unternehmen nach eurer Passung. Bei den Partnern siehst du das aggregierte Ergebnis ihrer Abstimmung (positiv/negativ)."
       >
         <Stats rows={allRows} />
       </HeroBanner>
@@ -265,7 +315,6 @@ export default async function MatrixPage() {
 
   if (role === "BUSINESS_PARTNER") return <PartnerMatrix />;
   if (role === "STARTUP") return <StartupMatrix />;
-  // Team keeps the full internal grid; everyone else goes home.
   if (role === "ADMIN" || role === "MEMBER") redirect("/match-matrix");
   redirect(ROLE_HOMES[role]);
 }

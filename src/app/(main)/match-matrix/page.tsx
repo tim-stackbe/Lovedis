@@ -67,7 +67,7 @@ export default async function MatchMatrixPage({
   const selected =
     batches.find((b) => b.id === batchParam) ?? batches[0];
 
-  const [batchPartners, batchStartups, matches] = await Promise.all([
+  const [batchPartners, batchStartups, matches, partnerVotes] = await Promise.all([
     prisma.batchPartner.findMany({
       where: { batchId: selected.id },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -105,9 +105,39 @@ export default async function MatchMatrixPage({
         partnerNotes: true,
         partnerContacted: true,
         partnerUpdatedAt: true,
+        partnerVotesYes: true,
+        partnerVotesNo: true,
+        partnerInterested: true,
+      },
+    }),
+    prisma.partnerVote.findMany({
+      where: { batchId: selected.id },
+      orderBy: [{ updatedAt: "desc" }],
+      select: {
+        partnerId: true,
+        startupId: true,
+        interested: true,
+        relevance: true,
+        voter: { select: { name: true, email: true } },
       },
     }),
   ]);
+
+  // Group individual partner-member votes by pairing for the team breakdown.
+  const votesByPairing = new Map<
+    string,
+    { voterName: string; interested: boolean | null; relevance: typeof partnerVotes[number]["relevance"] }[]
+  >();
+  for (const v of partnerVotes) {
+    const key = `${v.partnerId}:${v.startupId}`;
+    const list = votesByPairing.get(key) ?? [];
+    list.push({
+      voterName: v.voter.name?.trim() || v.voter.email,
+      interested: v.interested,
+      relevance: v.relevance,
+    });
+    votesByPairing.set(key, list);
+  }
 
   const partners: PartnerColumn[] = batchPartners.map((bp) => bp.partnerCompany);
   const partnerIndexById = new Map(partners.map((p, i) => [p.id, i]));
@@ -158,6 +188,12 @@ export default async function MatchMatrixPage({
         notes: m.partnerNotes,
         contacted: m.partnerContacted,
         updatedAt: m.partnerUpdatedAt,
+      },
+      partnerTally: {
+        yes: m.partnerVotesYes,
+        no: m.partnerVotesNo,
+        outcome: m.partnerInterested,
+        votes: votesByPairing.get(`${m.partnerId}:${m.startupId}`) ?? [],
       },
     };
   }
