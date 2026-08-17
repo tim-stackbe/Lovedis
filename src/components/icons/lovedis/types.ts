@@ -24,7 +24,13 @@ export type IconRenderer = ComponentType<{
 }>;
 
 /**
- * Brand coral accent. Reads the Tailwind v4 theme token so the accent tracks the
- * brand palette, with a hard fallback for non-CSS-var environments.
+ * Brand colours used directly as pictogram FILLS (the "Sticker Pop" set is
+ * intentionally two-tone/colourful rather than a single `currentColor` glyph).
+ * Both read the Tailwind v4 theme tokens so they track the brand palette, with a
+ * hard fallback for non-CSS-var environments (e.g. static SVG snapshots).
  */
+export const LV_BLUE = "var(--color-lv-blue, #2926e5)";
 export const LV_CORAL = "var(--color-lv-orange, #ff5736)";
+
+/** Interior "paper"/negative-space fill for the sticker style. */
+export const LV_PAPER = "#ffffff";

@@ -61,20 +61,29 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
                     onClick={onClose}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group flex items-center gap-3 rounded-button py-1.5 pl-1.5 pr-3 text-sm transition-colors",
+                      "group relative flex items-center gap-3 rounded-button py-1.5 pl-1.5 pr-3 text-sm transition-colors",
                       active
                         ? "bg-lv-blue-soft font-semibold text-lv-blue"
-                        : "text-lv-text hover:bg-lv-surface"
+                        : "font-medium text-lv-text hover:bg-lv-surface"
                     )}
                   >
+                    {active && (
+                      <span
+                        aria-hidden
+                        className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-lv-orange"
+                      />
+                    )}
                     <span
                       className={cn(
                         "flex h-7 w-7 shrink-0 items-center justify-center rounded-button transition-colors",
                         active
-                          ? "bg-lv-blue text-white shadow-sm"
-                          : "text-lv-secondary group-hover:text-lv-blue"
+                          ? "bg-white shadow-sm ring-1 ring-lv-blue/10"
+                          : "bg-lv-blue-soft/60 group-hover:bg-white"
                       )}
                     >
+                      {/* Two-tone "Sticker Pop" glyphs paint their own blue+coral,
+                          so the chip stays LIGHT in both states — a solid-blue
+                          active fill would hide the colourful icon. */}
                       <LovedisIcon name={item.icon} className="h-4 w-4" />
                     </span>
                     {item.label}

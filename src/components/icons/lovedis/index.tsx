@@ -97,4 +97,4 @@ export function LovedisIcon({ name, size = 24, className }: LovedisIconWrapperPr
 
 export * from "./glyphs";
 export type { LovedisIconProps, IconRenderer } from "./types";
-export { LV_CORAL } from "./types";
+export { LV_BLUE, LV_CORAL, LV_PAPER } from "./types";
