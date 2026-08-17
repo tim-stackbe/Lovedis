@@ -55,21 +55,25 @@ export default async function StartupsPage({
     where.pipelineStage = pipeline as PipelineStage;
   }
 
-  const [startups, total, industries] = await Promise.all([
+  const [startups, total, industries, partnered] = await Promise.all([
     prisma.startup.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        industry: true,
+        stage: true,
+        pipelineStage: true,
+        fundingRaised: true,
         _count: { select: { evaluations: true } },
       },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.startup.count(),
     prisma.startup.groupBy({ by: ["industry"], orderBy: { industry: "asc" } }),
+    prisma.startup.count({ where: { pipelineStage: "PARTNERED" } }),
   ]);
-
-  const partnered = await prisma.startup.count({
-    where: { pipelineStage: "PARTNERED" },
-  });
 
   // Team-consensus score per (filtered) startup for the Score column.
   const consensusByStartup = await getConsensusByStartup(

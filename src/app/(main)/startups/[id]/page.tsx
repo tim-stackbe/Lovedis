@@ -77,15 +77,17 @@ export default async function StartupDetailPage({
   });
   if (!startup) notFound();
 
-  const campaigns = await prisma.scoutingCampaign.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
-
   // Aggregated team consensus (scout-role evaluators only, most recent per
   // evaluator). This is the primary result; the per-evaluator table below shows
-  // the individual breakdown for transparency.
-  const consensus = await getStartupConsensus(startup.id);
+  // the individual breakdown for transparency. Fetched in parallel with the
+  // (independent) campaign list to save a DB round-trip.
+  const [campaigns, consensus] = await Promise.all([
+    prisma.scoutingCampaign.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    getStartupConsensus(startup.id),
+  ]);
   const hasConsensus = consensus.evaluatorCount > 0;
 
   return (
