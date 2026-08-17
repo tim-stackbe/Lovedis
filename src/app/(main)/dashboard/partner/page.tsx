@@ -1,3 +1,10 @@
+import {
+  Bell,
+  ClipboardCheck,
+  FlaskConical,
+  Inbox,
+  Share2,
+} from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
@@ -97,18 +104,21 @@ export default async function PartnerDashboard() {
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone={pendingCount > 0 ? "attention" : "muted"}
+            icon={Inbox}
             label="Ausstehende Bewerbungen"
             value={pendingCount}
             sub="warten auf deine Entscheidung"
           />
           <ToneCard
             tone="success"
+            icon={FlaskConical}
             label="Laufende PoCs"
             value={runningPoCs}
             sub="aktive Piloten"
           />
           <ToneCard
             tone="info"
+            icon={Share2}
             label="Geteilte Scorings"
             value={shares.length}
             sub="vom Scouting-Team"
@@ -122,6 +132,7 @@ export default async function PartnerDashboard() {
           <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={toScreen > 0 ? "attention" : "muted"}
+              icon={ClipboardCheck}
               label="Startups zu screenen"
               value={toScreen}
               sub="warten auf dein Verdikt →"
@@ -130,6 +141,7 @@ export default async function PartnerDashboard() {
           <Link href="/check-ins" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={overdueCheckIns > 0 ? "warn" : openCheckIns > 0 ? "info" : "muted"}
+              icon={Bell}
               label="Offene Check-ins"
               value={openCheckIns}
               sub={

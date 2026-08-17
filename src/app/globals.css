@@ -12,8 +12,8 @@
   --color-lv-pink: #ffdbf5;
   --color-lv-yellow: #ffe9a8;
   --color-lv-yellow-deep: #7a5a00;
-  --color-lv-surface: #f4f4f8;
-  --color-lv-border: #e5e5ee;
+  --color-lv-surface: #f5f6fb;
+  --color-lv-border: #e6e7f0;
   --color-lv-text: #0a0a0f;
   --color-lv-secondary: #6b6b7b;
 
@@ -47,6 +47,15 @@ body {
 ::selection {
   background: var(--color-lv-blue);
   color: #ffffff;
+}
+
+/* Branded iconography: uniform, friendlier lucide stroke across the whole app.
+   Presentation attributes on the generated <svg> are overridden by this rule,
+   so every lucide icon inherits a consistent, softer weight and rounded caps. */
+.lucide {
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Wordmark treatment: uppercase, heavy, widely tracked */

@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDashed } from "lucide-react";
+import { CircleCheck, CircleDashed, Clock, Coins, Store } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ApplicationStatusBadge } from "@/components/shared/badges";
@@ -145,12 +145,14 @@ export default async function StartupDashboard() {
           <div className="grid gap-4 sm:grid-cols-2">
             <ToneCard
               tone={pending > 0 ? "attention" : "muted"}
+              icon={Clock}
               label="Ausstehend"
               value={pending}
               sub="in Prüfung"
             />
             <ToneCard
               tone="success"
+              icon={CircleCheck}
               label="Angenommen"
               value={accepted}
               sub="PoCs in Bewegung"
@@ -201,6 +203,7 @@ export default async function StartupDashboard() {
             <Link href="/venture/credits" className="block transition-transform hover:-translate-y-0.5">
               <ToneCard
                 tone={creditBalance > 0 ? "success" : "muted"}
+                icon={Coins}
                 label="Venture-Guthaben"
                 value={`${creditBudget.remaining} von ${creditBudget.total}`}
                 sub={`Fix ${creditBudget.fixRemaining}/${creditBudget.fixTotal} · Flexibel ${creditBudget.flexRemaining}/${creditBudget.flexTotal} · Historie →`}
@@ -209,6 +212,7 @@ export default async function StartupDashboard() {
             <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
               <ToneCard
                 tone="info"
+                icon={Store}
                 label="Marktplatz"
                 value="Support finden"
                 sub="Programme, Mentor:innen & Angebote →"

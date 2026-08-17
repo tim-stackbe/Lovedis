@@ -14,7 +14,7 @@ export function AuthLayout({ headline, subline, children }: AuthLayoutProps) {
         <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-lv-orange/40 blur-3xl pointer-events-none" />
         <div className="relative">
-          <Wordmark variant="light" size="lg" />
+          <Wordmark variant="light" size="lg" priority />
         </div>
         <div className="relative">
           <h1 className="text-5xl font-bold leading-[1.1] tracking-tight text-white">

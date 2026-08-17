@@ -59,14 +59,24 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
                   <Link
                     href={item.href}
                     onClick={onClose}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-button px-3 py-2 text-sm transition-colors",
+                      "group flex items-center gap-3 rounded-button py-1.5 pl-1.5 pr-3 text-sm transition-colors",
                       active
-                        ? "bg-lv-blue-soft text-lv-blue font-semibold"
+                        ? "bg-lv-blue-soft font-semibold text-lv-blue"
                         : "text-lv-text hover:bg-lv-surface"
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-button transition-colors",
+                        active
+                          ? "bg-lv-blue text-white shadow-sm"
+                          : "text-lv-secondary group-hover:text-lv-blue"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                    </span>
                     {item.label}
                   </Link>
                 </li>

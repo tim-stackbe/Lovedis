@@ -1,3 +1,13 @@
+import {
+  Bell,
+  ClipboardCheck,
+  FlaskConical,
+  Inbox,
+  Share2,
+  Store,
+  Target,
+  UserCheck,
+} from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { DistributionChartLazy as DistributionChart } from "@/components/dashboard/ChartsLazy";
@@ -108,24 +118,28 @@ export default async function AdminDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <ToneCard
             tone="info"
+            icon={Target}
             label="Offene Challenges"
             value={openChallenges}
             sub="nehmen Bewerbungen an"
           />
           <ToneCard
             tone="attention"
+            icon={Inbox}
             label="Ausstehende Bewerbungen"
             value={pendingApplications}
             sub="warten auf eine Entscheidung"
           />
           <ToneCard
             tone="success"
+            icon={FlaskConical}
             label="Laufende PoCs"
             value={runningPoCs}
             sub="in aktiven Piloten"
           />
           <ToneCard
             tone="muted"
+            icon={Share2}
             label="Geteilte Scorings"
             value={shareCount}
             sub="für Partner sichtbar"
@@ -136,13 +150,14 @@ export default async function AdminDashboard() {
       <section className="space-y-4">
         <SectionLabel
           number="02"
-          label="Mara"
+          label="Aktionen"
           title="Aktions-Inbox"
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link href="/users" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={pendingPartners > 0 ? "attention" : "muted"}
+              icon={UserCheck}
               label="Partner-Freigaben offen"
               value={pendingPartners}
               sub="warten auf Freigabe →"
@@ -151,6 +166,7 @@ export default async function AdminDashboard() {
           <Link href="/marketplace" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={openBookings > 0 ? "attention" : "muted"}
+              icon={Store}
               label="Offene Marktplatz-Anfragen"
               value={openBookings}
               sub="warten auf Koordination →"
@@ -159,6 +175,7 @@ export default async function AdminDashboard() {
           <Link href="/pushes" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={dueCheckIns > 0 ? "warn" : "muted"}
+              icon={Bell}
               label="Fällige Check-in-Erinnerungen"
               value={dueCheckIns}
               sub="bereit zum Versand →"
@@ -167,6 +184,7 @@ export default async function AdminDashboard() {
           <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={pendingPartnerVerdicts > 0 ? "info" : "muted"}
+              icon={ClipboardCheck}
               label="Ausstehende Partner-Verdikte"
               value={pendingPartnerVerdicts}
               sub="Startups ohne Partner-Feedback →"

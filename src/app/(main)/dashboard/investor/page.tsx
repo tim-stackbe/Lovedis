@@ -1,4 +1,4 @@
-import { Compass, Newspaper } from "lucide-react";
+import { Compass, Eye, Handshake, Newspaper } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { StartupLogo } from "@/components/discovery/StartupLogo";
@@ -141,18 +141,21 @@ export default async function InvestorDashboard() {
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone={followedIds.length > 0 ? "info" : "muted"}
+            icon={Eye}
             label="Beobachtet"
             value={followedIds.length}
             sub="Startups, denen du folgst"
           />
           <ToneCard
             tone={openIntros > 0 ? "attention" : "muted"}
+            icon={Handshake}
             label="Offene Intros"
             value={openIntros}
             sub="in Anbahnung"
           />
           <ToneCard
             tone="success"
+            icon={Newspaper}
             label="Neue Updates"
             value={feedItems.length}
             sub="von deinen Startups"

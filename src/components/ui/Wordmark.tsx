@@ -1,42 +1,45 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface WordmarkProps {
   variant?: "default" | "light";
   className?: string;
   size?: "sm" | "md" | "lg";
+  priority?: boolean;
 }
 
-const SIZE_CLASSES = {
-  sm: "text-xs gap-1.5",
-  md: "text-sm gap-2",
-  lg: "text-lg gap-2.5",
-};
+/** Intrinsic logo aspect ratio (4033 × 1150 ≈ 3.51:1). */
+const LOGO_ASPECT = 4033 / 1150;
 
-const DOT_SIZES = {
-  sm: "w-2 h-2",
-  md: "w-2.5 h-2.5",
-  lg: "w-3 h-3",
+const SIZE_HEIGHTS: Record<NonNullable<WordmarkProps["size"]>, number> = {
+  sm: 20,
+  md: 28,
+  lg: 40,
 };
 
 export function Wordmark({
   variant = "default",
   size = "md",
   className,
+  priority = false,
 }: WordmarkProps) {
+  const height = SIZE_HEIGHTS[size];
+  const width = Math.round(height * LOGO_ASPECT);
+  const src =
+    variant === "light"
+      ? "/brand/lovedis-logo-white.png"
+      : "/brand/lovedis-logo.png";
+
   return (
-    <span
+    <Image
       data-lv-logo
-      className={cn(
-        "lv-wordmark inline-flex items-center",
-        SIZE_CLASSES[size],
-        variant === "light" ? "text-white" : "text-lv-text",
-        className
-      )}
-    >
-      <span
-        className={cn("rounded-full bg-lv-orange shrink-0", DOT_SIZES[size])}
-      />
-      LOVEDIS
-    </span>
+      src={src}
+      alt="LOVEDIS"
+      width={width}
+      height={height}
+      priority={priority}
+      className={cn("inline-block w-auto select-none", className)}
+      style={{ height }}
+    />
   );
 }

@@ -38,9 +38,9 @@ export function Topbar({
 
       <button
         onClick={onOpenPalette}
-        className="flex flex-1 max-w-md items-center gap-2 rounded-button border border-lv-border px-3.5 py-2 text-sm text-lv-secondary hover:bg-lv-surface transition-colors"
+        className="group flex flex-1 max-w-md items-center gap-2 rounded-button border border-lv-border px-3.5 py-2 text-sm text-lv-secondary transition-colors hover:border-lv-blue-soft hover:bg-lv-surface"
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-4 w-4 text-lv-secondary transition-colors group-hover:text-lv-blue" />
         <span className="flex-1 text-left">Suchen & Navigieren…</span>
         <kbd className="hidden rounded bg-lv-surface px-1.5 py-0.5 text-[10px] font-semibold text-lv-secondary sm:inline">
           ⌘K
@@ -51,11 +51,11 @@ export function Topbar({
         href={FAQ_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="ml-auto flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium text-lv-text hover:bg-lv-surface transition-colors"
+        className="group ml-auto flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium text-lv-text hover:bg-lv-surface transition-colors"
         aria-label="Hilfe"
         title="Hilfe"
       >
-        <HelpCircle className="h-5 w-5 shrink-0" />
+        <HelpCircle className="h-5 w-5 shrink-0 text-lv-secondary transition-colors group-hover:text-lv-blue" />
         <span className="hidden sm:inline">Hilfe</span>
       </a>
 

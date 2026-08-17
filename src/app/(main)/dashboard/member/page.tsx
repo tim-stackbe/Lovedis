@@ -1,3 +1,11 @@
+import {
+  BarChart3,
+  Bell,
+  ClipboardCheck,
+  Handshake,
+  Store,
+  Target,
+} from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { DistributionChartLazy as DistributionChart } from "@/components/dashboard/ChartsLazy";
@@ -93,9 +101,9 @@ export default async function MemberDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Sektion 00 — Venture Scout & Mara"
+        kicker="Sektion 00 — Venture Scout"
         title={`Schön, dich zu sehen, ${session.user.name?.split(" ")[0]}`}
-        subtitle="Dein Team-Desk: scoute und bewerte Startups — und koordiniere die Mara-Jobs aus SSOT, Screening und Marktplatz."
+        subtitle="Dein Team-Desk: scoute und bewerte Startups — und koordiniere die offenen Aufgaben aus SSOT, Screening und Marktplatz."
         actions={
           <LinkButton href="/startups/new" variant="white">
             Startup hinzufügen
@@ -115,18 +123,21 @@ export default async function MemberDashboard() {
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone="attention"
+            icon={Target}
             label="In Bewertung"
             value={inEvaluation}
             sub="Startups werden gescort"
           />
           <ToneCard
             tone="info"
+            icon={BarChart3}
             label="Deine Bewertungen"
             value={myEvaluationCount}
             sub="von dir verfasst"
           />
           <ToneCard
             tone="success"
+            icon={Handshake}
             label="Partnerschaften"
             value={
               pipelineGroups.find((g) => g.pipelineStage === "PARTNERED")
@@ -138,11 +149,12 @@ export default async function MemberDashboard() {
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number="02" label="Mara" title="Aktions-Inbox" />
+        <SectionLabel number="02" label="Aktionen" title="Aktions-Inbox" />
         <div className="grid gap-4 sm:grid-cols-3">
           <Link href="/marketplace" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={openBookings > 0 ? "attention" : "muted"}
+              icon={Store}
               label="Offene Marktplatz-Anfragen"
               value={openBookings}
               sub="warten auf Koordination →"
@@ -151,6 +163,7 @@ export default async function MemberDashboard() {
           <Link href="/pushes" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={dueCheckIns > 0 ? "warn" : "muted"}
+              icon={Bell}
               label="Fällige Check-in-Erinnerungen"
               value={dueCheckIns}
               sub="bereit zum Versand →"
@@ -159,6 +172,7 @@ export default async function MemberDashboard() {
           <Link href="/screening" className="block transition-transform hover:-translate-y-0.5">
             <ToneCard
               tone={pendingPartnerVerdicts > 0 ? "info" : "muted"}
+              icon={ClipboardCheck}
               label="Ausstehende Partner-Verdikte"
               value={pendingPartnerVerdicts}
               sub="Startups ohne Partner-Feedback →"
