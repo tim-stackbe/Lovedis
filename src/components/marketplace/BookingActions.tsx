@@ -1,6 +1,11 @@
 "use client";
 
-import { ArrowRight, Check, CheckCheck, X } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CheckCheckIcon,
+  CheckIcon,
+  CloseIcon,
+} from "@/components/icons/lovedis";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { BookingStatus } from "@/generated/prisma/enums";
@@ -109,7 +114,7 @@ export function BookingActions({
               disabled={pending}
               className={`${BTN_BASE} border border-lv-border text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange`}
             >
-              <X className="h-3.5 w-3.5" />
+              <CloseIcon className="h-3.5 w-3.5" />
               Ablehnen
             </button>
             <button
@@ -118,7 +123,7 @@ export function BookingActions({
               disabled={pending}
               className={`${BTN_BASE} bg-lv-blue text-white hover:bg-lv-blue-dark`}
             >
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRightIcon className="h-3.5 w-3.5" />
               In Koordination nehmen
             </button>
           </>
@@ -131,7 +136,7 @@ export function BookingActions({
               disabled={pending}
               className={`${BTN_BASE} border border-lv-border text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange`}
             >
-              <X className="h-3.5 w-3.5" />
+              <CloseIcon className="h-3.5 w-3.5" />
               Ablehnen
             </button>
             <button
@@ -140,7 +145,7 @@ export function BookingActions({
               disabled={pending}
               className={`${BTN_BASE} bg-lv-blue text-white hover:bg-lv-blue-dark`}
             >
-              <Check className="h-3.5 w-3.5" />
+              <CheckIcon className="h-3.5 w-3.5" />
               Bestätigen (Credits einlösen)
             </button>
           </>
@@ -153,7 +158,7 @@ export function BookingActions({
               disabled={pending}
               className={`${BTN_BASE} border border-lv-border text-lv-secondary hover:bg-lv-orange-soft hover:text-lv-orange`}
             >
-              <X className="h-3.5 w-3.5" />
+              <CloseIcon className="h-3.5 w-3.5" />
               Stornieren (Rückbuchung)
             </button>
             <button
@@ -162,7 +167,7 @@ export function BookingActions({
               disabled={pending}
               className={`${BTN_BASE} bg-lv-mint text-lv-mint-deep hover:bg-lv-mint/70`}
             >
-              <CheckCheck className="h-3.5 w-3.5" />
+              <CheckCheckIcon className="h-3.5 w-3.5" />
               Abschließen
             </button>
           </>

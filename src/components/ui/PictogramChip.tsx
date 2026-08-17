@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { IconRenderer } from "@/components/icons/lovedis";
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,7 +30,8 @@ const SIZES = {
 } as const;
 
 interface PictogramChipProps {
-  icon: LucideIcon;
+  /** Any Lovedis pictogram or (legacy) lucide icon component. */
+  icon: IconRenderer;
   tone?: PictogramTone;
   size?: keyof typeof SIZES;
   className?: string;

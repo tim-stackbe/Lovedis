@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Rocket, UserRound } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CalendarIcon,
+  ProfileIcon,
+  StartupsIcon,
+} from "@/components/icons/lovedis";
 import { CreditCostBadge } from "@/components/shared/badges";
 
 export interface ProgramCardData {
@@ -25,7 +30,7 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
       {/* Decorative gradient panel with the "EXKLUSIV" tag */}
       <div className="relative flex min-h-[9rem] items-center justify-center overflow-hidden bg-lv-cover p-6 text-white">
         <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-lv-orange/40 blur-3xl" />
-        <Rocket className="relative h-12 w-12 opacity-90" />
+        <StartupsIcon className="relative h-12 w-12 opacity-90" />
         <span className="lv-wordmark absolute left-4 top-4 rounded-full bg-white/15 px-2.5 py-1 text-[10px] text-white backdrop-blur">
           Exklusiv
         </span>
@@ -45,13 +50,13 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-lv-secondary">
           {program.sessionDate && (
             <span className="flex items-center gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
+              <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
               {program.sessionDate}
             </span>
           )}
           {program.contactPerson && (
             <span className="flex items-center gap-1.5">
-              <UserRound className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
+              <ProfileIcon className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
               {program.contactPerson}
             </span>
           )}
@@ -72,7 +77,7 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
 
         <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-lv-blue">
           Mehr erfahren
-          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
         </span>
       </div>
     </Link>

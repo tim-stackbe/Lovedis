@@ -1,4 +1,10 @@
-import { ArrowRight, GraduationCap, Sparkles, Users } from "lucide-react";
+import {
+  ArrowRightIcon,
+  GraduationCapIcon,
+  UsersIcon,
+  VentureIcon,
+  type IconRenderer,
+} from "@/components/icons/lovedis";
 import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
 import { LinkButton } from "@/components/ui/Button";
 import { PictogramChip } from "@/components/ui/PictogramChip";
@@ -18,7 +24,7 @@ function WidgetStat({
   label,
   value,
 }: {
-  icon: typeof Users;
+  icon: IconRenderer;
   label: string;
   value: number;
 }) {
@@ -73,7 +79,7 @@ export function MarketplaceHero({
               size="md"
             >
               {teamMode ? "Zur Koordination" : "Meine Anfragen"}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRightIcon className="h-4 w-4" />
             </LinkButton>
           </div>
         </div>
@@ -90,17 +96,17 @@ export function MarketplaceHero({
               </p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 <WidgetStat
-                  icon={GraduationCap}
+                  icon={GraduationCapIcon}
                   label="Programme"
                   value={programCount}
                 />
                 <WidgetStat
-                  icon={Users}
+                  icon={UsersIcon}
                   label="Mentor:innen"
                   value={mentorCount}
                 />
                 <WidgetStat
-                  icon={Sparkles}
+                  icon={VentureIcon}
                   label="Angebote"
                   value={offeringCount}
                 />

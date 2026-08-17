@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, X } from "lucide-react";
 import type { UserRole } from "@/generated/prisma/enums";
+import { LovedisIcon } from "@/components/icons/lovedis";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { ROLE_LABELS, ROLE_NAV } from "@/lib/roles";
 import { cn, initials } from "@/lib/utils";
@@ -36,7 +36,7 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
           {ROLE_LABELS[role]}
         </span>
       </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-lv-secondary" />
+      <LovedisIcon name="chevronRight" className="h-4 w-4 shrink-0 text-lv-secondary" />
     </Link>
   );
 
@@ -75,7 +75,7 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
                           : "text-lv-secondary group-hover:text-lv-blue"
                       )}
                     >
-                      <item.icon className="h-4 w-4" />
+                      <LovedisIcon name={item.icon} className="h-4 w-4" />
                     </span>
                     {item.label}
                   </Link>
@@ -117,7 +117,7 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
                 className="rounded-button p-2 hover:bg-lv-surface"
                 aria-label="Menü schließen"
               >
-                <X className="h-4 w-4" />
+                <LovedisIcon name="close" className="h-4 w-4" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto lv-scroll">{nav}</div>

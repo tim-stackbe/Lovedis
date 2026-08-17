@@ -1,4 +1,4 @@
-import { ArrowRight, Coins } from "lucide-react";
+import { ArrowRightIcon, CreditsIcon } from "@/components/icons/lovedis";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
@@ -64,7 +64,7 @@ export default async function VenturePage() {
       <SectionLabel number="01" label="Guthaben" title="Venture-Credits" />
       <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
         <div className="flex items-center gap-4">
-          <PictogramChip icon={Coins} tone="info" size="lg" />
+          <PictogramChip icon={CreditsIcon} tone="info" size="lg" />
           <div>
             <p className="text-3xl font-bold tracking-tight text-lv-text">
               {budget.remaining}{" "}
@@ -81,7 +81,7 @@ export default async function VenturePage() {
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-lv-blue hover:underline"
         >
           Historie ansehen
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRightIcon className="h-4 w-4" />
         </Link>
       </Card>
 

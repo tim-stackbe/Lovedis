@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons/lovedis";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface CardTrackProps {
@@ -68,7 +68,7 @@ export function CardTrack({ ariaLabel, children }: CardTrackProps) {
           (canPrev ? "opacity-100" : "pointer-events-none opacity-0")
         }
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeftIcon className="h-5 w-5" />
       </button>
 
       <div
@@ -93,7 +93,7 @@ export function CardTrack({ ariaLabel, children }: CardTrackProps) {
           (canNext ? "opacity-100" : "pointer-events-none opacity-0")
         }
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRightIcon className="h-5 w-5" />
       </button>
     </div>
   );

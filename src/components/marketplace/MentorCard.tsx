@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/icons/lovedis";
 import { CreditCostBadge } from "@/components/shared/badges";
 import { initials } from "@/lib/utils";
 
@@ -79,7 +79,7 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
 
       <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-lv-blue">
         Details &amp; Anfrage
-        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
       </span>
     </Link>
   );

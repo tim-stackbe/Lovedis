@@ -1,4 +1,4 @@
-import { Coins } from "lucide-react";
+import { CreditsIcon } from "@/components/icons/lovedis";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
@@ -77,7 +77,7 @@ export default async function VentureCreditsPage() {
         </PreviewBanner>
       ) : !startup ? (
         <EmptyState
-          icon={Coins}
+          icon={CreditsIcon}
           title="Kein Startup-Profil"
           description="Lege zuerst dein Startup-Profil an, um Venture-Credits zu erhalten."
         />
@@ -100,7 +100,7 @@ export default async function VentureCreditsPage() {
           <SectionLabel number="02" label="Historie" title="Buchungen" />
           {transactions.length === 0 ? (
             <EmptyState
-              icon={Coins}
+              icon={CreditsIcon}
               title="Noch keine Buchungen"
               description="Sobald das Lovedis-Team dir Credits gutschreibt, erscheinen sie hier."
             />

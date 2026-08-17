@@ -1,6 +1,6 @@
 "use client";
 
-import { Send } from "lucide-react";
+import { PushesIcon } from "@/components/icons/lovedis";
 import { useActionState, useState } from "react";
 import type { MarketplaceOfferingType } from "@/generated/prisma/enums";
 import { requestBooking } from "@/app/actions/marketplace";
@@ -170,7 +170,7 @@ export function MarketplaceBookingForm({
         disabled={pending || blockSubmit || insufficient}
         className="w-full"
       >
-        <Send className="h-4 w-4" />
+        <PushesIcon className="h-4 w-4" />
         {pending
           ? "Wird gesendet…"
           : teamMode

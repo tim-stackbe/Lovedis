@@ -1,9 +1,9 @@
-import type { LucideIcon } from "lucide-react";
+import type { IconRenderer } from "@/components/icons/lovedis";
 import { Card } from "@/components/ui/Card";
 import { PictogramChip, type PictogramTone } from "@/components/ui/PictogramChip";
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: IconRenderer;
   title: string;
   description: string;
   action?: React.ReactNode;

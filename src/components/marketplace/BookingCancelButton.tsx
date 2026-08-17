@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { CloseIcon } from "@/components/icons/lovedis";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { cancelBooking } from "@/app/actions/marketplace";
@@ -33,7 +33,7 @@ export function BookingCancelButton({ bookingId }: { bookingId: string }) {
         disabled={pending}
         className="inline-flex items-center gap-1.5 rounded-button border border-lv-border px-3 py-1.5 text-xs font-semibold text-lv-secondary transition-colors hover:bg-lv-orange-soft hover:text-lv-orange disabled:opacity-50"
       >
-        <X className="h-3.5 w-3.5" />
+        <CloseIcon className="h-3.5 w-3.5" />
         Zurückziehen
       </button>
 

@@ -1,35 +1,5 @@
 import type { UserRole } from "@/generated/prisma/enums";
-import {
-  BarChart3,
-  Bell,
-  BookOpen,
-  Building2,
-  ClipboardCheck,
-  Coins,
-  Compass,
-  FlaskConical,
-  GitCompare,
-  Handshake,
-  Home,
-  Inbox,
-  Kanban,
-  Layers,
-  LayoutGrid,
-  Library,
-  ListChecks,
-  MessageSquare,
-  Newspaper,
-  Radar,
-  Rocket,
-  Send,
-  Settings,
-  Share2,
-  Sparkles,
-  Store,
-  Target,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import type { LovedisIconName } from "@/components/icons/lovedis";
 
 export const ALL_ROLES: UserRole[] = [
   "ADMIN",
@@ -111,7 +81,8 @@ export const ROLE_HOMES: Record<UserRole, string> = {
 export interface NavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  /** Semantic name into the bespoke Lovedis pictogram set. */
+  icon: LovedisIconName;
 }
 
 export interface NavSection {
@@ -122,7 +93,7 @@ export interface NavSection {
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
   href: "/messages",
-  icon: MessageSquare,
+  icon: "messages",
 };
 
 // ---------------------------------------------------------------------------
@@ -136,11 +107,11 @@ const MESSAGES_ITEM: NavItem = {
 const SOURCING_SECTION: NavSection = {
   title: "Sourcing & Screening",
   items: [
-    { label: "Startups", href: "/startups", icon: Rocket },
-    { label: "Longlist", href: "/longlist", icon: ListChecks },
-    { label: "Bewertungen", href: "/evaluations", icon: BarChart3 },
-    { label: "Vergleich", href: "/compare", icon: GitCompare },
-    { label: "Radar", href: "/radar", icon: Radar },
+    { label: "Startups", href: "/startups", icon: "startups" },
+    { label: "Longlist", href: "/longlist", icon: "longlist" },
+    { label: "Bewertungen", href: "/evaluations", icon: "evaluations" },
+    { label: "Vergleich", href: "/compare", icon: "compare" },
+    { label: "Radar", href: "/radar", icon: "radar" },
   ],
 };
 
@@ -148,9 +119,9 @@ const SOURCING_SECTION: NavSection = {
 const MATCHMAKING_SECTION: NavSection = {
   title: "Matchmaking & Use-Cases",
   items: [
-    { label: "Batches", href: "/batches", icon: Layers },
-    { label: "Match-Matrix", href: "/match-matrix", icon: LayoutGrid },
-    { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: Target },
+    { label: "Batches", href: "/batches", icon: "batches" },
+    { label: "Match-Matrix", href: "/match-matrix", icon: "matchMatrix" },
+    { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: "useCases" },
   ],
 };
 
@@ -162,10 +133,10 @@ const MATCHMAKING_SECTION: NavSection = {
 const COLLAB_SECTION: NavSection = {
   title: "Zusammenarbeit & Kommunikation",
   items: [
-    { label: "Engagements", href: "/engagements", icon: Handshake },
-    { label: "Push & Check-ins", href: "/pushes", icon: Send },
-    { label: "Partner-Screening (Vorschau)", href: "/screening", icon: ClipboardCheck },
-    { label: "Partner-Check-ins (Vorschau)", href: "/check-ins", icon: Bell },
+    { label: "Engagements", href: "/engagements", icon: "engagements" },
+    { label: "Push & Check-ins", href: "/pushes", icon: "pushes" },
+    { label: "Partner-Screening (Vorschau)", href: "/screening", icon: "screening" },
+    { label: "Partner-Check-ins (Vorschau)", href: "/check-ins", icon: "checkIns" },
   ],
 };
 
@@ -173,8 +144,8 @@ const COLLAB_SECTION: NavSection = {
 const SPACE_SECTION: NavSection = {
   title: "Roadmap & Wissen (SSOT)",
   items: [
-    { label: "SSOT-Pflege", href: "/hub-admin", icon: BookOpen },
-    { label: "Partner-Hub (Vorschau)", href: "/partner-hub", icon: Library },
+    { label: "SSOT-Pflege", href: "/hub-admin", icon: "ssot" },
+    { label: "Partner-Hub (Vorschau)", href: "/partner-hub", icon: "partnerHub" },
   ],
 };
 
@@ -182,9 +153,9 @@ const SPACE_SECTION: NavSection = {
 const MARKET_SECTION: NavSection = {
   title: "Marktplatz & Credits",
   items: [
-    { label: "Venture-Credits", href: "/credits", icon: Coins },
-    { label: "Marktplatz-Inbox", href: "/marketplace", icon: Inbox },
-    { label: "Marktplatz-Storefront", href: "/venture/marketplace", icon: Store },
+    { label: "Venture-Credits", href: "/credits", icon: "credits" },
+    { label: "Marktplatz-Inbox", href: "/marketplace", icon: "inbox" },
+    { label: "Marktplatz-Storefront", href: "/venture/marketplace", icon: "storefront" },
   ],
 };
 
@@ -192,16 +163,16 @@ const MARKET_SECTION: NavSection = {
 const TRACKING_SECTION: NavSection = {
   title: "Tracking (intern)",
   items: [
-    { label: "Pipeline", href: "/pipeline", icon: Kanban },
-    { label: "Berichte", href: "/reports", icon: Share2 },
+    { label: "Pipeline", href: "/pipeline", icon: "pipeline" },
+    { label: "Berichte", href: "/reports", icon: "reports" },
   ],
 };
 
 const MARKETPLACE_SECTION: NavSection = {
   title: "Ökosystem",
   items: [
-    { label: "Entdecken", href: "/discover", icon: Compass },
-    { label: "Feed", href: "/feed", icon: Newspaper },
+    { label: "Entdecken", href: "/discover", icon: "discover" },
+    { label: "Feed", href: "/feed", icon: "feed" },
   ],
 };
 
@@ -216,10 +187,10 @@ const MARKETPLACE_SECTION: NavSection = {
 const PARTNER_FUNCTIONS_SECTION: NavSection = {
   title: "Partner-Funktionen (Admin-Sicht)",
   items: [
-    { label: "Partner-Dashboard", href: "/dashboard/partner", icon: Handshake },
-    { label: "Challenges (Use-Cases)", href: "/challenges", icon: Target },
-    { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
-    { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
+    { label: "Partner-Dashboard", href: "/dashboard/partner", icon: "partnerDashboard" },
+    { label: "Challenges (Use-Cases)", href: "/challenges", icon: "challenges" },
+    { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
+    { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
     MESSAGES_ITEM,
   ],
 };
@@ -234,12 +205,12 @@ const PARTNER_FUNCTIONS_SECTION: NavSection = {
 const STARTUP_FUNCTIONS_SECTION: NavSection = {
   title: "Startup-Funktionen (Admin-Sicht)",
   items: [
-    { label: "Startup-Dashboard", href: "/dashboard/startup", icon: Home },
-    { label: "Meine Bewerbungen", href: "/applications", icon: Building2 },
-    { label: "Mein Profil", href: "/profile", icon: Rocket },
-    { label: "Venture Platform", href: "/venture", icon: Sparkles },
-    { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: Inbox },
-    { label: "Mein Guthaben", href: "/venture/credits", icon: Coins },
+    { label: "Startup-Dashboard", href: "/dashboard/startup", icon: "startupDashboard" },
+    { label: "Meine Bewerbungen", href: "/applications", icon: "applications" },
+    { label: "Mein Profil", href: "/profile", icon: "profile" },
+    { label: "Venture Platform", href: "/venture", icon: "venture" },
+    { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: "requests" },
+    { label: "Mein Guthaben", href: "/venture/credits", icon: "wallet" },
   ],
 };
 
@@ -250,27 +221,27 @@ const STARTUP_FUNCTIONS_SECTION: NavSection = {
  */
 const PLATFORM_SECTION_MEMBER: NavSection = {
   title: "Plattform",
-  items: [{ label: "Intro-Anfragen", href: "/intros", icon: Handshake }],
+  items: [{ label: "Intro-Anfragen", href: "/intros", icon: "intros" }],
 };
 
 const PLATFORM_SECTION_ADMIN: NavSection = {
   title: "Plattform",
   items: [
-    { label: "Intro-Anfragen", href: "/intros", icon: Handshake },
-    { label: "Unternehmen", href: "/companies", icon: Building2 },
-    { label: "Nutzerverwaltung", href: "/users", icon: Users },
-    { label: "Geteilte Scorings", href: "/sharing", icon: Share2 },
+    { label: "Intro-Anfragen", href: "/intros", icon: "intros" },
+    { label: "Unternehmen", href: "/companies", icon: "companies" },
+    { label: "Nutzerverwaltung", href: "/users", icon: "users" },
+    { label: "Geteilte Scorings", href: "/sharing", icon: "sharing" },
   ],
 };
 
 const SETTINGS_SECTION: NavSection = {
-  items: [{ label: "Einstellungen", href: "/settings", icon: Settings }],
+  items: [{ label: "Einstellungen", href: "/settings", icon: "settings" }],
 };
 
 export const ROLE_NAV: Record<UserRole, NavSection[]> = {
   ADMIN: [
     {
-      items: [{ label: "Dashboard", href: "/dashboard/admin", icon: Home }],
+      items: [{ label: "Dashboard", href: "/dashboard/admin", icon: "dashboard" }],
     },
     SOURCING_SECTION,
     MATCHMAKING_SECTION,
@@ -286,7 +257,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
   ],
   MEMBER: [
     {
-      items: [{ label: "Dashboard", href: "/dashboard/member", icon: Home }],
+      items: [{ label: "Dashboard", href: "/dashboard/member", icon: "dashboard" }],
     },
     SOURCING_SECTION,
     MATCHMAKING_SECTION,
@@ -302,48 +273,48 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
   ],
   BUSINESS_PARTNER: [
     {
-      items: [{ label: "Dashboard", href: "/dashboard/partner", icon: Home }],
+      items: [{ label: "Dashboard", href: "/dashboard/partner", icon: "partnerDashboard" }],
     },
     MARKETPLACE_SECTION,
     {
       title: "Screening",
       items: [
-        { label: "Match-Matrix", href: "/matrix", icon: LayoutGrid },
-        { label: "Longlist-Screening", href: "/screening", icon: ClipboardCheck },
-        { label: "Use-Case-Bewertung", href: "/use-cases", icon: Target },
-        { label: "Check-ins", href: "/check-ins", icon: Bell },
+        { label: "Match-Matrix", href: "/matrix", icon: "matchMatrix" },
+        { label: "Longlist-Screening", href: "/screening", icon: "screening" },
+        { label: "Use-Case-Bewertung", href: "/use-cases", icon: "useCases" },
+        { label: "Check-ins", href: "/check-ins", icon: "checkIns" },
       ],
     },
     {
       title: "Zusammenarbeit",
       items: [
-        { label: "Meine Challenges", href: "/challenges", icon: Target },
-        { label: "Engagements", href: "/engagements", icon: Handshake },
-        { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
-        { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
+        { label: "Meine Challenges", href: "/challenges", icon: "challenges" },
+        { label: "Engagements", href: "/engagements", icon: "engagements" },
+        { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
+        { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
         MESSAGES_ITEM,
       ],
     },
     {
       title: "Wissen",
-      items: [{ label: "Partner-Hub", href: "/partner-hub", icon: BookOpen }],
+      items: [{ label: "Partner-Hub", href: "/partner-hub", icon: "partnerHub" }],
     },
     {
       title: "Unternehmen",
-      items: [{ label: "Team", href: "/team", icon: Users }],
+      items: [{ label: "Team", href: "/team", icon: "team" }],
     },
     SETTINGS_SECTION,
   ],
   INVESTOR: [
     {
-      items: [{ label: "Dashboard", href: "/dashboard/investor", icon: Home }],
+      items: [{ label: "Dashboard", href: "/dashboard/investor", icon: "dashboard" }],
     },
     MARKETPLACE_SECTION,
     {
       title: "Portfolio",
       items: [
-        { label: "PoC-Tracking", href: "/pocs", icon: FlaskConical },
-        { label: "Geteilte Scorings", href: "/scorings", icon: BarChart3 },
+        { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
+        { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
         MESSAGES_ITEM,
       ],
     },
@@ -351,30 +322,30 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
   ],
   STARTUP: [
     {
-      items: [{ label: "Dashboard", href: "/dashboard/startup", icon: Home }],
+      items: [{ label: "Dashboard", href: "/dashboard/startup", icon: "startupDashboard" }],
     },
     {
       // Feed only — Discover/follow stay marketplace-gated (see FEED_ROLES).
       title: "Ökosystem",
-      items: [{ label: "Feed", href: "/feed", icon: Newspaper }],
+      items: [{ label: "Feed", href: "/feed", icon: "feed" }],
     },
     {
       title: "Chancen",
       items: [
-        { label: "Match-Matrix", href: "/matrix", icon: LayoutGrid },
-        { label: "Challenges", href: "/challenges", icon: Target },
-        { label: "Meine Bewerbungen", href: "/applications", icon: Building2 },
-        { label: "Mein Profil", href: "/profile", icon: Rocket },
+        { label: "Match-Matrix", href: "/matrix", icon: "matchMatrix" },
+        { label: "Challenges", href: "/challenges", icon: "challenges" },
+        { label: "Meine Bewerbungen", href: "/applications", icon: "applications" },
+        { label: "Mein Profil", href: "/profile", icon: "profile" },
         MESSAGES_ITEM,
       ],
     },
     {
       title: "Venture Platform",
       items: [
-        { label: "Venture Platform", href: "/venture", icon: Sparkles },
-        { label: "Marktplatz", href: "/venture/marketplace", icon: Store },
-        { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: Inbox },
-        { label: "Mein Guthaben", href: "/venture/credits", icon: Coins },
+        { label: "Venture Platform", href: "/venture", icon: "venture" },
+        { label: "Marktplatz", href: "/venture/marketplace", icon: "storefront" },
+        { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: "requests" },
+        { label: "Mein Guthaben", href: "/venture/credits", icon: "wallet" },
       ],
     },
     SETTINGS_SECTION,

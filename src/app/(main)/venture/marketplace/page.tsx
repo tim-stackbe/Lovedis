@@ -1,4 +1,8 @@
-import { GraduationCap, Sparkles, Users } from "lucide-react";
+import {
+  GraduationCapIcon,
+  UsersIcon,
+  VentureIcon,
+} from "@/components/icons/lovedis";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { SupportCategory } from "@/generated/prisma/enums";
@@ -92,7 +96,7 @@ export default async function MarketplacePage() {
         </div>
         {programs.length === 0 ? (
           <EmptyState
-            icon={GraduationCap}
+            icon={GraduationCapIcon}
             title="Noch keine Programme"
             description="Sobald Programme freigeschaltet sind, erscheinen sie hier."
           />
@@ -127,7 +131,7 @@ export default async function MarketplacePage() {
             </p>
           </div>
           <EmptyState
-            icon={Users}
+            icon={UsersIcon}
             title="Noch keine Mentor:innen"
             description="Das Lovedis-Team kuratiert das Mentor:innen-Netzwerk."
           />
@@ -166,7 +170,7 @@ export default async function MarketplacePage() {
         </div>
         {offeringsByCategory.length === 0 ? (
           <EmptyState
-            icon={Sparkles}
+            icon={VentureIcon}
             title="Noch keine Angebote"
             description="Workshops und Sparring für Fundraising, Legal, Marketing und mehr folgen."
           />

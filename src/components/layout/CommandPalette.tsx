@@ -1,10 +1,10 @@
 "use client";
 
 import { Command } from "cmdk";
-import { ArrowRight, Rocket } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { UserRole } from "@/generated/prisma/enums";
+import { ArrowRightIcon, LovedisIcon, StartupsIcon } from "@/components/icons/lovedis";
 import { ROLE_NAV } from "@/lib/roles";
 
 export interface PaletteStartup {
@@ -81,9 +81,9 @@ export function CommandPalette({
                     onSelect={() => go(item.href)}
                     className="flex cursor-pointer items-center gap-3 rounded-button px-3 py-2.5 text-sm text-lv-text data-[selected=true]:bg-lv-blue-soft data-[selected=true]:text-lv-blue"
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <LovedisIcon name={item.icon} className="h-4 w-4 shrink-0" />
                     <span className="flex-1">{item.label}</span>
-                    <ArrowRight className="h-3.5 w-3.5 opacity-40" />
+                    <ArrowRightIcon className="h-3.5 w-3.5 opacity-40" />
                   </Command.Item>
                 ))}
             </Command.Group>
@@ -100,7 +100,7 @@ export function CommandPalette({
                     onSelect={() => go(`/startups/${s.id}`)}
                     className="flex cursor-pointer items-center gap-3 rounded-button px-3 py-2.5 text-sm text-lv-text data-[selected=true]:bg-lv-blue-soft data-[selected=true]:text-lv-blue"
                   >
-                    <Rocket className="h-4 w-4 shrink-0" />
+                    <StartupsIcon className="h-4 w-4 shrink-0" />
                     <span className="flex-1">{s.name}</span>
                     <span className="text-xs text-lv-secondary">
                       {s.industry}

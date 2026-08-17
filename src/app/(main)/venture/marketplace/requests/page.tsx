@@ -1,4 +1,4 @@
-import { Coins, Inbox } from "lucide-react";
+import { CreditsIcon, InboxIcon } from "@/components/icons/lovedis";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { BookingCancelButton } from "@/components/marketplace/BookingCancelButton";
@@ -87,7 +87,7 @@ export default async function MyBookingsPage() {
       <SectionLabel number="01" label="Übersicht" title="Anfragen" />
       {bookings.length === 0 ? (
         <EmptyState
-          icon={Inbox}
+          icon={InboxIcon}
           title="Noch keine Anfragen"
           description="Wähle im Marktplatz ein Programm, eine:n Mentor:in oder ein Support-Angebot und sende eine Anfrage."
           action={
@@ -118,7 +118,7 @@ export default async function MyBookingsPage() {
                       <BookingStatusBadge value={b.status} />
                       {b.creditCost > 0 ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-lv-secondary">
-                          <Coins className="h-3 w-3 text-lv-blue" />
+                          <CreditsIcon className="h-3 w-3 text-lv-blue" />
                           {b.creditCost} Credits
                         </span>
                       ) : (

@@ -1,5 +1,12 @@
-import { ArrowLeft, Building2, CalendarDays, Globe, UserRound } from "lucide-react";
 import Link from "next/link";
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  CompaniesIcon,
+  GlobeIcon,
+  ProfileIcon,
+  type IconRenderer,
+} from "@/components/icons/lovedis";
 import type { MarketplaceOfferingType } from "@/generated/prisma/enums";
 import { MarketplaceBookingForm } from "@/components/marketplace/MarketplaceBookingForm";
 import { OfferingTypeBadge } from "@/components/shared/badges";
@@ -38,7 +45,7 @@ function MetaRow({
   value,
   href,
 }: {
-  icon: typeof Building2;
+  icon: IconRenderer;
   label: string;
   value: string;
   href?: string;
@@ -94,7 +101,7 @@ export function OfferingDetail({
         href="/venture/marketplace"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-lv-secondary hover:text-lv-blue"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeftIcon className="h-4 w-4" />
         Zurück zum Marktplatz
       </Link>
 
@@ -132,28 +139,28 @@ export function OfferingDetail({
               <div className="space-y-2 border-t border-lv-border pt-4">
                 {providerCompany && (
                   <MetaRow
-                    icon={Building2}
+                    icon={CompaniesIcon}
                     label="Anbieter"
                     value={providerCompany}
                   />
                 )}
                 {contactPerson && (
                   <MetaRow
-                    icon={UserRound}
+                    icon={ProfileIcon}
                     label="Kontakt"
                     value={contactPerson}
                   />
                 )}
                 {sessionDate && (
                   <MetaRow
-                    icon={CalendarDays}
+                    icon={CalendarIcon}
                     label="Termin"
                     value={sessionDate}
                   />
                 )}
                 {website && (
                   <MetaRow
-                    icon={Globe}
+                    icon={GlobeIcon}
                     label="Website"
                     value={website.replace(/^https?:\/\//, "")}
                     href={website}
