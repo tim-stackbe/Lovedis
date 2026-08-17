@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import type { UserRole } from "@/generated/prisma/enums";
 import { LovedisIcon } from "@/components/icons/lovedis";
 import { Wordmark } from "@/components/ui/Wordmark";
@@ -18,6 +19,27 @@ interface SidebarProps {
 export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const sections = ROLE_NAV[role];
+
+  // Highlight exactly ONE nav item: the most specific route that matches the
+  // current pathname. A plain prefix test would light up every ancestor href
+  // (e.g. "/venture" AND "/venture/marketplace" on /venture/marketplace), so we
+  // pick the single longest matching href instead. This keeps deep detail
+  // pages (e.g. /startups/123 → "Startups") highlighting their section while
+  // ensuring the previously active item clears on navigation.
+  const activeHref = useMemo(() => {
+    let best: string | null = null;
+    for (const section of sections) {
+      for (const item of section.items) {
+        const matches =
+          pathname === item.href ||
+          (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+        if (matches && (best === null || item.href.length > best.length)) {
+          best = item.href;
+        }
+      }
+    }
+    return best;
+  }, [sections, pathname]);
 
   const userChip = (
     <Link
@@ -51,9 +73,7 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
           )}
           <ul className="space-y-0.5">
             {section.items.map((item) => {
-              const active =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+              const active = item.href === activeHref;
               return (
                 <li key={item.href}>
                   <Link
