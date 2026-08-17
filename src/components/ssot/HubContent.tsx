@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { RoadmapStatusBadge } from "@/components/shared/badges";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PictogramChip } from "@/components/ui/PictogramChip";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Markdown } from "@/components/ssot/Markdown";
 import { KNOWLEDGE_RESOURCE_TYPE_LABELS } from "@/lib/constants";
@@ -107,9 +108,7 @@ export function HubContent({
           <Card className="divide-y divide-lv-border">
             {media.map((asset) => (
               <div key={asset.id} className="flex items-center gap-3 p-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lv-pink text-lv-text">
-                  <Download className="h-4 w-4" />
-                </div>
+                <PictogramChip icon={Download} tone="pink" size="sm" />
                 <div className="min-w-0 flex-1">
                   <a
                     href={asset.url}
@@ -149,7 +148,7 @@ export function HubContent({
                     <Badge tone="blue">
                       {KNOWLEDGE_RESOURCE_TYPE_LABELS[res.type]}
                     </Badge>
-                    <BookOpen className="h-4 w-4 shrink-0 text-lv-secondary" />
+                    <BookOpen className="h-4 w-4 shrink-0 text-lv-blue" />
                   </div>
                   <Title
                     {...(res.url

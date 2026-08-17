@@ -1,6 +1,7 @@
 import { ArrowRight, GraduationCap, Sparkles, Users } from "lucide-react";
 import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
 import { LinkButton } from "@/components/ui/Button";
+import { PictogramChip } from "@/components/ui/PictogramChip";
 import type { CreditBudgetView } from "@/lib/credit-buckets";
 
 interface MarketplaceHeroProps {
@@ -23,9 +24,7 @@ function WidgetStat({
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-button bg-lv-blue-soft text-lv-blue">
-        <Icon className="h-4 w-4" />
-      </span>
+      <PictogramChip icon={Icon} tone="info" size="sm" />
       <span>
         <span className="block text-lg font-bold leading-none text-lv-text">
           {value}

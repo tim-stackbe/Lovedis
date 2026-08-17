@@ -45,13 +45,13 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-lv-secondary">
           {program.sessionDate && (
             <span className="flex items-center gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
               {program.sessionDate}
             </span>
           )}
           {program.contactPerson && (
             <span className="flex items-center gap-1.5">
-              <UserRound className="h-3.5 w-3.5 shrink-0" />
+              <UserRound className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
               {program.contactPerson}
             </span>
           )}

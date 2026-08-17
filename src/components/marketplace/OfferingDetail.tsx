@@ -45,7 +45,7 @@ function MetaRow({
 }) {
   return (
     <div className="flex items-start gap-2.5">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-lv-secondary" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-lv-blue" />
       <div className="text-sm">
         <span className="text-lv-secondary">{label}: </span>
         {href ? (

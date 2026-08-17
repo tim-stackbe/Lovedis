@@ -5,6 +5,7 @@ import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdow
 import { HubContent } from "@/components/ssot/HubContent";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { Card } from "@/components/ui/Card";
+import { PictogramChip } from "@/components/ui/PictogramChip";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireVentureView } from "@/lib/auth-guards";
@@ -63,9 +64,7 @@ export default async function VenturePage() {
       <SectionLabel number="01" label="Guthaben" title="Venture-Credits" />
       <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
         <div className="flex items-center gap-4">
-          <div className="grid h-12 w-12 place-items-center rounded-card bg-lv-blue-soft text-lv-blue">
-            <Coins className="h-6 w-6" />
-          </div>
+          <PictogramChip icon={Coins} tone="info" size="lg" />
           <div>
             <p className="text-3xl font-bold tracking-tight text-lv-text">
               {budget.remaining}{" "}

@@ -118,7 +118,7 @@ export default async function MyBookingsPage() {
                       <BookingStatusBadge value={b.status} />
                       {b.creditCost > 0 ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-lv-secondary">
-                          <Coins className="h-3 w-3" />
+                          <Coins className="h-3 w-3 text-lv-blue" />
                           {b.creditCost} Credits
                         </span>
                       ) : (

@@ -35,13 +35,13 @@ export function OfferingCard({ offering }: { offering: OfferingCardData }) {
       <div className="mt-3 space-y-1">
         {offering.providerCompany && (
           <p className="flex items-center gap-1.5 text-xs text-lv-secondary">
-            <Building2 className="h-3.5 w-3.5 shrink-0" />
+            <Building2 className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
             <span className="truncate">{offering.providerCompany}</span>
           </p>
         )}
         {offering.format && (
           <p className="flex items-center gap-1.5 text-xs text-lv-secondary">
-            <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+            <CalendarClock className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
             <span className="truncate">{offering.format}</span>
           </p>
         )}
