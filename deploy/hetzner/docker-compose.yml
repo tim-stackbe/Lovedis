@@ -1,0 +1,51 @@
+# Lovedis unified app on a single Hetzner Cloud VPS.
+# App is built in CI and pulled as an image (APP_IMAGE); nothing is built on the box.
+# Postgres data lives on a Hetzner Cloud Volume mounted at /mnt/pgdata on the host.
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  app:
+    image: ${APP_IMAGE} # e.g. ghcr.io/<owner>/lovedis:latest (built + pushed by CI)
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "3000" # only reachable inside the compose network; Caddy terminates TLS
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - /mnt/pgdata:/var/lib/postgresql/data # Hetzner Cloud Volume
+    # Not published to the host/internet — only the app talks to it over the internal network.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  caddy_data:
+  caddy_config:

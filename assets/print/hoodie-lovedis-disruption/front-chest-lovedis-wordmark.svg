@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LOVEDIS chest wordmark - print artboard 300mm x 85mm (~30 cm wide) -->
+<!-- Reference: public/brand/lovedis-logo.png - glitch slice on L,O,V,E; heart in D -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300mm" height="85mm" viewBox="0 0 1320 340">
+  <title>LOVEDIS Front Chest Wordmark</title>
+
+  <!-- L with horizontal glitch slice -->
+  <g fill="#2926e5">
+    <path d="M20 35 H115 V155 H70 V305 H20 V155 H20 Z"/>
+    <path d="M20 178 H115 V305 H70 V178 H20 Z" transform="translate(14 0)"/>
+  </g>
+
+  <!-- O with glitch slice -->
+  <g fill="#2926e5" fill-rule="evenodd">
+    <path d="M140 35 H265 Q330 35 330 170 Q330 305 265 305 H140 Q75 305 75 170 Q75 35 140 35 Z M140 92 Q108 92 108 170 Q108 248 140 248 H265 Q297 248 297 170 Q297 92 265 92 Z"/>
+    <path d="M140 188 H265 Q330 188 330 305 H140 Q75 305 75 188 Z" transform="translate(12 0)"/>
+  </g>
+
+  <!-- V with glitch slice -->
+  <g fill="#2926e5">
+    <path d="M355 35 L430 230 L505 35 H555 L460 305 H400 L305 35 Z"/>
+    <path d="M375 188 L430 248 L485 188 H530 L460 305 H400 L350 188 Z" transform="translate(10 0)"/>
+  </g>
+
+  <!-- E with glitch slice -->
+  <g fill="#2926e5">
+    <path d="M575 35 H720 V88 H630 V138 H710 V188 H630 V252 H720 V305 H575 Z"/>
+    <path d="M575 188 H720 V252 H630 V305 H575 Z" transform="translate(12 0)"/>
+  </g>
+
+  <!-- D outer shape -->
+  <path fill="#2926e5" fill-rule="evenodd"
+    d="M745 35 H795 V305 H745 Z
+       M795 35 H870 Q995 35 995 170 Q995 305 870 305 H795 Z
+       M845 92 Q790 92 790 170 Q790 248 845 248 H870 Q920 248 920 170 Q920 92 870 92 Z"/>
+
+  <!-- Heart in D counter (coral + white 3D) -->
+  <g transform="translate(810 108)">
+    <path fill="#ff5736" d="M8 78 L48 38 L88 78 L88 108 L48 148 L8 108 Z"/>
+    <path fill="#ffffff" d="M14 72 L48 38 L82 72 L82 98 L48 132 L14 98 Z"/>
+    <path fill="#ff5736" d="M20 76 C20 58 36 48 48 62 C60 48 76 58 76 76 C76 96 48 128 48 128 C48 128 20 96 20 76 Z"/>
+  </g>
+
+  <!-- I -->
+  <rect x="1015" y="35" width="52" height="270" fill="#2926e5"/>
+
+  <!-- S -->
+  <path fill="#2926e5"
+    d="M1095 52 C1155 28 1225 48 1255 88 C1275 112 1270 148 1235 168 C1205 182 1165 188 1135 198 C1105 208 1105 232 1125 252 C1150 278 1195 288 1245 268 C1268 258 1278 238 1275 218
+       M1095 248 C1118 288 1168 308 1225 292 C1260 280 1285 252 1275 218
+       M1095 52 C1068 62 1055 88 1068 112 C1080 132 1105 142 1135 148 C1175 158 1215 162 1240 148 C1262 136 1270 112 1255 88 C1230 58 1185 42 1135 48 C1112 52 1095 52 1095 52 Z"/>
+  <path fill="#2926e5"
+    d="M1092 55 C1152 30 1230 52 1258 92 C1278 118 1272 152 1238 172 C1208 186 1168 192 1138 202 C1108 212 1108 236 1128 256 C1155 282 1202 292 1250 272 C1272 262 1282 242 1278 222
+       L1260 228 C1265 245 1248 262 1218 272 C1182 284 1140 272 1122 248 C1105 226 1118 202 1152 190 C1188 178 1228 172 1252 158 C1272 146 1278 118 1260 96 C1235 68 1190 52 1142 58 C1118 62 1102 68 1092 55 Z
+       M1095 250 C1118 288 1165 305 1220 290 C1255 278 1275 252 1260 228 L1278 218 C1295 248 1272 288 1225 305 C1178 322 1125 298 1095 250 Z"/>
+</svg>

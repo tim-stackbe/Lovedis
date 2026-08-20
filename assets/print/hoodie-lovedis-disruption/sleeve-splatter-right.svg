@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Wearer RIGHT sleeve (appears on viewer's LEFT in front mockup photo) -->
+<!-- Artboard 180mm x 270mm - comic cloud outline + blue splash + black halftone + coral accent -->
+<svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="270mm" viewBox="0 0 400 600">
+  <title>Sleeve Splatter - Wearer Right</title>
+
+  <defs>
+    <pattern id="ht-black-dense" patternUnits="userSpaceOnUse" width="10" height="10">
+      <circle cx="5" cy="5" r="2.8" fill="#0a0a0f"/>
+    </pattern>
+    <pattern id="ht-black-mid" patternUnits="userSpaceOnUse" width="10" height="10">
+      <circle cx="5" cy="5" r="2" fill="#0a0a0f" opacity="0.7"/>
+    </pattern>
+    <pattern id="ht-black-light" patternUnits="userSpaceOnUse" width="12" height="12">
+      <circle cx="6" cy="6" r="1.5" fill="#0a0a0f" opacity="0.45"/>
+    </pattern>
+    <pattern id="ht-blue" patternUnits="userSpaceOnUse" width="10" height="10">
+      <circle cx="5" cy="5" r="2.5" fill="#2926e5"/>
+    </pattern>
+    <clipPath id="splash-clip">
+      <path d="M135 165
+               C85 135 115 75 175 45
+               C255 10 320 55 305 135
+               C290 220 225 265 165 285
+               C135 165 135 165 135 165 Z"/>
+    </clipPath>
+  </defs>
+
+  <g fill="none" stroke="#2926e5" stroke-linejoin="round" stroke-linecap="round">
+    <path stroke-width="5"
+      d="M165 38
+         C205 18 255 28 285 58
+         C310 82 300 118 268 128
+         L248 152 L232 122
+         C195 118 162 98 148 72
+         C132 48 142 28 165 38 Z"/>
+    <circle cx="138" cy="88" r="12" stroke-width="4"/>
+    <circle cx="118" cy="108" r="7" stroke-width="3"/>
+    <circle cx="105" cy="122" r="4" stroke-width="2.5"/>
+  </g>
+
+  <g clip-path="url(#splash-clip)">
+    <rect x="55" y="115" width="95" height="290" fill="url(#ht-black-dense)"/>
+    <rect x="55" y="115" width="65" height="290" fill="url(#ht-black-mid)"/>
+    <rect x="55" y="115" width="35" height="290" fill="url(#ht-black-light)"/>
+  </g>
+
+  <path fill="#2926e5"
+    d="M135 165
+       C85 135 115 75 175 45
+       C255 10 320 55 305 135
+       C290 220 225 265 165 285
+       C135 165 135 165 135 165 Z"/>
+  <ellipse cx="215" cy="168" rx="72" ry="58" fill="url(#ht-blue)" opacity="0.55" clip-path="url(#splash-clip)"/>
+
+  <g fill="#2926e5">
+    <rect x="188" y="278" width="11" height="128" rx="5"/>
+    <rect x="225" y="268" width="9" height="148" rx="4"/>
+    <rect x="158" y="292" width="7" height="98" rx="3.5"/>
+    <path d="M248 415 Q254 465 246 515 Q242 555 250 585"
+      fill="none" stroke="#2926e5" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="250" cy="590" r="11"/>
+  </g>
+
+  <path fill="#ff5736"
+    d="M108 395
+       C78 375 92 345 125 335
+       C158 325 185 350 172 385
+       C158 420 118 415 108 395 Z"/>
+  <path fill="#ff5736" opacity="0.75"
+    d="M288 418
+       C318 402 338 425 328 455
+       C318 485 278 478 268 448
+       C258 418 288 418 288 418 Z"/>
+
+  <g fill="#2926e5">
+    <circle cx="318" cy="98" r="6"/>
+    <circle cx="92" cy="205" r="5"/>
+    <circle cx="335" cy="288" r="4"/>
+  </g>
+  <g fill="#0a0a0f" opacity="0.65">
+    <circle cx="278" cy="358" r="4"/>
+    <circle cx="125" cy="428" r="3"/>
+    <circle cx="345" cy="225" r="3"/>
+  </g>
+  <g fill="#ff5736">
+    <circle cx="132" cy="368" r="5"/>
+  </g>
+</svg>

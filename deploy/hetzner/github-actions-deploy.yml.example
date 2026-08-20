@@ -1,0 +1,46 @@
+# Reference CI/CD: build the app image in GitHub Actions, push to GHCR, deploy over SSH.
+# To activate, move to .github/workflows/deploy.yml and set the repo secrets:
+#   SSH_HOST, SSH_USER, SSH_KEY  (private key with access to the VPS)
+name: Deploy (Hetzner)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The Dockerfile should run `prisma generate` + `next build` (standalone output)
+      # so the runtime image just does `node server.js`. Build happens here, not on the server.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/lovedis/deploy/hetzner
+            docker compose pull app
+            docker compose up -d
+            # Run DB migrations after the new image is live:
+            docker compose exec -T app npx prisma migrate deploy
+            docker compose exec -T app node ./node_modules/payload/dist/bin/index.js migrate || true

@@ -1,0 +1,10 @@
+# Caddy handles automatic HTTPS (Let's Encrypt) and proxies to the Next.js app.
+{
+	# Set a real address so Let's Encrypt can email about expiries.
+	email ops@lovedis.de
+}
+
+lovedis.de, www.lovedis.de {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
