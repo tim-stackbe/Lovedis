@@ -8,6 +8,7 @@ import { signIn, signOut } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import { prisma } from "@/lib/prisma";
+import { ROLE_HOMES } from "@/lib/roles";
 
 const loginSchema = z.object({
   email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
@@ -24,15 +25,34 @@ export async function login(
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
+  // Resolve a CONCRETE post-login destination so sign-in triggers exactly one
+  // redirect. Redirecting to "/" and letting middleware bounce "/" → the role
+  // home is a *chained* redirect (Server Action redirect + middleware redirect)
+  // which aborts the first client-side navigation after login in Next.js 16 —
+  // the landing page fails to load and only a manual reload recovers. Landing
+  // directly on the final URL avoids that second hop entirely.
   const callbackUrl = formData.get("callbackUrl");
+  const safeCallback =
+    typeof callbackUrl === "string" &&
+    callbackUrl.startsWith("/") &&
+    callbackUrl !== "/"
+      ? callbackUrl
+      : null;
+
+  let redirectTo = safeCallback ?? "/";
+  if (!safeCallback) {
+    const user = await prisma.user.findUnique({
+      where: { email: parsed.data.email.toLowerCase() },
+      select: { role: true },
+    });
+    if (user) redirectTo = ROLE_HOMES[user.role];
+  }
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo:
-        typeof callbackUrl === "string" && callbackUrl.startsWith("/")
-          ? callbackUrl
-          : "/",
+      redirectTo,
     });
     return {};
   } catch (error) {
@@ -87,11 +107,17 @@ async function signup(
     },
   });
 
+  // Land directly on the concrete destination (single redirect) — same reason
+  // as `login` above. A freshly self-registered partner is still pending
+  // approval, so the app-shell guard would bounce their role home → /pending;
+  // send them straight to /pending to keep it a single hop.
+  const redirectTo =
+    role === "BUSINESS_PARTNER" ? "/pending" : ROLE_HOMES[role];
   try {
     await signIn("credentials", {
       email,
       password: parsed.data.password,
-      redirectTo: "/",
+      redirectTo,
     });
     return {};
   } catch (error) {
