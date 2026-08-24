@@ -176,6 +176,43 @@ const MARKETPLACE_SECTION: NavSection = {
   ],
 };
 
+// ---------------------------------------------------------------------------
+// ADMIN-only variants of the shared team spaces. ADMIN must see the internal
+// team/admin working tools but NOT previews of the Partner/Startup end-user
+// surfaces. The shared *_SECTION constants above are still used verbatim by
+// MEMBER, so we clone them here with the partner-view PREVIEW items stripped
+// out instead of mutating the shared objects. Nav-level only — the underlying
+// routes and their ADMIN-inclusive guards are unchanged.
+// ---------------------------------------------------------------------------
+
+/** Matchmaking for ADMIN: drops "Use-Case-Bewertung (Partner)" (/use-cases is
+ *  the partner-facing verdict mask, shown to the team only as a preview). */
+const MATCHMAKING_SECTION_ADMIN: NavSection = {
+  title: "Matchmaking & Use-Cases",
+  items: [
+    { label: "Batches", href: "/batches", icon: "batches" },
+    { label: "Match-Matrix", href: "/match-matrix", icon: "matchMatrix" },
+  ],
+};
+
+/** Collaboration for ADMIN: drops the "Partner-Screening (Vorschau)" and
+ *  "Partner-Check-ins (Vorschau)" partner-view previews; keeps the internal
+ *  engagements + Team→Partner push tools. */
+const COLLAB_SECTION_ADMIN: NavSection = {
+  title: "Zusammenarbeit & Kommunikation",
+  items: [
+    { label: "Engagements", href: "/engagements", icon: "engagements" },
+    { label: "Push & Check-ins", href: "/pushes", icon: "pushes" },
+  ],
+};
+
+/** SSOT for ADMIN: drops "Partner-Hub (Vorschau)"; keeps the team's SSOT
+ *  curation tool. */
+const SPACE_SECTION_ADMIN: NavSection = {
+  title: "Roadmap & Wissen (SSOT)",
+  items: [{ label: "SSOT-Pflege", href: "/hub-admin", icon: "ssot" }],
+};
+
 /**
  * Cross-role access for the internal team: the partner-native surfaces the
  * admin (and member) must be able to open and work on, clearly labelled as a
@@ -248,17 +285,21 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
   // and "Partner-Funktionen (Admin-Sicht)" — are intentionally NOT surfaced
   // here: items like "Mein Profil", "Mein Guthaben", "Meine Bewerbungen" or a
   // partner's personal dashboard are role-specific end-user surfaces, not admin
-  // tools, and only cluttered the admin view. Those routes still exist and stay
-  // reachable by URL (their ADMIN-inclusive guards are unchanged), and MEMBER
-  // keeps the full preview nav below — this is a nav-level declutter only.
+  // tools, and only cluttered the admin view. The remaining partner-view
+  // PREVIEW items embedded in the shared spaces are likewise dropped for ADMIN
+  // via the *_SECTION_ADMIN variants: "Use-Case-Bewertung (Partner)",
+  // "Partner-Screening (Vorschau)", "Partner-Check-ins (Vorschau)" and
+  // "Partner-Hub (Vorschau)". Those routes still exist and stay reachable by
+  // URL (their ADMIN-inclusive guards are unchanged), and MEMBER keeps the full
+  // preview nav below — this is a nav-level declutter only.
   ADMIN: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: "dashboard" }],
     },
     SOURCING_SECTION,
-    MATCHMAKING_SECTION,
-    COLLAB_SECTION,
-    SPACE_SECTION,
+    MATCHMAKING_SECTION_ADMIN,
+    COLLAB_SECTION_ADMIN,
+    SPACE_SECTION_ADMIN,
     MARKET_SECTION,
     TRACKING_SECTION,
     MARKETPLACE_SECTION,
