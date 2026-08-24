@@ -15,7 +15,9 @@ FROM base AS deps
 # Install full deps (incl. dev) for the build. Use the lockfile for repeatable
 # installs. Ignore lifecycle scripts here — Prisma generate runs in the builder.
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+# --include=dev is required because NODE_ENV=production would otherwise make
+# npm omit devDependencies (tailwind, typescript, prisma CLI) needed to build.
+RUN npm ci --include=dev --ignore-scripts
 
 # --- Builder ----------------------------------------------------------------
 FROM base AS builder
