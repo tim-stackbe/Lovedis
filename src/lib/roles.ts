@@ -239,6 +239,18 @@ const SETTINGS_SECTION: NavSection = {
 };
 
 export const ROLE_NAV: Record<UserRole, NavSection[]> = {
+  // ADMIN sees a focused, admin-relevant navigation: platform administration
+  // (Nutzerverwaltung, Unternehmen, Intro-Anfragen, Geteilte Scorings), the
+  // internal scouting/curation workflow it oversees (Sourcing → Matchmaking →
+  // Zusammenarbeit → SSOT → Marktplatz), tracking/reporting, and settings.
+  //
+  // The personal end-user role previews — "Startup-Funktionen (Admin-Sicht)"
+  // and "Partner-Funktionen (Admin-Sicht)" — are intentionally NOT surfaced
+  // here: items like "Mein Profil", "Mein Guthaben", "Meine Bewerbungen" or a
+  // partner's personal dashboard are role-specific end-user surfaces, not admin
+  // tools, and only cluttered the admin view. Those routes still exist and stay
+  // reachable by URL (their ADMIN-inclusive guards are unchanged), and MEMBER
+  // keeps the full preview nav below — this is a nav-level declutter only.
   ADMIN: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: "dashboard" }],
@@ -250,8 +262,6 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     MARKET_SECTION,
     TRACKING_SECTION,
     MARKETPLACE_SECTION,
-    PARTNER_FUNCTIONS_SECTION,
-    STARTUP_FUNCTIONS_SECTION,
     PLATFORM_SECTION_ADMIN,
     SETTINGS_SECTION,
   ],
