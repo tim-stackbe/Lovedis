@@ -7,6 +7,7 @@ import { z } from "zod";
 import { signIn, signOut } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
+import { sendRegistrationConfirmationEmail } from "@/lib/registration-email";
 import { prisma } from "@/lib/prisma";
 import { ROLE_HOMES } from "@/lib/roles";
 
@@ -106,6 +107,7 @@ async function signup(
       approvedAt: role === "BUSINESS_PARTNER" ? null : new Date(),
     },
   });
+  await sendRegistrationConfirmationEmail({ to: email, name: parsed.data.name });
 
   // Land directly on the concrete destination (single redirect) — same reason
   // as `login` above. A freshly self-registered partner is still pending

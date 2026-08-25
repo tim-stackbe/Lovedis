@@ -8,6 +8,7 @@ import { firstZodError, type ActionState } from "@/lib/action-state";
 import { requireAuth, requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { isRecordNotFoundError } from "@/lib/prisma-errors";
+import { sendRegistrationConfirmationEmail } from "@/lib/registration-email";
 import { ALL_ROLES } from "@/lib/roles";
 
 const roleEnum = z.enum(ALL_ROLES as [UserRole, ...UserRole[]]);
@@ -51,6 +52,10 @@ export async function createUser(
       company: parsed.data.company,
       approvedAt: new Date(),
     },
+  });
+  await sendRegistrationConfirmationEmail({
+    to: email,
+    name: parsed.data.name,
   });
   revalidatePath("/users");
   return { success: "Nutzer erstellt." };
