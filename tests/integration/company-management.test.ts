@@ -78,8 +78,8 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("inviteEmployee — authorization boundary", () => {
-  it("lets a company OWNER invite into their own company (PENDING invite + email)", async () => {
+describe("inviteEmployee — temp-password provisioning + authorization", () => {
+  it("lets a company OWNER provision a new member with a temp password + first-login gate", async () => {
     const company = await makeCompany();
     const owner = await makeMember({
       companyId: company.id,
@@ -89,22 +89,36 @@ describe("inviteEmployee — authorization boundary", () => {
 
     const res = await inviteEmployee(
       undefined,
-      form({ companyId: company.id, email: "New@Example.com", role: "MEMBER" })
+      form({
+        companyId: company.id,
+        name: "Nina New",
+        email: "New@Example.com",
+        role: "MEMBER",
+      })
     );
 
     expect(res.success).toBeTruthy();
-    const invite = await prisma.invitation.findFirst({
-      where: { companyId: company.id },
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: "new@example.com" },
     });
-    expect(invite).toMatchObject({
-      email: "new@example.com",
-      role: "MEMBER",
-      status: "PENDING",
+    expect(user).toMatchObject({
+      name: "Nina New",
+      companyId: company.id,
+      companyRole: "MEMBER",
+      role: "BUSINESS_PARTNER",
+      isActive: true,
+      mustChangePassword: true,
     });
+    expect(user.approvedAt).not.toBeNull();
+    // A real (bcrypt) hash was stored, not the temp password in the clear.
+    expect(user.passwordHash).not.toBe("");
+    expect(user.passwordHash.startsWith("$2")).toBe(true);
+    // No token-invite row is created in the temp-password flow.
+    expect(await prisma.invitation.count()).toBe(0);
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
   });
 
-  it("DENIES a manager of a DIFFERENT company (no invite created)", async () => {
+  it("DENIES a manager of a DIFFERENT company (no account created)", async () => {
     const companyA = await makeCompany();
     const companyB = await makeCompany();
     const ownerB = await makeMember({
@@ -115,11 +129,18 @@ describe("inviteEmployee — authorization boundary", () => {
 
     const res = await inviteEmployee(
       undefined,
-      form({ companyId: companyA.id, email: "x@example.com", role: "MEMBER" })
+      form({
+        companyId: companyA.id,
+        name: "Xavier X",
+        email: "x@example.com",
+        role: "MEMBER",
+      })
     );
 
     expect(res.error).toContain("Keine Berechtigung");
-    expect(await prisma.invitation.count()).toBe(0);
+    expect(
+      await prisma.user.findUnique({ where: { email: "x@example.com" } })
+    ).toBeNull();
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
@@ -133,14 +154,21 @@ describe("inviteEmployee — authorization boundary", () => {
 
     const res = await inviteEmployee(
       undefined,
-      form({ companyId: company.id, email: "x@example.com", role: "MEMBER" })
+      form({
+        companyId: company.id,
+        name: "Xavier X",
+        email: "x@example.com",
+        role: "MEMBER",
+      })
     );
 
     expect(res.error).toContain("Keine Berechtigung");
-    expect(await prisma.invitation.count()).toBe(0);
+    expect(
+      await prisma.user.findUnique({ where: { email: "x@example.com" } })
+    ).toBeNull();
   });
 
-  it("lets a PLATFORM ADMIN invite into ANY company", async () => {
+  it("lets a PLATFORM ADMIN provision into ANY company", async () => {
     const company = await makeCompany();
     const admin = await makeMember({
       companyId: null,
@@ -151,44 +179,52 @@ describe("inviteEmployee — authorization boundary", () => {
 
     const res = await inviteEmployee(
       undefined,
-      form({ companyId: company.id, email: "x@example.com", role: "ADMIN" })
+      form({
+        companyId: company.id,
+        name: "Xavier X",
+        email: "x@example.com",
+        role: "ADMIN",
+      })
     );
 
     expect(res.success).toBeTruthy();
-    expect(await prisma.invitation.count()).toBe(1);
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: "x@example.com" },
+    });
+    expect(user).toMatchObject({
+      companyId: company.id,
+      companyRole: "ADMIN",
+      mustChangePassword: true,
+    });
   });
 
-  it("re-inviting a pending email refreshes the SAME invite (no duplicate)", async () => {
+  it("rejects an email that already exists as a platform account", async () => {
     const company = await makeCompany();
     const owner = await makeMember({
       companyId: company.id,
       companyRole: "OWNER",
     });
+    await makeMember({
+      companyId: null,
+      companyRole: null,
+      email: "exists@example.com",
+    });
     actAs(owner.id);
 
-    await inviteEmployee(
+    const res = await inviteEmployee(
       undefined,
-      form({ companyId: company.id, email: "dup@example.com", role: "MEMBER" })
+      form({
+        companyId: company.id,
+        name: "Erin Exists",
+        email: "exists@example.com",
+        role: "MEMBER",
+      })
     );
-    const first = await prisma.invitation.findFirstOrThrow({
-      where: { email: "dup@example.com" },
-    });
-
-    await inviteEmployee(
-      undefined,
-      form({ companyId: company.id, email: "dup@example.com", role: "ADMIN" })
-    );
-
-    const all = await prisma.invitation.findMany({
-      where: { email: "dup@example.com" },
-    });
-    expect(all).toHaveLength(1);
-    expect(all[0].id).toBe(first.id);
-    expect(all[0].role).toBe("ADMIN"); // refreshed
-    expect(all[0].token).not.toBe(first.token); // new token
+    expect(res.error).toContain("existiert bereits");
+    expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it("rejects re-inviting someone already in the company", async () => {
+  it("rejects inviting someone already in the company", async () => {
     const company = await makeCompany();
     const owner = await makeMember({
       companyId: company.id,
@@ -203,13 +239,21 @@ describe("inviteEmployee — authorization boundary", () => {
 
     const res = await inviteEmployee(
       undefined,
-      form({ companyId: company.id, email: "already@example.com", role: "MEMBER" })
+      form({
+        companyId: company.id,
+        name: "Ada Already",
+        email: "already@example.com",
+        role: "MEMBER",
+      })
     );
     expect(res.error).toContain("bereits Teil");
   });
 });
 
 describe("acceptInvitation — onboarding flow", () => {
+  // The token-based accept flow stays for legacy/existing pending invites, so it
+  // is still exercised here by seeding an Invitation row directly (the partner
+  // invite UI now provisions accounts via inviteEmployee instead of tokens).
   async function seedPendingInvite(role: CompanyRole = "MEMBER") {
     const company = await makeCompany("Rheinwerk");
     const owner = await makeMember({
@@ -217,12 +261,15 @@ describe("acceptInvitation — onboarding flow", () => {
       companyRole: "OWNER",
     });
     actAs(owner.id);
-    await inviteEmployee(
-      undefined,
-      form({ companyId: company.id, email: "invitee@example.com", role })
-    );
-    const invite = await prisma.invitation.findFirstOrThrow({
-      where: { email: "invitee@example.com" },
+    const invite = await prisma.invitation.create({
+      data: {
+        companyId: company.id,
+        email: "invitee@example.com",
+        role,
+        token: `tok-${Math.random().toString(36).slice(2)}`,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        invitedByUserId: owner.id,
+      },
     });
     return { company, invite };
   }

@@ -16,8 +16,10 @@ import {
   INVITABLE_COMPANY_ROLES,
 } from "@/lib/company-roles";
 import { sendEmail } from "@/lib/email";
+import { sendPartnerInvitationEmail } from "@/lib/invitation-email";
 import { prisma } from "@/lib/prisma";
 import { isRecordNotFoundError } from "@/lib/prisma-errors";
+import { generateTempPassword } from "@/lib/temp-password";
 
 // Invitations live for a week; expired/revoked tokens are rejected on accept.
 const INVITE_TTL_DAYS = 7;
@@ -153,17 +155,23 @@ export async function updateCompany(
 
 const inviteSchema = z.object({
   companyId: z.string().min(1),
+  name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein").max(120),
   email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
   role: invitableRoleEnum,
 });
 
 /**
- * Invites an employee by email into a company. Authorized for platform admins
- * (any company) and OWNER/ADMIN of the target company. Handles the graceful
- * re-invite cases:
- *   • email already an active member of THIS company → friendly notice.
- *   • email already has a PENDING invite → refresh token/expiry (resend).
- * Enforces the optional seat cap.
+ * Invites someone into a company by immediately provisioning their account with
+ * a temporary single-sign-on password. Authorized for platform admins (any
+ * company) and OWNER/ADMIN of the target company.
+ *
+ * The invitee is created right away as a BUSINESS_PARTNER scoped to the inviting
+ * partner's company (companyId + companyRole), active and approved, carrying a
+ * generated temp password and `mustChangePassword = true`. The invitation email
+ * hands them their login URL, email and that temporary password; the shared
+ * first-login gate (middleware → /change-password) forces them to set their own
+ * password before reaching any app surface. Handles duplicate email (already a
+ * platform user) with a friendly error and enforces the optional seat cap.
  */
 export async function inviteEmployee(
   _prevState: ActionState | undefined,
@@ -171,12 +179,13 @@ export async function inviteEmployee(
 ): Promise<ActionState> {
   const parsed = inviteSchema.safeParse({
     companyId: formData.get("companyId"),
+    name: formData.get("name"),
     email: formData.get("email"),
     role: formData.get("role"),
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  const { companyId, role } = parsed.data;
+  const { companyId, role, name } = parsed.data;
   const email = parsed.data.email.toLowerCase();
 
   const authz = await authorizeCompanyManagement(companyId);
@@ -184,51 +193,66 @@ export async function inviteEmployee(
 
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) return { error: "Unternehmen nicht gefunden." };
-
-  // Already a member of THIS company? Nothing to do.
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser?.companyId === companyId) {
-    return { error: "Diese Person ist bereits Teil des Unternehmens." };
+  if (!company.isActive) {
+    return { error: "Dieses Unternehmen ist derzeit deaktiviert." };
   }
 
-  // Seat cap (counts active members + pending invites).
+  // A platform account for this email must not already exist — the temp-password
+  // flow provisions a brand-new account. (Adding an existing user to a company
+  // is a separate, explicit management action.)
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    return existingUser.companyId === companyId
+      ? { error: "Diese Person ist bereits Teil des Unternehmens." }
+      : { error: "Ein Nutzer mit dieser E-Mail existiert bereits." };
+  }
+
+  // Seat cap (counts active members + any legacy pending invites).
   if (company.seatLimit != null && (await seatsInUse(companyId)) >= company.seatLimit) {
     return {
       error: "Das Sitzplatzlimit dieses Unternehmens ist erreicht.",
     };
   }
 
-  const token = generateToken();
-  const expiresAt = inviteExpiry();
+  const tempPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-  // Refresh an existing pending invite for the same email+company (resend),
-  // otherwise create a fresh one.
-  const existingInvite = await prisma.invitation.findFirst({
-    where: { companyId, email, status: "PENDING" },
+  await prisma.user.create({
+    data: {
+      email,
+      name,
+      passwordHash,
+      // Invited members are partner-side end users scoped to the company; the
+      // company-scoped role carries their management rights, never OWNER.
+      role: "BUSINESS_PARTNER",
+      companyId,
+      companyRole: role,
+      company: company.name,
+      // Invited by a trusted partner → approved immediately (no /pending gate).
+      approvedAt: new Date(),
+      isActive: true,
+      // Force the shared first-login password change on first sign-in.
+      mustChangePassword: true,
+    },
   });
 
-  if (existingInvite) {
-    await prisma.invitation.update({
-      where: { id: existingInvite.id },
-      data: { role, token, expiresAt, invitedByUserId: authz.actor.userId },
-    });
-  } else {
-    await prisma.invitation.create({
-      data: {
-        companyId,
-        email,
-        role,
-        token,
-        expiresAt,
-        invitedByUserId: authz.actor.userId,
-      },
-    });
-  }
+  const inviter = await prisma.user.findUnique({
+    where: { id: authz.actor.userId },
+    select: { name: true },
+  });
 
-  await sendInviteEmail({ email, companyName: company.name, role, token });
+  await sendPartnerInvitationEmail({
+    to: email,
+    name,
+    companyName: company.name,
+    invitedByName: inviter?.name,
+    tempPassword,
+  });
 
   revalidateCompanySurfaces(companyId);
-  return { success: `Einladung an ${email} gesendet.` };
+  return {
+    success: `Zugang für ${email} erstellt — Zugangsdaten wurden per E-Mail versendet.`,
+  };
 }
 
 async function sendInviteEmail(opts: {

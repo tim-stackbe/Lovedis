@@ -36,7 +36,17 @@ export function InviteEmployeeForm({ companyId }: { companyId: string }) {
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="companyId" value={companyId} />
-      <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+        <Field label="Name" htmlFor="invite-name">
+          <Input
+            id="invite-name"
+            name="name"
+            placeholder="Jane Doe"
+            autoComplete="off"
+            required
+            minLength={2}
+          />
+        </Field>
         <Field label="E-Mail" htmlFor="invite-email">
           <Input
             id="invite-email"
@@ -59,6 +69,11 @@ export function InviteEmployeeForm({ companyId }: { companyId: string }) {
           {pending ? "Senden…" : "Einladen"}
         </Button>
       </div>
+      <p className="text-xs text-lv-secondary">
+        Es wird sofort ein Zugang mit einem temporären Passwort angelegt. Die
+        Person erhält ihre Zugangsdaten per E-Mail und legt beim ersten Login ein
+        eigenes Passwort fest.
+      </p>
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       {state?.success && <SuccessChip>{state.success}</SuccessChip>}
     </form>
