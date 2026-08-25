@@ -24,6 +24,21 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+// Paths reachable while a user still owes a first-login password change: the
+// change-password screen itself plus the NextAuth/session endpoints needed to
+// submit it or sign out. Everything else bounces to /change-password.
+const PASSWORD_CHANGE_EXEMPT = [
+  "/change-password",
+  "/api/auth",
+  "/api/session-clear",
+];
+
+function isPasswordChangeExempt(pathname: string): boolean {
+  return PASSWORD_CHANGE_EXEMPT.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
 export default auth((req) => {
   const { nextUrl } = req;
   const user = req.auth?.user;
@@ -35,6 +50,14 @@ export default auth((req) => {
       loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
     }
     return NextResponse.redirect(loginUrl);
+  }
+
+  // First-login gate: an admin-provisioned account carrying a temporary
+  // password must set its own password before reaching any app surface. This
+  // runs BEFORE the "/" → role-home bounce so those users land on
+  // /change-password in a single hop.
+  if (user.mustChangePassword && !isPasswordChangeExempt(nextUrl.pathname)) {
+    return NextResponse.redirect(new URL("/change-password", nextUrl));
   }
 
   // Authenticated users hitting "/" or the auth pages → role home. The invite

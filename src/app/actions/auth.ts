@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { z } from "zod";
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import { sendRegistrationConfirmationEmail } from "@/lib/registration-email";
@@ -67,6 +67,79 @@ export async function login(
 
 export async function logout(): Promise<void> {
   await signOut({ redirectTo: "/login" });
+}
+
+const changePasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Passwort muss mindestens 8 Zeichen lang sein")
+      .max(200),
+    confirm: z.string().min(1, "Bitte bestätige dein neues Passwort"),
+  })
+  .refine((data) => data.password === data.confirm, {
+    message: "Die Passwörter stimmen nicht überein",
+    path: ["confirm"],
+  });
+
+/**
+ * First-login (or self-service) password change. Requires a valid session,
+ * writes the new bcrypt hash, clears the `mustChangePassword` gate and stamps
+ * `passwordChangedAt`. Re-authenticates with the new password so the JWT is
+ * reissued WITHOUT the stale `mustChangePassword` flag (otherwise middleware
+ * would keep bouncing the user back to /change-password), then lands them on
+ * their role home in a single redirect.
+ */
+export async function changePassword(
+  _prevState: ActionState | undefined,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return { error: "Nicht angemeldet. Bitte melde dich erneut an." };
+  }
+
+  const parsed = changePasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirm: formData.get("confirm"),
+  });
+  if (!parsed.success) return { error: firstZodError(parsed.error) };
+
+  const email = session.user.email.toLowerCase();
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, isActive: true },
+  });
+  if (!user || !user.isActive) {
+    return { error: "Konto nicht gefunden. Bitte melde dich erneut an." };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash,
+      mustChangePassword: false,
+      passwordChangedAt: new Date(),
+    },
+  });
+
+  try {
+    await signIn("credentials", {
+      email,
+      password: parsed.data.password,
+      redirectTo: ROLE_HOMES[session.user.role],
+    });
+    return {};
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    // The password was already updated; if re-auth hiccups, sending the user to
+    // /login lets them sign in cleanly with the new password.
+    if (error instanceof AuthError) {
+      return { success: "Passwort geändert. Bitte melde dich erneut an." };
+    }
+    throw error;
+  }
 }
 
 const signupSchema = z.object({

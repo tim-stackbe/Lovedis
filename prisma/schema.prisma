@@ -303,6 +303,13 @@ model User {
   // Last successful credentials login (set in auth.ts on authorize). Surfaced
   // in the team/company member lists.
   lastLoginAt  DateTime?
+  // First-login password change gate. Admin-provisioned accounts are created
+  // with a temporary password and `mustChangePassword = true`; middleware then
+  // forces the user to /change-password before any app surface is reachable.
+  // Cleared (set false) once the user sets their own password.
+  mustChangePassword Boolean @default(false)
+  // Timestamp of the last self-service password change (null until first set).
+  passwordChangedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
