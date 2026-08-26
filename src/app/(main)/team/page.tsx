@@ -13,7 +13,7 @@ export default async function TeamPage() {
   const { actor } = await requireOwnCompanyManager();
   const companyId = actor.companyId;
 
-  const [company, members, invitations] = await Promise.all([
+  const [company, members] = await Promise.all([
     prisma.company.findUnique({ where: { id: companyId } }),
     prisma.user.findMany({
       where: { companyId },
@@ -27,10 +27,6 @@ export default async function TeamPage() {
         lastLoginAt: true,
       },
     }),
-    prisma.invitation.findMany({
-      where: { companyId, status: "PENDING" },
-      orderBy: { createdAt: "desc" },
-    }),
   ]);
 
   const activeCount = members.filter((m) => m.isActive).length;
@@ -42,10 +38,9 @@ export default async function TeamPage() {
         title="Team verwalten"
         subtitle="Lade Kolleg:innen ein, vergib Rollen und verwalte den Zugang deines Unternehmens."
       >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-xl">
+        <div className="grid grid-cols-2 gap-3 sm:max-w-md">
           <BannerStat label="Mitarbeiter:innen" value={members.length} />
           <BannerStat label="Aktiv" value={activeCount} />
-          <BannerStat label="Offene Einladungen" value={invitations.length} />
         </div>
       </HeroBanner>
 
@@ -64,7 +59,6 @@ export default async function TeamPage() {
             ...m,
             companyRole: m.companyRole ?? "MEMBER",
           }))}
-          invitations={invitations}
           currentUserId={actor.userId}
         />
       </section>

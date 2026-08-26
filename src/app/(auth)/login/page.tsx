@@ -7,15 +7,15 @@ export const metadata: Metadata = { title: "Anmelden" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; reset?: string }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, reset } = await searchParams;
   return (
     <AuthLayout
       headline={["Entdecken.", "Bewerten.", "Partnern."]}
       subline="Die Scouting-Workbench für Innovation Engineers — vom ersten Signal bis zum unterschriebenen Proof-of-Concept."
     >
-      <LoginForm callbackUrl={callbackUrl} />
+      <LoginForm callbackUrl={callbackUrl} resetSuccess={reset === "success"} />
     </AuthLayout>
   );
 }

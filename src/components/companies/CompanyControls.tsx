@@ -7,8 +7,6 @@ import {
   inviteEmployee,
   moveEmployee,
   removeEmployee,
-  resendInvitation,
-  revokeInvitation,
   setEmployeeActive,
   updateCompany,
 } from "@/app/actions/companies";
@@ -16,11 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorChip, Field, Input, Select, SuccessChip } from "@/components/ui/Field";
 import type { CompanyRole } from "@/generated/prisma/enums";
-import {
-  ALL_COMPANY_ROLES,
-  COMPANY_ROLE_LABELS,
-  INVITABLE_COMPANY_ROLES,
-} from "@/lib/company-roles";
+import { ALL_COMPANY_ROLES, COMPANY_ROLE_LABELS } from "@/lib/company-roles";
 import { toast } from "@/stores/useToast";
 
 // ---------------------------------------------------------------------------
@@ -36,7 +30,17 @@ export function InviteEmployeeForm({ companyId }: { companyId: string }) {
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="companyId" value={companyId} />
-      <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <Field label="Name" htmlFor="invite-name">
+          <Input
+            id="invite-name"
+            name="name"
+            placeholder="Jane Doe"
+            autoComplete="off"
+            required
+            minLength={2}
+          />
+        </Field>
         <Field label="E-Mail" htmlFor="invite-email">
           <Input
             id="invite-email"
@@ -46,72 +50,18 @@ export function InviteEmployeeForm({ companyId }: { companyId: string }) {
             required
           />
         </Field>
-        <Field label="Rolle" htmlFor="invite-role">
-          <Select id="invite-role" name="role" defaultValue="MEMBER" className="sm:w-40">
-            {INVITABLE_COMPANY_ROLES.map((r) => (
-              <option key={r} value={r}>
-                {COMPANY_ROLE_LABELS[r]}
-              </option>
-            ))}
-          </Select>
-        </Field>
         <Button type="submit" disabled={pending}>
           {pending ? "Senden…" : "Einladen"}
         </Button>
       </div>
+      <p className="text-xs text-lv-secondary">
+        Es wird sofort ein Zugang als Mitglied mit einem temporären Passwort
+        angelegt. Die Person erhält ihre Zugangsdaten per E-Mail und legt beim
+        ersten Login ein eigenes Passwort fest.
+      </p>
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       {state?.success && <SuccessChip>{state.success}</SuccessChip>}
     </form>
-  );
-}
-
-export function InvitationActions({
-  invitationId,
-}: {
-  invitationId: string;
-}) {
-  const [pending, startTransition] = useTransition();
-  const [confirming, setConfirming] = useState(false);
-
-  const run = (fn: () => Promise<{ error?: string; success?: string }>) =>
-    startTransition(async () => {
-      const res = await fn();
-      setConfirming(false);
-      if (res.error) toast.error(res.error);
-      else if (res.success) toast.success(res.success);
-    });
-
-  return (
-    <div className="flex items-center justify-end gap-2">
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        disabled={pending}
-        onClick={() => run(() => resendInvitation(invitationId))}
-      >
-        Erneut senden
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="danger"
-        disabled={pending}
-        onClick={() => setConfirming(true)}
-      >
-        Widerrufen
-      </Button>
-      <ConfirmDialog
-        open={confirming}
-        title="Einladung widerrufen?"
-        description="Der Einladungslink wird sofort ungültig."
-        confirmLabel="Widerrufen"
-        tone="danger"
-        pending={pending}
-        onConfirm={() => run(() => revokeInvitation(invitationId))}
-        onCancel={() => setConfirming(false)}
-      />
-    </div>
   );
 }
 

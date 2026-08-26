@@ -144,7 +144,7 @@ async function main() {
     where: { id: { notIn: [...keepUserIds] } },
   });
 
-  // --- Delete demo Companies (invitations cascade). Real ones are kept. -----
+  // --- Delete demo Companies. Real ones are kept. --------------------------
   const deletedCompanies = await prisma.company.deleteMany({
     where: { matrixColumn: { is: null } },
   });
@@ -152,15 +152,9 @@ async function main() {
   // Demo scouting campaigns (Startup.campaignId already SetNull).
   const deletedCampaigns = await prisma.scoutingCampaign.deleteMany({});
 
-  // Any lingering invitations to now-deleted companies.
-  const orphanInvites = await prisma.invitation.deleteMany({
-    where: { companyId: { notIn: realCompanyIds } },
-  });
-
   console.log(
     `Gelöscht: ${deletedStartups.count} Startups, ${deletedUsers.count} Nutzer, ` +
-      `${deletedCompanies.count} Demo-Firmen, ${deletedCampaigns.count} Kampagnen, ` +
-      `${orphanInvites.count} verwaiste Einladungen.`
+      `${deletedCompanies.count} Demo-Firmen, ${deletedCampaigns.count} Kampagnen.`
   );
 
   // --- Verify the real core survived ---------------------------------------
