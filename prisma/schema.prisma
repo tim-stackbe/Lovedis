@@ -34,13 +34,6 @@ enum CompanyRole {
   MEMBER // regular employee, no management rights
 }
 
-enum InvitationStatus {
-  PENDING  // sent, awaiting accept — the only redeemable state
-  ACCEPTED // redeemed → the invitee is now a company member
-  REVOKED  // withdrawn by a company manager before it was accepted
-  EXPIRED  // past expiresAt (lazily flipped on read / accept attempt)
-}
-
 enum StartupStage {
   PRE_SEED
   SEED
@@ -319,7 +312,6 @@ model User {
   companyId    String?
   companyRel   Company?     @relation("CompanyMembers", fields: [companyId], references: [id], onDelete: SetNull)
   companyRole  CompanyRole?
-  sentInvitations Invitation[] @relation("InvitationInviter")
 
   ownedStartup       Startup?              @relation("StartupOwner")
   evaluations        Evaluation[]          @relation("Evaluator")
@@ -360,12 +352,16 @@ model User {
 }
 
 // ---------------------------------------------------------------------------
-// Company accounts (Partner organisations) + employee invitations
+// Company accounts (Partner organisations)
 //
 // A Company is the top-level Partner account. It has many employee Users
-// (User.companyRel) each carrying a company-scoped role. This is DISTINct from
-// `PartnerCompany` further down, which is a lightweight match-matrix column
-// (cross-partner internal data), not a login/account entity.
+// (User.companyRel) each carrying a company-scoped role. Company managers
+// (OWNER/ADMIN) invite new members from the Team page: the invitee's account is
+// provisioned immediately with a temporary password + the first-login password
+// change gate (User.mustChangePassword), so no separate invitation entity is
+// needed. This is DISTINct from `PartnerCompany` further down, which is a
+// lightweight match-matrix column (cross-partner internal data), not a
+// login/account entity.
 // ---------------------------------------------------------------------------
 
 model Company {
@@ -380,36 +376,11 @@ model Company {
   updatedAt DateTime @updatedAt
 
   members     User[]       @relation("CompanyMembers")
-  invitations Invitation[] @relation("CompanyInvitations")
   // Optional match-matrix column this partner org owns (self-service side).
   matrixColumn PartnerCompany? @relation("CompanyMatrixColumn")
 
   @@index([name])
   @@index([isActive])
-}
-
-model Invitation {
-  id            String           @id @default(cuid())
-  email         String
-  companyId     String
-  company       Company          @relation("CompanyInvitations", fields: [companyId], references: [id], onDelete: Cascade)
-  // Company role the invitee receives on accept (never OWNER via invite; owner
-  // promotion is an explicit management action).
-  role          CompanyRole      @default(MEMBER)
-  token         String           @unique
-  status        InvitationStatus @default(PENDING)
-  invitedByUserId String?
-  invitedBy       User?          @relation("InvitationInviter", fields: [invitedByUserId], references: [id], onDelete: SetNull)
-  expiresAt     DateTime
-  acceptedAt    DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-
-  // At most one live (PENDING) invite per email+company is enforced in the
-  // action layer (re-invite refreshes the existing row). The index keeps the
-  // "does a pending invite already exist?" lookup fast.
-  @@index([companyId, status])
-  @@index([email])
 }
 
 // ---------------------------------------------------------------------------

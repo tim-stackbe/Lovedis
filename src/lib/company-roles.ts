@@ -3,9 +3,6 @@ import type { CompanyRole } from "@/generated/prisma/enums";
 /** All company-scoped roles, highest → lowest. */
 export const ALL_COMPANY_ROLES: CompanyRole[] = ["OWNER", "ADMIN", "MEMBER"];
 
-/** Roles a company OWNER/ADMIN may hand out via invitation (never OWNER). */
-export const INVITABLE_COMPANY_ROLES: CompanyRole[] = ["ADMIN", "MEMBER"];
-
 /** Company roles that may manage employees + invitations. */
 export const COMPANY_MANAGER_ROLES: CompanyRole[] = ["OWNER", "ADMIN"];
 

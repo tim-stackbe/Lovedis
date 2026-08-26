@@ -415,7 +415,6 @@ async function main() {
   await prisma.contact.deleteMany();
   await prisma.startup.deleteMany();
   await prisma.scoutingCampaign.deleteMany();
-  await prisma.invitation.deleteMany();
   await prisma.user.deleteMany();
   await prisma.company.deleteMany();
 
@@ -535,16 +534,6 @@ async function main() {
         companyRole: "ADMIN",
         passwordHash,
         approvedAt: new Date(),
-      },
-    }),
-    prisma.invitation.create({
-      data: {
-        companyId: rheinwerk.id,
-        email: "neu@rheinwerk.dev",
-        role: "MEMBER",
-        token: "seed-invite-rheinwerk",
-        invitedByUserId: partner.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     }),
   ]);

@@ -15,7 +15,6 @@ vi.mock("@/lib/email", () => ({
 import { auth } from "@/auth";
 import type { CompanyRole } from "@/generated/prisma/enums";
 import {
-  acceptInvitation,
   changeEmployeeCompanyRole,
   inviteEmployee,
   removeEmployee,
@@ -93,7 +92,6 @@ describe("inviteEmployee — temp-password provisioning + authorization", () => 
         companyId: company.id,
         name: "Nina New",
         email: "New@Example.com",
-        role: "MEMBER",
       })
     );
 
@@ -113,8 +111,6 @@ describe("inviteEmployee — temp-password provisioning + authorization", () => 
     // A real (bcrypt) hash was stored, not the temp password in the clear.
     expect(user.passwordHash).not.toBe("");
     expect(user.passwordHash.startsWith("$2")).toBe(true);
-    // No token-invite row is created in the temp-password flow.
-    expect(await prisma.invitation.count()).toBe(0);
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
   });
 
@@ -168,7 +164,7 @@ describe("inviteEmployee — temp-password provisioning + authorization", () => 
     ).toBeNull();
   });
 
-  it("lets a PLATFORM ADMIN provision into ANY company", async () => {
+  it("lets a PLATFORM ADMIN provision into ANY company (always as MEMBER)", async () => {
     const company = await makeCompany();
     const admin = await makeMember({
       companyId: null,
@@ -183,6 +179,7 @@ describe("inviteEmployee — temp-password provisioning + authorization", () => 
         companyId: company.id,
         name: "Xavier X",
         email: "x@example.com",
+        // Even if a role is smuggled in via the form, invitees are always MEMBER.
         role: "ADMIN",
       })
     );
@@ -193,7 +190,7 @@ describe("inviteEmployee — temp-password provisioning + authorization", () => 
     });
     expect(user).toMatchObject({
       companyId: company.id,
-      companyRole: "ADMIN",
+      companyRole: "MEMBER",
       mustChangePassword: true,
     });
   });
@@ -247,108 +244,6 @@ describe("inviteEmployee — temp-password provisioning + authorization", () => 
       })
     );
     expect(res.error).toContain("bereits Teil");
-  });
-});
-
-describe("acceptInvitation — onboarding flow", () => {
-  // The token-based accept flow stays for legacy/existing pending invites, so it
-  // is still exercised here by seeding an Invitation row directly (the partner
-  // invite UI now provisions accounts via inviteEmployee instead of tokens).
-  async function seedPendingInvite(role: CompanyRole = "MEMBER") {
-    const company = await makeCompany("Rheinwerk");
-    const owner = await makeMember({
-      companyId: company.id,
-      companyRole: "OWNER",
-    });
-    actAs(owner.id);
-    const invite = await prisma.invitation.create({
-      data: {
-        companyId: company.id,
-        email: "invitee@example.com",
-        role,
-        token: `tok-${Math.random().toString(36).slice(2)}`,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        invitedByUserId: owner.id,
-      },
-    });
-    return { company, invite };
-  }
-
-  it("creates a new account inside the correct company with the invited role", async () => {
-    const { company, invite } = await seedPendingInvite("ADMIN");
-
-    const res = await acceptInvitation(
-      undefined,
-      form({ token: invite.token, name: "Ida Invitee", password: "supersecret" })
-    );
-
-    expect(res.success).toBeTruthy();
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { email: "invitee@example.com" },
-    });
-    expect(user).toMatchObject({
-      companyId: company.id,
-      companyRole: "ADMIN",
-      role: "BUSINESS_PARTNER",
-      isActive: true,
-    });
-    expect(user.approvedAt).not.toBeNull();
-
-    const after = await prisma.invitation.findUniqueOrThrow({
-      where: { id: invite.id },
-    });
-    expect(after.status).toBe("ACCEPTED");
-  });
-
-  it("joins an EXISTING account to the company on accept", async () => {
-    const { company, invite } = await seedPendingInvite("MEMBER");
-    const existing = await makeMember({
-      companyId: null,
-      companyRole: null,
-      email: "invitee@example.com",
-    });
-
-    const res = await acceptInvitation(undefined, form({ token: invite.token }));
-
-    expect(res.success).toBeTruthy();
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { id: existing.id },
-    });
-    expect(user.companyId).toBe(company.id);
-    expect(user.companyRole).toBe("MEMBER");
-  });
-
-  it("rejects an EXPIRED invitation with a clear message", async () => {
-    const { invite } = await seedPendingInvite();
-    await prisma.invitation.update({
-      where: { id: invite.id },
-      data: { expiresAt: new Date(Date.now() - 1000) },
-    });
-
-    const res = await acceptInvitation(
-      undefined,
-      form({ token: invite.token, name: "Ida Invitee", password: "supersecret" })
-    );
-    expect(res.error).toContain("abgelaufen");
-
-    const after = await prisma.invitation.findUniqueOrThrow({
-      where: { id: invite.id },
-    });
-    expect(after.status).toBe("EXPIRED");
-  });
-
-  it("rejects a REVOKED invitation", async () => {
-    const { invite } = await seedPendingInvite();
-    await prisma.invitation.update({
-      where: { id: invite.id },
-      data: { status: "REVOKED" },
-    });
-
-    const res = await acceptInvitation(
-      undefined,
-      form({ token: invite.token, name: "Ida Invitee", password: "supersecret" })
-    );
-    expect(res.error).toContain("widerrufen");
   });
 });
 

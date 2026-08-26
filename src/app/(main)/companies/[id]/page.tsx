@@ -25,7 +25,7 @@ export default async function CompanyDetailPage({
   const company = await prisma.company.findUnique({ where: { id } });
   if (!company) notFound();
 
-  const [members, invitations, otherCompanies] = await Promise.all([
+  const [members, otherCompanies] = await Promise.all([
     prisma.user.findMany({
       where: { companyId: id },
       orderBy: [{ isActive: "desc" }, { companyRole: "asc" }, { createdAt: "asc" }],
@@ -37,10 +37,6 @@ export default async function CompanyDetailPage({
         isActive: true,
         lastLoginAt: true,
       },
-    }),
-    prisma.invitation.findMany({
-      where: { companyId: id, status: "PENDING" },
-      orderBy: { createdAt: "desc" },
     }),
     prisma.company.findMany({
       where: { isActive: true },
@@ -67,10 +63,9 @@ export default async function CompanyDetailPage({
         title={company.name}
         subtitle="Mitarbeiter:innen, Rollen und Einladungen dieses Unternehmens verwalten."
       >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:max-w-2xl">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-xl">
           <BannerStat label="Mitarbeiter:innen" value={members.length} />
           <BannerStat label="Aktiv" value={activeCount} />
-          <BannerStat label="Offene Einladungen" value={invitations.length} />
           <BannerStat
             label="Sitzplatzlimit"
             value={company.seatLimit ?? "∞"}
@@ -108,7 +103,6 @@ export default async function CompanyDetailPage({
             ...m,
             companyRole: m.companyRole ?? "MEMBER",
           }))}
-          invitations={invitations}
           currentUserId={session.user.id}
           moveCompanies={otherCompanies}
         />

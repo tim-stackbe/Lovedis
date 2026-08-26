@@ -1,47 +1,22 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { CompanyRole } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import {
   authorizeCompanyManagement,
   authorizePlatformAdmin,
   countOtherOwners,
 } from "@/lib/company-guards";
-import {
-  COMPANY_ROLE_LABELS,
-  INVITABLE_COMPANY_ROLES,
-} from "@/lib/company-roles";
-import { sendEmail } from "@/lib/email";
 import { sendPartnerInvitationEmail } from "@/lib/invitation-email";
 import { prisma } from "@/lib/prisma";
 import { isRecordNotFoundError } from "@/lib/prisma-errors";
 import { generateTempPassword } from "@/lib/temp-password";
 
-// Invitations live for a week; expired/revoked tokens are rejected on accept.
-const INVITE_TTL_DAYS = 7;
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function generateToken(): string {
-  return randomBytes(32).toString("hex");
-}
-
-function inviteExpiry(): Date {
-  return new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000);
-}
-
-function buildInviteUrl(token: string): string {
-  const base = (
-    process.env.NEXTAUTH_URL ?? "http://localhost:3000"
-  ).replace(/\/$/, "");
-  return `${base}/auth/invite/${token}`;
-}
 
 /** Revalidates every surface a company/team change can appear on. */
 function revalidateCompanySurfaces(companyId?: string): void {
@@ -51,21 +26,15 @@ function revalidateCompanySurfaces(companyId?: string): void {
 }
 
 /**
- * Counts the "seats in use" for a company = active members + still-pending
- * invitations. Used to enforce an optional per-company seat cap.
+ * Counts the "seats in use" for a company = active members. Used to enforce an
+ * optional per-company seat cap. (Invitations provision an account immediately,
+ * so a pending-invite tier no longer exists.)
  */
 async function seatsInUse(companyId: string): Promise<number> {
-  const [members, pending] = await Promise.all([
-    prisma.user.count({ where: { companyId, isActive: true } }),
-    prisma.invitation.count({ where: { companyId, status: "PENDING" } }),
-  ]);
-  return members + pending;
+  return prisma.user.count({ where: { companyId, isActive: true } });
 }
 
 const companyRoleEnum = z.enum(["OWNER", "ADMIN", "MEMBER"]);
-const invitableRoleEnum = z.enum(
-  INVITABLE_COMPANY_ROLES as [CompanyRole, ...CompanyRole[]]
-);
 
 // ---------------------------------------------------------------------------
 // Company CRUD — platform admin only
@@ -150,14 +119,13 @@ export async function updateCompany(
 }
 
 // ---------------------------------------------------------------------------
-// Invitations
+// Invitations — immediate account provisioning with a temporary password
 // ---------------------------------------------------------------------------
 
 const inviteSchema = z.object({
   companyId: z.string().min(1),
   name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein").max(120),
   email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
-  role: invitableRoleEnum,
 });
 
 /**
@@ -165,13 +133,15 @@ const inviteSchema = z.object({
  * a temporary single-sign-on password. Authorized for platform admins (any
  * company) and OWNER/ADMIN of the target company.
  *
- * The invitee is created right away as a BUSINESS_PARTNER scoped to the inviting
- * partner's company (companyId + companyRole), active and approved, carrying a
- * generated temp password and `mustChangePassword = true`. The invitation email
- * hands them their login URL, email and that temporary password; the shared
- * first-login gate (middleware → /change-password) forces them to set their own
- * password before reaching any app surface. Handles duplicate email (already a
- * platform user) with a friendly error and enforces the optional seat cap.
+ * The invitee is always created as a BUSINESS_PARTNER with the company-scoped
+ * role MEMBER, scoped to the inviting partner's company, active and approved,
+ * carrying a generated temp password and `mustChangePassword = true`. (Promoting
+ * a member to ADMIN/OWNER later is a separate, explicit management action.) The
+ * invitation email hands them their login URL, email and that temporary
+ * password; the shared first-login gate (middleware → /change-password) forces
+ * them to set their own password before reaching any app surface. Handles
+ * duplicate email (already a platform user) with a friendly error and enforces
+ * the optional seat cap.
  */
 export async function inviteEmployee(
   _prevState: ActionState | undefined,
@@ -181,11 +151,10 @@ export async function inviteEmployee(
     companyId: formData.get("companyId"),
     name: formData.get("name"),
     email: formData.get("email"),
-    role: formData.get("role"),
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  const { companyId, role, name } = parsed.data;
+  const { companyId, name } = parsed.data;
   const email = parsed.data.email.toLowerCase();
 
   const authz = await authorizeCompanyManagement(companyId);
@@ -207,7 +176,7 @@ export async function inviteEmployee(
       : { error: "Ein Nutzer mit dieser E-Mail existiert bereits." };
   }
 
-  // Seat cap (counts active members + any legacy pending invites).
+  // Seat cap (counts active members).
   if (company.seatLimit != null && (await seatsInUse(companyId)) >= company.seatLimit) {
     return {
       error: "Das Sitzplatzlimit dieses Unternehmens ist erreicht.",
@@ -222,11 +191,11 @@ export async function inviteEmployee(
       email,
       name,
       passwordHash,
-      // Invited members are partner-side end users scoped to the company; the
-      // company-scoped role carries their management rights, never OWNER.
+      // Invited members are partner-side end users scoped to the company; they
+      // always join as MEMBER (management rights are granted later, if ever).
       role: "BUSINESS_PARTNER",
       companyId,
-      companyRole: role,
+      companyRole: "MEMBER",
       company: company.name,
       // Invited by a trusted partner → approved immediately (no /pending gate).
       approvedAt: new Date(),
@@ -253,80 +222,6 @@ export async function inviteEmployee(
   return {
     success: `Zugang für ${email} erstellt — Zugangsdaten wurden per E-Mail versendet.`,
   };
-}
-
-async function sendInviteEmail(opts: {
-  email: string;
-  companyName: string;
-  role: CompanyRole;
-  token: string;
-}): Promise<void> {
-  const url = buildInviteUrl(opts.token);
-  await sendEmail({
-    to: opts.email,
-    subject: `Einladung zu ${opts.companyName} auf Lovedis`,
-    text:
-      `Du wurdest als ${COMPANY_ROLE_LABELS[opts.role]} zum Team von ` +
-      `${opts.companyName} auf Lovedis eingeladen.\n\n` +
-      `Einladung annehmen:\n${url}\n\n` +
-      `Der Link ist ${INVITE_TTL_DAYS} Tage gültig.`,
-  });
-}
-
-export async function resendInvitation(
-  invitationId: string
-): Promise<ActionState> {
-  const invite = await prisma.invitation.findUnique({
-    where: { id: invitationId },
-    include: { company: true },
-  });
-  if (!invite) return { error: "Einladung nicht gefunden." };
-
-  const authz = await authorizeCompanyManagement(invite.companyId);
-  if (!authz.ok) return { error: authz.error };
-
-  if (invite.status !== "PENDING") {
-    return { error: "Nur offene Einladungen können erneut gesendet werden." };
-  }
-
-  const token = generateToken();
-  await prisma.invitation.update({
-    where: { id: invite.id },
-    data: { token, expiresAt: inviteExpiry() },
-  });
-
-  await sendInviteEmail({
-    email: invite.email,
-    companyName: invite.company.name,
-    role: invite.role,
-    token,
-  });
-
-  revalidateCompanySurfaces(invite.companyId);
-  return { success: `Einladung an ${invite.email} erneut gesendet.` };
-}
-
-export async function revokeInvitation(
-  invitationId: string
-): Promise<ActionState> {
-  const invite = await prisma.invitation.findUnique({
-    where: { id: invitationId },
-  });
-  if (!invite) return { error: "Einladung nicht gefunden." };
-
-  const authz = await authorizeCompanyManagement(invite.companyId);
-  if (!authz.ok) return { error: authz.error };
-
-  if (invite.status !== "PENDING") {
-    return { error: "Nur offene Einladungen können widerrufen werden." };
-  }
-
-  await prisma.invitation.update({
-    where: { id: invite.id },
-    data: { status: "REVOKED" },
-  });
-  revalidateCompanySurfaces(invite.companyId);
-  return { success: "Einladung widerrufen." };
 }
 
 // ---------------------------------------------------------------------------
@@ -530,160 +425,4 @@ export async function moveEmployee(
   revalidateCompanySurfaces(targetCompanyId);
   if (from) revalidatePath(`/companies/${from}`);
   return { success: "Mitarbeiter:in verschoben." };
-}
-
-// ---------------------------------------------------------------------------
-// Invitation acceptance (public, token-based)
-// ---------------------------------------------------------------------------
-
-export interface InvitationView {
-  status: "PENDING" | "ACCEPTED" | "REVOKED" | "EXPIRED";
-  email: string;
-  companyName: string;
-  role: CompanyRole;
-  /** Whether an account for this email already exists (join vs create). */
-  accountExists: boolean;
-}
-
-/**
- * Loads a safe, public view of an invitation by token for the accept page.
- * Lazily flips a past-due PENDING invite to EXPIRED so the UI + accept action
- * agree. Returns null for an unknown token.
- */
-export async function loadInvitation(
-  token: string
-): Promise<InvitationView | null> {
-  const invite = await prisma.invitation.findUnique({
-    where: { token },
-    include: { company: true },
-  });
-  if (!invite) return null;
-
-  let status = invite.status;
-  if (status === "PENDING" && invite.expiresAt.getTime() < Date.now()) {
-    await prisma.invitation.update({
-      where: { id: invite.id },
-      data: { status: "EXPIRED" },
-    });
-    status = "EXPIRED";
-  }
-
-  const account = await prisma.user.findUnique({
-    where: { email: invite.email },
-    select: { id: true },
-  });
-
-  return {
-    status,
-    email: invite.email,
-    companyName: invite.company.name,
-    role: invite.role,
-    accountExists: account != null,
-  };
-}
-
-const acceptSchema = z.object({
-  token: z.string().min(1),
-  name: z.string().min(2).max(120).optional(),
-  password: z.string().min(8, "Passwort muss mindestens 8 Zeichen lang sein").optional(),
-});
-
-/**
- * Accepts an invitation. If no account exists for the invited email, a new
- * BUSINESS_PARTNER account is created (name + password required) linked to the
- * company with the invited role. If an account already exists, it is joined to
- * the company. Expired/revoked/already-accepted tokens are rejected with a
- * clear message. Possession of the token proves control of the invited inbox,
- * so no separate login is required to join.
- */
-export async function acceptInvitation(
-  _prevState: ActionState | undefined,
-  formData: FormData
-): Promise<ActionState> {
-  const parsed = acceptSchema.safeParse({
-    token: formData.get("token"),
-    name: formData.get("name") || undefined,
-    password: formData.get("password") || undefined,
-  });
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
-
-  const invite = await prisma.invitation.findUnique({
-    where: { token: parsed.data.token },
-    include: { company: true },
-  });
-  if (!invite) return { error: "Diese Einladung ist ungültig." };
-
-  if (invite.status === "ACCEPTED") {
-    return { error: "Diese Einladung wurde bereits angenommen." };
-  }
-  if (invite.status === "REVOKED") {
-    return { error: "Diese Einladung wurde widerrufen." };
-  }
-  if (
-    invite.status === "EXPIRED" ||
-    invite.expiresAt.getTime() < Date.now()
-  ) {
-    if (invite.status !== "EXPIRED") {
-      await prisma.invitation.update({
-        where: { id: invite.id },
-        data: { status: "EXPIRED" },
-      });
-    }
-    return { error: "Diese Einladung ist abgelaufen. Bitte fordere eine neue an." };
-  }
-  if (!invite.company.isActive) {
-    return { error: "Dieses Unternehmen ist derzeit deaktiviert." };
-  }
-
-  const existing = await prisma.user.findUnique({
-    where: { email: invite.email },
-  });
-
-  if (existing) {
-    // Join the existing account to the company with the invited role.
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: existing.id },
-        data: {
-          companyId: invite.companyId,
-          companyRole: invite.role,
-          isActive: true,
-          approvedAt: existing.approvedAt ?? new Date(),
-        },
-      }),
-      prisma.invitation.update({
-        where: { id: invite.id },
-        data: { status: "ACCEPTED", acceptedAt: new Date() },
-      }),
-    ]);
-    return { success: "Einladung angenommen. Du kannst dich jetzt anmelden." };
-  }
-
-  // No account yet → create one. Name + password are required.
-  if (!parsed.data.name || !parsed.data.password) {
-    return { error: "Bitte gib deinen Namen und ein Passwort an." };
-  }
-
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  await prisma.$transaction([
-    prisma.user.create({
-      data: {
-        email: invite.email,
-        name: parsed.data.name,
-        passwordHash,
-        role: "BUSINESS_PARTNER",
-        companyId: invite.companyId,
-        companyRole: invite.role,
-        company: invite.company.name,
-        // Invited by a trusted partner → approved immediately (no /pending gate).
-        approvedAt: new Date(),
-        isActive: true,
-      },
-    }),
-    prisma.invitation.update({
-      where: { id: invite.id },
-      data: { status: "ACCEPTED", acceptedAt: new Date() },
-    }),
-  ]);
-  return { success: "Konto erstellt. Du kannst dich jetzt anmelden." };
 }

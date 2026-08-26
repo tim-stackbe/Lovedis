@@ -20,7 +20,6 @@ export default async function CompaniesPage() {
       _count: {
         select: {
           members: true,
-          invitations: true,
         },
       },
     },
@@ -66,7 +65,6 @@ export default async function CompaniesPage() {
               <tr>
                 <Th>Unternehmen</Th>
                 <Th>Mitarbeiter:innen</Th>
-                <Th>Offene Einladungen</Th>
                 <Th>Status</Th>
                 <Th className="text-right">Aktion</Th>
               </tr>
@@ -81,7 +79,6 @@ export default async function CompaniesPage() {
                     )}
                   </Td>
                   <Td className="text-lv-secondary">{c._count.members}</Td>
-                  <Td className="text-lv-secondary">{c._count.invitations}</Td>
                   <Td>
                     {c.isActive ? (
                       <Badge tone="mint">Aktiv</Badge>

@@ -1,26 +1,14 @@
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import {
   CompanyRoleSelect,
   EmployeeActiveToggle,
-  InvitationActions,
   MoveEmployeeControl,
   RemoveEmployeeButton,
 } from "@/components/companies/CompanyControls";
-import type { CompanyRole, InvitationStatus } from "@/generated/prisma/enums";
-import { COMPANY_ROLE_LABELS } from "@/lib/company-roles";
-import { formatDate, formatDateTime } from "@/lib/utils";
-
-const ROLE_TONE: Record<CompanyRole, BadgeTone> = {
-  OWNER: "blue",
-  ADMIN: "mint",
-  MEMBER: "muted",
-};
-
-export function CompanyRoleBadge({ role }: { role: CompanyRole }) {
-  return <Badge tone={ROLE_TONE[role]}>{COMPANY_ROLE_LABELS[role]}</Badge>;
-}
+import type { CompanyRole } from "@/generated/prisma/enums";
+import { formatDateTime } from "@/lib/utils";
 
 export interface MemberRow {
   id: string;
@@ -31,70 +19,25 @@ export interface MemberRow {
   lastLoginAt: Date | null;
 }
 
-export interface InvitationRow {
-  id: string;
-  email: string;
-  role: CompanyRole;
-  status: InvitationStatus;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
 /**
- * Shared employee + pending-invitation view with the management controls.
- * Server component: renders the client controls from CompanyControls. Used by
- * both the Partner /team page and the platform-admin per-company page.
+ * Shared employee view with the management controls. Server component: renders
+ * the client controls from CompanyControls. Used by both the Partner /team page
+ * and the platform-admin per-company page.
  */
 export function CompanyMembers({
   companyId,
   members,
-  invitations,
   currentUserId,
   moveCompanies,
 }: {
   companyId: string;
   members: MemberRow[];
-  invitations: InvitationRow[];
   currentUserId: string;
   /** When provided, renders a per-row "move to company" control (admin only). */
   moveCompanies?: { id: string; name: string }[];
 }) {
   return (
     <div className="space-y-8">
-      {invitations.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-lv-secondary">
-            Offene Einladungen ({invitations.length})
-          </h3>
-          <TableCard>
-            <THead>
-              <tr>
-                <Th>E-Mail</Th>
-                <Th>Rolle</Th>
-                <Th>Läuft ab</Th>
-                <Th className="text-right">Aktionen</Th>
-              </tr>
-            </THead>
-            <tbody>
-              {invitations.map((inv) => (
-                <Tr key={inv.id}>
-                  <Td className="font-medium">{inv.email}</Td>
-                  <Td>
-                    <CompanyRoleBadge role={inv.role} />
-                  </Td>
-                  <Td className="text-lv-secondary">
-                    {formatDate(inv.expiresAt)}
-                  </Td>
-                  <Td>
-                    <InvitationActions invitationId={inv.id} />
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </TableCard>
-        </div>
-      )}
-
       {members.length === 0 ? (
         <Card className="p-8 text-center text-sm text-lv-secondary">
           Noch keine Mitarbeiter:innen in diesem Unternehmen.
