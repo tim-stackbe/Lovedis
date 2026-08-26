@@ -8,6 +8,11 @@ const { auth } = NextAuth(authConfig);
 const PUBLIC_PATHS = [
   "/login",
   "/auth",
+  // Self-service password reset — reachable WITHOUT a session so a locked-out
+  // user can request and complete a reset. The reset itself is gated by the
+  // single-use token, not by auth.
+  "/forgot-password",
+  "/reset-password",
   // Hidden Odie Easter-egg route — reachable with or without a session.
   "/odie",
   "/api/auth",

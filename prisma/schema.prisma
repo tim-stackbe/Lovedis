@@ -346,9 +346,40 @@ model User {
   // Match-Matrix — welche Team-Person eine Zelle zuletzt gepflegt hat.
   matchCellUpdates   PartnerStartupMatch[] @relation("MatchUpdater")
 
+  // Self-service password reset — outstanding/used reset tokens for this user.
+  passwordResetTokens PasswordResetToken[] @relation("UserResetTokens")
+
   @@index([role])
   @@index([isActive])
   @@index([companyId])
+}
+
+// ---------------------------------------------------------------------------
+// Self-service password reset
+//
+// A short-lived, single-use token for the "forgot password" flow. We store ONLY
+// a SHA-256 hash of the raw token (never the raw value); the raw token lives
+// solely in the emailed reset link. Lookups happen by hash, so a leaked DB row
+// can't be turned back into a usable link. Tokens expire quickly (see
+// PASSWORD_RESET_TTL_MINUTES) and are marked `usedAt` on redemption; requesting
+// a new reset invalidates any earlier outstanding tokens for the same user.
+// ---------------------------------------------------------------------------
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+  // SHA-256 hex digest of the raw token. Unique so a hash maps to at most one row.
+  tokenHash String   @unique
+  expiresAt DateTime
+  // Set once when the token is redeemed; a non-null value means single-use spent.
+  usedAt    DateTime?
+  // Optional request metadata for light abuse forensics (never security-critical).
+  requestIp String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ---------------------------------------------------------------------------
