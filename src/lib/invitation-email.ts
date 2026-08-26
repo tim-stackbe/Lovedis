@@ -4,7 +4,11 @@ function buildLoginUrl(): string {
   const base = (
     process.env.NEXTAUTH_URL ?? "http://localhost:3000"
   ).replace(/\/$/, "");
-  return `${base}/login`;
+  // Point invitees straight at the first-login gate: after they sign in with
+  // the temporary password, the login action honours this callbackUrl and lands
+  // them on /change-password in a SINGLE hop (no chained role-home → 307 bounce
+  // that breaks the first navigation in Next.js 16).
+  return `${base}/login?callbackUrl=/change-password`;
 }
 
 /**

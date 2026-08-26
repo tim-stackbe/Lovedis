@@ -40,13 +40,23 @@ export async function login(
       ? callbackUrl
       : null;
 
-  let redirectTo = safeCallback ?? "/";
-  if (!safeCallback) {
-    const user = await prisma.user.findUnique({
-      where: { email: parsed.data.email.toLowerCase() },
-      select: { role: true },
-    });
-    if (user) redirectTo = ROLE_HOMES[user.role];
+  // Single lookup for BOTH the role home and the first-login gate.
+  const user = await prisma.user.findUnique({
+    where: { email: parsed.data.email.toLowerCase() },
+    select: { role: true, mustChangePassword: true },
+  });
+
+  // First-login accounts (admin-provisioned, temporary password) MUST land on
+  // /change-password. Sending them to their role home first would make
+  // middleware bounce role-home → /change-password — the same chained redirect
+  // that breaks the first navigation in Next.js 16. So force /change-password
+  // directly, taking precedence over any callbackUrl (middleware would bounce a
+  // non-exempt callback for these users anyway).
+  let redirectTo: string;
+  if (user?.mustChangePassword) {
+    redirectTo = "/change-password";
+  } else {
+    redirectTo = safeCallback ?? (user ? ROLE_HOMES[user.role] : "/");
   }
 
   try {
