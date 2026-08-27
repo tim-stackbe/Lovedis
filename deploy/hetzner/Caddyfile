@@ -23,9 +23,15 @@ cms.lovedis.de {
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
 		# The Payload admin (React) needs inline/eval for its bundle; blob:/data:
-		# cover uploads previews. `frame-src https://lovedis.de` lets the admin
-		# embed the homepage preview (Phase 2). Tighten iteratively if possible.
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; media-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:; frame-src 'self' https://lovedis.de; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+		# cover upload previews. `frame-src https://lovedis.de` lets the admin embed
+		# the homepage preview (Phase 2). Tighten iteratively if possible.
+		#
+		# MEDIA: `img-src`/`media-src` allow the Hetzner Object Storage host and a
+		# placeholder CDN so admin thumbnails + the site can load media directly from
+		# a public bucket. Adjust the Hetzner location (fsn1/nbg1/hel1) and replace the
+		# CDN placeholder `https://media.lovedis.de` with your real one (or remove it).
+		# If media is served only through Payload (private bucket), `'self'` suffices.
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https://*.your-objectstorage.com https://media.lovedis.de; media-src 'self' https://*.your-objectstorage.com https://media.lovedis.de; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:; frame-src 'self' https://lovedis.de; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
 		-Server
 	}
 }

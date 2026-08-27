@@ -80,10 +80,19 @@ export default buildConfig({
           collections: { media: true },
           bucket: process.env.S3_BUCKET as string,
           config: {
-            endpoint: process.env.S3_ENDPOINT,
-            // 'auto' for Cloudflare R2; a real region for Hetzner Object Storage.
-            region: process.env.S3_REGION || 'auto',
-            forcePathStyle: true,
+            // Hetzner Object Storage (S3-compatible). Endpoint per data center:
+            //   https://fsn1.your-objectstorage.com (Falkenstein)
+            //   https://nbg1.your-objectstorage.com (Nuremberg)
+            //   https://hel1.your-objectstorage.com (Helsinki)
+            // Docs: https://docs.hetzner.com/storage/object-storage/overview/
+            endpoint: process.env.S3_ENDPOINT || 'https://fsn1.your-objectstorage.com',
+            // The `region` must match the bucket's location code (fsn1/nbg1/hel1).
+            region: process.env.S3_REGION || 'fsn1',
+            // Hetzner's canonical addressing is virtual-hosted style, but it also
+            // accepts path-style API requests; we keep path-style for simplicity
+            // and S3-compatibility. Override with S3_FORCE_PATH_STYLE=false to use
+            // virtual-hosted addressing.
+            forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
             credentials: {
               accessKeyId: process.env.S3_ACCESS_KEY_ID as string,
               secretAccessKey: process.env.S3_SECRET_ACCESS_KEY as string,

@@ -16,7 +16,7 @@ REST/GraphQL content API. It is the content backend for the **lovedis.de** homep
 | Framework | Next.js `16.2.9`, React `19.2.7` |
 | CMS | `payload` `3.88.0` + `@payloadcms/next` |
 | DB | `@payloadcms/db-postgres` — same Postgres as the platform, isolated **`payload`** schema |
-| Storage | `@payloadcms/storage-s3` — Cloudflare R2 / Hetzner Object Storage |
+| Storage | `@payloadcms/storage-s3` — Hetzner Object Storage (S3-compatible) |
 | Rich text | `@payloadcms/richtext-lexical` |
 | Locales | `de` (default) + `en` |
 
@@ -50,7 +50,7 @@ cms/
 | `site-settings` footer + toggles | `site-settings` global |
 | `partner` / `event` | `partners` / `events` collections |
 | Storyblok richtext | Lexical (converted on import) |
-| Storyblok assets | `media` collection (S3/R2) |
+| Storyblok assets | `media` collection (Hetzner Object Storage) |
 | `translatable` fields / `en` | Payload `localized: true` + locales `de`/`en` |
 
 ## Local development
@@ -89,6 +89,33 @@ Payload manages **only** the `payload` schema (`schemaName: 'payload'`). The
 platform's Prisma continues to own `public`. One Postgres instance, one nightly
 backup covers both. The pool is capped (`PAYLOAD_DB_POOL_MAX`, default 10) so the
 platform + cms + backups stay within Postgres `max_connections`.
+
+## Media / object storage (Hetzner Object Storage)
+
+Media uploads go to **Hetzner Object Storage** (S3-compatible) via
+`@payloadcms/storage-s3`. Locally, set `DISABLE_S3_STORAGE=true` to write to `./media`.
+
+**Create the bucket + keys (Hetzner Cloud Console):**
+
+1. Project → **Object Storage** → **Create Bucket** (choose a location: `fsn1`
+   Falkenstein, `nbg1` Nuremberg, or `hel1` Helsinki). Suggested name: `lovedis-media`.
+2. Generate **S3 credentials** (access key + secret) for the bucket.
+3. Fill the env vars (names only — never commit values):
+
+| Env var | Example / note |
+|---|---|
+| `S3_ENDPOINT` | `https://fsn1.your-objectstorage.com` (match the bucket location) |
+| `S3_REGION` | `fsn1` (must equal the bucket's location code) |
+| `S3_BUCKET` | `lovedis-media` |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from the console |
+| `S3_FORCE_PATH_STYLE` | `true` (Hetzner also supports virtual-hosted; set `false` for that) |
+| `S3_PUBLIC_BASE_URL` | optional; for a **public** bucket, virtual-hosted URL `https://<bucket>.<location>.your-objectstorage.com`, or a CDN/custom domain |
+
+By default media is served **through Payload** (`cms.lovedis.de`), so a public bucket
+is not required. If you make the bucket public (or front it with a CDN), set
+`S3_PUBLIC_BASE_URL` and make sure the Caddy CSP `img-src`/`media-src` allows that
+host (see `deploy/hetzner/Caddyfile`). Docs:
+<https://docs.hetzner.com/storage/object-storage/overview/>.
 
 ## Deploy (server — separate follow-up, not part of Phase 1)
 
