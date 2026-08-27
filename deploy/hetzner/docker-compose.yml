@@ -14,6 +14,7 @@ services:
       - caddy_config:/config
     depends_on:
       - app
+      - cms
 
   app:
     image: ${APP_IMAGE} # e.g. ghcr.io/<owner>/lovedis:latest (built + pushed by CI)
@@ -21,6 +22,24 @@ services:
     env_file: .env
     expose:
       - "3000" # only reachable inside the compose network; Caddy terminates TLS
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # Headless Payload CMS (Option 1B). Own image built + pushed by CI, reached
+  # only via Caddy at cms.lovedis.de. Reuses the same Postgres (isolated `payload`
+  # schema) and the same S3/R2 object storage as the platform.
+  cms:
+    image: ${CMS_IMAGE} # e.g. ghcr.io/<owner>/lovedis-cms:latest (built + pushed by CI)
+    restart: unless-stopped
+    env_file: cms.env # dedicated env (secrets NOT committed); see cms/.env.example
+    expose:
+      - "3000" # internal only; Caddy terminates TLS. No host port publish.
     depends_on:
       db:
         condition: service_healthy

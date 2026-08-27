@@ -8,3 +8,24 @@ lovedis.de, www.lovedis.de {
 	encode zstd gzip
 	reverse_proxy app:3000
 }
+
+# --- Headless Payload CMS (Option 1B) -------------------------------------
+# Production subdomain. For a test box use a `cms.<ip>.nip.io { ... }` block
+# with the same body (Caddy auto-issues TLS for it too).
+cms.lovedis.de {
+	encode zstd gzip
+	reverse_proxy cms:3000
+
+	# Security headers for the new subdomain from day one (addresses audit #10).
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# The Payload admin (React) needs inline/eval for its bundle; blob:/data:
+		# cover uploads previews. `frame-src https://lovedis.de` lets the admin
+		# embed the homepage preview (Phase 2). Tighten iteratively if possible.
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; media-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:; frame-src 'self' https://lovedis.de; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+}
