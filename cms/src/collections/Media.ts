@@ -17,6 +17,10 @@ export const Media: CollectionConfig = {
     delete: isAdmin,
   },
   upload: {
+    // When object storage is disabled (DISABLE_S3_STORAGE=true), files live on
+    // local disk. MEDIA_DIR pins an absolute, mountable path so uploads survive
+    // container restarts; unset falls back to Payload's default (./media).
+    staticDir: process.env.MEDIA_DIR || undefined,
     // Small, responsive-friendly set matching the homepage's needs.
     imageSizes: [
       { name: 'thumbnail', width: 400, height: undefined, position: 'centre' },
