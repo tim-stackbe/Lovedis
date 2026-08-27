@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { homepageBlocks } from '../blocks'
-import { isAdmin, isEditorOrAdmin, publishedOrSignedIn } from '../access/roles'
+import { isAdmin, isEditorOrAdmin, previewOrPublishedOrSignedIn } from '../access/roles'
 import { seoField } from '../fields/seo'
 
 /**
@@ -25,7 +25,7 @@ export const Pages: CollectionConfig = {
     maxPerDoc: 25,
   },
   access: {
-    read: publishedOrSignedIn,
+    read: previewOrPublishedOrSignedIn,
     create: isEditorOrAdmin,
     update: isEditorOrAdmin,
     delete: isAdmin,

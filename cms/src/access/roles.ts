@@ -31,3 +31,24 @@ export const publishedOrSignedIn: Access = ({ req: { user } }) => {
     },
   }
 }
+
+/**
+ * Like {@link publishedOrSignedIn}, but ALSO grants draft read to a trusted
+ * server presenting the shared `PREVIEW_SECRET` via the `X-Preview-Secret`
+ * header. This lets the Nuxt homepage `/preview` route (server-side, cross-
+ * origin — no CMS auth cookie) fetch DRAFT content for Live Preview without
+ * exposing drafts publicly. The secret is only ever used server-to-server.
+ */
+export const previewOrPublishedOrSignedIn: Access = ({ req }) => {
+  if (req.user) return true
+
+  const expected = process.env.PREVIEW_SECRET
+  const provided = (req.headers as Headers | undefined)?.get?.('x-preview-secret')
+  if (expected && provided && provided === expected) return true
+
+  return {
+    _status: {
+      equals: 'published',
+    },
+  }
+}
