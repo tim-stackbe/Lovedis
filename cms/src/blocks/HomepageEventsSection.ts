@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
 import { linkField } from '../fields/link'
 
 /** Storyblok `homepage-events-section` (events = `homepage-event-card`). */
@@ -7,8 +8,12 @@ export const HomepageEventsSection: Block = {
   slug: 'homepageEventsSection',
   dbName: 'evt',
   labels: { singular: 'Events-Sektion', plural: 'Events-Sektionen' },
+  admin: {
+    group: BLOCK_GROUPS.sections,
+    images: { thumbnail: '/block-previews/events.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
+    visibleField(),
     { name: 'tagline', type: 'text', label: 'Tagline', localized: true },
     { name: 'headline', type: 'text', label: 'Überschrift', localized: true },
     { name: 'subtitle', type: 'textarea', label: 'Untertitel', localized: true },
@@ -45,6 +50,7 @@ export const HomepageEventsSection: Block = {
       type: 'array',
       label: 'Event-Karten (statisch)',
       labels: { singular: 'Event-Karte', plural: 'Event-Karten' },
+      admin: { initCollapsed: true },
       fields: [
         { name: 'title', type: 'text', label: 'Titel', localized: true },
         {

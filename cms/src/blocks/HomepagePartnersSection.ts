@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
 import { linkField } from '../fields/link'
 
 /** Storyblok `homepage-partners-section` (logos = `homepage-partner-logo`). */
@@ -7,8 +8,12 @@ export const HomepagePartnersSection: Block = {
   slug: 'homepagePartnersSection',
   dbName: 'prtnrs',
   labels: { singular: 'Partner-Sektion', plural: 'Partner-Sektionen' },
+  admin: {
+    group: BLOCK_GROUPS.sections,
+    images: { thumbnail: '/block-previews/partners.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
+    visibleField(),
     { name: 'tagline', type: 'text', label: 'Tagline', localized: true },
     { name: 'title', type: 'text', label: 'Titel', localized: true },
     { name: 'subtitle', type: 'textarea', label: 'Untertitel', localized: true },
@@ -26,6 +31,7 @@ export const HomepagePartnersSection: Block = {
       type: 'array',
       label: 'Partner-Logos',
       labels: { singular: 'Logo', plural: 'Logos' },
+      admin: { initCollapsed: true },
       fields: [
         { name: 'name', type: 'text', label: 'Name' },
         { name: 'logo', type: 'upload', relationTo: 'media', label: 'Logo' },

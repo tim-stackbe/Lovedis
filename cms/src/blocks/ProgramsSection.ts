@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
 import { linkField } from '../fields/link'
 
 /** Storyblok `programs-section` (programs = `program-card`). */
@@ -7,8 +8,12 @@ export const ProgramsSection: Block = {
   slug: 'programsSection',
   dbName: 'prog',
   labels: { singular: 'Programme-Sektion', plural: 'Programme-Sektionen' },
+  admin: {
+    group: BLOCK_GROUPS.sections,
+    images: { thumbnail: '/block-previews/programs.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
+    visibleField(),
     { name: 'tagline', type: 'text', label: 'Tagline', localized: true },
     { name: 'headline', type: 'text', label: 'Überschrift', localized: true },
     { name: 'description', type: 'textarea', label: 'Beschreibung', localized: true },
@@ -25,6 +30,7 @@ export const ProgramsSection: Block = {
       type: 'array',
       label: 'Programme',
       labels: { singular: 'Programm', plural: 'Programme' },
+      admin: { initCollapsed: true },
       fields: [
         { name: 'title', type: 'text', label: 'Titel', localized: true },
         { name: 'description', type: 'textarea', label: 'Beschreibung', localized: true },

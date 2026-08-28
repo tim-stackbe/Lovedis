@@ -1,1 +1,67 @@
-/* Project-level overrides for the Payload admin UI. Intentionally minimal. */
+/* Project-level overrides for the Payload admin UI. */
+
+/* Dashboard welcome banner (admin.components.beforeDashboard). Uses Payload's
+   theme CSS variables so it fits both light and dark mode. */
+.lovedis-welcome {
+  margin-bottom: var(--base, 1.5rem);
+  padding: calc(var(--base, 1rem) * 1.25);
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: 8px;
+  background: var(--theme-elevation-50);
+
+  &__title {
+    margin: 0 0 0.5rem;
+  }
+
+  &__lead {
+    margin: 0 0 1rem;
+    max-width: 62ch;
+    color: var(--theme-elevation-650);
+    line-height: 1.5;
+  }
+
+  &__links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 6px;
+    background: var(--theme-elevation-0);
+    text-decoration: none;
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      border-color: var(--theme-success-500, var(--theme-elevation-400));
+      transform: translateY(-1px);
+    }
+  }
+
+  &__card-title {
+    font-weight: 600;
+    color: var(--theme-elevation-800);
+  }
+
+  &__card-hint {
+    font-size: 0.8rem;
+    color: var(--theme-elevation-500);
+  }
+}
+
+/* Make the visual block picker's thumbnails a touch larger/cleaner so choosing
+   a section feels closer to Storyblok's component picker. */
+.blocks-field__block-selection-drawer,
+.block-selection-drawer {
+  .thumbnail,
+  img {
+    object-fit: cover;
+  }
+}

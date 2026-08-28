@@ -12,7 +12,8 @@ export const Events: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'date', 'location', '_status'],
-    group: 'Inhalte',
+    group: 'Inhalt',
+    description: 'Veranstaltungen. Können in der Events-Sektion der Startseite (Modus „Manuell") ausgewählt werden.',
   },
   versions: { drafts: true },
   access: {

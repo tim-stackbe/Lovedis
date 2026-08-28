@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
 import { linkField } from '../fields/link'
 
 /** Storyblok `cta-section` → Payload block. */
@@ -7,8 +8,12 @@ export const CtaSection: Block = {
   slug: 'ctaSection',
   dbName: 'cta',
   labels: { singular: 'CTA-Sektion', plural: 'CTA-Sektionen' },
+  admin: {
+    group: BLOCK_GROUPS.closing,
+    images: { thumbnail: '/block-previews/cta.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
+    visibleField(),
     { name: 'tagline', type: 'text', label: 'Tagline', localized: true },
     { name: 'title', type: 'text', label: 'Titel', localized: true },
     { name: 'subtitle', type: 'textarea', label: 'Untertitel', localized: true },

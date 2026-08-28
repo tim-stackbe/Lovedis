@@ -10,7 +10,10 @@ import { linkField } from '../fields/link'
 export const Navigation: GlobalConfig = {
   slug: 'navigation',
   label: 'Navigation',
-  admin: { group: 'Einstellungen' },
+  admin: {
+    group: 'Einstellungen',
+    description: 'Hauptmenü, Logo und CTA-Button der Website-Kopfzeile.',
+  },
   access: {
     read: () => true,
     update: isEditorOrAdmin,

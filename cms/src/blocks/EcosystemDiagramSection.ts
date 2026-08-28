@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
 import { linkField } from '../fields/link'
 
 /** Storyblok `ecosystem-diagram-section` (layers = `ecosystem-diagram-layer`). */
@@ -7,8 +8,12 @@ export const EcosystemDiagramSection: Block = {
   slug: 'ecosystemDiagramSection',
   dbName: 'eco',
   labels: { singular: 'Ökosystem-Diagramm', plural: 'Ökosystem-Diagramme' },
+  admin: {
+    group: BLOCK_GROUPS.sections,
+    images: { thumbnail: '/block-previews/ecosystem.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
+    visibleField(),
     { name: 'tagline', type: 'text', label: 'Tagline', localized: true },
     { name: 'headline', type: 'text', label: 'Überschrift', localized: true },
     { name: 'description', type: 'textarea', label: 'Beschreibung', localized: true },
@@ -25,6 +30,7 @@ export const EcosystemDiagramSection: Block = {
       type: 'array',
       label: 'Ebenen',
       labels: { singular: 'Ebene', plural: 'Ebenen' },
+      admin: { initCollapsed: true },
       fields: [
         { name: 'label', type: 'text', label: 'Beschriftung', localized: true },
         {

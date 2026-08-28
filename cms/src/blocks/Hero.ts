@@ -1,14 +1,25 @@
 import type { Block } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
 import { linkField } from '../fields/link'
 
 /** Storyblok `hero` → Payload block. Headline uses Lexical rich text. */
 export const Hero: Block = {
   slug: 'hero',
   labels: { singular: 'Hero', plural: 'Heroes' },
+  admin: {
+    group: BLOCK_GROUPS.header,
+    images: { thumbnail: '/block-previews/hero.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
-    { name: 'headline', type: 'richText', label: 'Überschrift', localized: true },
+    visibleField(),
+    {
+      name: 'headline',
+      type: 'richText',
+      label: 'Überschrift',
+      localized: true,
+      admin: { description: 'Große Titelzeile ganz oben auf der Seite.' },
+    },
     { name: 'description', type: 'textarea', label: 'Beschreibung', localized: true },
     {
       type: 'row',
@@ -27,6 +38,7 @@ export const Hero: Block = {
       type: 'array',
       label: 'Quick-Access-Karten',
       labels: { singular: 'Karte', plural: 'Karten' },
+      admin: { initCollapsed: true },
       fields: [
         { name: 'title', type: 'text', label: 'Titel', localized: true },
         {

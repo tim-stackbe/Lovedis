@@ -36,6 +36,10 @@ export default buildConfig({
     meta: {
       titleSuffix: '· Lovedis CMS',
     },
+    // Friendly German onboarding at the top of the dashboard.
+    components: {
+      beforeDashboard: ['@/components/BeforeDashboard#BeforeDashboard'],
+    },
     // Phase 2 (Live Preview) — harmless to define now; the Nuxt `/preview`
     // route is wired later. The admin loads this URL in the preview pane.
     livePreview: {

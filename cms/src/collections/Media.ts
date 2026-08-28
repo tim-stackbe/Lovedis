@@ -9,7 +9,10 @@ import { isEditorOrAdmin, isAdmin } from '../access/roles'
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Medium', plural: 'Medien' },
-  admin: { group: 'Inhalte' },
+  admin: {
+    group: 'Inhalt',
+    description: 'Bilder, Logos und Dateien. Vergib immer einen Alt-Text für Barrierefreiheit und SEO.',
+  },
   access: {
     read: () => true,
     create: isEditorOrAdmin,

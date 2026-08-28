@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Inter,Segoe UI,Arial,sans-serif">
+  <rect width="480" height="320" fill="#ffffff"/>
+  <rect width="480" height="72" fill="#6366F1"/>
+  <text x="24" y="46" fill="#ffffff" font-size="30" font-weight="700">Benefits-Bento</text>
+  <rect x="24" y="96" width="210" height="110" rx="10" fill="#eef2ff" stroke="#6366F1" stroke-width="2"/>
+  <rect x="246" y="96" width="210" height="52" rx="10" fill="#f3f4f6"/>
+  <rect x="246" y="154" width="100" height="52" rx="10" fill="#f3f4f6"/>
+  <rect x="356" y="154" width="100" height="52" rx="10" fill="#f3f4f6"/>
+  <rect x="24" y="216" width="140" height="52" rx="10" fill="#f3f4f6"/>
+  <rect x="176" y="216" width="140" height="52" rx="10" fill="#f3f4f6"/>
+  <rect x="328" y="216" width="128" height="52" rx="10" fill="#eef2ff" stroke="#6366F1" stroke-width="2"/>
+  <text x="24" y="300" fill="#6b7280" font-size="16">Vorteile als Kachel-Raster (Bento)</text>
+</svg>

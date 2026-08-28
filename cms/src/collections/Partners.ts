@@ -13,7 +13,8 @@ export const Partners: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', '_status'],
-    group: 'Inhalte',
+    group: 'Inhalt',
+    description: 'Partner-Organisationen, die u. a. in der Partner-Sektion der Startseite erscheinen.',
   },
   versions: { drafts: true },
   access: {

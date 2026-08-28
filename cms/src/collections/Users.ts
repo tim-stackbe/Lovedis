@@ -13,7 +13,8 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['name', 'email', 'role'],
-    group: 'Verwaltung',
+    group: 'Team',
+    description: 'CMS-Zugänge. „Admin" verwaltet alles inkl. Team & Einstellungen, „Redakteur:in" pflegt Inhalte.',
   },
   access: {
     // Only admins manage the user list; users may read/update their own record.

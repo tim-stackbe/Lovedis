@@ -7,7 +7,10 @@ import { linkField } from '../fields/link'
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Website-Einstellungen',
-  admin: { group: 'Einstellungen' },
+  admin: {
+    group: 'Einstellungen',
+    description: 'Globale Einstellungen: Footer, Newsletter sowie Sichtbarkeit von Navbar/Footer.',
+  },
   access: {
     read: () => true,
     update: isEditorOrAdmin,

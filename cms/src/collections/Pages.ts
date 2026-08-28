@@ -15,7 +15,9 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', '_status', 'updatedAt'],
-    group: 'Inhalte',
+    group: 'Inhalt',
+    description:
+      'Seiten der Website. Öffne eine Seite und wechsle oben auf „Live Preview", um Änderungen sofort neben dem Editor zu sehen. Speichern als Entwurf ändert die Live-Website noch nicht — erst „Veröffentlichen".',
   },
   versions: {
     drafts: {
@@ -37,13 +39,24 @@ export const Pages: CollectionConfig = {
         {
           label: 'Inhalt',
           fields: [
-            { name: 'title', type: 'text', label: 'Titel', required: true, localized: true },
+            {
+              name: 'title',
+              type: 'text',
+              label: 'Titel',
+              required: true,
+              localized: true,
+              admin: { description: 'Interner Seitentitel (auch in der Seitenliste sichtbar).' },
+            },
             {
               name: 'layout',
               type: 'blocks',
-              label: 'Layout',
+              label: 'Sektionen',
               localized: true,
               blocks: homepageBlocks,
+              admin: {
+                description:
+                  'Baue die Seite aus Sektionen zusammen: „Block hinzufügen" wählen, Reihenfolge per Drag & Drop ändern. Jede Sektion hat oben einen „Sichtbar"-Schalter.',
+              },
             },
           ],
         },
@@ -60,7 +73,10 @@ export const Pages: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        description: 'Teil der URL, z. B. „home". Nur Kleinbuchstaben, keine Leerzeichen.',
+      },
     },
     {
       // Original Storyblok story uuid → idempotent upsert on re-import.

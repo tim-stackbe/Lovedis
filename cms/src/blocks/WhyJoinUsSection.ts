@@ -1,10 +1,13 @@
 import type { Block, Field } from 'payload'
 
+import { BLOCK_GROUPS, visibleField } from '../fields/common'
+
 const whyJoinCards = (name: string, label: string): Field => ({
   name,
   type: 'array',
   label,
   labels: { singular: 'Karte', plural: 'Karten' },
+  admin: { initCollapsed: true },
   fields: [
     { name: 'title', type: 'text', label: 'Titel', localized: true },
     { name: 'description', type: 'textarea', label: 'Beschreibung', localized: true },
@@ -17,8 +20,12 @@ export const WhyJoinUsSection: Block = {
   slug: 'whyJoinUsSection',
   dbName: 'why',
   labels: { singular: 'Why-Join-Us-Sektion', plural: 'Why-Join-Us-Sektionen' },
+  admin: {
+    group: BLOCK_GROUPS.sections,
+    images: { thumbnail: '/block-previews/why-join-us.svg' },
+  },
   fields: [
-    { name: 'visible', type: 'checkbox', label: 'Sichtbar', defaultValue: true },
+    visibleField(),
     { name: 'tagline', type: 'text', label: 'Tagline', localized: true },
     { name: 'headline', type: 'text', label: 'Überschrift', localized: true },
     { name: 'subtitle', type: 'textarea', label: 'Untertitel', localized: true },
