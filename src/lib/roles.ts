@@ -130,8 +130,8 @@ export const ALPHA_HIDE_PARTNER_SECTIONS = true;
  */
 const ALPHA_VISIBLE_PARTNER_HREFS = [
   "/discover", // Entdecken
-  "/matrix", // Match-Matrix
-  "/challenges", // Meine Challenges
+  "/matrix", // Startup-Partner Matchmaking
+  "/challenges", // Challenges
   "/partner-hub", // Partner-Hub
   "/team", // Team
   "/settings", // Einstellungen
@@ -249,7 +249,7 @@ const MATCHMAKING_SECTION_ADMIN: NavSection = {
   title: "Matchmaking & Use-Cases",
   items: [
     { label: "Batches", href: "/batches", icon: "batches" },
-    { label: "Match-Matrix", href: "/match-matrix", icon: "matchMatrix" },
+    { label: "Startup-Partner Matchmaking", href: "/match-matrix", icon: "matchMatrix" },
   ],
 };
 
@@ -388,7 +388,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Screening",
       items: [
-        { label: "Match-Matrix", href: "/matrix", icon: "matchMatrix" },
+        { label: "Startup-Partner Matchmaking", href: "/matrix", icon: "matchMatrix" },
         { label: "Longlist-Screening", href: "/screening", icon: "screening" },
         { label: "Use-Case-Bewertung", href: "/use-cases", icon: "useCases" },
         { label: "Check-ins", href: "/check-ins", icon: "checkIns" },
@@ -397,7 +397,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Zusammenarbeit",
       items: [
-        { label: "Meine Challenges", href: "/challenges", icon: "challenges" },
+        { label: "Challenges", href: "/challenges", icon: "challenges" },
         { label: "Engagements", href: "/engagements", icon: "engagements" },
         { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
         { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
@@ -441,7 +441,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Chancen",
       items: [
-        { label: "Match-Matrix", href: "/matrix", icon: "matchMatrix" },
+        { label: "Startup-Partner Matchmaking", href: "/matrix", icon: "matchMatrix" },
         { label: "Challenges", href: "/challenges", icon: "challenges" },
         { label: "Meine Bewerbungen", href: "/applications", icon: "applications" },
         { label: "Mein Profil", href: "/profile", icon: "profile" },
