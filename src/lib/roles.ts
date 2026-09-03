@@ -91,7 +91,7 @@ export interface NavSection {
 }
 
 // ---------------------------------------------------------------------------
-// Alpha launch — Partner nav hide (flip ONE value to restore the old nav)
+// Alpha launch — Partner nav allowlist (flip ONE value to restore the old nav)
 // ---------------------------------------------------------------------------
 //
 // Pre-Alpha BUSINESS_PARTNER sidebar / command-palette nav (DE labels):
@@ -111,13 +111,24 @@ export interface NavSection {
 //   Unternehmen    Team                   /team
 //   [untitled]     Einstellungen          /settings
 //
+// During Alpha the Partner nav is reduced to a strict KEEP-list (allowlist):
+// only the six hrefs in ALPHA_VISIBLE_PARTNER_HREFS stay visible. Everything
+// else above — Dashboard (/dashboard/partner), Feed (/feed), Longlist-Screening
+// (/screening), Use-Case-Bewertung (/use-cases), Check-ins (/check-ins),
+// Engagements (/engagements), PoC-Tracking (/pocs), Geteilte Scorings
+// (/scorings) and Nachrichten (/messages) — is hidden from the Partner nav.
+//
 // Set to `false` to show every item above again. Pages/routes stay registered
 // either way; this only filters Partner ROLE_NAV (sidebar + command palette).
 // ADMIN / MEMBER / STARTUP / INVESTOR nav is untouched.
 export const ALPHA_HIDE_PARTNER_SECTIONS = true;
 
-/** Partner nav hrefs hidden while ALPHA_HIDE_PARTNER_SECTIONS is true. */
-const ALPHA_HIDDEN_PARTNER_HREFS = [
+/**
+ * Partner nav hrefs that stay VISIBLE while ALPHA_HIDE_PARTNER_SECTIONS is
+ * true. This is an allowlist: any Partner nav item whose href is NOT listed
+ * here is hidden during Alpha (and now-empty sections are dropped).
+ */
+const ALPHA_VISIBLE_PARTNER_HREFS = [
   "/discover", // Entdecken
   "/matrix", // Match-Matrix
   "/challenges", // Meine Challenges
@@ -128,11 +139,11 @@ const ALPHA_HIDDEN_PARTNER_HREFS = [
 
 function applyPartnerAlphaNav(sections: NavSection[]): NavSection[] {
   if (!ALPHA_HIDE_PARTNER_SECTIONS) return sections;
-  const hidden = new Set<string>(ALPHA_HIDDEN_PARTNER_HREFS);
+  const visible = new Set<string>(ALPHA_VISIBLE_PARTNER_HREFS);
   return sections
     .map((section) => ({
       ...section,
-      items: section.items.filter((item) => !hidden.has(item.href)),
+      items: section.items.filter((item) => visible.has(item.href)),
     }))
     .filter((section) => section.items.length > 0);
 }
