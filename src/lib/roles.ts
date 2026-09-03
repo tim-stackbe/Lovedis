@@ -195,15 +195,52 @@ const ALPHA_HIDDEN_STARTUP_HREFS = [
   "/venture/credits", // Mein Guthaben
 ] as const;
 
+// ---------------------------------------------------------------------------
+// Alpha launch — rename the Startup "Venture Platform" nav to "Übersicht"
+// (flip ONE value to restore the old label).
+// ---------------------------------------------------------------------------
+//
+// After ALPHA_HIDE_STARTUP_SECTIONS hides Marktplatz / Meine Anfragen / Mein
+// Guthaben, the "Venture Platform" section collapses to a single visible item
+// (/venture), whose label is ALSO "Venture Platform" — so the user would see
+// "Venture Platform" twice (section header + item). For Alpha we rename BOTH
+// the section header (title === "Venture Platform") and the /venture item label
+// to "Übersicht". The href "/venture" and routing are unchanged.
+//
+// Set ALPHA_RENAME_STARTUP_VENTURE to `false` to restore the original
+// "Venture Platform" header + item label. Only the STARTUP nav is affected.
+export const ALPHA_RENAME_STARTUP_VENTURE = true;
+const ALPHA_STARTUP_VENTURE_LABEL = "Übersicht";
+
 function applyStartupAlphaNav(sections: NavSection[]): NavSection[] {
-  if (!ALPHA_HIDE_STARTUP_SECTIONS) return sections;
-  const hidden = new Set<string>(ALPHA_HIDDEN_STARTUP_HREFS);
-  return sections
-    .map((section) => ({
+  let result = sections;
+
+  if (ALPHA_HIDE_STARTUP_SECTIONS) {
+    const hidden = new Set<string>(ALPHA_HIDDEN_STARTUP_HREFS);
+    result = result
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => !hidden.has(item.href)),
+      }))
+      .filter((section) => section.items.length > 0);
+  }
+
+  if (ALPHA_RENAME_STARTUP_VENTURE) {
+    result = result.map((section) => ({
       ...section,
-      items: section.items.filter((item) => !hidden.has(item.href)),
-    }))
-    .filter((section) => section.items.length > 0);
+      title:
+        section.title === "Venture Platform"
+          ? ALPHA_STARTUP_VENTURE_LABEL
+          : section.title,
+      items: section.items.map((item) =>
+        item.href === "/venture"
+          ? { ...item, label: ALPHA_STARTUP_VENTURE_LABEL }
+          : item,
+      ),
+    }));
+  }
+
+  return result;
 }
 
 const MESSAGES_ITEM: NavItem = {
