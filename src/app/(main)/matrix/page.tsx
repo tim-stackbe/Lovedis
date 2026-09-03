@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
@@ -169,6 +170,19 @@ async function PartnerMatrix() {
       >
         <Stats rows={allRows} />
       </HeroBanner>
+
+      <div
+        role="note"
+        className="flex items-start gap-3 rounded-card border border-lv-blue-soft bg-lv-blue-soft px-4 py-3 text-sm text-lv-blue"
+      >
+        <Info className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          Bewerte die Startups nach Relevanz für euer Unternehmen und eure
+          Herausforderungen sowie nach potentiellen gemeinsamen Use Cases. Es
+          können mehrere Personen aus eurem Unternehmen eine Einschätzung
+          vornehmen.
+        </p>
+      </div>
 
       {sections.length === 0 ? (
         <Card className="p-8 text-center text-sm text-lv-secondary">
