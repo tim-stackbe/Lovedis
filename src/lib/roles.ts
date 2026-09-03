@@ -166,15 +166,16 @@ function applyPartnerAlphaNav(sections: NavSection[]): NavSection[] {
 //                     Mein Guthaben                 /venture/credits
 //   [untitled]        Einstellungen                 /settings
 //
-// During Alpha the Startup nav hides a strict HIDE-list (denylist): the four
+// During Alpha the Startup nav hides a strict HIDE-list (denylist): the six
 // hrefs in ALPHA_HIDDEN_STARTUP_HREFS are removed and every OTHER Startup nav
-// item stays visible. Hidden for Alpha: Nachrichten (/messages), Marktplatz
-// (/venture/marketplace), Meine Anfragen (/venture/marketplace/requests) and
-// Mein Guthaben (/venture/credits). Everything else — Dashboard
-// (/dashboard/startup), Feed (/feed), Startup-Partner Matchmaking (/matrix),
-// Challenges (/challenges), Meine Bewerbungen (/applications), Mein Profil
-// (/profile), Venture Platform (/venture) and Einstellungen (/settings) —
-// stays visible.
+// item stays visible. Hidden for Alpha: Feed (/feed), Nachrichten (/messages),
+// Marktplatz (/venture/marketplace), Meine Anfragen
+// (/venture/marketplace/requests) and Mein Guthaben (/venture/credits).
+// Hiding Feed empties the "Ökosystem" section, so that whole section (header
+// included) is dropped too. Everything else — Dashboard (/dashboard/startup),
+// Startup-Partner Matchmaking (/matrix), Challenges (/challenges), Meine
+// Bewerbungen (/applications), Mein Profil (/profile), Venture Platform
+// (/venture) and Einstellungen (/settings) — stays visible.
 //
 // Set to `false` to show every item above again. Pages/routes stay registered
 // either way; this only filters Startup ROLE_NAV (sidebar + command palette).
@@ -187,6 +188,7 @@ export const ALPHA_HIDE_STARTUP_SECTIONS = true;
  * during Alpha (and now-empty sections are dropped). Everything else stays.
  */
 const ALPHA_HIDDEN_STARTUP_HREFS = [
+  "/feed", // Feed (empties the "Ökosystem" section → header dropped too)
   "/messages", // Nachrichten
   "/venture/marketplace", // Marktplatz
   "/venture/marketplace/requests", // Meine Anfragen

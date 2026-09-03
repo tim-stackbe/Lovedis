@@ -294,7 +294,7 @@ async function StartupMatrix() {
       <HeroBanner
         kicker={startup.name}
         title="Partner-Matrix"
-        subtitle="Bewerte je Batch die Partner-Unternehmen nach eurer Passung. Bei den Partnern siehst du das aggregierte Ergebnis ihrer Abstimmung (positiv/negativ)."
+        subtitle="Bewerte die Partner-Unternehmen nach Relevanz für euer Startup und nach potentiellen gemeinsamen Use Cases."
       >
         <Stats rows={allRows} />
       </HeroBanner>
