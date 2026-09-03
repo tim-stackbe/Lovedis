@@ -56,7 +56,7 @@ export default async function ProfilePage() {
       <HeroBanner
         kicker="Self-Service"
         title="Dein Startup-Profil"
-        subtitle="Pflege deine Daten, veröffentliche ein Storefront-Profil für Investoren und halte deine Follower mit Updates auf dem Laufenden."
+        subtitle="Pflege deine Daten, veröffentliche dein öffentliches Storefront-Profil für und halte die Partner mit Updates auf dem Laufenden."
       >
         {startup && (
           <div className="grid grid-cols-2 gap-3 sm:max-w-md">
