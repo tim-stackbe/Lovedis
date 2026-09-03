@@ -38,8 +38,7 @@ const COPY = {
   },
   STARTUP: {
     title: "Offene Challenges",
-    subtitle:
-      "Entdecke Corporate-Innovations-Challenges und pitche deine Lösung.",
+    subtitle: "Entdecke die Challenges der Unternehmenspartner.",
   },
 } as const;
 
