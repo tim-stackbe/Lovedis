@@ -90,6 +90,53 @@ export interface NavSection {
   items: NavItem[];
 }
 
+// ---------------------------------------------------------------------------
+// Alpha launch — Partner nav hide (flip ONE value to restore the old nav)
+// ---------------------------------------------------------------------------
+//
+// Pre-Alpha BUSINESS_PARTNER sidebar / command-palette nav (DE labels):
+//   [untitled]     Dashboard              /dashboard/partner
+//   Ökosystem      Entdecken              /discover
+//                  Feed                   /feed
+//   Screening      Match-Matrix           /matrix
+//                  Longlist-Screening     /screening
+//                  Use-Case-Bewertung     /use-cases
+//                  Check-ins              /check-ins
+//   Zusammenarbeit Meine Challenges       /challenges
+//                  Engagements            /engagements
+//                  PoC-Tracking           /pocs
+//                  Geteilte Scorings      /scorings
+//                  Nachrichten            /messages
+//   Wissen         Partner-Hub            /partner-hub
+//   Unternehmen    Team                   /team
+//   [untitled]     Einstellungen          /settings
+//
+// Set to `false` to show every item above again. Pages/routes stay registered
+// either way; this only filters Partner ROLE_NAV (sidebar + command palette).
+// ADMIN / MEMBER / STARTUP / INVESTOR nav is untouched.
+export const ALPHA_HIDE_PARTNER_SECTIONS = true;
+
+/** Partner nav hrefs hidden while ALPHA_HIDE_PARTNER_SECTIONS is true. */
+const ALPHA_HIDDEN_PARTNER_HREFS = [
+  "/discover", // Entdecken
+  "/matrix", // Match-Matrix
+  "/challenges", // Meine Challenges
+  "/partner-hub", // Partner-Hub
+  "/team", // Team
+  "/settings", // Einstellungen
+] as const;
+
+function applyPartnerAlphaNav(sections: NavSection[]): NavSection[] {
+  if (!ALPHA_HIDE_PARTNER_SECTIONS) return sections;
+  const hidden = new Set<string>(ALPHA_HIDDEN_PARTNER_HREFS);
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !hidden.has(item.href)),
+    }))
+    .filter((section) => section.items.length > 0);
+}
+
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
   href: "/messages",
@@ -322,7 +369,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     PLATFORM_SECTION_MEMBER,
     SETTINGS_SECTION,
   ],
-  BUSINESS_PARTNER: [
+  BUSINESS_PARTNER: applyPartnerAlphaNav([
     {
       items: [{ label: "Dashboard", href: "/dashboard/partner", icon: "partnerDashboard" }],
     },
@@ -355,7 +402,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Team", href: "/team", icon: "team" }],
     },
     SETTINGS_SECTION,
-  ],
+  ]),
   INVESTOR: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/investor", icon: "dashboard" }],
