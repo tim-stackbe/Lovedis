@@ -148,6 +148,62 @@ function applyPartnerAlphaNav(sections: NavSection[]): NavSection[] {
     .filter((section) => section.items.length > 0);
 }
 
+// ---------------------------------------------------------------------------
+// Alpha launch — Startup nav hide-list (flip ONE value to restore the old nav)
+// ---------------------------------------------------------------------------
+//
+// Pre-Alpha STARTUP sidebar / command-palette nav (DE labels):
+//   [untitled]        Dashboard                     /dashboard/startup
+//   Ökosystem         Feed                          /feed
+//   Chancen           Startup-Partner Matchmaking   /matrix
+//                     Challenges                    /challenges
+//                     Meine Bewerbungen             /applications
+//                     Mein Profil                   /profile
+//                     Nachrichten                   /messages
+//   Venture Platform  Venture Platform              /venture
+//                     Marktplatz                    /venture/marketplace
+//                     Meine Anfragen                /venture/marketplace/requests
+//                     Mein Guthaben                 /venture/credits
+//   [untitled]        Einstellungen                 /settings
+//
+// During Alpha the Startup nav hides a strict HIDE-list (denylist): the four
+// hrefs in ALPHA_HIDDEN_STARTUP_HREFS are removed and every OTHER Startup nav
+// item stays visible. Hidden for Alpha: Nachrichten (/messages), Marktplatz
+// (/venture/marketplace), Meine Anfragen (/venture/marketplace/requests) and
+// Mein Guthaben (/venture/credits). Everything else — Dashboard
+// (/dashboard/startup), Feed (/feed), Startup-Partner Matchmaking (/matrix),
+// Challenges (/challenges), Meine Bewerbungen (/applications), Mein Profil
+// (/profile), Venture Platform (/venture) and Einstellungen (/settings) —
+// stays visible.
+//
+// Set to `false` to show every item above again. Pages/routes stay registered
+// either way; this only filters Startup ROLE_NAV (sidebar + command palette).
+// ADMIN / MEMBER / BUSINESS_PARTNER / INVESTOR nav is untouched.
+export const ALPHA_HIDE_STARTUP_SECTIONS = true;
+
+/**
+ * Startup nav hrefs that are HIDDEN while ALPHA_HIDE_STARTUP_SECTIONS is true.
+ * This is a denylist: any Startup nav item whose href IS listed here is hidden
+ * during Alpha (and now-empty sections are dropped). Everything else stays.
+ */
+const ALPHA_HIDDEN_STARTUP_HREFS = [
+  "/messages", // Nachrichten
+  "/venture/marketplace", // Marktplatz
+  "/venture/marketplace/requests", // Meine Anfragen
+  "/venture/credits", // Mein Guthaben
+] as const;
+
+function applyStartupAlphaNav(sections: NavSection[]): NavSection[] {
+  if (!ALPHA_HIDE_STARTUP_SECTIONS) return sections;
+  const hidden = new Set<string>(ALPHA_HIDDEN_STARTUP_HREFS);
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !hidden.has(item.href)),
+    }))
+    .filter((section) => section.items.length > 0);
+}
+
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
   href: "/messages",
@@ -429,7 +485,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     },
     SETTINGS_SECTION,
   ],
-  STARTUP: [
+  STARTUP: applyStartupAlphaNav([
     {
       items: [{ label: "Dashboard", href: "/dashboard/startup", icon: "startupDashboard" }],
     },
@@ -458,5 +514,5 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       ],
     },
     SETTINGS_SECTION,
-  ],
+  ]),
 };
