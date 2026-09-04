@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { CreditBudgetBreakdown } from "@/components/credits/CreditBudgetBreakdown";
 import { HubContent } from "@/components/ssot/HubContent";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PictogramChip } from "@/components/ui/PictogramChip";
 import { HeroBanner } from "@/components/ui/HeroBanner";
@@ -15,6 +16,11 @@ import { isTeamRole } from "@/lib/roles";
 import { audiencesForRole, getHubContent } from "@/lib/ssot";
 
 export const metadata: Metadata = { title: "Venture Platform" };
+
+// ALPHA: show a temporary "Coming soon" sticker on the
+// "Guthaben verfügbar" element (Section 01 · Venture-Credits).
+// Set to false (or delete) to remove the sticker in a later release.
+const SHOW_CREDITS_COMING_SOON = true;
 
 export default async function VenturePage() {
   const session = await requireVentureView();
@@ -72,7 +78,14 @@ export default async function VenturePage() {
                 von {budget.total}
               </span>
             </p>
-            <p className="text-sm text-lv-secondary">Guthaben verfügbar</p>
+            <p className="flex items-center gap-2 text-sm text-lv-secondary">
+              Guthaben verfügbar
+              {/* ALPHA: temporary "coming soon" sticker.
+                  To remove later, delete the flag + this Badge. */}
+              {SHOW_CREDITS_COMING_SOON && (
+                <Badge tone="orange">Coming soon</Badge>
+              )}
+            </p>
             <CreditBudgetBreakdown budget={budget} className="mt-1" />
           </div>
         </div>
