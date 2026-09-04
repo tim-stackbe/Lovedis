@@ -195,6 +195,23 @@ const ALPHA_HIDDEN_STARTUP_HREFS = [
   "/venture/credits", // Mein Guthaben
 ] as const;
 
+/**
+ * Single source of truth for "is the Startup Marktplatz hidden for Alpha?".
+ * Driven ENTIRELY by ALPHA_HIDE_STARTUP_SECTIONS + ALPHA_HIDDEN_STARTUP_HREFS,
+ * the exact same flag/list that removes the "Marktplatz" (/venture/marketplace)
+ * item from the Startup sidebar nav. Use this to gate any Startup-context
+ * "Zum Marktplatz" call-to-action in page BODIES (which the nav filter can't
+ * reach). Because both the nav item and the body CTA read from the same
+ * flag/list, re-enabling Marktplatz — by flipping ALPHA_HIDE_STARTUP_SECTIONS
+ * to false OR removing "/venture/marketplace" from ALPHA_HIDDEN_STARTUP_HREFS —
+ * brings BOTH back automatically, with no extra code change.
+ */
+export const isStartupMarketplaceHiddenForAlpha = (): boolean =>
+  ALPHA_HIDE_STARTUP_SECTIONS &&
+  (ALPHA_HIDDEN_STARTUP_HREFS as readonly string[]).includes(
+    "/venture/marketplace",
+  );
+
 // ---------------------------------------------------------------------------
 // Alpha launch — rename the Startup "Venture Platform" nav to "Übersicht"
 // (flip ONE value to restore the old label).

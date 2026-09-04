@@ -11,6 +11,7 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
+import { isStartupMarketplaceHiddenForAlpha } from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Startup-Dashboard" };
@@ -61,6 +62,11 @@ export default async function StartupDashboard() {
     (profileChecks.filter((c) => c.done).length / profileChecks.length) * 100
   );
 
+  // Alpha: hide the body "Zum Marktplatz" CTA in exact sync with the Marktplatz
+  // sidebar nav item. Both read the same flag/list in @/lib/roles, so
+  // re-enabling Marktplatz there brings this button back with no extra change.
+  const marketplaceHidden = isStartupMarketplaceHiddenForAlpha();
+
   return (
     <>
       <HeroBanner
@@ -74,9 +80,11 @@ export default async function StartupDashboard() {
         actions={
           startup ? (
             <>
-              <LinkButton href="/venture/marketplace" variant="white">
-                Zum Marktplatz
-              </LinkButton>
+              {!marketplaceHidden && (
+                <LinkButton href="/venture/marketplace" variant="white">
+                  Zum Marktplatz
+                </LinkButton>
+              )}
               <LinkButton href="/challenges" variant="white">
                 Challenges
               </LinkButton>
