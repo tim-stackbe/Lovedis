@@ -78,7 +78,7 @@ const PHASES: Phase[] = [
     tone: "muted",
     milestones: [
       {
-        date: "01.09. – 10.09.",
+        date: "07.09. – 17.09.",
         title: "Feedback zu Partnern / Startups / Expert:innen",
         type: "To Do Startup / Partner",
         details:
