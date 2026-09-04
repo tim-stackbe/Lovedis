@@ -213,6 +213,30 @@ export const isStartupMarketplaceHiddenForAlpha = (): boolean =>
   );
 
 // ---------------------------------------------------------------------------
+// Alpha launch — hide the Startup dashboard "Section 03 — Venture Platform"
+// (header "Marktplatz & Guthaben") ENTIRELY, including the Venture-Guthaben
+// card, until the Venture Platform features are switched back on.
+// ---------------------------------------------------------------------------
+//
+// The Marktplatz card in that section is already gated by
+// isStartupMarketplaceHiddenForAlpha(); this flag additionally hides the
+// Venture-Guthaben card, which empties the section — so the whole Section 03
+// (header + cards) is removed from the Startup dashboard body.
+//
+// ⚠️ RESTORE REMINDER: when the Venture Platform is fully re-enabled again,
+// set this back to `false` to bring Section 03 (Venture-Guthaben + Marktplatz)
+// back. Routing/pages are unchanged; this only hides the dashboard section body.
+export const ALPHA_HIDE_STARTUP_VENTURE_SECTION = true;
+
+/**
+ * Whether the Startup dashboard "Section 03 — Venture Platform" (incl. the
+ * Venture-Guthaben card) is hidden for Alpha. Flip
+ * ALPHA_HIDE_STARTUP_VENTURE_SECTION to false to restore it.
+ */
+export const isStartupVentureSectionHiddenForAlpha = (): boolean =>
+  ALPHA_HIDE_STARTUP_VENTURE_SECTION;
+
+// ---------------------------------------------------------------------------
 // Alpha launch — rename the Startup "Venture Platform" nav to "Übersicht"
 // (flip ONE value to restore the old label).
 // ---------------------------------------------------------------------------

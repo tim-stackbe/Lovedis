@@ -11,7 +11,10 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
-import { isStartupMarketplaceHiddenForAlpha } from "@/lib/roles";
+import {
+  isStartupMarketplaceHiddenForAlpha,
+  isStartupVentureSectionHiddenForAlpha,
+} from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Startup-Dashboard" };
@@ -66,6 +69,11 @@ export default async function StartupDashboard() {
   // sidebar nav item. Both read the same flag/list in @/lib/roles, so
   // re-enabling Marktplatz there brings this button back with no extra change.
   const marketplaceHidden = isStartupMarketplaceHiddenForAlpha();
+
+  // Alpha: hide the entire "Section 03 — Venture Platform" (Venture-Guthaben +
+  // Marktplatz) until the Venture Platform is fully re-enabled. Flip
+  // ALPHA_HIDE_STARTUP_VENTURE_SECTION in @/lib/roles to false to restore it.
+  const ventureSectionHidden = isStartupVentureSectionHiddenForAlpha();
 
   return (
     <>
@@ -200,6 +208,7 @@ export default async function StartupDashboard() {
         </div>
       </section>
 
+      {!ventureSectionHidden && (
       <section className="space-y-4">
         <SectionLabel
           number="03"
@@ -246,6 +255,7 @@ export default async function StartupDashboard() {
           </Card>
         )}
       </section>
+      )}
 
       <section className="space-y-4">
         <SectionLabel
