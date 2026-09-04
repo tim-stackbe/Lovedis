@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PictogramChip } from "@/components/ui/PictogramChip";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Markdown } from "@/components/ssot/Markdown";
+import { MediaKit } from "@/components/ssot/MediaKit";
 import { KNOWLEDGE_RESOURCE_TYPE_LABELS } from "@/lib/constants";
 
 interface HubContentProps {
@@ -98,13 +99,8 @@ export function HubContent({
 
       <section className="space-y-4">
         <SectionLabel number={n(2)} label="Material" title="Media-Kit & Downloads" />
-        {media.length === 0 ? (
-          <EmptyState
-            icon={Download}
-            title="Keine Assets"
-            description="Hier erscheinen Logos, Vorlagen und Downloads."
-          />
-        ) : (
+        <MediaKit />
+        {media.length > 0 && (
           <Card className="divide-y divide-lv-border">
             {media.map((asset) => (
               <div key={asset.id} className="flex items-center gap-3 p-4">
