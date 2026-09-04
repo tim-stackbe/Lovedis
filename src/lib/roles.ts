@@ -534,7 +534,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Feed", href: "/feed", icon: "feed" }],
     },
     {
-      title: "Chancen",
+      title: "Startup-Hub",
       items: [
         { label: "Startup-Partner Matchmaking", href: "/matrix", icon: "matchMatrix" },
         { label: "Challenges", href: "/challenges", icon: "challenges" },
