@@ -21,7 +21,7 @@ import { PictogramChip } from "@/components/ui/PictogramChip";
  */
 
 const BATCH_CONTEXT =
-  "Industry Accelerator – Daten, KI & Automatisierung: Batch 1 – " +
+  "Industry Accelerator – Wissensmanagement: Batch 1 – " +
   "September bis Dezember 2026";
 
 interface Milestone {
