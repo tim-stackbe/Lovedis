@@ -110,7 +110,7 @@ export default async function DiscoverPage({
       <HeroBanner
         kicker="Ökosystem"
         title="Startup-Universum entdecken"
-        subtitle="Kuratierte Profile aus dem Lovedis-Netzwerk — folge spannenden Teams, verfolge ihre Updates und frage über uns eine Einführung an."
+        subtitle="Entdecke die Startups aus unserem aktuellen Industry Batch #1 zum Thema Wissensmanagement."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
           <BannerStat label="Öffentliche Startups" value={total} />
