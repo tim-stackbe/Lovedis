@@ -1,4 +1,4 @@
-import { BookOpen, Download, FileText, Lightbulb, Map } from "lucide-react";
+import { BookOpen, Download, FileText, Lightbulb } from "lucide-react";
 import type {
   ContentPageModel,
   KnowledgeResourceModel,
@@ -13,6 +13,7 @@ import { PictogramChip } from "@/components/ui/PictogramChip";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Markdown } from "@/components/ssot/Markdown";
 import { MediaKit } from "@/components/ssot/MediaKit";
+import { Roadmap } from "@/components/ssot/Roadmap";
 import { KNOWLEDGE_RESOURCE_TYPE_LABELS } from "@/lib/constants";
 
 interface HubContentProps {
@@ -38,13 +39,8 @@ export function HubContent({
     <>
       <section className="space-y-4">
         <SectionLabel number={n(0)} label="Roadmap" title="Was als Nächstes kommt" />
-        {roadmap.length === 0 ? (
-          <EmptyState
-            icon={Map}
-            title="Noch keine Roadmap"
-            description="Sobald Meilensteine geplant sind, erscheinen sie hier."
-          />
-        ) : (
+        <Roadmap />
+        {roadmap.length > 0 && (
           <div className="relative space-y-4 border-l-2 border-lv-border pl-6">
             {roadmap.map((item) => (
               <div key={item.id} className="relative">
