@@ -138,10 +138,10 @@ const PHASES: Phase[] = [
     tone: "muted",
     milestones: [
       {
-        date: "Ggfls. Mitte Januar",
+        date: "Mitte Januar",
         title: "Closing des Industry Accelerators",
         type: "Event vor Ort",
-        details: "Ggfls. Closing des Industry Accelerators.",
+        details: "Closing des Industry Accelerators.",
       },
     ],
   },
