@@ -220,14 +220,21 @@ export const isStartupMarketplaceHiddenForAlpha = (): boolean =>
 // After ALPHA_HIDE_STARTUP_SECTIONS hides Marktplatz / Meine Anfragen / Mein
 // Guthaben, the "Venture Platform" section collapses to a single visible item
 // (/venture), whose label is ALSO "Venture Platform" — so the user would see
-// "Venture Platform" twice (section header + item). For Alpha we rename BOTH
-// the section header (title === "Venture Platform") and the /venture item label
-// to "Übersicht". The href "/venture" and routing are unchanged.
+// "Venture Platform" twice (section header + item). For Alpha we rename the
+// section header (title === "Venture Platform") to "Programm" and the /venture
+// item label to "Übersicht", giving "Programm → Übersicht" (no double naming).
+// The href "/venture" and routing are unchanged.
 //
 // Set ALPHA_RENAME_STARTUP_VENTURE to `false` to restore the original
 // "Venture Platform" header + item label. Only the STARTUP nav is affected.
 export const ALPHA_RENAME_STARTUP_VENTURE = true;
+// The single visible item (/venture) keeps the "Übersicht" label...
 const ALPHA_STARTUP_VENTURE_LABEL = "Übersicht";
+// ...while the section HEADER becomes "Programm", so the user sees
+// "Programm → Übersicht" instead of the previous "Übersicht → Übersicht"
+// double naming. When ALPHA_RENAME_STARTUP_VENTURE is flipped to false, the
+// original "Venture Platform" header + item label are restored.
+const ALPHA_STARTUP_VENTURE_SECTION_LABEL = "Programm";
 
 function applyStartupAlphaNav(sections: NavSection[]): NavSection[] {
   let result = sections;
@@ -247,7 +254,7 @@ function applyStartupAlphaNav(sections: NavSection[]): NavSection[] {
       ...section,
       title:
         section.title === "Venture Platform"
-          ? ALPHA_STARTUP_VENTURE_LABEL
+          ? ALPHA_STARTUP_VENTURE_SECTION_LABEL
           : section.title,
       items: section.items.map((item) =>
         item.href === "/venture"
