@@ -42,7 +42,7 @@ export default async function VenturePage() {
     <>
       <HeroBanner
         kicker="Venture Platform"
-        title="Deine Venture Platform"
+        title="Deine Accelerator Übersicht"
         subtitle="Roadmap, Ressourcen und dein Venture-Guthaben — deine Single Source of Truth für die Zusammenarbeit mit Lovedis."
       />
 
