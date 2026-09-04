@@ -1,5 +1,6 @@
-import { CalendarRange, Layers, Rocket } from "lucide-react";
+import { CalendarRange, Check, Layers, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import type { BadgeTone } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PictogramChip } from "@/components/ui/PictogramChip";
 
@@ -19,13 +20,25 @@ const BATCH_CONTEXT =
   "Industry Accelerator – Daten, KI & Automatisierung: Batch 1 – " +
   "September bis Dezember 2026";
 
-/** Phase overview table: title, timeframe (Zeitraum) and status. */
-const PHASES = [
-  { title: "1 — Kick-off", period: "1. September", status: "Ausstehend" },
-  { title: "2 — Matching", period: "September", status: "Ausstehend" },
-  { title: "3 — Deep Dive", period: "Okt – Dez", status: "Ausstehend" },
-  { title: "4 — Closing", period: "Januar", status: "Ausstehend" },
-] as const;
+/** Phase overview table: title, timeframe (Zeitraum), status label and tone. */
+const PHASES: {
+  title: string;
+  period: string;
+  status: string;
+  tone: BadgeTone;
+  done?: boolean;
+}[] = [
+  {
+    title: "1 — Kick-off",
+    period: "1. September",
+    status: "Erledigt",
+    tone: "mint",
+    done: true,
+  },
+  { title: "2 — Matching", period: "September", status: "Ausstehend", tone: "muted" },
+  { title: "3 — Deep Dive", period: "Okt – Dez", status: "Ausstehend", tone: "muted" },
+  { title: "4 — Closing", period: "Januar", status: "Ausstehend", tone: "muted" },
+];
 
 /** Dual-track accelerator: Basis + optionaler 1:1-Accelerator. */
 const TRACKS = [
@@ -80,7 +93,12 @@ export function Roadmap() {
                     · {phase.period}
                   </span>
                 </div>
-                <Badge tone="muted">{phase.status}</Badge>
+                <Badge tone={phase.tone}>
+                  {phase.done && (
+                    <Check className="h-3 w-3 shrink-0" strokeWidth={2.5} />
+                  )}
+                  {phase.status}
+                </Badge>
               </div>
             </Card>
           </div>
