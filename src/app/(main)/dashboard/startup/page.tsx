@@ -217,15 +217,22 @@ export default async function StartupDashboard() {
                 sub={`Fix ${creditBudget.fixRemaining}/${creditBudget.fixTotal} · Flexibel ${creditBudget.flexRemaining}/${creditBudget.flexTotal} · Historie →`}
               />
             </Link>
-            <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
-              <ToneCard
-                tone="info"
-                icon={Store}
-                label="Marktplatz"
-                value="Support finden"
-                sub="Programme, Mentor:innen & Angebote →"
-              />
-            </Link>
+            {/* Alpha: hide the Section-03 "Marktplatz" card in sync with the
+                Marktplatz nav item + hero CTA. Reuses the same marketplaceHidden
+                flag, so re-enabling Marktplatz in @/lib/roles brings it back
+                with no extra code change. The Guthaben card above stays, so the
+                section header ("Marktplatz & Guthaben") never renders empty. */}
+            {!marketplaceHidden && (
+              <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
+                <ToneCard
+                  tone="info"
+                  icon={Store}
+                  label="Marktplatz"
+                  value="Support finden"
+                  sub="Programme, Mentor:innen & Angebote →"
+                />
+              </Link>
+            )}
           </div>
         ) : (
           <Card className="flex flex-col items-start gap-3 p-6 text-sm text-lv-secondary">
