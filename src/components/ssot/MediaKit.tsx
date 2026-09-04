@@ -91,8 +91,6 @@ const HASHTAGS_LOVE = ["#lovedis", "#welovedis", "#lovedisruption"];
 const HASHTAGS_COMBINE = ["#innovation", "#accelerator", "#startups"];
 
 const LINKS = {
-  event:
-    "https://drive.google.com/drive/folders/16TaDugsyb2h2Phpgpwj-dhqXryXMbBcb",
   logos:
     "https://drive.google.com/drive/folders/1yeEwBkr49UpQsFhJDjp2nvUrE12a90zf?usp=drive_link",
   linkedin: "https://www.linkedin.com/company/lovedisfactory/",
@@ -211,12 +209,6 @@ export function MediaKit() {
           </p>
         </div>
 
-        {/* Event communication */}
-        <div className="mt-4">
-          <LinkPill href={LINKS.event} icon={Download}>
-            Event-Kommunikation der LOVE DISRUPTION &apos;26
-          </LinkPill>
-        </div>
       </Card>
 
       {/* Das ist LOVEDIS (DE) */}
