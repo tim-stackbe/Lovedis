@@ -168,14 +168,6 @@ const TRACKS = [
   },
 ] as const;
 
-/** Follow-on milestone belonging to the optional 1:1-Accelerator track. */
-const FOLLOW_ON: Milestone = {
-  date: "Ab Februar 2027",
-  title: "ggf. LOI & Fortführung im 1:1 Accelerator",
-  type: "To Do Startup / Partner",
-  details: "Details nachstehend.",
-};
-
 /** A single dated milestone card on the phase timeline. */
 function MilestoneCard({ item, done }: { item: Milestone; done?: boolean }) {
   return (
@@ -302,23 +294,6 @@ export function Roadmap() {
           ))}
         </div>
 
-        {/* Follow-on milestone for the optional 1:1-Accelerator */}
-        <div className="mt-4 rounded-card border border-dashed border-lv-border p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-lv-blue">
-                {FOLLOW_ON.date}
-              </span>
-              <h5 className="text-sm font-bold text-lv-text">
-                {FOLLOW_ON.title}
-              </h5>
-            </div>
-            <Badge tone="muted">{FOLLOW_ON.type}</Badge>
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-lv-secondary">
-            {FOLLOW_ON.details}
-          </p>
-        </div>
       </Card>
     </div>
   );
