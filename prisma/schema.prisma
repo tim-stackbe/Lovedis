@@ -303,6 +303,11 @@ model User {
   mustChangePassword Boolean @default(false)
   // Timestamp of the last self-service password change (null until first set).
   passwordChangedAt  DateTime?
+  // One-time DSGVO data-sharing notice acknowledgment. Null = not yet
+  // acknowledged, so new users get the info modal on their first login; set to
+  // now() once they confirm. Existing users are backfilled to now() at rollout
+  // so they are never re-prompted.
+  dataSharingNoticeAckAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
