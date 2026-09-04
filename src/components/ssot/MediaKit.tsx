@@ -101,6 +101,7 @@ const LINKS = {
   teaser: "https://www.youtube.com/watch?v=mupXOZrg418",
   photos:
     "https://drive.google.com/drive/folders/1JgNJvjqPUMmjCC8li2T5G4VGdjS533wc",
+  photosPixieset: "https://markuslaubvogel.pixieset.com/lovedisruption2026/",
   newsletter: "https://www.lovedis.de/lovedis-newsletter",
   news: "https://lovedis.de/de/news",
   website: "https://lovedis.de/de",
@@ -310,9 +311,12 @@ export function MediaKit() {
         <p className="text-lv-text/90">
           Fotos und Videos von unseren Events.
         </p>
-        <div>
+        <div className="flex flex-wrap gap-3">
           <LinkPill href={LINKS.photos} icon={Camera}>
             Zu Fotos & Videos
+          </LinkPill>
+          <LinkPill href={LINKS.photosPixieset} icon={Camera}>
+            LOVE DISRUPTION 2026 (Pixieset)
           </LinkPill>
         </div>
       </Block>
