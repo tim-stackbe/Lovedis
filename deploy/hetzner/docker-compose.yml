@@ -28,24 +28,42 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 40s
 
   # Nuxt (Vue 3) marketing site. Content from Storyblok Delivery API at build/runtime.
   # Source lives in a separate repo; CI builds and pushes HOMEPAGE_IMAGE.
   homepage:
     image: ${HOMEPAGE_IMAGE} # e.g. ghcr.io/<owner>/lovedis-homepage:test
     restart: unless-stopped
-    env_file: homepage.env # STORYBLOK_* tokens — never commit the real file
+    env_file: homepage.env # Storyblok tokens — never commit the real file
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "3000"
     expose:
       - "3000"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   db:
     image: postgres:17
@@ -62,6 +80,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 20s
 
 volumes:
   caddy_data:

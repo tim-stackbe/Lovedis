@@ -10,7 +10,7 @@ name: Deploy TEST (Hetzner)
 on:
   workflow_dispatch:
   push:
-    branches: [feat/hetzner-deploy, main]
+    branches: [Dedalus, feat/hetzner-deploy]
 
 jobs:
   build-and-deploy-test:
@@ -54,7 +54,19 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /opt/lovedis/deploy/hetzner
-            docker compose pull platform homepage
+            set -euo pipefail
+            # Prefer deploy/hetzner; fall back to legacy /opt/lovedis layout.
+            if [ -d /opt/lovedis/deploy/hetzner ]; then
+              cd /opt/lovedis/deploy/hetzner
+            else
+              cd /opt/lovedis
+            fi
+            docker compose pull platform homepage || true
             docker compose up -d
-            docker compose exec -T platform npx prisma migrate deploy
+            # Standalone app image has no Prisma CLI — migrate via one-off Node container.
+            bash ./migrate.sh
+
+      - name: Post-deploy smoke test
+        run: |
+          chmod +x deploy/hetzner/smoke-test.sh
+          deploy/hetzner/smoke-test.sh 49.13.222.76

@@ -35,6 +35,8 @@ lovedis.de  ──▶  NOT pointed here yet (production stays where it is)
 | `.env.example` | Platform + Postgres + backup vars → copy to `.env` |
 | `homepage.env.example` | Storyblok tokens → copy to `homepage.env` |
 | `smoke-test.sh` | Read-only HTTP checks against the TEST URLs |
+| `deployment-audit.sh` | Extended smoke + TLS + headers + DNS probe |
+| `migrate.sh` | Prisma migrations via one-off Node container (not in app image) |
 | `backup-postgres.sh` | Nightly encrypted `pg_dump` → Object Storage (cron) |
 | `github-actions-deploy.yml.example` | CI build + SSH deploy to TEST |
 
@@ -49,7 +51,7 @@ chmod 600 .env homepage.env
 
 docker compose pull platform homepage
 docker compose up -d
-docker compose exec -T platform npx prisma migrate deploy
+./migrate.sh
 
 # From your laptop (or on the server):
 ./smoke-test.sh 49.13.222.76
