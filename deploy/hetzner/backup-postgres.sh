@@ -11,9 +11,8 @@ FILE="lovedis-${STAMP}.sql.gz.gpg"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-# Full-database dump (no `-n`/`--schema` filter) so it covers BOTH the platform's
-# `public` schema AND Payload's `payload` schema in one file (addresses audit #31).
-echo "[backup] dumping database ${POSTGRES_DB} (all schemas: public + payload)..."
+# Full-database dump (platform `public` schema only — no Payload/cms schema).
+echo "[backup] dumping database ${POSTGRES_DB}..."
 docker compose exec -T db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
   | gzip -9 \
   | gpg --batch --yes --symmetric --cipher-algo AES256 \

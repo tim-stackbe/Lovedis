@@ -1,127 +1,140 @@
-# Plan — Merge Mara Platform + lovedis.de Homepage (with design refresh)
+# Plan — Hetzner hybrid deployment (Storyblok + Mara platform)
 
-> Status: **Decided, not yet started.** Saved for later. See diagram:
-> `docs/architecture/lovedis-architecture.jpg` (source: `lovedis-architecture.svg`).
-> Deploy artifacts: `deploy/hetzner/`.
+> **Status (2026-09-05): Active — TEST phase.** Storyblok Visual Editor is the priority — we
+> **keep Storyblok** for homepage content and self-host the frontends on Hetzner. The Hetzner box
+> is **TEST only**; **`lovedis.de` production DNS must not be changed** until explicit cutover.
+>
+> Deploy artifacts: `deploy/hetzner/`. Storyblok baseline: `docs/storyblok-baseline/`.
+> Payload scaffold (paused): `cms/`.
 
 ## Goal
-Unify the marketing homepage and the Mara platform into **one Next.js app**, refresh the
-design, drop Storyblok, and **self-host everything on Hetzner** (incl. the database) —
-while keeping a great editing experience for non-technical marketing/ops people.
 
-## Decisions locked
-- **CMS:** Replace Storyblok with **Payload CMS 3**, embedded in the Next.js app.
-- **Editors:** Non-technical people edit content via a proper UI (`/admin`) — no code/PRs.
-- **Hosting:** **Hetzner Cloud — a single Cloud Server (VPS)**. Not Webhosting (too limited: 384 MB memory, PHP-process caps, `next build` would OOM), not Dedicated (overkill).
-  - **Size:** **CX32** (x86, 4 vCPU / 8 GB / 80 GB) **or CAX21** (ARM, cheaper, same specs). 8 GB is enough because **builds run in CI**, not on the server.
-- **Database:** **Self-hosted PostgreSQL 17 on the same VPS** (Docker). No external DB anymore (was Neon).
-  - Driver switches from `@prisma/adapter-neon` → **`@prisma/adapter-pg`** (already a dependency).
-  - Data lives on a **Hetzner Cloud Volume** (survives server rebuild, snapshot-able).
-  - Payload → `schema=payload` (Drizzle); app → `schema=public` (Prisma).
-- **Media:** **Hetzner Object Storage (S3-compatible)** via Payload's S3 storage adapter (replaces the earlier Vercel Blob idea).
-- **Backups:** **Nightly `pg_dump`, encrypted, to Hetzner Object Storage**; plus Hetzner Cloud server snapshots as a coarse net; optional WAL archiving (pgBackRest/wal-g) for PITR later. **Restores must be tested.**
-- **Auth:** Keep **NextAuth v5 (JWT)** for platform users; separate **Payload Users** collection for content editors.
-- **Routing (single origin `lovedis.de`):** `/` marketing · `/app/*` platform · `/admin` Payload.
-- **Design:** Ship the refresh (Concept A/B mockups) as shared **Tailwind v4 tokens**.
-- **Content freshness:** ISR + **on-demand revalidation** (publish → `revalidateTag`).
-- **Build/CI + orchestration:** GitHub Actions builds a Docker image (`prisma generate` + `next build` standalone) and pushes it to a registry (GHCR). **Coolify** on the VPS pulls that prebuilt image and runs it — git-push-style deploys, auto-TLS, managed Postgres + scheduled backups, one-click rollbacks. 8 GB suffices because builds run in CI, not on the box.
+Validate **lovedis.de homepage** (Nuxt + Storyblok) and the **Mara platform** (Next.js) on a
+single Hetzner TEST VPS, then cut over production DNS only when ready.
 
-## Current state (for reference)
-- **Homepage `lovedis.de`:** Nuxt (Vue) + Storyblok, SSG, on Cloudflare. We only have Storyblok access, not the Nuxt repo → rebuilding in Next.js regains frontend control.
-- **Mara platform (this repo):** Next.js 16 + React 19 (RSC, Server Actions), NextAuth v5, Prisma 7, Tailwind v4. Already ships `@prisma/adapter-pg` (local PG) alongside the Neon adapter.
+## Decisions locked (2026-09-05)
 
-## Target architecture
-See `docs/architecture/lovedis-architecture.jpg`. One Next.js app on a Hetzner Cloud VPS:
-- Marketing (`/`, RSC + ISR), Platform (`/app/*`, role-gated), Payload editor (`/admin`), `/api/revalidate` + `/api/auth` + `/api/health`.
-- Shared server layer: Payload (Local API) + NextAuth (JWT) + Server Actions.
-- On the VPS (Docker): **Caddy** (Auto-TLS reverse proxy) + **Next.js app** + **PostgreSQL 17** (data on Cloud Volume).
-- External Hetzner service: **Object Storage (S3)** for media + nightly DB backups.
+| Area | Decision |
+|---|---|
+| **Homepage CMS** | **Keep Storyblok** (SaaS, EU region). No content migration. |
+| **Homepage frontend** | **Nuxt (Vue 3)** — separate repo, Docker image on Hetzner |
+| **Platform** | **Next.js 16 + React 19** (this repo), NextAuth v5, Prisma 7 |
+| **Platform DB** | **Self-hosted PostgreSQL 17** on the VPS (TEST; was Neon in dev) |
+| **Hosting** | **Hetzner Cloud — single VPS** (TEST: `49.13.222.76`) |
+| **TEST routing** | `home.<ip>.nip.io` → homepage · `app.<ip>.nip.io` → platform |
+| **Production routing (later)** | `lovedis.de` → homepage · `app.lovedis.de` → platform |
+| **TLS** | Caddy + Let's Encrypt (works on nip.io without DNS changes) |
+| **Backups** | Nightly encrypted `pg_dump` → Hetzner Object Storage |
+| **Payload CMS** | **Paused** — `cms/` kept for reference only |
 
-## Server stack (on the VPS)
+### Why Storyblok stays
+
+The Visual Editor (click-on-page inline editing) matters more than full CMS self-hosting. Storyblok
+has no self-hosted edition; the hybrid model (self-hosted frontends + Storyblok cloud content) is
+the lowest-effort path with the best editor UX.
+
+## Current state
+
+| Piece | Where | Notes |
+|---|---|---|
+| Homepage `lovedis.de` | Nuxt + Storyblok, **production host (unchanged)** | Separate Nuxt repo |
+| Storyblok space | EU SaaS, id `288104308443570` | 126 stories; baseline in `docs/storyblok-baseline/` |
+| Mara platform | This repo, Next.js | Neon Postgres in dev; TEST on Hetzner |
+| **Hetzner TEST** | `49.13.222.76` (`lovedis-prod`) | `home.*` + `app.*` nip.io — see security/functional test reports |
+
+## Phase 1 — TEST (active now)
+
 ```text
-Hetzner Cloud VPS (Ubuntu 24.04 + Docker)
-├─ Caddy            → Auto-TLS (Let's Encrypt), reverse proxy → app:3000
-├─ Next.js 16 app   → Payload CMS embedded, runs `node server.js`
-├─ PostgreSQL 17    → data on /mnt/pgdata (Hetzner Cloud Volume)
-└─ (optional) Redis → caching / sessions
-   Media + backups  → Hetzner Object Storage (S3-compatible)
+                         Storyblok Cloud (EU) — shared with production
+                         ┌─────────────────────────┐
+                         │ Visual Editor + content   │
+                         └───────────┬─────────────┘
+                                     │ Delivery API
+Hetzner TEST (49.13.222.76)          │
+┌────────────────────────────────────┼──────────────────────────┐
+│ home.49.13.222.76.nip.io → homepage ◀┘  (Nuxt)               │
+│ app.49.13.222.76.nip.io  → platform      (Next.js)            │
+│ PostgreSQL 17 (platform data, schema=public)                   │
+└────────────────────────────────────────────────────────────────┘
+
+lovedis.de (production)  ──▶  existing host — NOT the Hetzner box yet
 ```
 
-## Payload data model (mapped from Storyblok)
-- **Globals:** `SiteSettings`, `Navigation`.
-- **Collections:** `Pages` (flexible blocks), `Events` (agenda items **+ a real `stage` field**), `Speakers`, `Partners`, `Media`, `Users` (editors).
+### TEST rollout steps
 
-## Migrations (one-time)
-- **Content:** Export Storyblok stories/components → transform (richtext → Lexical, assets → Media) → import into Payload via Local API. Diff against `docs/storyblok-baseline/`.
-- **Database:** `pg_dump` from Neon → `pg_restore` into on-server PostgreSQL; verify row counts.
+1. Update compose + Caddyfile on the TEST server (repo templates in `deploy/hetzner/`).
+2. Wire CI for `PLATFORM_IMAGE:test` (this repo) and `HOMEPAGE_IMAGE:test` (Nuxt repo).
+3. Deploy with `.env` + `homepage.env`; `NEXTAUTH_URL=https://app.49.13.222.76.nip.io`.
+4. Migrate platform DB snapshot to TEST Postgres if needed; `prisma migrate deploy`.
+5. Run `./deploy/hetzner/smoke-test.sh` + full functional QA.
+6. **Stop here.** Do not touch `lovedis.de` DNS.
 
-## Rollout (strangler-fig, low risk)
-1. **Provision** Hetzner VPS + Cloud Volume + Object Storage; harden (SSH keys, firewall, non-root, fail2ban, unattended-upgrades); install Docker + Caddy.
-2. **Scaffold** Payload in the repo; stand up Postgres container; wire CI image build + SSH deploy.
-3. **Model + import** collections; verify content in `/admin`.
-4. **Rebuild homepage** in React from Payload, screen-by-screen, applying the design refresh; validate vs baseline screenshots.
-5. **Wire platform** under `/app/*` with NextAuth; shared design tokens.
-6. **Cutover** `lovedis.de` DNS → VPS IP; retire Nuxt + Storyblok + Neon.
+## Phase 2 — Production cutover (later, explicit gate)
 
-## What's needed to actually deploy
-- A **Hetzner Cloud server** (you create it) **or** a **Hetzner Cloud API token** (I provision via `hcloud`).
-- **SSH access** to the server (my key authorized) — no SSH, no deploy.
-- **DNS control** for `lovedis.de` (to point at the server at cutover).
-- **Hetzner Object Storage** credentials (S3 access key/secret + endpoint).
+Only after TEST sign-off:
 
-## Runbook — optimal Hetzner deploy (Coolify + CI-built image, 8 GB)
+1. Swap `Caddyfile` → production blocks from `Caddyfile.production.example`.
+2. Update `NEXTAUTH_URL=https://app.lovedis.de`; image tags → `:latest`.
+3. Lower DNS TTL; point `lovedis.de`, `www`, `app.lovedis.de` at the server IP.
+4. Smoke-test production URLs; decommission old homepage host after grace period.
+5. **Storyblok unchanged** — same space, editors keep Visual Editor.
 
-**Target:** one Hetzner Cloud VPS (**CX32** x86 or **CAX21** ARM · 8 GB) + Cloud Volume (Postgres data) + Object Storage (media & backups). Image built in **CI**, run by **Coolify**.
+## Server stack (Docker Compose)
 
-### 0. Access needed first
-Hetzner server *or* API token · SSH key authorized · DNS control for `lovedis.de` · Object Storage creds (endpoint + key/secret) · GHCR registry access · Resend API key.
+```text
+Hetzner Cloud VPS (Ubuntu 24.04 + Docker)
+├─ Caddy         → Auto-TLS, reverse proxy (nip.io on TEST)
+├─ homepage      → Nuxt container (Storyblok Delivery API)
+├─ platform      → Next.js app (NextAuth, Prisma)
+├─ PostgreSQL 17 → data on /mnt/pgdata (Hetzner Cloud Volume)
+└─ Backups       → Hetzner Object Storage (S3-compatible)
+```
 
-### 1. Provision
-- Create server (Ubuntu 24.04); attach a **Cloud Volume**, format + mount at `/mnt/pgdata` (add to `/etc/fstab`).
-- Hetzner **Firewall**: allow 22 / 80 / 443 only. Set reverse DNS on the IP.
+## What is NOT in this deployment
 
-### 2. Harden
-- SSH keys only (disable password login), non-root sudo user, `ufw`, `fail2ban`, `unattended-upgrades`.
+- **Payload CMS** (`cms/` service) — paused
+- **Storyblok → Payload migration** — not needed
+- **Homepage rewrite in React** — not needed
+- **lovedis.de on TEST Caddyfile** — intentionally absent until Phase 2
 
-### 3. Install Coolify
-- Run the Coolify install script. Expose the dashboard on `deploy.lovedis.de` with its own TLS; enable 2FA.
+## One-time migrations (TEST)
 
-### 4. CI image (GitHub Actions)
-- `Dockerfile`: node base → `prisma generate` → `next build` (`output: 'standalone'`) → runtime image runs `node server.js` on `:3000`.
-- Workflow builds + pushes `ghcr.io/OWNER/lovedis:<sha>` and `:latest` on push to `main`. (Adapt `deploy/hetzner/github-actions-deploy.yml.example` to **build+push only** — Coolify does the deploy via webhook.)
+| Data | Action |
+|---|---|
+| **Platform DB** | Optional: `pg_dump` from Neon → restore into TEST Postgres |
+| **Homepage content** | None — Storyblok Delivery API |
+| **Media** | None — Storyblok CDN |
 
-### 5. App in Coolify
-- New resource → **Docker Image** from GHCR (private-registry creds) → `ghcr.io/OWNER/lovedis:latest`, port `3000`, domain `lovedis.de` (Coolify issues TLS).
-- **Env:** `DATABASE_URL` (→ Coolify Postgres), `NEXTAUTH_URL=https://lovedis.de`, `NEXTAUTH_SECRET`, `PAYLOAD_SECRET`, `S3_*` (media), `RESEND_API_KEY`, `EMAIL_FROM`.
-- Health check: `/api/health`. Enable **auto-deploy** on new `:latest` (CI webhook).
+## What's needed for TEST
 
-### 6. Postgres + backups
-- Coolify → **PostgreSQL 17** database; bind its data dir to `/mnt/pgdata` (Cloud Volume).
-- Schemas: `public` (Prisma) + `payload` (Payload).
-- Enable Coolify **scheduled backups → Object Storage** (keep `deploy/hetzner/backup-postgres.sh` as a second belt-and-braces cron if wanted).
+- SSH access to `49.13.222.76` (deploy user)
+- Nuxt homepage repo in CI (`HOMEPAGE_IMAGE:test`)
+- Storyblok delivery token (LOVEDIS space)
+- Test-scoped API keys (Resend, etc.) — not production secrets
 
-### 7. Migrations
-- After first deploy: `prisma migrate deploy` + Payload migrations (via Coolify exec). Seed if needed.
+## Superseded decisions (archived)
 
-### 8. Data + content migration (one-time)
-- **DB:** `pg_dump` from Neon → restore into Coolify Postgres; verify row counts.
-- **Content:** run Storyblok → Payload import; verify in `/admin`; diff vs `docs/storyblok-baseline/`.
+The following were decided in Aug 2026 but **superseded on 2026-09-05**:
 
-### 9. Cutover
-- Lower DNS TTL ahead of time → point `lovedis.de` A/AAAA at the server IP → verify TLS → smoke-test marketing + `/app/*` + `/admin` + a Resend test mail.
-- Decommission Nuxt + Storyblok + Neon after a grace period.
+- ~~Replace Storyblok with Payload CMS 3~~
+- ~~Merge homepage into one Next.js app at `lovedis.de`~~
+- ~~Single origin: `/` marketing · `/app/*` platform · `/admin` Payload~~
+- ~~Payload `payload` schema in Postgres~~
 
-### 10. Verify + operate
-- Test a **deploy + rollback** in Coolify; test a **backup restore**; set up uptime + error alerting.
+Details: `docs/research/2026-08-27-homepage-visual-cms-options.md`,
+`docs/plans/2026-08-27-payload-cms-1b-implementation-plan.md` (paused).
 
-## Open items to confirm when we resume
-- Final domain shape: `lovedis.de/app/*` (single origin) vs `app.lovedis.de` (subdomain).
-- Container registry choice (GHCR vs Hetzner) for CI image.
-- CAX21 (ARM) vs CX32 (x86) — ARM is cheaper and fine for Node; x86 maximally compatible.
-- Deploy style: **decided → Coolify + CI-built image (8 GB).** Plain Docker Compose templates stay in `deploy/hetzner/` as a minimal fallback.
-- **Email sending: leaning toward [Resend](https://resend.com)** (keep in mind as the email solution) — modern API, React-Email templates, EU region available. Wire it via the existing drop-in `EmailAdapter` in `src/lib/email.ts` (SMTP or `RESEND_API_KEY`), and configure Payload's email with the same. Still need SPF/DKIM/DMARC on a sending subdomain (e.g. `mail.lovedis.de`).
+## Open items
 
-## Related design assets
-- `assets/lovedis-refresh-concept-a-bright.png` — bright/playful direction.
-- `assets/lovedis-refresh-concept-b-dark.png` — dark/neon direction.
-- Brand tokens: Electric Indigo `#2926E5`, Pink `#FFDBF5`, Coral `#FF5736`, Mint `#00B97E`, black/white; font *Greed Standard* + IBM Plex Mono.
+- **Nuxt homepage repo** — confirm CI access + `HOMEPAGE_IMAGE` build.
+- **TEST API keys** — rotate to test-scoped credentials (audit finding #13).
+- **Backup cron** — activate on TEST server (audit finding #31).
+- **Storyblok preview URL** — optional: point Visual Editor preview at `home.*.nip.io` for TEST edits (production preview can stay on `lovedis.de` until cutover).
+
+## Related docs
+
+- `deploy/hetzner/README.md` — TEST deploy + production cutover checklist
+- `docs/reports/2026-08-27-hetzner-security-audit.md`
+- `docs/reports/2026-08-27-hetzner-functional-test.md`
+- `docs/storyblok-baseline/` — content model reference
+- `cms/README.md` — Payload scaffold (paused)

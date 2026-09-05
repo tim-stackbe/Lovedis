@@ -1,12 +1,16 @@
-# Lovedis CMS (Payload 3, headless)
+# Lovedis CMS (Payload 3, headless) — **PAUSED**
+
+> **Status (2026-09-05): Paused.** We keep **Storyblok** for homepage content because the Visual
+> Editor experience is the priority. This Payload scaffold is retained for reference only — it is
+> **not** deployed on Hetzner. See `docs/architecture/plan-mara-homepage-merge.md` for the active
+> hybrid plan (Nuxt + Storyblok on Hetzner).
 
 A self-hostable, **headless** [Payload CMS 3](https://payloadcms.com) app (Next.js
 App Router, Next-native admin) that serves the editor UI at `/admin` plus Payload's
-REST/GraphQL content API. It is the content backend for the **lovedis.de** homepage
-(**Option 1B** — keep the Nuxt homepage, run Payload headless in its own container).
+REST/GraphQL content API. It was scaffolded as **Option 1B** (keep Nuxt, Payload headless).
 
-> Phase 1 scope: scaffold, homepage content model, homepage import, local build.
-> The Nuxt live-preview integration and the server deploy are separate follow-ups.
+> Phase 1 was completed locally (scaffold, content model, homepage import script).
+> Server deploy and Nuxt live-preview integration are **not planned** while Storyblok is active.
 
 ## Stack
 
@@ -117,9 +121,9 @@ is not required. If you make the bucket public (or front it with a CDN), set
 host (see `deploy/hetzner/Caddyfile`). Docs:
 <https://docs.hetzner.com/storage/object-storage/overview/>.
 
-## Deploy (server — separate follow-up, not part of Phase 1)
+## Deploy (paused — not part of active Hetzner plan)
 
-The image is built in CI and run as the `cms` service behind Caddy at
-`cms.lovedis.de` (see `deploy/hetzner/`). On first release:
-`docker compose exec -T cms npm run migrate` creates the schema + tables. See the
-repo's deploy docs and `.env.example` for the exact env var names required.
+This service is **not deployed** while Storyblok remains the CMS. The former `cms` compose
+service and `cms.lovedis.de` route have been removed from `deploy/hetzner/`. If Payload is
+revived later, refer to the archived plan in
+`docs/plans/2026-08-27-payload-cms-1b-implementation-plan.md`.

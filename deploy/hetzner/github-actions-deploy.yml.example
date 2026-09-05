@@ -1,15 +1,19 @@
-# Reference CI/CD: build the app image in GitHub Actions, push to GHCR, deploy over SSH.
-# To activate, move to .github/workflows/deploy.yml and set the repo secrets:
-#   SSH_HOST, SSH_USER, SSH_KEY  (private key with access to the VPS)
-name: Deploy (Hetzner)
+# Reference CI/CD: build images in GitHub Actions, push to GHCR, deploy to Hetzner TEST.
+#
+# TEST-only: deploys to 49.13.222.76 via nip.io URLs. Does NOT touch lovedis.de DNS.
+# To activate: copy to .github/workflows/deploy-hetzner-test.yml and set secrets:
+#   SSH_HOST=49.13.222.76
+#   SSH_USER=deploy
+#   SSH_KEY=<private key with access to the TEST VPS>
+name: Deploy TEST (Hetzner)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+  push:
+    branches: [feat/hetzner-deploy, main]
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,15 +27,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The Dockerfile should run `prisma generate` + `next build` (standalone output)
-      # so the runtime image just does `node server.js`. Build happens here, not on the server.
+      # Platform (Next.js). Tags :test for the TEST server; :latest reserved for production cutover.
       - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: |
+            ghcr.io/${{ github.repository }}:test
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
-      - name: Deploy over SSH
+      # Homepage (Nuxt). Uncomment when the homepage repo is wired into CI.
+      # - uses: actions/checkout@v4
+      #   with:
+      #     repository: OWNER/lovedis-homepage
+      #     token: ${{ secrets.HOMEPAGE_REPO_TOKEN }}
+      # - uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}-homepage:test
+
+      - name: Deploy to TEST server over SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -39,8 +55,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /opt/lovedis/deploy/hetzner
-            docker compose pull app
+            docker compose pull platform homepage
             docker compose up -d
-            # Run DB migrations after the new image is live:
-            docker compose exec -T app npx prisma migrate deploy
-            docker compose exec -T app node ./node_modules/payload/dist/bin/index.js migrate || true
+            docker compose exec -T platform npx prisma migrate deploy
