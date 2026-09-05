@@ -1,0 +1,30 @@
+# Production Caddy config — NOT active on the TEST server.
+#
+# Enable only at cutover, after the stack passes smoke tests on nip.io.
+# Steps:
+#   1. Replace the TEST blocks in Caddyfile with the blocks below (or include this file).
+#   2. Update NEXTAUTH_URL in .env to https://app.lovedis.de
+#   3. Lower DNS TTL 24 h ahead, then point A/AAAA records at the server IP.
+#   4. docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+#   5. Smoke-test lovedis.de + app.lovedis.de before decommissioning old hosts.
+#
+# DO NOT apply while lovedis.de still serves production traffic elsewhere.
+
+# lovedis.de, www.lovedis.de {
+# 	encode zstd gzip
+# 	reverse_proxy homepage:3000
+# }
+#
+# app.lovedis.de {
+# 	encode zstd gzip
+# 	reverse_proxy platform:3000
+#
+# 	header {
+# 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+# 		X-Content-Type-Options "nosniff"
+# 		X-Frame-Options "SAMEORIGIN"
+# 		Referrer-Policy "strict-origin-when-cross-origin"
+# 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+# 		-Server
+# 	}
+# }

@@ -1,10 +1,32 @@
-# Caddy handles automatic HTTPS (Let's Encrypt) and proxies to the Next.js app.
+# Caddy — automatic HTTPS (Let's Encrypt) and reverse proxy.
+#
+# ACTIVE: TEST box only (nip.io). Production lovedis.de blocks live in
+# Caddyfile.production.example — do NOT enable until explicit cutover.
 {
-	# Set a real address so Let's Encrypt can email about expiries.
 	email ops@lovedis.de
 }
 
-lovedis.de, www.lovedis.de {
+# --- TEST (active) ---------------------------------------------------------
+# Server: lovedis-prod @ 49.13.222.76 — replace the IP if the test box changes.
+# Public URLs (no DNS changes needed; Caddy auto-issues TLS for nip.io):
+#   https://home.49.13.222.76.nip.io  → Nuxt homepage (Storyblok content)
+#   https://app.49.13.222.76.nip.io   → Next.js platform
+
+home.49.13.222.76.nip.io {
 	encode zstd gzip
-	reverse_proxy app:3000
+	reverse_proxy homepage:3000
+}
+
+app.49.13.222.76.nip.io {
+	encode zstd gzip
+	reverse_proxy platform:3000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
 }

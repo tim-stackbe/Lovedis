@@ -90,6 +90,207 @@ export interface NavSection {
   items: NavItem[];
 }
 
+// ---------------------------------------------------------------------------
+// Alpha launch — Partner nav allowlist (flip ONE value to restore the old nav)
+// ---------------------------------------------------------------------------
+//
+// Pre-Alpha BUSINESS_PARTNER sidebar / command-palette nav (DE labels):
+//   [untitled]     Dashboard              /dashboard/partner
+//   Ökosystem      Entdecken              /discover
+//                  Feed                   /feed
+//   Screening      Match-Matrix           /matrix
+//                  Longlist-Screening     /screening
+//                  Use-Case-Bewertung     /use-cases
+//                  Check-ins              /check-ins
+//   Zusammenarbeit Meine Challenges       /challenges
+//                  Engagements            /engagements
+//                  PoC-Tracking           /pocs
+//                  Geteilte Scorings      /scorings
+//                  Nachrichten            /messages
+//   Wissen         Partner-Hub            /partner-hub
+//   Unternehmen    Team                   /team
+//   [untitled]     Einstellungen          /settings
+//
+// During Alpha the Partner nav is reduced to a strict KEEP-list (allowlist):
+// only the six hrefs in ALPHA_VISIBLE_PARTNER_HREFS stay visible. Everything
+// else above — Dashboard (/dashboard/partner), Feed (/feed), Longlist-Screening
+// (/screening), Use-Case-Bewertung (/use-cases), Check-ins (/check-ins),
+// Engagements (/engagements), PoC-Tracking (/pocs), Geteilte Scorings
+// (/scorings) and Nachrichten (/messages) — is hidden from the Partner nav.
+//
+// Set to `false` to show every item above again. Pages/routes stay registered
+// either way; this only filters Partner ROLE_NAV (sidebar + command palette).
+// ADMIN / MEMBER / STARTUP / INVESTOR nav is untouched.
+export const ALPHA_HIDE_PARTNER_SECTIONS = true;
+
+/**
+ * Partner nav hrefs that stay VISIBLE while ALPHA_HIDE_PARTNER_SECTIONS is
+ * true. This is an allowlist: any Partner nav item whose href is NOT listed
+ * here is hidden during Alpha (and now-empty sections are dropped).
+ */
+const ALPHA_VISIBLE_PARTNER_HREFS = [
+  "/discover", // Entdecken
+  "/matrix", // Startup-Partner Matchmaking
+  "/challenges", // Challenges
+  "/partner-hub", // Partner-Hub
+  "/team", // Team
+  "/settings", // Einstellungen
+] as const;
+
+function applyPartnerAlphaNav(sections: NavSection[]): NavSection[] {
+  if (!ALPHA_HIDE_PARTNER_SECTIONS) return sections;
+  const visible = new Set<string>(ALPHA_VISIBLE_PARTNER_HREFS);
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => visible.has(item.href)),
+    }))
+    .filter((section) => section.items.length > 0);
+}
+
+// ---------------------------------------------------------------------------
+// Alpha launch — Startup nav hide-list (flip ONE value to restore the old nav)
+// ---------------------------------------------------------------------------
+//
+// Pre-Alpha STARTUP sidebar / command-palette nav (DE labels):
+//   [untitled]        Dashboard                     /dashboard/startup
+//   Ökosystem         Feed                          /feed
+//   Chancen           Startup-Partner Matchmaking   /matrix
+//                     Challenges                    /challenges
+//                     Meine Bewerbungen             /applications
+//                     Mein Profil                   /profile
+//                     Nachrichten                   /messages
+//   Venture Platform  Venture Platform              /venture
+//                     Marktplatz                    /venture/marketplace
+//                     Meine Anfragen                /venture/marketplace/requests
+//                     Mein Guthaben                 /venture/credits
+//   [untitled]        Einstellungen                 /settings
+//
+// During Alpha the Startup nav hides a strict HIDE-list (denylist): the six
+// hrefs in ALPHA_HIDDEN_STARTUP_HREFS are removed and every OTHER Startup nav
+// item stays visible. Hidden for Alpha: Feed (/feed), Nachrichten (/messages),
+// Marktplatz (/venture/marketplace), Meine Anfragen
+// (/venture/marketplace/requests) and Mein Guthaben (/venture/credits).
+// Hiding Feed empties the "Ökosystem" section, so that whole section (header
+// included) is dropped too. Everything else — Dashboard (/dashboard/startup),
+// Startup-Partner Matchmaking (/matrix), Challenges (/challenges), Meine
+// Bewerbungen (/applications), Mein Profil (/profile), Venture Platform
+// (/venture) and Einstellungen (/settings) — stays visible.
+//
+// Set to `false` to show every item above again. Pages/routes stay registered
+// either way; this only filters Startup ROLE_NAV (sidebar + command palette).
+// ADMIN / MEMBER / BUSINESS_PARTNER / INVESTOR nav is untouched.
+export const ALPHA_HIDE_STARTUP_SECTIONS = true;
+
+/**
+ * Startup nav hrefs that are HIDDEN while ALPHA_HIDE_STARTUP_SECTIONS is true.
+ * This is a denylist: any Startup nav item whose href IS listed here is hidden
+ * during Alpha (and now-empty sections are dropped). Everything else stays.
+ */
+const ALPHA_HIDDEN_STARTUP_HREFS = [
+  "/feed", // Feed (empties the "Ökosystem" section → header dropped too)
+  "/messages", // Nachrichten
+  "/venture/marketplace", // Marktplatz
+  "/venture/marketplace/requests", // Meine Anfragen
+  "/venture/credits", // Mein Guthaben
+] as const;
+
+/**
+ * Single source of truth for "is the Startup Marktplatz hidden for Alpha?".
+ * Driven ENTIRELY by ALPHA_HIDE_STARTUP_SECTIONS + ALPHA_HIDDEN_STARTUP_HREFS,
+ * the exact same flag/list that removes the "Marktplatz" (/venture/marketplace)
+ * item from the Startup sidebar nav. Use this to gate any Startup-context
+ * "Zum Marktplatz" call-to-action in page BODIES (which the nav filter can't
+ * reach). Because both the nav item and the body CTA read from the same
+ * flag/list, re-enabling Marktplatz — by flipping ALPHA_HIDE_STARTUP_SECTIONS
+ * to false OR removing "/venture/marketplace" from ALPHA_HIDDEN_STARTUP_HREFS —
+ * brings BOTH back automatically, with no extra code change.
+ */
+export const isStartupMarketplaceHiddenForAlpha = (): boolean =>
+  ALPHA_HIDE_STARTUP_SECTIONS &&
+  (ALPHA_HIDDEN_STARTUP_HREFS as readonly string[]).includes(
+    "/venture/marketplace",
+  );
+
+// ---------------------------------------------------------------------------
+// Alpha launch — hide the Startup dashboard "Section 03 — Venture Platform"
+// (header "Marktplatz & Guthaben") ENTIRELY, including the Venture-Guthaben
+// card, until the Venture Platform features are switched back on.
+// ---------------------------------------------------------------------------
+//
+// The Marktplatz card in that section is already gated by
+// isStartupMarketplaceHiddenForAlpha(); this flag additionally hides the
+// Venture-Guthaben card, which empties the section — so the whole Section 03
+// (header + cards) is removed from the Startup dashboard body.
+//
+// ⚠️ RESTORE REMINDER: when the Venture Platform is fully re-enabled again,
+// set this back to `false` to bring Section 03 (Venture-Guthaben + Marktplatz)
+// back. Routing/pages are unchanged; this only hides the dashboard section body.
+export const ALPHA_HIDE_STARTUP_VENTURE_SECTION = true;
+
+/**
+ * Whether the Startup dashboard "Section 03 — Venture Platform" (incl. the
+ * Venture-Guthaben card) is hidden for Alpha. Flip
+ * ALPHA_HIDE_STARTUP_VENTURE_SECTION to false to restore it.
+ */
+export const isStartupVentureSectionHiddenForAlpha = (): boolean =>
+  ALPHA_HIDE_STARTUP_VENTURE_SECTION;
+
+// ---------------------------------------------------------------------------
+// Alpha launch — rename the Startup "Venture Platform" nav to "Übersicht"
+// (flip ONE value to restore the old label).
+// ---------------------------------------------------------------------------
+//
+// After ALPHA_HIDE_STARTUP_SECTIONS hides Marktplatz / Meine Anfragen / Mein
+// Guthaben, the "Venture Platform" section collapses to a single visible item
+// (/venture), whose label is ALSO "Venture Platform" — so the user would see
+// "Venture Platform" twice (section header + item). For Alpha we rename the
+// section header (title === "Venture Platform") to "Programm" and the /venture
+// item label to "Übersicht", giving "Programm → Übersicht" (no double naming).
+// The href "/venture" and routing are unchanged.
+//
+// Set ALPHA_RENAME_STARTUP_VENTURE to `false` to restore the original
+// "Venture Platform" header + item label. Only the STARTUP nav is affected.
+export const ALPHA_RENAME_STARTUP_VENTURE = true;
+// The single visible item (/venture) keeps the "Übersicht" label...
+const ALPHA_STARTUP_VENTURE_LABEL = "Übersicht";
+// ...while the section HEADER becomes "Programm", so the user sees
+// "Programm → Übersicht" instead of the previous "Übersicht → Übersicht"
+// double naming. When ALPHA_RENAME_STARTUP_VENTURE is flipped to false, the
+// original "Venture Platform" header + item label are restored.
+const ALPHA_STARTUP_VENTURE_SECTION_LABEL = "Programm";
+
+function applyStartupAlphaNav(sections: NavSection[]): NavSection[] {
+  let result = sections;
+
+  if (ALPHA_HIDE_STARTUP_SECTIONS) {
+    const hidden = new Set<string>(ALPHA_HIDDEN_STARTUP_HREFS);
+    result = result
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => !hidden.has(item.href)),
+      }))
+      .filter((section) => section.items.length > 0);
+  }
+
+  if (ALPHA_RENAME_STARTUP_VENTURE) {
+    result = result.map((section) => ({
+      ...section,
+      title:
+        section.title === "Venture Platform"
+          ? ALPHA_STARTUP_VENTURE_SECTION_LABEL
+          : section.title,
+      items: section.items.map((item) =>
+        item.href === "/venture"
+          ? { ...item, label: ALPHA_STARTUP_VENTURE_LABEL }
+          : item,
+      ),
+    }));
+  }
+
+  return result;
+}
+
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
   href: "/messages",
@@ -191,7 +392,7 @@ const MATCHMAKING_SECTION_ADMIN: NavSection = {
   title: "Matchmaking & Use-Cases",
   items: [
     { label: "Batches", href: "/batches", icon: "batches" },
-    { label: "Match-Matrix", href: "/match-matrix", icon: "matchMatrix" },
+    { label: "Startup-Partner Matchmaking", href: "/match-matrix", icon: "matchMatrix" },
   ],
 };
 
@@ -322,7 +523,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     PLATFORM_SECTION_MEMBER,
     SETTINGS_SECTION,
   ],
-  BUSINESS_PARTNER: [
+  BUSINESS_PARTNER: applyPartnerAlphaNav([
     {
       items: [{ label: "Dashboard", href: "/dashboard/partner", icon: "partnerDashboard" }],
     },
@@ -330,7 +531,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Screening",
       items: [
-        { label: "Match-Matrix", href: "/matrix", icon: "matchMatrix" },
+        { label: "Startup-Partner Matchmaking", href: "/matrix", icon: "matchMatrix" },
         { label: "Longlist-Screening", href: "/screening", icon: "screening" },
         { label: "Use-Case-Bewertung", href: "/use-cases", icon: "useCases" },
         { label: "Check-ins", href: "/check-ins", icon: "checkIns" },
@@ -339,7 +540,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       title: "Zusammenarbeit",
       items: [
-        { label: "Meine Challenges", href: "/challenges", icon: "challenges" },
+        { label: "Challenges", href: "/challenges", icon: "challenges" },
         { label: "Engagements", href: "/engagements", icon: "engagements" },
         { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
         { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
@@ -355,7 +556,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Team", href: "/team", icon: "team" }],
     },
     SETTINGS_SECTION,
-  ],
+  ]),
   INVESTOR: [
     {
       items: [{ label: "Dashboard", href: "/dashboard/investor", icon: "dashboard" }],
@@ -371,7 +572,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     },
     SETTINGS_SECTION,
   ],
-  STARTUP: [
+  STARTUP: applyStartupAlphaNav([
     {
       items: [{ label: "Dashboard", href: "/dashboard/startup", icon: "startupDashboard" }],
     },
@@ -381,9 +582,9 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [{ label: "Feed", href: "/feed", icon: "feed" }],
     },
     {
-      title: "Chancen",
+      title: "Startup-Hub",
       items: [
-        { label: "Match-Matrix", href: "/matrix", icon: "matchMatrix" },
+        { label: "Startup-Partner Matchmaking", href: "/matrix", icon: "matchMatrix" },
         { label: "Challenges", href: "/challenges", icon: "challenges" },
         { label: "Meine Bewerbungen", href: "/applications", icon: "applications" },
         { label: "Mein Profil", href: "/profile", icon: "profile" },
@@ -400,5 +601,5 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       ],
     },
     SETTINGS_SECTION,
-  ],
+  ]),
 };

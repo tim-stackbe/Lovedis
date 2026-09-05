@@ -131,7 +131,7 @@ export default async function ChallengeDetailPage({
       </Card>
 
       {role === "STARTUP" && (
-        <section className="space-y-4">
+        <section id="bewerben" className="space-y-4 scroll-mt-24">
           <SectionLabel number="02" label="Bewerben" title="Deine Bewerbung" />
           {myApplication ? (
             <Card className="p-6">

@@ -38,8 +38,7 @@ const COPY = {
   },
   STARTUP: {
     title: "Offene Challenges",
-    subtitle:
-      "Entdecke Corporate-Innovations-Challenges und pitche deine Lösung.",
+    subtitle: "Entdecke die Challenges der Unternehmenspartner.",
   },
 } as const;
 
@@ -104,7 +103,9 @@ export default async function ChallengesPage() {
       <SectionLabel
         number="01"
         label="Challenges"
-        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}`}
+        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}${
+          role === "STARTUP" ? " – Wissensmanagement" : ""
+        }`}
       />
 
       {challenges.length === 0 ? (
@@ -172,11 +173,14 @@ export default async function ChallengesPage() {
                       <ApplicationStatusBadge
                         value={applied as "PENDING" | "ACCEPTED" | "REJECTED"}
                       />
-                    ) : (
-                      <span className="font-semibold text-lv-blue">
-                        {c.status === "OPEN" ? "Bewirb dich jetzt →" : ""}
-                      </span>
-                    )
+                    ) : c.status === "OPEN" ? (
+                      <Link
+                        href={`/challenges/${c.id}#bewerben`}
+                        className="font-semibold text-lv-blue hover:underline"
+                      >
+                        Bewirb dich jetzt →
+                      </Link>
+                    ) : null
                   ) : (
                     <span>
                       {c._count.applications} Bewerbung

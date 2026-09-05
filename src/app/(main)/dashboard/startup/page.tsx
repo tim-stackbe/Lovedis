@@ -11,6 +11,10 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
+import {
+  isStartupMarketplaceHiddenForAlpha,
+  isStartupVentureSectionHiddenForAlpha,
+} from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Startup-Dashboard" };
@@ -61,6 +65,16 @@ export default async function StartupDashboard() {
     (profileChecks.filter((c) => c.done).length / profileChecks.length) * 100
   );
 
+  // Alpha: hide the body "Zum Marktplatz" CTA in exact sync with the Marktplatz
+  // sidebar nav item. Both read the same flag/list in @/lib/roles, so
+  // re-enabling Marktplatz there brings this button back with no extra change.
+  const marketplaceHidden = isStartupMarketplaceHiddenForAlpha();
+
+  // Alpha: hide the entire "Section 03 — Venture Platform" (Venture-Guthaben +
+  // Marktplatz) until the Venture Platform is fully re-enabled. Flip
+  // ALPHA_HIDE_STARTUP_VENTURE_SECTION in @/lib/roles to false to restore it.
+  const ventureSectionHidden = isStartupVentureSectionHiddenForAlpha();
+
   return (
     <>
       <HeroBanner
@@ -74,9 +88,11 @@ export default async function StartupDashboard() {
         actions={
           startup ? (
             <>
-              <LinkButton href="/venture/marketplace" variant="white">
-                Zum Marktplatz
-              </LinkButton>
+              {!marketplaceHidden && (
+                <LinkButton href="/venture/marketplace" variant="white">
+                  Zum Marktplatz
+                </LinkButton>
+              )}
               <LinkButton href="/challenges" variant="white">
                 Challenges
               </LinkButton>
@@ -192,6 +208,7 @@ export default async function StartupDashboard() {
         </div>
       </section>
 
+      {!ventureSectionHidden && (
       <section className="space-y-4">
         <SectionLabel
           number="03"
@@ -209,15 +226,22 @@ export default async function StartupDashboard() {
                 sub={`Fix ${creditBudget.fixRemaining}/${creditBudget.fixTotal} · Flexibel ${creditBudget.flexRemaining}/${creditBudget.flexTotal} · Historie →`}
               />
             </Link>
-            <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
-              <ToneCard
-                tone="info"
-                icon={Store}
-                label="Marktplatz"
-                value="Support finden"
-                sub="Programme, Mentor:innen & Angebote →"
-              />
-            </Link>
+            {/* Alpha: hide the Section-03 "Marktplatz" card in sync with the
+                Marktplatz nav item + hero CTA. Reuses the same marketplaceHidden
+                flag, so re-enabling Marktplatz in @/lib/roles brings it back
+                with no extra code change. The Guthaben card above stays, so the
+                section header ("Marktplatz & Guthaben") never renders empty. */}
+            {!marketplaceHidden && (
+              <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
+                <ToneCard
+                  tone="info"
+                  icon={Store}
+                  label="Marktplatz"
+                  value="Support finden"
+                  sub="Programme, Mentor:innen & Angebote →"
+                />
+              </Link>
+            )}
           </div>
         ) : (
           <Card className="flex flex-col items-start gap-3 p-6 text-sm text-lv-secondary">
@@ -231,6 +255,7 @@ export default async function StartupDashboard() {
           </Card>
         )}
       </section>
+      )}
 
       <section className="space-y-4">
         <SectionLabel
