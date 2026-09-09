@@ -47,19 +47,22 @@ export function Topbar({
         </kbd>
       </button>
 
-      <a
-        href={FAQ_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group ml-auto flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium text-lv-text hover:bg-lv-surface transition-colors"
-        aria-label="Hilfe"
-        title="Hilfe"
-      >
-        <LovedisIcon name="help" className="h-5 w-5 shrink-0 text-lv-secondary transition-colors group-hover:text-lv-blue" />
-        <span className="hidden sm:inline">Hilfe</span>
-      </a>
+      <div className="relative ml-auto flex items-center gap-1">
+        {role === "ADMIN" && (
+          <a
+            href={FAQ_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium text-lv-text hover:bg-lv-surface transition-colors"
+            aria-label="Hilfe"
+            title="Hilfe"
+          >
+            <LovedisIcon name="help" className="h-5 w-5 shrink-0 text-lv-secondary transition-colors group-hover:text-lv-blue" />
+            <span className="hidden sm:inline">Hilfe</span>
+          </a>
+        )}
 
-      <div className="relative">
+        <div className="relative">
         <button
           onClick={() => setMenuOpen((o) => !o)}
           className="flex items-center gap-3 rounded-button px-2 py-1.5 hover:bg-lv-surface transition-colors"
@@ -104,6 +107,7 @@ export function Topbar({
             </div>
           </>
         )}
+        </div>
       </div>
     </header>
   );
