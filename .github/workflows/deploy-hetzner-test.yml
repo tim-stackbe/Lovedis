@@ -27,8 +27,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:test
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/tim-stackbe/lovedis:test
+            ghcr.io/tim-stackbe/lovedis:${{ github.sha }}
 
       - name: Deploy to TEST server over SSH
         uses: appleboy/ssh-action@v1
