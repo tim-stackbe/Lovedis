@@ -2,6 +2,7 @@ import {
   Bell,
   ClipboardCheck,
   FlaskConical,
+  HelpCircle,
   Inbox,
   Share2,
   Store,
@@ -43,6 +44,7 @@ export default async function AdminDashboard() {
     dueCheckIns,
     screenedForVerdicts,
     pendingPartners,
+    openSupportTickets,
   ] = await Promise.all([
     prisma.user.count({ where: { isActive: true } }),
     prisma.startup.count(),
@@ -81,6 +83,11 @@ export default async function AdminDashboard() {
     }),
     prisma.user.count({
       where: { role: "BUSINESS_PARTNER", approvedAt: null, isActive: true },
+    }),
+    prisma.supportTicket.count({
+      where: {
+        status: { in: ["OPEN", "IN_PROGRESS", "WAITING_ON_USER"] },
+      },
     }),
   ]);
 
@@ -188,6 +195,15 @@ export default async function AdminDashboard() {
               label="Ausstehende Partner-Verdikte"
               value={pendingPartnerVerdicts}
               sub="Startups ohne Partner-Feedback →"
+            />
+          </Link>
+          <Link href="/support/admin" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone={openSupportTickets > 0 ? "attention" : "muted"}
+              icon={HelpCircle}
+              label="Offene Support-Tickets"
+              value={openSupportTickets}
+              sub="warten auf Antwort →"
             />
           </Link>
         </div>

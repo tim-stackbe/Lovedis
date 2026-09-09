@@ -19,6 +19,8 @@ import type {
   RoadmapStatus,
   SourceType,
   SupportCategory,
+  SupportTicketCategory,
+  SupportTicketStatus,
   UpdateCategory,
 } from "@/generated/prisma/enums";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
@@ -44,6 +46,8 @@ import {
   ROADMAP_STATUS_LABELS,
   SOURCE_TYPE_LABELS,
   SUPPORT_CATEGORY_LABELS,
+  SUPPORT_TICKET_CATEGORY_LABELS,
+  SUPPORT_TICKET_STATUS_LABELS,
   UPDATE_CATEGORY_LABELS,
 } from "@/lib/constants";
 import { cn, formatScore } from "@/lib/utils";
@@ -308,6 +312,48 @@ export function OfferingTypeBadge({
 
 export function SupportCategoryBadge({ value }: { value: SupportCategory }) {
   return <Badge tone="blue">{SUPPORT_CATEGORY_LABELS[value]}</Badge>;
+}
+
+const SUPPORT_TICKET_STATUS_TONES: Record<SupportTicketStatus, BadgeTone> = {
+  OPEN: "orange",
+  IN_PROGRESS: "blue",
+  WAITING_ON_USER: "yellow",
+  RESOLVED: "muted",
+};
+
+export function SupportTicketStatusBadge({
+  value,
+}: {
+  value: SupportTicketStatus;
+}) {
+  return (
+    <Badge tone={SUPPORT_TICKET_STATUS_TONES[value]}>
+      {SUPPORT_TICKET_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const SUPPORT_TICKET_CATEGORY_TONES: Record<
+  SupportTicketCategory,
+  BadgeTone
+> = {
+  ACCOUNT: "blue",
+  PLATFORM: "pink",
+  MARKETPLACE: "mint",
+  CREDITS: "yellow",
+  OTHER: "muted",
+};
+
+export function SupportTicketCategoryBadge({
+  value,
+}: {
+  value: SupportTicketCategory;
+}) {
+  return (
+    <Badge tone={SUPPORT_TICKET_CATEGORY_TONES[value]}>
+      {SUPPORT_TICKET_CATEGORY_LABELS[value]}
+    </Badge>
+  );
 }
 
 /**

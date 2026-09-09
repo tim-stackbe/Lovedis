@@ -297,6 +297,12 @@ const MESSAGES_ITEM: NavItem = {
   icon: "messages",
 };
 
+const SUPPORT_ITEM: NavItem = {
+  label: "Support",
+  href: "/support",
+  icon: "help",
+};
+
 // ---------------------------------------------------------------------------
 // Team navigation — grouped into thematic "Spaces" (Sourcing, Matchmaking,
 // Zusammenarbeit, Roadmap/Wissen, Marktplatz, Tracking) instead of one long
@@ -466,6 +472,7 @@ const PLATFORM_SECTION_ADMIN: NavSection = {
   title: "Plattform",
   items: [
     { label: "Intro-Anfragen", href: "/intros", icon: "intros" },
+    { label: "Support-Tickets", href: "/support/admin", icon: "help" },
     { label: "Unternehmen", href: "/companies", icon: "companies" },
     { label: "Nutzerverwaltung", href: "/users", icon: "users" },
     { label: "Geteilte Scorings", href: "/sharing", icon: "sharing" },
@@ -474,6 +481,11 @@ const PLATFORM_SECTION_ADMIN: NavSection = {
 
 const SETTINGS_SECTION: NavSection = {
   items: [{ label: "Einstellungen", href: "/settings", icon: "settings" }],
+};
+
+/** Settings + Support for external roles (Startup, Partner, Investor). */
+const EXTERNAL_ACCOUNT_SECTION: NavSection = {
+  items: [SUPPORT_ITEM, { label: "Einstellungen", href: "/settings", icon: "settings" }],
 };
 
 export const ROLE_NAV: Record<UserRole, NavSection[]> = {
@@ -555,7 +567,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       title: "Unternehmen",
       items: [{ label: "Team", href: "/team", icon: "team" }],
     },
-    SETTINGS_SECTION,
+    EXTERNAL_ACCOUNT_SECTION,
   ]),
   INVESTOR: [
     {
@@ -570,7 +582,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
         MESSAGES_ITEM,
       ],
     },
-    SETTINGS_SECTION,
+    EXTERNAL_ACCOUNT_SECTION,
   ],
   STARTUP: applyStartupAlphaNav([
     {
@@ -600,6 +612,6 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
         { label: "Mein Guthaben", href: "/venture/credits", icon: "wallet" },
       ],
     },
-    SETTINGS_SECTION,
+    EXTERNAL_ACCOUNT_SECTION,
   ]),
 };

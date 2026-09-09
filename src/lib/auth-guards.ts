@@ -149,3 +149,23 @@ export async function requireVentureView(): Promise<Session> {
 export async function requirePartnerView(): Promise<Session> {
   return requireRole(PARTNER_VIEW_ROLES);
 }
+
+/** External roles allowed to create support tickets. */
+export const SUPPORT_CREATOR_ROLES = [
+  "STARTUP",
+  "BUSINESS_PARTNER",
+  "INVESTOR",
+] as const satisfies readonly UserRole[];
+
+/** Support ticket creation gate (STARTUP, BUSINESS_PARTNER, INVESTOR). */
+export async function requireSupportCreator(): Promise<Session> {
+  const session = await requireApprovedAccess();
+  if (
+    !SUPPORT_CREATOR_ROLES.includes(
+      session.user.role as (typeof SUPPORT_CREATOR_ROLES)[number]
+    )
+  ) {
+    redirect(ROLE_HOMES[session.user.role]);
+  }
+  return session;
+}

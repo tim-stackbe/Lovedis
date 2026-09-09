@@ -25,6 +25,8 @@ import type {
   SourceType,
   StartupStage,
   SupportCategory,
+  SupportTicketCategory,
+  SupportTicketStatus,
   UpdateCategory,
 } from "@/generated/prisma/enums";
 
@@ -507,6 +509,43 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   COMPLETED: "Abgeschlossen",
   DECLINED: "Abgelehnt",
   CANCELLED: "Storniert",
+};
+
+// ---------------------------------------------------------------------------
+// Support-Tickets
+// ---------------------------------------------------------------------------
+
+export const SUPPORT_TICKET_STATUSES: SupportTicketStatus[] = [
+  "OPEN",
+  "IN_PROGRESS",
+  "WAITING_ON_USER",
+  "RESOLVED",
+];
+
+export const SUPPORT_TICKET_STATUS_LABELS: Record<SupportTicketStatus, string> = {
+  OPEN: "Offen",
+  IN_PROGRESS: "In Bearbeitung",
+  WAITING_ON_USER: "Wartet auf Antwort",
+  RESOLVED: "Erledigt",
+};
+
+export const SUPPORT_TICKET_CATEGORIES: SupportTicketCategory[] = [
+  "ACCOUNT",
+  "PLATFORM",
+  "MARKETPLACE",
+  "CREDITS",
+  "OTHER",
+];
+
+export const SUPPORT_TICKET_CATEGORY_LABELS: Record<
+  SupportTicketCategory,
+  string
+> = {
+  ACCOUNT: "Konto",
+  PLATFORM: "Plattform",
+  MARKETPLACE: "Marktplatz",
+  CREDITS: "Credits",
+  OTHER: "Sonstiges",
 };
 
 // ---------------------------------------------------------------------------
