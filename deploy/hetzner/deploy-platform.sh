@@ -4,7 +4,7 @@
 # Two deploy paths (auto-selected; override with DEPLOY_MODE=mac|cloud):
 #
 #   mac   — Mac desktop: ~/.ssh/config alias (hetzner-lovedis), rsync → /opt/lovedis/platform,
-#           compose at /opt/lovedis, ControlMaster multiplexing.
+#           compose at /opt/lovedis, db push + smoke test, ControlMaster multiplexing.
 #   cloud — Cursor cloud agent / CI: SSH_KEY → deploy@49.13.222.76, rsync → /opt/lovedis,
 #           compose at /opt/lovedis/deploy/hetzner, db push + smoke test.
 #
@@ -115,23 +115,16 @@ deploy_mac() {
   "
   echo "   Platform container up"
 
-  echo "→ Smoke test (platform health)…"
-  local code i
-  for i in $(seq 1 20); do
-    code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "${app_url}/api/health" || true)"
-    if [ "$code" = "200" ]; then
-      echo "   Health OK (${app_url}/api/health)"
-      echo
-      echo "==> Deploy complete (${SHA})"
-      echo "    Platform: ${app_url}"
-      return 0
-    fi
-    echo "   attempt ${i}: HTTP ${code}"
-    sleep 3
-  done
+  echo "→ Applying Prisma schema (db push)…"
+  ssh "$ssh_target" "bash ${platform_dir}/deploy/hetzner/migrate-db-push.sh"
+  echo "   Schema applied"
 
-  echo "deploy-platform.sh: health check did not return 200 — container may still be starting." >&2
-  exit 1
+  echo "→ Smoke test (platform + homepage)…"
+  bash "$ROOT/deploy/hetzner/smoke-test.sh" "49.13.222.76"
+  echo
+  echo "==> Deploy complete (${SHA})"
+  echo "    Platform: ${app_url}"
+  echo "    Homepage: https://home.49.13.222.76.nip.io"
 }
 
 deploy_cloud() {

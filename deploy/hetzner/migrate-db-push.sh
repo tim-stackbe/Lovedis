@@ -14,26 +14,60 @@ else
   exit 1
 fi
 
-cd "$SCRIPT_DIR"
-if [ -f .env ]; then
-  set -a; source ./.env; set +a
-elif [ -f "$ROOT/.env" ]; then
-  set -a; source "$ROOT/.env"; set +a
+read_env_var() {
+  local file="$1" key="$2"
+  [ -f "$file" ] || return 1
+  grep -E "^${key}=" "$file" | head -1 | cut -d= -f2- | sed 's/^"\(.*\)"$/\1/'
+}
+
+load_database_url() {
+  local f
+  for f in \
+    "$SCRIPT_DIR/.env" \
+    "$ROOT/../platform.env" \
+    "$ROOT/platform.env" \
+    "$ROOT/.env"; do
+    if [ -z "${DATABASE_URL:-}" ]; then
+      DATABASE_URL="$(read_env_var "$f" DATABASE_URL || true)"
+    fi
+    if [ -z "${DATABASE_URL:-}" ] && [ -f "$f" ]; then
+      set +u
+      # shellcheck disable=SC1090
+      set -a; source "$f" 2>/dev/null || true; set +a
+      set -u
+    fi
+    [ -n "${DATABASE_URL:-}" ] && return 0
+  done
+  return 1
+}
+
+COMPOSE_FILE=docker-compose.yml
+if [ -f "$ROOT/../docker-compose.yml" ]; then
+  # Mac server layout: live compose at /opt/lovedis, repo at /opt/lovedis/platform
+  COMPOSE_DIR="$(cd "$ROOT/.." && pwd)"
+elif [ -f "$SCRIPT_DIR/docker-compose.yml" ]; then
+  COMPOSE_DIR="$SCRIPT_DIR"
+elif [ -f "$ROOT/docker-compose.yml" ]; then
+  COMPOSE_DIR="$ROOT"
 else
-  echo "migrate-db-push.sh: no .env with DATABASE_URL" >&2
+  echo "migrate-db-push.sh: docker-compose.yml not found" >&2
   exit 1
+fi
+
+cd "$COMPOSE_DIR"
+
+if ! load_database_url; then
+  if DB_CID="$(docker compose -f "$COMPOSE_FILE" ps -q platform 2>/dev/null || true)" \
+    && [ -n "$DB_CID" ]; then
+    DATABASE_URL="$(docker compose -f "$COMPOSE_FILE" exec -T platform printenv DATABASE_URL | tr -d '\r')"
+  fi
 fi
 
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "migrate-db-push.sh: DATABASE_URL is not set" >&2
   exit 1
 fi
-
-COMPOSE_FILE=docker-compose.yml
-if [ ! -f "$COMPOSE_FILE" ] && [ -f "$ROOT/docker-compose.yml" ]; then
-  cd "$ROOT"
-  COMPOSE_FILE=docker-compose.yml
-fi
+export DATABASE_URL
 
 DB_CID="$(docker compose -f "$COMPOSE_FILE" ps -q db 2>/dev/null || true)"
 if [ -z "$DB_CID" ]; then
