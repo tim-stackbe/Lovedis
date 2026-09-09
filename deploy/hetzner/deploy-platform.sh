@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Deploy LOVEDIS platform to Hetzner TEST.
+# Deploy LOVEDIS platform to Hetzner TEST — run from your Mac.
 #
-# Requires one of:
-#   - SSH_KEY env var (Cursor environment secret or GitHub Actions secret)
-#   - SSH agent with a key authorized on the server (SSH_AUTH_SOCK)
+# Primary path: local SSH via macOS Keychain / ssh-agent (no env vars required).
+# Optional: set SSH_KEY to a private key file contents (CI / automation only).
 #
-# Usage (from repo root):
+# Usage (from repo root on Mac):
 #   ./deploy/hetzner/deploy-platform.sh
 #
 # Optional env:
@@ -39,10 +38,13 @@ if [ -n "${SSH_KEY:-}" ]; then
   chmod 600 "$KEY_FILE"
   SSH_OPTS+=(-i "$KEY_FILE")
 elif [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
-  :
+  : # Mac ssh-agent / Keychain — default path
 else
-  echo "deploy-platform.sh: missing SSH_KEY env and no SSH agent socket." >&2
-  echo "Add SSH_KEY to Cursor Cloud environment secrets (private key for ${USER}@${HOST})." >&2
+  echo "deploy-platform.sh: cannot connect to ${USER}@${HOST}." >&2
+  echo >&2
+  echo "Run this script from your Mac (repo: ~/Documents/Lovedis or similar)." >&2
+  echo "Your SSH key must be loaded — e.g. \`ssh-add --apple-use-keychain\` or \`ssh ${USER}@${HOST}\` once." >&2
+  echo "Cloud Agent VMs cannot deploy without SSH_KEY; use Mac-local deploy instead." >&2
   exit 1
 fi
 
@@ -55,38 +57,47 @@ RSYNC=(rsync -az --delete
   --exclude cms/node_modules
   -e "$RSYNC_SSH")
 
-echo "==> LOVEDIS Hetzner deploy (${SHA}) → ${USER}@${HOST}"
+echo "==> LOVEDIS Hetzner deploy (${SHA})"
+echo "    Target: ${USER}@${HOST}:${REMOTE_DIR}"
+echo "    Image:  ${IMAGE}"
+echo
 
-echo "→ Testing SSH…"
+echo "→ Testing SSH to ${USER}@${HOST}…"
 if ! "${SSH_CMD[@]}" "echo ok" >/dev/null 2>&1; then
-  echo "deploy-platform.sh: SSH to ${USER}@${HOST} failed." >&2
-  if [ -z "${SSH_KEY:-}" ] && [ -n "${SSH_AUTH_SOCK:-}" ]; then
-    echo "The forwarded SSH agent key is not authorized on the server." >&2
-    echo "Add SSH_KEY (deploy private key) to Cursor environment secrets." >&2
-  fi
+  echo "deploy-platform.sh: SSH failed." >&2
+  echo >&2
+  echo "On Mac, verify your deploy key is authorized:" >&2
+  echo "  ssh ${USER}@${HOST}" >&2
+  echo "If that works, re-run: ./deploy/hetzner/deploy-platform.sh" >&2
   exit 1
 fi
+echo "   SSH OK"
 
-echo "→ Syncing repository to ${REMOTE_DIR}…"
+echo "→ Syncing repo to ${REMOTE_DIR}…"
 "${RSYNC[@]}" "$ROOT/" "${USER}@${HOST}:${REMOTE_DIR}/"
+echo "   Sync complete"
 
-echo "→ Pulling platform image ${IMAGE}…"
+echo "→ Pulling platform image and restarting container…"
 "${SSH_CMD[@]}" bash -s <<REMOTE
 set -euo pipefail
 cd "${COMPOSE_DIR}"
 if [ ! -f .env ]; then
-  echo "Missing ${COMPOSE_DIR}/.env on server" >&2
+  echo "Missing ${COMPOSE_DIR}/.env on server — copy from .env.example and fill secrets." >&2
   exit 1
 fi
 export PLATFORM_IMAGE="${IMAGE}"
 docker compose pull platform
 docker compose up -d platform
 REMOTE
+echo "   Platform container up"
 
 echo "→ Applying Prisma schema (db push)…"
 "${SSH_CMD[@]}" "bash ${COMPOSE_DIR}/migrate-db-push.sh"
 
-echo "→ Smoke test…"
+echo "→ Smoke test (platform + homepage)…"
 bash "$ROOT/deploy/hetzner/smoke-test.sh" "$HOST"
 
+echo
 echo "==> Deploy complete (${SHA})"
+echo "    Platform: https://app.${HOST}.nip.io"
+echo "    Homepage: https://home.${HOST}.nip.io"

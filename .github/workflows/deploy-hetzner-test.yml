@@ -1,11 +1,15 @@
 # Deploy platform to Hetzner TEST (49.13.222.76).
-# Requires repo secrets: SSH_HOST, SSH_USER, SSH_KEY
+#
+# Mac-local deploy is preferred — run from repo root on your Mac:
+#   ./deploy/hetzner/deploy-platform.sh
+#
+# This workflow builds/pushes the :test image and can deploy via SSH only when
+# repo secrets are configured: SSH_HOST, SSH_USER, SSH_KEY.
+# Automatic deploy on push is disabled until secrets exist.
 name: Deploy TEST (Hetzner)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [Dedalus]
 
 jobs:
   build-and-deploy-test:
@@ -31,6 +35,7 @@ jobs:
             ghcr.io/tim-stackbe/lovedis:${{ github.sha }}
 
       - name: Deploy to TEST server over SSH
+        if: ${{ secrets.SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -46,6 +51,12 @@ jobs:
             docker compose pull platform
             docker compose up -d platform
             bash ./migrate-db-push.sh
+
+      - name: Skip SSH deploy (no secrets)
+        if: ${{ secrets.SSH_KEY == '' }}
+        run: |
+          echo "SSH_KEY not configured — skipping server deploy."
+          echo "Run ./deploy/hetzner/deploy-platform.sh from your Mac instead."
 
       - name: Post-deploy smoke test
         run: |

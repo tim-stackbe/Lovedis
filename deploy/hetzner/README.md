@@ -1,5 +1,26 @@
 # Hetzner deployment (Storyblok hybrid)
 
+## Mac deploy (primary)
+
+Deploy from your Mac with local SSH (Keychain / `ssh-agent`). No `SSH_KEY` env var needed.
+
+```bash
+# From repo root (e.g. ~/Documents/Lovedis)
+./deploy/hetzner/deploy-platform.sh
+```
+
+Or via npm:
+
+```bash
+npm run deploy:hetzner
+```
+
+**Prerequisites on Mac:** `ssh deploy@49.13.222.76` works (your deploy key in Keychain). The script rsyncs the repo to `/opt/lovedis`, pulls the platform image, runs `migrate-db-push.sh`, and smoke-tests the stack.
+
+**Cloud Agents / CI:** cannot deploy without server SSH access. Run the script above from your Mac after merging changes. GitHub Actions deploy is disabled by default (`workflow_dispatch` only) until `SSH_HOST`, `SSH_USER`, and `SSH_KEY` secrets are configured.
+
+---
+
 **Current phase: TEST only.** The Hetzner box (`49.13.222.76`) is a staging environment.
 **Do not change `lovedis.de` DNS** until the stack passes TEST smoke tests and you explicitly
 run production cutover (see below).
