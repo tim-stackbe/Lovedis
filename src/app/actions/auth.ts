@@ -84,7 +84,15 @@ export async function login(
 }
 
 export async function logout(): Promise<void> {
-  await signOut({ redirectTo: "/login" });
+  // Route through /api/session-clear instead of /login directly. signOut clears
+  // the session cookie, but the Server Action's client-side redirect to /login
+  // can still race the cookie update — middleware then sees a valid JWT on /login
+  // and bounces to the role home (pending partners: /login → /dashboard/partner →
+  // /pending). That chained redirect aborts the first navigation in Next.js 16
+  // ("This page couldn't load"; manual reload works). session-clear is public
+  // even with a JWT, deletes the cookie, then HTTP-redirects to /login in one
+  // clean chain — same pattern as requireAuth() for stale sessions.
+  await signOut({ redirectTo: "/api/session-clear" });
 }
 
 const changePasswordSchema = z
