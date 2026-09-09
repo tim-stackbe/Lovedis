@@ -1,23 +1,22 @@
 # Hetzner deployment (Storyblok hybrid)
 
-## Mac deploy (primary)
-
-Deploy from your Mac with local SSH (Keychain / `ssh-agent`). No `SSH_KEY` env var needed.
+## Deploy (Cursor agents, Mac, or CI)
 
 ```bash
-# From repo root (e.g. ~/Documents/Lovedis)
+# From repo root
 ./deploy/hetzner/deploy-platform.sh
+# or: npm run deploy:hetzner
 ```
 
-Or via npm:
+The script rsyncs the repo to `/opt/lovedis`, runs `docker build --no-cache` on the server, restarts the platform container, runs `migrate-db-push.sh`, and smoke-tests the stack.
 
-```bash
-npm run deploy:hetzner
-```
+| Environment | SSH auth |
+|---|---|
+| **Cursor cloud agent** | `SSH_KEY` in Cursor → Environment → Secrets (deploy user's private key) |
+| **Cursor desktop agent (Mac)** | Mac Keychain / `ssh-agent` — `ssh deploy@49.13.222.76` must work |
+| **GitHub Actions** | Repo secrets `SSH_HOST`, `SSH_USER`, `SSH_KEY` — see `github-actions-deploy.yml.example` |
 
-**Prerequisites on Mac:** `ssh deploy@49.13.222.76` works (your deploy key in Keychain). The script rsyncs the repo to `/opt/lovedis`, runs `docker build --no-cache` on the server, restarts the platform container, runs `migrate-db-push.sh`, and smoke-tests the stack.
-
-**Cloud Agents / CI:** cannot deploy without server SSH access. Run the script above from your Mac after merging changes. Optional GitHub Actions deploy is documented in `github-actions-deploy.yml.example` (copy manually if you want CI-based deploy).
+**One-time cloud setup:** In [Cursor Environment settings](https://cursor.com/dashboard/cloud-agents/environments), add secret `SSH_KEY` with the full private key for `deploy@49.13.222.76` (PEM/OpenSSH format, including `-----BEGIN … KEY-----` lines). After saving, cloud agents can run `./deploy/hetzner/deploy-platform.sh` automatically.
 
 ---
 

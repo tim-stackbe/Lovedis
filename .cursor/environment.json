@@ -1,4 +1,4 @@
 {
-  "install": "npm ci && npx prisma generate",
-  "start": "echo 'Hetzner deploy: run ./deploy/hetzner/deploy-platform.sh from your Mac (local SSH). Cloud agents must not attempt Hetzner SSH unless SSH_KEY is configured in environment secrets.'"
+  "install": "npm ci && npx prisma generate && sudo apt-get update -qq && sudo apt-get install -y -qq rsync openssh-client",
+  "start": "if [ -n \"${SSH_KEY:-}\" ]; then echo 'SSH_KEY configured — run ./deploy/hetzner/deploy-platform.sh to deploy to Hetzner TEST'; elif [ -S \"${SSH_AUTH_SOCK:-/dev/null}\" ]; then echo 'SSH agent available — deploy via ./deploy/hetzner/deploy-platform.sh (requires deploy key in agent)'; else echo 'Add SSH_KEY (deploy private key) to Cursor Environment → Secrets to enable Hetzner deploy from cloud agents'; fi"
 }

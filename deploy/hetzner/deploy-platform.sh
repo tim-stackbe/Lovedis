@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# Deploy LOVEDIS platform to Hetzner TEST — run from your Mac.
+# Deploy LOVEDIS platform to Hetzner TEST.
 #
-# Primary path: local SSH via macOS Keychain / ssh-agent (no env vars required).
-# Optional: set SSH_KEY to a private key file contents (CI / automation only).
+# Auth (first match wins):
+#   1. SSH_KEY env var — Cursor environment secret or CI (recommended for cloud agents)
+#   2. SSH agent — Mac Keychain / forwarded agent socket (desktop agents)
 #
-# Flow (same as the 30-day working pipeline):
+# Flow:
 #   1. rsync repo → deploy@49.13.222.76:/opt/lovedis
-#   2. docker build --no-cache on the server (not GHCR pull)
+#   2. docker build --no-cache on the server
 #   3. docker compose up -d platform
 #   4. prisma db push via migrate-db-push.sh
 #
-# Usage (from repo root on Mac):
+# Usage (from repo root):
 #   ./deploy/hetzner/deploy-platform.sh
 #
 # Optional env:
@@ -29,7 +30,7 @@ SHA="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15)
 KEY_FILE=""
 
-# Cursor Cloud Agent on Mac: forwarded ssh-agent socket (override with SSH_AUTH_SOCK).
+# Cursor desktop agent on Mac: forwarded ssh-agent socket.
 if [ -z "${SSH_AUTH_SOCK:-}" ] && [ -S /run/host-services/ssh-auth.sock ]; then
   export SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
 fi
@@ -45,15 +46,14 @@ if [ -n "${SSH_KEY:-}" ]; then
   KEY_FILE="$(mktemp)"
   printf '%s\n' "$SSH_KEY" > "$KEY_FILE"
   chmod 600 "$KEY_FILE"
-  SSH_OPTS+=(-i "$KEY_FILE")
+  SSH_OPTS+=(-i "$KEY_FILE" -o IdentitiesOnly=yes)
 elif [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
-  : # Mac ssh-agent / Keychain — default path
+  : # Mac ssh-agent / Keychain
 else
-  echo "deploy-platform.sh: cannot connect to ${USER}@${HOST}." >&2
+  echo "deploy-platform.sh: no SSH credentials for ${USER}@${HOST}." >&2
   echo >&2
-  echo "Run this script from your Mac (repo: ~/Documents/Lovedis or similar)." >&2
-  echo "Your SSH key must be loaded — e.g. \`ssh-add --apple-use-keychain\` or \`ssh ${USER}@${HOST}\` once." >&2
-  echo "Cloud Agent VMs cannot deploy without SSH_KEY; use Mac-local deploy instead." >&2
+  echo "Cloud agents: add SSH_KEY to Cursor → Environment → Secrets (full deploy private key)." >&2
+  echo "Desktop Mac:  load your deploy key — ssh-add --apple-use-keychain" >&2
   exit 1
 fi
 
@@ -79,13 +79,12 @@ if ! "${SSH_CMD[@]}" "echo ok" >/dev/null 2>&1; then
     ssh-add -l 2>&1 | sed 's/^/  /' >&2 || true
   fi
   if [ -n "${SSH_KEY:-}" ]; then
-    echo "SSH_KEY was set but authentication still failed — check the key is in deploy@${HOST} authorized_keys." >&2
+    echo "SSH_KEY is set but authentication failed — verify the key is in deploy@${HOST} authorized_keys." >&2
   else
-    echo "On Mac, verify your deploy key is authorized:" >&2
-    echo "  ssh ${USER}@${HOST}" >&2
-    echo "Load Keychain key: ssh-add --apple-use-keychain" >&2
+    echo "The forwarded SSH agent key is not authorized on the server." >&2
+    echo "Add SSH_KEY (Hetzner deploy private key) to Cursor Environment → Secrets." >&2
+    echo "Or on Mac: ssh ${USER}@${HOST}  (must succeed before re-running this script)" >&2
   fi
-  echo "Re-run: ./deploy/hetzner/deploy-platform.sh" >&2
   exit 1
 fi
 echo "   SSH OK"
