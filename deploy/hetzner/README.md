@@ -8,12 +8,19 @@
 # or: npm run deploy:hetzner
 ```
 
-The script rsyncs the repo to `/opt/lovedis`, runs `docker build --no-cache` on the server, restarts the platform container, runs `migrate-db-push.sh`, and smoke-tests the stack.
+The script auto-selects a deploy path:
+
+| Path | When | Target | Remote layout |
+|---|---|---|---|
+| **mac** | Mac with `hetzner-lovedis` in `~/.ssh/config`, or `HETZNER_*` env vars | SSH alias `hetzner-lovedis` | rsync → `/opt/lovedis/platform`, compose at `/opt/lovedis` |
+| **cloud** | `SSH_KEY` set, or non-Mac / no SSH alias | `deploy@49.13.222.76` | rsync → `/opt/lovedis`, compose at `/opt/lovedis/deploy/hetzner`, db push + smoke test |
+
+Override with `DEPLOY_MODE=mac` or `DEPLOY_MODE=cloud`.
 
 | Environment | SSH auth |
 |---|---|
 | **Cursor cloud agent** | `SSH_KEY` in Cursor → Environment → Secrets (deploy user's private key) |
-| **Cursor desktop agent (Mac)** | Mac Keychain / `ssh-agent` — `ssh deploy@49.13.222.76` must work |
+| **Mac desktop** | `~/.ssh/config` host `hetzner-lovedis` (ControlMaster); or `ssh deploy@49.13.222.76` via agent for cloud path |
 | **GitHub Actions** | Repo secrets `SSH_HOST`, `SSH_USER`, `SSH_KEY` — see `github-actions-deploy.yml.example` |
 
 **One-time cloud setup:** In [Cursor Environment settings](https://cursor.com/dashboard/cloud-agents/environments), add secret `SSH_KEY` with the full private key for `deploy@49.13.222.76` (PEM/OpenSSH format, including `-----BEGIN … KEY-----` lines). After saving, cloud agents can run `./deploy/hetzner/deploy-platform.sh` automatically.
