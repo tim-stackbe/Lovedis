@@ -25,6 +25,11 @@ SHA="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15)
 KEY_FILE=""
 
+# Cursor Cloud Agent on Mac: forwarded ssh-agent socket (override with SSH_AUTH_SOCK).
+if [ -z "${SSH_AUTH_SOCK:-}" ] && [ -S /run/host-services/ssh-auth.sock ]; then
+  export SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+fi
+
 cleanup() {
   if [ -n "$KEY_FILE" ] && [ -f "$KEY_FILE" ]; then
     rm -f "$KEY_FILE"
@@ -66,9 +71,18 @@ echo "→ Testing SSH to ${USER}@${HOST}…"
 if ! "${SSH_CMD[@]}" "echo ok" >/dev/null 2>&1; then
   echo "deploy-platform.sh: SSH failed." >&2
   echo >&2
-  echo "On Mac, verify your deploy key is authorized:" >&2
-  echo "  ssh ${USER}@${HOST}" >&2
-  echo "If that works, re-run: ./deploy/hetzner/deploy-platform.sh" >&2
+  if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
+    echo "Agent keys offered (if any):" >&2
+    ssh-add -l 2>&1 | sed 's/^/  /' >&2 || true
+  fi
+  if [ -n "${SSH_KEY:-}" ]; then
+    echo "SSH_KEY was set but authentication still failed — check the key is in deploy@${HOST} authorized_keys." >&2
+  else
+    echo "On Mac, verify your deploy key is authorized:" >&2
+    echo "  ssh ${USER}@${HOST}" >&2
+    echo "Load Keychain key: ssh-add --apple-use-keychain" >&2
+  fi
+  echo "Re-run: ./deploy/hetzner/deploy-platform.sh" >&2
   exit 1
 fi
 echo "   SSH OK"

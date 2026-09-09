@@ -26,6 +26,28 @@ check() {
   fi
 }
 
+# Unauthenticated support routes must redirect to login with callbackUrl (not 404).
+check_support_route() {
+  local name="$1"
+  local path="$2"
+  local url="${APP}${path}"
+  local code loc
+  code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo "000")"
+  loc="$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 15 "$url" || echo "")"
+  if [ "$code" = "307" ] || [ "$code" = "308" ]; then
+    if echo "$loc" | grep -q "callbackUrl=.*$(printf '%s' "$path" | sed 's|/|%2F|g')"; then
+      echo "  OK   $name  ($code → login)  $url"
+      pass=$((pass + 1))
+    else
+      echo "  FAIL $name  (redirect missing callbackUrl for $path)  $loc"
+      fail=$((fail + 1))
+    fi
+  else
+    echo "  FAIL $name  (got $code, want 307/308 auth redirect)  $url"
+    fail=$((fail + 1))
+  fi
+}
+
 echo "=== Lovedis Hetzner TEST smoke test ==="
 echo "Server IP: $IP"
 echo
@@ -34,6 +56,12 @@ echo "--- Platform ($APP) ---"
 check "health"       "${APP}/api/health" "200"
 check "login page"   "${APP}/login" "2xx"
 check "unauth dash"  "${APP}/dashboard/admin" "307"
+
+echo
+echo "--- Support ticket system (unauth → login redirect) ---"
+check_support_route "support list"   "/support"
+check_support_route "new ticket"     "/support/new"
+check_support_route "support admin"  "/support/admin"
 
 echo
 echo "--- Homepage ($HOME) ---"
