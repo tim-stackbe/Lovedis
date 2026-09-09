@@ -9,6 +9,7 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
+import { isTeamRole } from "@/lib/roles";
 import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
@@ -16,17 +17,23 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "PoC-Tracking" };
 
 export default async function PoCsPage() {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "INVESTOR"]);
+  const session = await requireRole([
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "INVESTOR",
+  ]);
 
-  const where: Prisma.PoCPerformanceWhereInput =
-    session.user.role === "ADMIN"
-      ? {}
-      : {
-          OR: [
-            { trackedById: session.user.id },
-            { application: { challenge: { createdById: session.user.id } } },
-          ],
-        };
+  // The internal team (ADMIN + MEMBER) sees every PoC; partners/investors only
+  // see the ones they track or that stem from their own challenges.
+  const where: Prisma.PoCPerformanceWhereInput = isTeamRole(session.user.role)
+    ? {}
+    : {
+        OR: [
+          { trackedById: session.user.id },
+          { application: { challenge: { createdById: session.user.id } } },
+        ],
+      };
 
   const pocs = await prisma.poCPerformance.findMany({
     where,

@@ -1,0 +1,123 @@
+{
+  "front-chest-lovedis.png": {
+    "crop_box": [
+      270,
+      195,
+      755,
+      335
+    ],
+    "source_size": [
+      485,
+      140
+    ],
+    "output_size": [
+      3543,
+      1023
+    ],
+    "elements": {
+      "lovedis_blue_letters": true,
+      "heart_in_D": true,
+      "glitch_offset": true
+    },
+    "colors": {
+      "blue_extracted": "#363CCC",
+      "blue_mockup": "#363CCC",
+      "coral_extracted": "#DA5F4A",
+      "coral_mockup": "#DA5F4A",
+      "black_halftone_extracted": "#2128CC",
+      "black_halftone_mockup": "#2128CC"
+    }
+  },
+  "sleeve-right-wearer.png": {
+    "crop_box": [
+      155,
+      120,
+      375,
+      595
+    ],
+    "source_size": [
+      220,
+      475
+    ],
+    "output_size": [
+      1389,
+      3000
+    ],
+    "elements": {
+      "blue_drip": true,
+      "orange_halftone_circle": true,
+      "scatter_specks": true
+    },
+    "colors": {
+      "blue_extracted": "#5868CC",
+      "blue_mockup": "#5868CC",
+      "coral_extracted": "#CB5949",
+      "coral_mockup": "#CB5949",
+      "black_halftone_extracted": "#2E43C1",
+      "black_halftone_mockup": "#2E43C1"
+    }
+  },
+  "sleeve-left-wearer.png": {
+    "crop_box": [
+      655,
+      165,
+      870,
+      625
+    ],
+    "source_size": [
+      215,
+      460
+    ],
+    "output_size": [
+      1402,
+      3000
+    ],
+    "elements": {
+      "cloud_speech_bubble": true,
+      "blue_splash": true,
+      "black_halftone": true,
+      "orange_splatter": true
+    },
+    "colors": {
+      "blue_extracted": "#5662C3",
+      "blue_mockup": "#5662C3",
+      "coral_extracted": "#DA4F37",
+      "coral_mockup": "#DA4F37",
+      "black_halftone_extracted": "#3B2E90",
+      "black_halftone_mockup": "#3B2E90"
+    }
+  },
+  "back-we-color-disruption.png": {
+    "crop_box": [
+      115,
+      15,
+      910,
+      665
+    ],
+    "source_size": [
+      795,
+      650
+    ],
+    "output_size": [
+      3898,
+      3187
+    ],
+    "elements": {
+      "we_color_text": true,
+      "disruption_text": true,
+      "coral_R_letters": true,
+      "blue_halftone": true,
+      "orange_halftone": true,
+      "paint_drips": true,
+      "white_outlines": true
+    },
+    "colors": {
+      "blue_extracted": "#4762B7",
+      "blue_mockup": "#4762B7",
+      "coral_extracted": "#E15F39",
+      "coral_mockup": "#E15F39",
+      "black_halftone_extracted": "#4A53A4",
+      "black_halftone_mockup": "#4A53A4"
+    }
+  }
+}

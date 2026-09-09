@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils";
 
+// `text-base` (16px) on mobile prevents iOS Safari from auto-zooming when a
+// field gains focus; `sm:text-sm` keeps the compact desktop/tablet sizing.
 const INPUT_CLASSES =
-  "w-full rounded-button border border-lv-border bg-white px-3.5 py-2.5 text-sm text-lv-text placeholder:text-lv-secondary/60 outline-none focus:ring-2 focus:ring-lv-blue/40 focus:border-lv-blue transition-shadow";
+  "w-full rounded-button border border-lv-border bg-white px-3.5 py-2.5 text-base sm:text-sm text-lv-text placeholder:text-lv-secondary/60 outline-none focus:ring-2 focus:ring-lv-blue/40 focus:border-lv-blue transition-shadow";
 
 export function Input({
   className,

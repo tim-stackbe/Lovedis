@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDashed } from "lucide-react";
+import { CircleCheck, CircleDashed, Clock, Coins, Store } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ApplicationStatusBadge } from "@/components/shared/badges";
@@ -9,18 +9,26 @@ import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
+import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
+import {
+  isStartupMarketplaceHiddenForAlpha,
+  isStartupVentureSectionHiddenForAlpha,
+} from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Startup-Dashboard" };
 
 export default async function StartupDashboard() {
-  const session = await requireRole(["STARTUP"]);
+  const session = await requireRole(["STARTUP", "ADMIN", "MEMBER"]);
 
   const [startup, openChallenges] = await Promise.all([
     prisma.startup.findUnique({
       where: { ownerUserId: session.user.id },
       include: {
+        creditAccount: {
+          select: { balance: true, fixBalance: true, flexBalance: true },
+        },
         applications: {
           include: {
             challenge: { select: { id: true, title: true } },
@@ -41,6 +49,8 @@ export default async function StartupDashboard() {
   const applications = startup?.applications ?? [];
   const accepted = applications.filter((a) => a.status === "ACCEPTED").length;
   const pending = applications.filter((a) => a.status === "PENDING").length;
+  const creditBalance = startup?.creditAccount?.balance ?? 0;
+  const creditBudget = deriveCreditBudget(startup?.creditAccount);
 
   const profileChecks = [
     { label: "Unternehmensprofil erstellt", done: Boolean(startup) },
@@ -55,6 +65,16 @@ export default async function StartupDashboard() {
     (profileChecks.filter((c) => c.done).length / profileChecks.length) * 100
   );
 
+  // Alpha: hide the body "Zum Marktplatz" CTA in exact sync with the Marktplatz
+  // sidebar nav item. Both read the same flag/list in @/lib/roles, so
+  // re-enabling Marktplatz there brings this button back with no extra change.
+  const marketplaceHidden = isStartupMarketplaceHiddenForAlpha();
+
+  // Alpha: hide the entire "Section 03 — Venture Platform" (Venture-Guthaben +
+  // Marktplatz) until the Venture Platform is fully re-enabled. Flip
+  // ALPHA_HIDE_STARTUP_VENTURE_SECTION in @/lib/roles to false to restore it.
+  const ventureSectionHidden = isStartupVentureSectionHiddenForAlpha();
+
   return (
     <>
       <HeroBanner
@@ -64,15 +84,32 @@ export default async function StartupDashboard() {
             ? `${startup.name}, willkommen zurück`
             : "Lass uns dein Profil aufsetzen"
         }
-        subtitle="Entdecke Corporate-Challenges, pitche deine Lösung und tracke deine Bewerbungen."
+        subtitle="Entdecke Corporate-Challenges, hol dir Support über den Venture-Marktplatz und tracke deine Bewerbungen."
         actions={
-          <LinkButton href="/challenges" variant="white">
-            Challenges entdecken
-          </LinkButton>
+          startup ? (
+            <>
+              {!marketplaceHidden && (
+                <LinkButton href="/venture/marketplace" variant="white">
+                  Zum Marktplatz
+                </LinkButton>
+              )}
+              <LinkButton href="/challenges" variant="white">
+                Challenges
+              </LinkButton>
+            </>
+          ) : (
+            <LinkButton href="/profile" variant="white">
+              Profil anlegen
+            </LinkButton>
+          )
         }
       >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <BannerStat label="Profil" value={`${completeness}%`} />
+          <BannerStat
+            label="Guthaben"
+            value={`${creditBudget.remaining} von ${creditBudget.total}`}
+          />
           <BannerStat label="Bewerbungen" value={applications.length} />
           <BannerStat label="Angenommen" value={accepted} />
           <BannerStat label="Offene Challenges" value={openChallenges.length} />
@@ -124,12 +161,14 @@ export default async function StartupDashboard() {
           <div className="grid gap-4 sm:grid-cols-2">
             <ToneCard
               tone={pending > 0 ? "attention" : "muted"}
+              icon={Clock}
               label="Ausstehend"
               value={pending}
               sub="in Prüfung"
             />
             <ToneCard
               tone="success"
+              icon={CircleCheck}
               label="Angenommen"
               value={accepted}
               sub="PoCs in Bewegung"
@@ -169,9 +208,58 @@ export default async function StartupDashboard() {
         </div>
       </section>
 
+      {!ventureSectionHidden && (
       <section className="space-y-4">
         <SectionLabel
           number="03"
+          label="Venture Platform"
+          title="Marktplatz & Guthaben"
+        />
+        {startup ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Link href="/venture/credits" className="block transition-transform hover:-translate-y-0.5">
+              <ToneCard
+                tone={creditBalance > 0 ? "success" : "muted"}
+                icon={Coins}
+                label="Venture-Guthaben"
+                value={`${creditBudget.remaining} von ${creditBudget.total}`}
+                sub={`Fix ${creditBudget.fixRemaining}/${creditBudget.fixTotal} · Flexibel ${creditBudget.flexRemaining}/${creditBudget.flexTotal} · Historie →`}
+              />
+            </Link>
+            {/* Alpha: hide the Section-03 "Marktplatz" card in sync with the
+                Marktplatz nav item + hero CTA. Reuses the same marketplaceHidden
+                flag, so re-enabling Marktplatz in @/lib/roles brings it back
+                with no extra code change. The Guthaben card above stays, so the
+                section header ("Marktplatz & Guthaben") never renders empty. */}
+            {!marketplaceHidden && (
+              <Link href="/venture/marketplace" className="block transition-transform hover:-translate-y-0.5">
+                <ToneCard
+                  tone="info"
+                  icon={Store}
+                  label="Marktplatz"
+                  value="Support finden"
+                  sub="Programme, Mentor:innen & Angebote →"
+                />
+              </Link>
+            )}
+          </div>
+        ) : (
+          <Card className="flex flex-col items-start gap-3 p-6 text-sm text-lv-secondary">
+            <span>
+              Lege zuerst dein Startup-Profil an, um Venture-Credits zu erhalten
+              und den Marktplatz zu nutzen.
+            </span>
+            <LinkButton href="/profile" size="sm" variant="secondary">
+              Profil anlegen
+            </LinkButton>
+          </Card>
+        )}
+      </section>
+      )}
+
+      <section className="space-y-4">
+        <SectionLabel
+          number="04"
           label="Chancen"
           title="Offene Challenges für dich"
         />

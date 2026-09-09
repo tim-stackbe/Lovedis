@@ -2,22 +2,22 @@
 
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { handleIntroRequest } from "@/app/actions/discovery";
+import { toast } from "@/stores/useToast";
 
 export function IntroDecision({ introId }: { introId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
 
   const decide = (decision: "APPROVE" | "DECLINE") => {
-    setError(null);
     startTransition(async () => {
       const res = await handleIntroRequest(introId, decision);
       if (res.error) {
-        setError(res.error);
+        toast.error(res.error);
         return;
       }
+      if (res.success) toast.success(res.success);
       router.refresh();
     });
   };
@@ -44,7 +44,6 @@ export function IntroDecision({ introId }: { introId: string }) {
           Verbinden
         </button>
       </div>
-      {error && <p className="text-xs font-medium text-lv-orange">{error}</p>}
     </div>
   );
 }

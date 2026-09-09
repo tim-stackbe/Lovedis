@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3200" height="2240" viewBox="0 0 1600 1120" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2926E5"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1120" fill="#FFFFFF"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1600" height="100" fill="#2926E5"/>
+  <text x="50" y="62" font-size="36" font-weight="700" fill="#FFFFFF">LOVEDIS &#8212; Unified Platform Architecture</text>
+  <text x="1550" y="62" text-anchor="end" font-size="18" fill="#C7CCFF">Next.js 16 &#183; Payload CMS &#183; PostgreSQL &#183; Hetzner Cloud</text>
+
+  <!-- Clients -->
+  <rect x="150" y="150" width="590" height="76" rx="14" fill="#FFFFFF" stroke="#2926E5" stroke-width="2"/>
+  <text x="445" y="186" text-anchor="middle" font-size="20" font-weight="700" fill="#111827">Visitors &amp; Users</text>
+  <text x="445" y="210" text-anchor="middle" font-size="13" fill="#6B7280">public marketing + logged-in app</text>
+
+  <rect x="790" y="150" width="340" height="76" rx="14" fill="#FFFFFF" stroke="#00B97E" stroke-width="2"/>
+  <text x="960" y="186" text-anchor="middle" font-size="20" font-weight="700" fill="#111827">Content Editors</text>
+  <text x="960" y="210" text-anchor="middle" font-size="13" fill="#6B7280">marketing / ops &#8212; no code</text>
+
+  <!-- App container -->
+  <rect x="110" y="290" width="1380" height="344" rx="22" fill="#FFF4FB" stroke="#2926E5" stroke-width="2.5"/>
+  <text x="140" y="332" font-size="22" font-weight="700" fill="#2926E5">Next.js 16 App &#183; Hetzner Cloud VPS (Docker + Caddy TLS) &#183; lovedis.de</text>
+
+  <!-- Design system band -->
+  <rect x="150" y="346" width="1290" height="34" rx="8" fill="#FFDBF5"/>
+  <text x="795" y="368" text-anchor="middle" font-size="14" font-weight="700" fill="#2926E5">Shared design system &#183; Tailwind v4 tokens (Concept A / B refresh)</text>
+
+  <!-- Route modules -->
+  <rect x="150" y="396" width="280" height="104" rx="14" fill="#FFFFFF" stroke="#FF5736" stroke-width="2"/>
+  <text x="290" y="428" text-anchor="middle" font-size="19" font-weight="700" fill="#111827">Marketing</text>
+  <text x="290" y="452" text-anchor="middle" font-size="15" font-weight="700" fill="#FF5736">/</text>
+  <text x="290" y="476" text-anchor="middle" font-size="13" fill="#6B7280">RSC + ISR (cached)</text>
+
+  <rect x="460" y="396" width="280" height="104" rx="14" fill="#FFFFFF" stroke="#2926E5" stroke-width="2"/>
+  <text x="600" y="428" text-anchor="middle" font-size="19" font-weight="700" fill="#111827">Platform</text>
+  <text x="600" y="452" text-anchor="middle" font-size="15" font-weight="700" fill="#2926E5">/app/*</text>
+  <text x="600" y="476" text-anchor="middle" font-size="13" fill="#6B7280">dynamic &#183; role-gated</text>
+
+  <rect x="770" y="396" width="240" height="104" rx="14" fill="#FFFFFF" stroke="#00B97E" stroke-width="2"/>
+  <text x="890" y="428" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Payload editor</text>
+  <text x="890" y="452" text-anchor="middle" font-size="15" font-weight="700" fill="#0A8F63">/admin</text>
+  <text x="890" y="476" text-anchor="middle" font-size="13" fill="#6B7280">drafts &#183; preview</text>
+
+  <rect x="1040" y="396" width="400" height="104" rx="14" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="1240" y="426" text-anchor="middle" font-size="17" font-weight="700" fill="#111827">/api/revalidate</text>
+  <text x="1240" y="450" text-anchor="middle" font-size="12" fill="#6B7280">on-demand ISR (publish &#8594; revalidateTag)</text>
+  <text x="1240" y="474" text-anchor="middle" font-size="12" fill="#6B7280">/api/auth &#183; /api/health</text>
+
+  <!-- Core server layer -->
+  <rect x="150" y="520" width="1290" height="84" rx="14" fill="#EEF0FF" stroke="#2926E5" stroke-width="1.5"/>
+  <text x="795" y="556" text-anchor="middle" font-size="18" font-weight="700" fill="#2926E5">Server layer &#8212; Payload CMS (Local API) &#183; NextAuth (JWT) &#183; Server Actions</text>
+  <text x="795" y="582" text-anchor="middle" font-size="13" fill="#4B5563">content + app logic in one codebase &#8212; you own the React frontend</text>
+
+  <!-- Data layer -->
+  <rect x="220" y="790" width="520" height="185" rx="16" fill="#FFFFFF" stroke="#111827" stroke-width="2.2"/>
+  <text x="480" y="828" text-anchor="middle" font-size="20" font-weight="700" fill="#111827">PostgreSQL 17 (on-server &#183; Docker)</text>
+  <rect x="250" y="848" width="460" height="50" rx="10" fill="#EEF0FF"/>
+  <text x="480" y="879" text-anchor="middle" font-size="14" fill="#2926E5">schema = payload &#8212; content (Drizzle)</text>
+  <rect x="250" y="910" width="460" height="50" rx="10" fill="#E7FBF3"/>
+  <text x="480" y="941" text-anchor="middle" font-size="14" fill="#0A8F63">schema = public &#8212; app data (Prisma &#183; adapter-pg)</text>
+
+  <rect x="900" y="790" width="360" height="185" rx="16" fill="#FFFFFF" stroke="#111827" stroke-width="2.2"/>
+  <text x="1080" y="852" text-anchor="middle" font-size="20" font-weight="700" fill="#111827">Hetzner Object Storage (S3)</text>
+  <text x="1080" y="884" text-anchor="middle" font-size="15" fill="#6B7280">media + uploads</text>
+  <text x="1080" y="914" text-anchor="middle" font-size="13" fill="#6B7280">+ nightly encrypted DB backups</text>
+
+  <!-- Arrows -->
+  <line x1="340" y1="226" x2="300" y2="394" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="560" y1="226" x2="600" y2="394" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="950" y1="226" x2="890" y2="394" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <line x1="290" y1="500" x2="290" y2="518" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="600" y1="500" x2="600" y2="518" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="890" y1="500" x2="890" y2="518" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1240" y1="500" x2="1240" y2="518" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <line x1="480" y1="604" x2="480" y2="788" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1080" y1="604" x2="1080" y2="788" stroke="#2926E5" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="498" y="702" font-size="13" fill="#4B5563">content + app tables</text>
+  <text x="1098" y="702" font-size="13" fill="#4B5563">media + backups</text>
+
+  <!-- Footer -->
+  <text x="50" y="1045" font-size="14" fill="#6B7280">One server &#183; one database &#183; one deploy &#8212; PostgreSQL on-server (data on a Hetzner Cloud Volume); nightly encrypted backups to Object Storage. Built in CI, deployed via SSH.</text>
+</svg>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Back print: WE COLOR DISRUPTION - artboard 330mm x 270mm (~33 cm wide) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="330mm" height="270mm" viewBox="0 0 1250 900">
+  <title>WE COLOR DISRUPTION Back Print</title>
+
+  <defs>
+    <pattern id="halftone-blue" patternUnits="userSpaceOnUse" width="10" height="10">
+      <circle cx="5" cy="5" r="2.2" fill="#2926e5"/>
+    </pattern>
+    <pattern id="halftone-coral" patternUnits="userSpaceOnUse" width="10" height="10">
+      <circle cx="5" cy="5" r="2.2" fill="#ff5736"/>
+    </pattern>
+    <pattern id="halftone-blue-fade" patternUnits="userSpaceOnUse" width="12" height="12">
+      <circle cx="6" cy="6" r="1.8" fill="#2926e5" opacity="0.7"/>
+    </pattern>
+  </defs>
+
+  <!-- Background splatters -->
+  <g opacity="0.95">
+    <path fill="#ff5736" d="M80 120 Q20 80 60 40 Q120 10 180 60 Q220 90 200 150 Q175 210 120 190 Q70 170 80 120 Z"/>
+    <path fill="url(#halftone-coral)" d="M100 130 Q60 100 90 70 Q130 50 160 80 Q180 100 170 140 Q150 170 120 160 Z"/>
+    <path fill="#2926e5" d="M820 80 Q900 20 980 70 Q1040 120 990 190 Q940 250 860 220 Q790 190 820 80 Z"/>
+    <path fill="url(#halftone-blue)" d="M860 110 Q920 80 960 120 Q980 150 940 180 Q900 200 870 170 Q850 140 860 110 Z"/>
+    <path fill="#2926e5" d="M40 380 Q0 340 30 300 Q80 260 130 310 Q160 350 120 400 Q80 440 40 380 Z"/>
+    <ellipse cx="85" cy="350" rx="45" ry="35" fill="url(#halftone-blue-fade)"/>
+    <path fill="#ff5736" d="M960 420 Q1020 380 1040 440 Q1050 500 990 520 Q930 540 900 480 Q880 430 960 420 Z"/>
+    <path fill="#2926e5" d="M180 620 Q120 580 160 540 Q220 500 280 560 Q320 600 280 660 Q240 700 180 620 Z"/>
+    <path fill="#ff5736" d="M780 650 Q840 610 880 660 Q900 710 840 730 Q780 750 740 700 Q720 660 780 650 Z"/>
+    <path fill="url(#halftone-blue)" d="M420 680 Q480 640 540 680 Q560 720 500 740 Q440 760 400 720 Q380 690 420 680 Z"/>
+  </g>
+
+  <g fill="#2926e5">
+    <circle cx="250" cy="90" r="8"/><circle cx="310" cy="130" r="5"/><circle cx="720" cy="60" r="6"/>
+    <circle cx="650" cy="780" r="7"/><circle cx="380" cy="820" r="5"/>
+  </g>
+  <g fill="#ff5736">
+    <circle cx="190" cy="220" r="6"/><circle cx="890" cy="280" r="7"/><circle cx="460" cy="710" r="5"/>
+  </g>
+
+  <!-- Helper: inline letter style = black keyline + white inline + fill -->
+  <!-- WE COLOR (line 1) -->
+  <g transform="translate(40 300)" stroke="#0a0a0f" stroke-width="3" paint-order="stroke fill">
+    <!-- W -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" paint-order="stroke fill"
+      d="M0 0 L38 110 L76 15 L114 110 L152 0 L122 0 L95 78 L76 28 L57 78 L30 0 Z"/>
+    <!-- E -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" transform="translate(175 0)" paint-order="stroke fill"
+      d="M0 0 H115 V25 H32 V48 H105 V72 H32 V85 H115 V110 H0 Z"/>
+    <!-- C -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" transform="translate(320 0)" paint-order="stroke fill"
+      d="M98 8 Q62 0 35 28 Q8 56 8 92 Q8 128 35 156 Q62 184 98 176 L98 152 Q72 158 54 138 Q36 118 36 92 Q36 66 54 46 Q72 26 98 32 Z"/>
+    <!-- O -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" transform="translate(445 0)" fill-rule="evenodd" paint-order="stroke fill"
+      d="M0 55 Q0 0 52 0 Q104 0 104 55 Q104 110 52 110 Q0 110 0 55 Z M26 55 Q26 28 52 28 Q78 28 78 55 Q78 82 52 82 Q26 82 26 55 Z"/>
+    <!-- L -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" transform="translate(575 0)" paint-order="stroke fill"
+      d="M0 0 H32 V85 H104 V110 H0 Z"/>
+    <!-- O -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" transform="translate(700 0)" fill-rule="evenodd" paint-order="stroke fill"
+      d="M0 55 Q0 0 52 0 Q104 0 104 55 Q104 110 52 110 Q0 110 0 55 Z M26 55 Q26 28 52 28 Q78 28 78 55 Q78 82 52 82 Q26 82 26 55 Z"/>
+    <!-- R -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="5" transform="translate(825 0)" paint-order="stroke fill"
+      d="M0 0 H62 Q92 0 92 35 Q92 62 68 68 L92 110 H58 L38 72 H28 V110 H0 Z M28 25 V48 H62 Q66 48 66 38 Q66 25 62 25 Z"/>
+  </g>
+
+  <!-- DISRUPTION (line 2) -->
+  <g transform="translate(10 455)" stroke="#0a0a0f" stroke-width="3">
+    <!-- D -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="6" fill-rule="evenodd" paint-order="stroke fill"
+      d="M0 0 H48 V150 H0 Z M48 0 H112 Q170 0 170 75 Q170 150 112 150 H48 Z M78 32 Q54 32 54 75 Q54 118 78 118 H112 Q132 118 132 75 Q132 32 112 32 Z"/>
+    <!-- I -->
+    <rect fill="#2926e5" stroke="#ffffff" stroke-width="6" x="188" y="0" width="36" height="150"/>
+    <!-- S -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="6" transform="translate(248 0)" paint-order="stroke fill"
+      d="M8 16 C42 0 82 6 98 36 C110 58 106 84 82 98 C62 108 38 112 26 124 C14 136 16 158 36 170 C58 184 92 180 108 160 L122 176 C100 204 58 212 24 192 C-2 176 -4 138 20 118 C42 102 68 96 88 86 C104 78 108 60 96 44 C80 22 48 16 22 22 Z"/>
+    <!-- R (coral) -->
+    <path fill="#ff5736" stroke="#ffffff" stroke-width="6" transform="translate(370 0)" paint-order="stroke fill"
+      d="M0 0 H68 Q108 0 108 42 Q108 76 78 84 L108 150 H72 L48 92 H36 V150 H0 Z M36 30 V68 H68 Q76 68 76 52 Q76 30 68 30 Z"/>
+    <!-- U (coral) -->
+    <path fill="#ff5736" stroke="#ffffff" stroke-width="6" transform="translate(495 0)" paint-order="stroke fill"
+      d="M0 0 H36 V98 Q36 132 64 132 Q92 132 92 98 V0 H128 V100 Q128 162 64 162 Q0 162 0 100 Z"/>
+    <!-- P -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="6" transform="translate(645 0)" paint-order="stroke fill"
+      d="M0 0 H72 Q112 0 112 48 Q112 88 72 88 H40 V150 H0 Z M40 30 V60 H70 Q78 60 78 48 Q78 30 70 30 Z"/>
+    <!-- T -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="6" transform="translate(775 0)" paint-order="stroke fill"
+      d="M0 0 H118 V32 H76 V150 H42 V32 H0 Z"/>
+    <!-- I -->
+    <rect fill="#2926e5" stroke="#ffffff" stroke-width="6" x="905" y="0" width="36" height="150"/>
+    <!-- O -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="6" transform="translate(960 0)" fill-rule="evenodd" paint-order="stroke fill"
+      d="M0 75 Q0 0 62 0 Q124 0 124 75 Q124 150 62 150 Q0 150 0 75 Z M31 75 Q31 38 62 38 Q93 38 93 75 Q93 112 62 112 Q31 112 31 75 Z"/>
+    <!-- N -->
+    <path fill="#2926e5" stroke="#ffffff" stroke-width="6" transform="translate(1100 0)" paint-order="stroke fill"
+      d="M0 0 H36 V112 H96 V0 H132 V150 H96 V38 H36 V150 H0 Z"/>
+  </g>
+
+  <!-- Foreground splatters -->
+  <g opacity="0.85">
+    <path fill="#2926e5" d="M520 250 Q480 220 520 190 Q560 160 600 200 Q630 230 590 260 Q550 290 520 250 Z"/>
+    <path fill="#ff5736" d="M350 520 Q310 490 350 460 Q390 430 430 470 Q460 500 420 530 Q380 560 350 520 Z"/>
+    <path fill="url(#halftone-blue)" d="M680 540 Q640 510 680 480 Q720 450 760 490 Q790 520 750 550 Q710 580 680 540 Z"/>
+  </g>
+
+  <!-- Drips -->
+  <g fill="#2926e5">
+    <rect x="130" y="620" width="8" height="120" rx="3"/>
+    <rect x="300" y="640" width="6" height="95" rx="2"/>
+    <rect x="510" y="630" width="10" height="140" rx="4"/>
+    <rect x="670" y="635" width="7" height="110" rx="3"/>
+    <rect x="840" y="645" width="9" height="130" rx="3"/>
+    <path d="M410 660 Q415 710 408 770 Q405 810 412 850" fill="none" stroke="#2926e5" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="412" cy="855" r="10"/>
+    <circle cx="848" cy="780" r="9"/>
+  </g>
+  <g fill="#ff5736">
+    <rect x="570" y="620" width="8" height="100" rx="3"/>
+    <rect x="710" y="640" width="6" height="85" rx="2"/>
+    <path d="M630 650 Q625 700 632 770" fill="none" stroke="#ff5736" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="632" cy="775" r="8"/>
+  </g>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Inter,Segoe UI,Arial,sans-serif">
+  <rect width="480" height="320" fill="#ffffff"/>
+  <rect width="480" height="72" fill="#14B8A6"/>
+  <text x="24" y="46" fill="#ffffff" font-size="30" font-weight="700">Partner</text>
+  <g fill="#f3f4f6">
+    <rect x="24" y="104" width="132" height="56" rx="10"/>
+    <rect x="174" y="104" width="132" height="56" rx="10"/>
+    <rect x="324" y="104" width="132" height="56" rx="10"/>
+    <rect x="24" y="176" width="132" height="56" rx="10"/>
+    <rect x="174" y="176" width="132" height="56" rx="10"/>
+    <rect x="324" y="176" width="132" height="56" rx="10"/>
+  </g>
+  <g fill="#ccfbf1">
+    <circle cx="90" cy="132" r="16"/><circle cx="240" cy="132" r="16"/><circle cx="390" cy="132" r="16"/>
+    <circle cx="90" cy="204" r="16"/><circle cx="240" cy="204" r="16"/><circle cx="390" cy="204" r="16"/>
+  </g>
+  <text x="24" y="300" fill="#6b7280" font-size="16">Partner-Logos in Reihen</text>
+</svg>

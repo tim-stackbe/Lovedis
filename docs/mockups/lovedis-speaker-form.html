@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LOVEDIS · Speaker-Anmeldung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Brand tokens */
+    --blue: #2926E5;
+    --blue-hover: #3330F0;
+    --blue-dark: #1F1CB8;
+    --blue-soft: #EEEDFF;
+    --orange: #FF5736;
+    --orange-soft: #FFE7E1;
+    --pink: #FFDBF5;
+    --lavender: #E0EDFF;
+    --mint: #C0FCD8;
+    --surface: #F4F4F8;
+    --border: #E5E5EE;
+    --text: #0A0A0F;
+    --text-2: #6B6B7B;
+    --white: #FFFFFF;
+
+    --r-btn: 12px;
+    --r-input: 12px;
+    --r-card-sm: 16px;
+    --r-card-lg: 24px;
+    --content: 700px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--white);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Header ---------- */
+  header.site {
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+  }
+  .header-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .wordmark {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    font-size: 22px;
+    color: var(--blue);
+    display: inline-flex;
+    align-items: baseline;
+  }
+  .wordmark .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: var(--orange);
+    margin: 0 1px;
+    transform: translateY(-1px);
+  }
+  nav.top {
+    color: var(--text-2);
+    font-size: 14px;
+  }
+
+  /* ---------- Layout ---------- */
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+  .wrap {
+    max-width: var(--content);
+    margin: 0 auto;
+  }
+
+  /* ---------- Eyebrow ---------- */
+  .eyebrow {
+    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--blue);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-card-lg);
+    background: linear-gradient(135deg,#2926E5 0%,#4F46E5 55%,#FF5736 130%);
+    color: #fff;
+    padding: 52px 52px 48px;
+    margin-top: 40px;
+  }
+  .hero .orb-orange {
+    position: absolute;
+    top: -130px;
+    right: -110px;
+    width: 400px;
+    height: 400px;
+    border-radius: 9999px;
+    background: radial-gradient(circle at center, rgba(255,87,54,0.42) 0%, rgba(255,87,54,0.0) 70%);
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  .hero .orb-indigo {
+    position: absolute;
+    bottom: -150px;
+    left: -120px;
+    width: 360px;
+    height: 360px;
+    border-radius: 9999px;
+    background: radial-gradient(circle at center, rgba(20,16,120,0.55) 0%, rgba(20,16,120,0.0) 70%);
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  .hero .kicker {
+    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.78);
+    position: relative;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 5.2vw, 52px);
+    line-height: 1.05;
+    font-weight: 500;
+    margin: 16px 0 16px;
+    letter-spacing: -0.01em;
+    position: relative;
+  }
+  .hero p.sub {
+    font-size: 18px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.82);
+    max-width: 540px;
+    margin: 0;
+    position: relative;
+  }
+
+  /* ---------- Form card ---------- */
+  .form-card {
+    background: var(--surface);
+    border-radius: var(--r-card-lg);
+    padding: 44px 44px 40px;
+    margin-top: 28px;
+  }
+  .intro {
+    color: var(--text-2);
+    font-size: 16.5px;
+    margin: 0 0 34px;
+    line-height: 1.65;
+  }
+
+  /* ---------- Fields ---------- */
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .field { margin-bottom: 22px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label.lbl {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-bottom: 8px;
+  }
+  .field label.lbl .req { color: var(--orange); margin-left: 2px; }
+  .hint {
+    font-size: 13px;
+    color: var(--text-2);
+    margin: -2px 0 8px;
+    line-height: 1.5;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    width: 100%;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-input);
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input::placeholder, textarea::placeholder { color: #A6A6B5; }
+  textarea { resize: vertical; min-height: 118px; line-height: 1.6; }
+
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(41,38,229,0.40);
+  }
+
+  .field.invalid input,
+  .field.invalid textarea,
+  .field.invalid .file-drop {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,87,54,0.18);
+  }
+
+  /* counter / warn */
+  .counter {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 12.5px;
+    color: var(--text-2);
+    margin-top: 6px;
+  }
+  .counter.warn { color: var(--orange); font-weight: 600; }
+
+  /* inline error chip */
+  .err {
+    display: none;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    background: var(--orange-soft);
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 9999px;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .field.invalid .err { display: inline-flex; }
+  .err svg { flex: 0 0 auto; }
+
+  /* ---------- File upload ---------- */
+  .file-drop {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--white);
+    border: 1px dashed var(--border);
+    border-radius: var(--r-input);
+    padding: 14px 16px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .file-btn {
+    flex: 0 0 auto;
+    background: var(--blue-soft);
+    color: var(--blue);
+    border: none;
+    border-radius: 9999px;
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .file-btn:hover { background: var(--blue); color: #fff; }
+  .file-name { font-size: 14px; color: var(--text-2); flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-name.has { color: var(--text); font-weight: 500; }
+  .thumb {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .thumb.show { display: block; }
+  input[type="file"] { display: none; }
+
+  /* ---------- Checkboxes ---------- */
+  .checks { margin-top: 30px; display: flex; flex-direction: column; gap: 16px; }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .check input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .check .box {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s;
+    margin-top: 1px;
+  }
+  .check .box svg { opacity: 0; transition: opacity .12s; }
+  .check input:checked + .box { background: var(--blue); border-color: var(--blue); }
+  .check input:checked + .box svg { opacity: 1; }
+  .check input:focus-visible + .box { box-shadow: 0 0 0 3px rgba(41,38,229,0.40); }
+  .check .req { color: var(--orange); margin-left: 2px; }
+  .check.invalid .box { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,87,54,0.18); }
+  .field-check.invalid .err { display: inline-flex; margin-left: 35px; }
+  .field-check .err { display: none; }
+
+  /* ---------- Thanks + privacy ---------- */
+  .thanks {
+    text-align: center;
+    margin: 34px 0 6px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+  .privacy {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-2);
+    max-width: 520px;
+    margin: 0 auto 28px;
+    line-height: 1.6;
+  }
+
+  /* ---------- Submit ---------- */
+  .actions { display: flex; justify-content: center; }
+  .btn-primary {
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-btn);
+    padding: 16px 32px;
+    min-height: 54px;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, transform .05s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-primary:hover { background: var(--orange); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-primary:disabled { cursor: not-allowed; opacity: 0.85; background: var(--text); }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 9999px;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .btn-primary.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* form-level error banner */
+  .form-error {
+    display: none;
+    align-items: center;
+    gap: 9px;
+    background: var(--orange-soft);
+    color: var(--orange);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: var(--r-input);
+    margin-bottom: 26px;
+  }
+  .form-error.show { display: flex; }
+
+  /* ---------- Success card ---------- */
+  .success {
+    background: var(--mint);
+    border-radius: var(--r-card-lg);
+    padding: 48px 44px;
+    margin-top: 28px;
+    display: none;
+  }
+  .success.show { display: block; animation: rise .4s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px);} to {opacity:1; transform:none;} }
+  .success .check-badge {
+    width: 58px; height: 58px;
+    border-radius: 9999px;
+    background: var(--text);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 22px;
+  }
+  .success h2 {
+    font-size: clamp(26px, 3.6vw, 34px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    line-height: 1.15;
+  }
+  .success p.lead { color: #1a3d2a; font-size: 16.5px; margin: 0 0 26px; max-width: 520px; }
+  .summary {
+    background: rgba(255,255,255,0.7);
+    border-radius: var(--r-card-sm);
+    padding: 22px 24px;
+  }
+  .summary h3 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-2); font-weight: 600; margin: 0 0 14px;
+  }
+  .summary dl { margin: 0; display: grid; grid-template-columns: 190px 1fr; gap: 10px 18px; }
+  .summary dt { font-size: 13px; color: var(--text-2); font-weight: 600; }
+  .summary dd { font-size: 14.5px; color: var(--text); margin: 0; word-break: break-word; }
+  .summary .thumb-lg { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(0,0,0,0.1); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 640px) {
+    main { padding: 0 16px 64px; }
+    .header-inner { padding: 16px 18px; }
+    nav.top { display: none; }
+    .hero { padding: 38px 26px 34px; margin-top: 22px; border-radius: 20px; }
+    .form-card { padding: 28px 20px 30px; border-radius: 20px; }
+    .success { padding: 34px 22px; border-radius: 20px; }
+    .row { grid-template-columns: 1fr; gap: 0; }
+    .summary dl { grid-template-columns: 1fr; gap: 3px 0; }
+    .summary dt { margin-top: 10px; }
+    .btn-primary { width: 100%; justify-content: center; }
+    .actions { display: block; }
+  }
+</style>
+</head>
+<body>
+  <header class="site">
+    <div class="header-inner">
+      <div class="wordmark">LOVED<span class="dot"></span>S</div>
+      <nav class="top">We Love Disruption</nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="orb-orange"></div>
+        <div class="orb-indigo"></div>
+        <div class="kicker">SPEAKER · LOVEDIS</div>
+        <h1>Speaker-Anmeldung</h1>
+        <p class="sub">We Love Disruption &ndash; sei als Speaker:in Teil davon.</p>
+      </section>
+
+      <!-- Form -->
+      <section class="form-card" id="formCard">
+        <p class="intro">
+          Sch&ouml;n, dass du als Speaker:in bei LOVEDIS dabei bist! F&uuml;r die weitere
+          Kommunikation und deine Ank&uuml;ndigung als Speaker:in bitten wir dich, das
+          folgende Formular auszuf&uuml;llen.
+        </p>
+
+        <form id="speakerForm" novalidate>
+          <div class="form-error" id="formError">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 7v6M12 16.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>Bitte &uuml;berpr&uuml;fe die markierten Felder.</span>
+          </div>
+
+          <!-- Vorname / Nachname -->
+          <div class="row">
+            <div class="field" data-field>
+              <label class="lbl" for="vorname">Vorname<span class="req">*</span></label>
+              <input type="text" id="vorname" name="vorname" data-required placeholder="Max" autocomplete="given-name" />
+              <span class="err" data-err>Bitte gib deinen Vornamen ein.</span>
+            </div>
+            <div class="field" data-field>
+              <label class="lbl" for="nachname">Nachname<span class="req">*</span></label>
+              <input type="text" id="nachname" name="nachname" data-required placeholder="Mustermann" autocomplete="family-name" />
+              <span class="err" data-err>Bitte gib deinen Nachnamen ein.</span>
+            </div>
+          </div>
+
+          <!-- Jobtitel / Organisation -->
+          <div class="row">
+            <div class="field" data-field>
+              <label class="lbl" for="jobtitel">Jobtitel<span class="req">*</span></label>
+              <input type="text" id="jobtitel" name="jobtitel" data-required placeholder="Head of Innovation" autocomplete="organization-title" />
+              <span class="err" data-err>Bitte gib deinen Jobtitel ein.</span>
+            </div>
+            <div class="field" data-field>
+              <label class="lbl" for="organisation">Organisation<span class="req">*</span></label>
+              <input type="text" id="organisation" name="organisation" data-required placeholder="LOVEDIS GmbH" autocomplete="organization" />
+              <span class="err" data-err>Bitte gib deine Organisation ein.</span>
+            </div>
+          </div>
+
+          <!-- E-Mail -->
+          <div class="field" data-field>
+            <label class="lbl" for="email">E-Mail-Adresse<span class="req">*</span></label>
+            <input type="email" id="email" name="email" data-required data-type="email" placeholder="max@lovedis.de" autocomplete="email" />
+            <span class="err" data-err>Bitte gib eine g&uuml;ltige E-Mail-Adresse ein.</span>
+          </div>
+
+          <!-- Handynummer -->
+          <div class="field" data-field>
+            <label class="lbl" for="handy">Handynummer<span class="req">*</span></label>
+            <p class="hint">Deine Handynummer verwenden wir nur im Rahmen des Events, falls wir dich &uuml;ber eventuelle &Auml;nderungen informieren oder dich vor Ort erreichen m&uuml;ssen.</p>
+            <input type="tel" id="handy" name="handy" data-required data-type="tel" placeholder="+49 170 1234567" autocomplete="tel" />
+            <span class="err" data-err>Bitte gib eine g&uuml;ltige Handynummer ein.</span>
+          </div>
+
+          <!-- Kurzbiographie -->
+          <div class="field" data-field>
+            <label class="lbl" for="bio">Kurzbiographie<span class="req">*</span></label>
+            <p class="hint">Maximal 5 S&auml;tze.</p>
+            <textarea id="bio" name="bio" data-required data-max-sentences="5" placeholder="Erz&auml;hl uns in wenigen S&auml;tzen, wer du bist und was du machst."></textarea>
+            <div class="counter" data-counter>0 S&auml;tze</div>
+            <span class="err" data-err>Bitte f&uuml;ge eine kurze Biographie hinzu.</span>
+          </div>
+
+          <!-- Was bedeutet LOVEDIS -->
+          <div class="field" data-field>
+            <label class="lbl" for="meaning">Was bedeutet LOVEDIS f&uuml;r dich?<span class="req">*</span></label>
+            <p class="hint">Maximal 2 S&auml;tze.</p>
+            <textarea id="meaning" name="meaning" data-required data-max-sentences="2" placeholder="We Love Disruption bedeutet f&uuml;r mich &hellip;"></textarea>
+            <div class="counter" data-counter>0 S&auml;tze</div>
+            <span class="err" data-err>Bitte beantworte diese Frage.</span>
+          </div>
+
+          <!-- Foto hochladen -->
+          <div class="field" data-field data-file-field>
+            <label class="lbl" for="foto">Foto hochladen<span class="req">*</span></label>
+            <div class="file-drop">
+              <button type="button" class="file-btn" id="fileBtn">Datei ausw&auml;hlen</button>
+              <span class="file-name" id="fileName">Keine ausgew&auml;hlt</span>
+              <img class="thumb" id="thumb" alt="Vorschau" />
+            </div>
+            <input type="file" id="foto" name="foto" accept="image/*" data-required />
+            <span class="err" data-err>Bitte lade ein Foto (Bilddatei) hoch.</span>
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="checks">
+            <div class="field-check" data-field-check>
+              <label class="check">
+                <input type="checkbox" id="consent" name="consent" data-required-check />
+                <span class="box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>Hiermit erlaube ich die Nutzung meiner Daten im Rahmen des LOVEDIS Events 2026.<span class="req">*</span></span>
+              </label>
+              <span class="err" data-err>Bitte stimme der Nutzung deiner Daten zu.</span>
+            </div>
+
+            <div class="field-check">
+              <label class="check">
+                <input type="checkbox" id="template" name="template" />
+                <span class="box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>Ich w&uuml;nsche zur Bewerbung des Events eine Vorlage f&uuml;r soziale Medien.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="thanks">Vielen Dank!</div>
+          <p class="privacy">Unsere Datenschutzpraktiken und unsere Verpflichtung zum Schutz deiner Privatsph&auml;re findest du in unseren <a href="#" onclick="return false;">Datenschutzbestimmungen</a>.</p>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary" id="submitBtn">
+              <span class="spinner"></span>
+              <span class="btn-label">Informationen abschicken</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Success -->
+      <section class="success" id="successCard">
+        <div class="check-badge">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>Vielen Dank!</h2>
+        <p class="lead">Deine Informationen wurden abgeschickt. Wir melden uns bei dir mit allen weiteren Details zu deinem Auftritt als Speaker:in.</p>
+        <div class="summary">
+          <h3>Deine Angaben</h3>
+          <dl id="summaryList"></dl>
+        </div>
+      </section>
+    </div>
+  </main>
+
+<script>
+(function () {
+  "use strict";
+
+  var form = document.getElementById("speakerForm");
+  var submitBtn = document.getElementById("submitBtn");
+  var formError = document.getElementById("formError");
+  var formCard = document.getElementById("formCard");
+  var successCard = document.getElementById("successCard");
+  var summaryList = document.getElementById("summaryList");
+  var submitting = false;
+
+  // ---------- Helpers ----------
+  function fieldOf(el) { return el.closest("[data-field]"); }
+
+  function setInvalid(container, msg) {
+    if (!container) return;
+    container.classList.add("invalid");
+    if (msg) {
+      var err = container.querySelector("[data-err]");
+      if (err) err.textContent = msg;
+    }
+  }
+  function clearInvalid(container) {
+    if (container) container.classList.remove("invalid");
+  }
+
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  }
+  function isValidPhone(v) {
+    var cleaned = v.replace(/[\s\-().]/g, "");
+    return /^\+?[0-9]{6,15}$/.test(cleaned);
+  }
+  function countSentences(v) {
+    var t = v.trim();
+    if (!t) return 0;
+    var parts = t.split(/[.!?…]+/).filter(function (s) { return s.trim().length > 0; });
+    return parts.length || (t.length ? 1 : 0);
+  }
+
+  // ---------- Live: clear error on input ----------
+  form.querySelectorAll("input, textarea").forEach(function (el) {
+    var evt = (el.type === "file" || el.type === "checkbox") ? "change" : "input";
+    el.addEventListener(evt, function () {
+      var container = el.closest("[data-field], [data-field-check]");
+      if (container && container.classList.contains("invalid")) {
+        // re-validate just this field to decide whether to clear
+        if (validateField(el)) clearInvalid(container);
+      }
+      if (formError.classList.contains("show")) {
+        // hide banner once everything is fixed
+        if (form.querySelectorAll(".invalid").length === 0) formError.classList.remove("show");
+      }
+    });
+  });
+
+  // ---------- Sentence counters ----------
+  form.querySelectorAll("textarea[data-max-sentences]").forEach(function (ta) {
+    var max = parseInt(ta.getAttribute("data-max-sentences"), 10);
+    var counter = fieldOf(ta).querySelector("[data-counter]");
+    function update() {
+      var n = countSentences(ta.value);
+      counter.textContent = n + (n === 1 ? " Satz" : " Sätze") + " / max. " + max;
+      if (n > max) counter.classList.add("warn");
+      else counter.classList.remove("warn");
+    }
+    ta.addEventListener("input", update);
+    update();
+  });
+
+  // ---------- File upload ----------
+  var fileInput = document.getElementById("foto");
+  var fileBtn = document.getElementById("fileBtn");
+  var fileName = document.getElementById("fileName");
+  var thumb = document.getElementById("thumb");
+
+  fileBtn.addEventListener("click", function () { fileInput.click(); });
+  fileInput.addEventListener("change", function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) {
+      fileName.textContent = "Keine ausgewählt";
+      fileName.classList.remove("has");
+      thumb.classList.remove("show");
+      thumb.removeAttribute("src");
+      return;
+    }
+    fileName.textContent = f.name;
+    fileName.classList.add("has");
+    if (f.type && f.type.indexOf("image/") === 0) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        thumb.src = e.target.result;
+        thumb.classList.add("show");
+      };
+      reader.readAsDataURL(f);
+    } else {
+      thumb.classList.remove("show");
+      thumb.removeAttribute("src");
+    }
+  });
+
+  // ---------- Per-field validation ----------
+  function validateField(el) {
+    // returns true if valid
+    if (el.type === "file") {
+      var f = el.files && el.files[0];
+      if (!f) return false;
+      if (!f.type || f.type.indexOf("image/") !== 0) {
+        setInvalid(fieldOf(el), "Bitte lade eine Bilddatei hoch (z. B. JPG oder PNG).");
+        return false;
+      }
+      return true;
+    }
+    var v = (el.value || "").trim();
+    if (el.hasAttribute("data-required") && !v) return false;
+    if (el.getAttribute("data-type") === "email" && v && !isValidEmail(v)) return false;
+    if (el.getAttribute("data-type") === "tel" && v && !isValidPhone(v)) return false;
+    return true;
+  }
+
+  // ---------- Full validation ----------
+  function validateAll() {
+    var firstInvalid = null;
+    // text-like + file fields
+    form.querySelectorAll("[data-required]").forEach(function (el) {
+      var container = el.closest("[data-field]");
+      var ok = validateField(el);
+      if (!ok) {
+        // craft message for empty vs invalid format
+        var v = (el.value || "").trim();
+        if (el.getAttribute("data-type") === "email" && v) {
+          setInvalid(container, "Bitte gib eine gültige E-Mail-Adresse ein.");
+        } else if (el.getAttribute("data-type") === "tel" && v) {
+          setInvalid(container, "Bitte gib eine gültige Handynummer ein.");
+        } else if (el.type !== "file") {
+          setInvalid(container);
+        } else if (!(el.files && el.files[0])) {
+          setInvalid(container, "Bitte lade ein Foto (Bilddatei) hoch.");
+        }
+        if (!firstInvalid) firstInvalid = container;
+      } else {
+        clearInvalid(container);
+      }
+    });
+    // required checkbox
+    var consent = document.getElementById("consent");
+    var consentField = consent.closest("[data-field-check]");
+    if (!consent.checked) {
+      consentField.classList.add("invalid");
+      consentField.querySelector(".check").classList.add("invalid");
+      if (!firstInvalid) firstInvalid = consentField;
+    } else {
+      consentField.classList.remove("invalid");
+      consentField.querySelector(".check").classList.remove("invalid");
+    }
+    return firstInvalid;
+  }
+
+  // clear checkbox error live
+  document.getElementById("consent").addEventListener("change", function () {
+    var f = this.closest("[data-field-check]");
+    if (this.checked) { f.classList.remove("invalid"); f.querySelector(".check").classList.remove("invalid"); }
+  });
+
+  // ---------- Gather data ----------
+  function gather() {
+    var f = fileInput.files && fileInput.files[0];
+    return {
+      vorname: document.getElementById("vorname").value.trim(),
+      nachname: document.getElementById("nachname").value.trim(),
+      jobtitel: document.getElementById("jobtitel").value.trim(),
+      organisation: document.getElementById("organisation").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      handynummer: document.getElementById("handy").value.trim(),
+      kurzbiographie: document.getElementById("bio").value.trim(),
+      bedeutungLovedis: document.getElementById("meaning").value.trim(),
+      foto: f ? { name: f.name, type: f.type, size: f.size } : null,
+      datennutzung: document.getElementById("consent").checked,
+      socialMediaVorlage: document.getElementById("template").checked
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function renderSummary(data) {
+    var rows = [
+      ["Name", escapeHtml(data.vorname + " " + data.nachname)],
+      ["Jobtitel", escapeHtml(data.jobtitel)],
+      ["Organisation", escapeHtml(data.organisation)],
+      ["E-Mail", escapeHtml(data.email)],
+      ["Handynummer", escapeHtml(data.handynummer)],
+      ["Kurzbiographie", escapeHtml(data.kurzbiographie)],
+      ["Was LOVEDIS bedeutet", escapeHtml(data.bedeutungLovedis)],
+      ["Foto", data.foto ? escapeHtml(data.foto.name) : "&ndash;"],
+      ["Vorlage f&uuml;r Social Media", data.socialMediaVorlage ? "Ja" : "Nein"]
+    ];
+    var html = "";
+    rows.forEach(function (r) {
+      html += "<dt>" + r[0] + "</dt><dd>" + (r[1] || "&ndash;") + "</dd>";
+    });
+    // thumbnail if present
+    if (thumb.src && thumb.classList.contains("show")) {
+      html += '<dt>Vorschau</dt><dd><img class="thumb-lg" src="' + thumb.src + '" alt="Foto-Vorschau" /></dd>';
+    }
+    summaryList.innerHTML = html;
+  }
+
+  // ---------- Submit ----------
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (submitting) return;
+
+    var firstInvalid = validateAll();
+    if (firstInvalid) {
+      formError.classList.add("show");
+      var focusEl = firstInvalid.querySelector("input, textarea, button");
+      firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (focusEl) { try { focusEl.focus({ preventScroll: true }); } catch (_) { focusEl.focus(); } }
+      return;
+    }
+
+    formError.classList.remove("show");
+    submitting = true;
+
+    // pending state
+    submitBtn.classList.add("loading");
+    submitBtn.disabled = true;
+    submitBtn.querySelector(".btn-label").textContent = "Wird gesendet…";
+
+    var data = gather();
+
+    // simulate async submit
+    setTimeout(function () {
+      console.log("LOVEDIS Speaker-Anmeldung – gesammelte Daten:", data);
+      renderSummary(data);
+      formCard.style.display = "none";
+      successCard.classList.add("show");
+      successCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      submitting = false;
+    }, 900);
+  });
+})();
+</script>
+</body>
+</html>

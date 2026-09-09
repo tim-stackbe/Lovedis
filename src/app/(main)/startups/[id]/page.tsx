@@ -17,14 +17,18 @@ import {
 } from "@/app/actions/startups";
 import { createEvaluation } from "@/app/actions/evaluations";
 import {
+  EvaluationStatusBadge,
+  PartnerVerdictBadge,
   PipelineStageBadge,
-  QuadrantBadge,
   RecommendationBadge,
   ScorePill,
+  SourceTypeBadge,
 } from "@/components/shared/badges";
+import { InitialAssessmentForm } from "@/components/screening/InitialAssessmentForm";
 import { AttachmentForm } from "@/components/startups/AttachmentForm";
 import { ContactForm } from "@/components/startups/ContactForm";
 import { StartupForm } from "@/components/startups/StartupForm";
+import { TeamConsensusCard } from "@/components/scoring/TeamConsensus";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BannerStat, Card } from "@/components/ui/Card";
@@ -32,13 +36,14 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getStartupConsensus } from "@/lib/consensus-data";
 import {
   RADAR_QUADRANT_LABELS,
   RADAR_RING_LABELS,
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { deriveQuadrant } from "@/lib/scoring";
+import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate, formatMillions } from "@/lib/utils";
 
 export default async function StartupDetailPage({
@@ -55,15 +60,35 @@ export default async function StartupDetailPage({
       contacts: { orderBy: { createdAt: "asc" } },
       attachments: { orderBy: { createdAt: "asc" } },
       evaluations: {
-        include: { evaluator: { select: { name: true } } },
+        include: {
+          evaluator: { select: { name: true } },
+          scores: { select: { dimension: true, value: true } },
+        },
         orderBy: { updatedAt: "desc" },
       },
       campaign: { select: { name: true } },
+      screenedBy: { select: { name: true } },
+      partnerReviews: {
+        where: { challengeId: null },
+        include: { partner: { select: { name: true, company: true } } },
+        orderBy: { updatedAt: "desc" },
+      },
     },
   });
   if (!startup) notFound();
 
-  const latest = startup.evaluations[0];
+  // Aggregated team consensus (scout-role evaluators only, most recent per
+  // evaluator). This is the primary result; the per-evaluator table below shows
+  // the individual breakdown for transparency. Fetched in parallel with the
+  // (independent) campaign list to save a DB round-trip.
+  const [campaigns, consensus] = await Promise.all([
+    prisma.scoutingCampaign.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    getStartupConsensus(startup.id),
+  ]);
+  const hasConsensus = consensus.evaluatorCount > 0;
 
   return (
     <>
@@ -82,8 +107,8 @@ export default async function StartupDetailPage({
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat
-            label="Letzter Score"
-            value={latest ? latest.overallScore.toFixed(1) : "—"}
+            label="Konsens-Score"
+            value={hasConsensus ? consensus.weightedTotal.toFixed(1) : "—"}
           />
           <BannerStat
             label="Phase"
@@ -183,17 +208,18 @@ export default async function StartupDetailPage({
                     : "Nicht platziert"}
                 </span>
               </div>
-              {latest && (
+              {hasConsensus && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-lv-secondary">Quadrant</span>
-                    <QuadrantBadge
-                      value={deriveQuadrant(latest.potential, latest.feasibility)}
+                    <span className="text-lv-secondary">Konsens-Status</span>
+                    <EvaluationStatusBadge
+                      recommendation={consensus.recommendation}
+                      gated={consensus.gated}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-lv-secondary">Empfehlung</span>
-                    <RecommendationBadge value={latest.recommendation} />
+                    <RecommendationBadge value={consensus.recommendation} />
                   </div>
                 </>
               )}
@@ -204,57 +230,122 @@ export default async function StartupDetailPage({
 
       <section className="space-y-4">
         <SectionLabel
+          number="01b"
+          label="Screening"
+          title="Erst-Einordnung & Partner-Feedback"
+        />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-xs uppercase tracking-wider text-lv-secondary">
+                Erst-Einordnung
+              </p>
+              <div className="flex items-center gap-2">
+                {startup.sourceType && (
+                  <SourceTypeBadge value={startup.sourceType} />
+                )}
+                {startup.screenedAt && startup.screenedBy && (
+                  <span className="text-xs text-lv-secondary">
+                    {startup.screenedBy.name} · {formatDate(startup.screenedAt)}
+                  </span>
+                )}
+              </div>
+            </div>
+            <InitialAssessmentForm
+              startupId={startup.id}
+              summary={startup.screenSummary}
+              recommendation={startup.screenRecommendation}
+            />
+          </Card>
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-wider text-lv-secondary">
+              Partner-Verdikte ({startup.partnerReviews.length})
+            </p>
+            {startup.partnerReviews.length === 0 ? (
+              <p className="mt-3 text-sm text-lv-secondary">
+                Noch kein Partner-Feedback zu diesem Startup.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {startup.partnerReviews.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex items-start justify-between gap-3 border-b border-lv-border pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">
+                        {r.partner.company ?? r.partner.name}
+                      </p>
+                      {r.note && (
+                        <p className="mt-0.5 text-xs text-lv-secondary">
+                          {r.note}
+                        </p>
+                      )}
+                    </div>
+                    <PartnerVerdictBadge value={r.verdict} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <SectionLabel
           number="02"
           label="Bewerten"
           title={`Bewertungen (${startup.evaluations.length})`}
         />
-        {startup.evaluations.length === 0 ? (
-          <Card className="p-6 text-sm text-lv-secondary">
-            Noch keine Bewertungen — starte eine mit dem Button oben.
-          </Card>
-        ) : (
-          <TableCard>
-            <THead>
-              <tr>
-                <Th>Bewertet von</Th>
-                <Th>Aktualisiert</Th>
-                <Th>Empfehlung</Th>
-                <Th className="text-right">Potenzial</Th>
-                <Th className="text-right">Machbarkeit</Th>
-                <Th className="text-right">Gesamt</Th>
-              </tr>
-            </THead>
-            <tbody>
-              {startup.evaluations.map((e) => (
-                <Tr key={e.id}>
-                  <Td>
-                    <Link
-                      href={`/evaluations/${e.id}`}
-                      className="font-semibold hover:text-lv-blue"
-                    >
-                      {e.evaluator.name}
-                    </Link>
-                  </Td>
-                  <Td className="text-lv-secondary">
-                    {formatDate(e.updatedAt)}
-                  </Td>
-                  <Td>
-                    <RecommendationBadge value={e.recommendation} />
-                  </Td>
-                  <Td className="text-right tabular-nums">
-                    {e.potential.toFixed(1)}
-                  </Td>
-                  <Td className="text-right tabular-nums">
-                    {e.feasibility.toFixed(1)}
-                  </Td>
-                  <Td className="text-right">
-                    <ScorePill score={e.overallScore} />
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </TableCard>
-        )}
+        <div className="grid gap-4 lg:grid-cols-[340px_1fr] lg:items-start">
+          <TeamConsensusCard consensus={consensus} />
+          {startup.evaluations.length === 0 ? (
+            <Card className="p-6 text-sm text-lv-secondary">
+              Noch keine Bewertungen — starte eine mit dem Button oben.
+            </Card>
+          ) : (
+            <TableCard>
+              <THead>
+                <tr>
+                  <Th>Bewertet von</Th>
+                  <Th>Aktualisiert</Th>
+                  <Th>Empfehlung</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Gesamt</Th>
+                </tr>
+              </THead>
+              <tbody>
+                {startup.evaluations.map((e) => (
+                  <Tr key={e.id}>
+                    <Td>
+                      <Link
+                        href={`/evaluations/${e.id}`}
+                        className="font-semibold hover:text-lv-blue"
+                      >
+                        {e.evaluator.name}
+                      </Link>
+                    </Td>
+                    <Td className="text-lv-secondary">
+                      {formatDate(e.updatedAt)}
+                    </Td>
+                    <Td>
+                      <RecommendationBadge value={e.recommendation} />
+                    </Td>
+                    <Td>
+                      <EvaluationStatusBadge
+                        recommendation={e.recommendation}
+                        gated={isChallengeFitGated(scoresToMap(e.scores))}
+                      />
+                    </Td>
+                    <Td className="text-right">
+                      <ScorePill score={e.overallScore} />
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </TableCard>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -358,7 +449,7 @@ export default async function StartupDetailPage({
 
       <section className="space-y-4">
         <SectionLabel number="05" label="Verwalten" title="Startup bearbeiten" />
-        <StartupForm startup={startup} />
+        <StartupForm startup={startup} campaigns={campaigns} />
         <div className="flex justify-end">
           <form action={deleteStartup.bind(null, startup.id)}>
             <Button type="submit" variant="danger" size="sm">

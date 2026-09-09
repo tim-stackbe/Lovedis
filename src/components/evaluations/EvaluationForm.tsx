@@ -2,16 +2,20 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { updateEvaluation } from "@/app/actions/evaluations";
-import { QuadrantBadge, RecommendationBadge } from "@/components/shared/badges";
+import {
+  EvaluationStatusBadge,
+  RecommendationBadge,
+} from "@/components/shared/badges";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorChip, Label, SuccessChip, Textarea } from "@/components/ui/Field";
 import type { ScoreDimension } from "@/generated/prisma/enums";
 import {
+  CHALLENGE_FIT_GATE_MIN,
   DIMENSION_DESCRIPTIONS,
   DIMENSION_LABELS,
+  GATE_STATUS_LABEL,
   MAX_SCORE,
-  QUADRANT_DESCRIPTIONS,
   SCORE_DIMENSIONS,
 } from "@/lib/constants";
 import { evaluateScores, normalizeWeights } from "@/lib/scoring";
@@ -118,24 +122,25 @@ export function EvaluationForm({
           </div>
           <div className="space-y-3 p-5 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-lv-secondary">Potenzial</span>
-              <span className="font-bold tabular-nums">
-                {result.potential.toFixed(1)}
-              </span>
+              <span className="text-lv-secondary">Status</span>
+              <EvaluationStatusBadge
+                recommendation={result.recommendation}
+                gated={result.gated}
+              />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-lv-secondary">Machbarkeit</span>
-              <span className="font-bold tabular-nums">
-                {result.feasibility.toFixed(1)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-lv-secondary">Quadrant</span>
-              <QuadrantBadge value={result.quadrant} />
-            </div>
-            <p className="text-xs text-lv-secondary">
-              {QUADRANT_DESCRIPTIONS[result.quadrant]}
-            </p>
+            {result.gated ? (
+              <p className="text-xs text-lv-orange">
+                {GATE_STATUS_LABEL}: „Challenge Fit“ liegt unter{" "}
+                {CHALLENGE_FIT_GATE_MIN} — die Empfehlung wird unabhängig vom
+                Gesamtscore auf „Klares Nein“ gesetzt.
+              </p>
+            ) : (
+              <p className="text-xs text-lv-secondary">
+                „Challenge Fit“ ist das Minimum-Gate: unter{" "}
+                {CHALLENGE_FIT_GATE_MIN} wird das Startup als „Kein Fit (Gate)“
+                markiert.
+              </p>
+            )}
             <div className="flex items-center justify-between border-t border-lv-border pt-3">
               <span className="text-lv-secondary">Empfehlung</span>
               <RecommendationBadge value={result.recommendation} />

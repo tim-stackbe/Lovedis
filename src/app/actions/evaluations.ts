@@ -8,10 +8,9 @@ import { requireScoutModule } from "@/lib/auth-guards";
 import { SCORE_DIMENSIONS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import {
-  computeFeasibility,
   computeOverallScore,
-  computePotential,
   deriveRecommendation,
+  isChallengeFitGated,
   type DimensionScores,
 } from "@/lib/scoring";
 
@@ -43,13 +42,12 @@ export async function createEvaluation(startupId: string): Promise<void> {
 
 const scoreValue = z.coerce.number().int().min(0).max(5);
 const scoresSchema = z.object({
-  MARKET: scoreValue,
-  PRODUCT: scoreValue,
-  TRACTION: scoreValue,
-  COMPETITIVE_POSITION: scoreValue,
-  TEAM: scoreValue,
-  BUSINESS_MODEL: scoreValue,
-  STRATEGIC_FIT: scoreValue,
+  CHALLENGE_FIT: scoreValue,
+  MATURITY_FEASIBILITY: scoreValue,
+  TEAM_EXECUTION: scoreValue,
+  MARKET_SCALABILITY: scoreValue,
+  STRATEGIC_ECOSYSTEM_FIT: scoreValue,
+  TRACTION_REFERENCES: scoreValue,
 });
 
 const updateSchema = z.object({
@@ -87,9 +85,10 @@ export async function updateEvaluation(
 
   const scores = parsedScores.data as DimensionScores;
   const overallScore = computeOverallScore(scores);
-  const potential = computePotential(scores);
-  const feasibility = computeFeasibility(scores);
-  const recommendation = deriveRecommendation(overallScore);
+  const recommendation = deriveRecommendation(
+    overallScore,
+    isChallengeFitGated(scores)
+  );
 
   await prisma.$transaction([
     ...SCORE_DIMENSIONS.map((dimension) =>
@@ -105,8 +104,6 @@ export async function updateEvaluation(
       where: { id: evaluationId },
       data: {
         overallScore,
-        potential,
-        feasibility,
         recommendation,
         notes: parsedNotes.data.notes ?? null,
       },

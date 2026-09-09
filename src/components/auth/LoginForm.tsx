@@ -5,9 +5,15 @@ import { useActionState } from "react";
 import { login } from "@/app/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { ErrorChip, Field, Input } from "@/components/ui/Field";
+import { ErrorChip, Field, Input, SuccessChip } from "@/components/ui/Field";
 
-export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
+export function LoginForm({
+  callbackUrl,
+  resetSuccess = false,
+}: {
+  callbackUrl?: string;
+  resetSuccess?: boolean;
+}) {
   const [state, formAction, pending] = useActionState(login, undefined);
 
   return (
@@ -17,6 +23,15 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
       <p className="mt-1 text-sm text-lv-secondary">
         Melde dich mit deinem Lovedis-Konto an.
       </p>
+
+      {resetSuccess && (
+        <div className="mt-4">
+          <SuccessChip>
+            Dein Passwort wurde geändert. Bitte melde dich mit deinem neuen
+            Passwort an.
+          </SuccessChip>
+        </div>
+      )}
 
       <form action={formAction} className="mt-6 space-y-4">
         {callbackUrl && (
@@ -47,6 +62,15 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
           {pending ? "Anmeldung läuft…" : "Anmelden"}
         </Button>
       </form>
+
+      <div className="mt-4 text-center text-sm">
+        <Link
+          href="/forgot-password"
+          className="font-semibold text-lv-blue hover:underline"
+        >
+          Passwort vergessen?
+        </Link>
+      </div>
 
       <div className="mt-6 border-t border-lv-border pt-5 text-center text-sm text-lv-secondary">
         Neu hier?{" "}

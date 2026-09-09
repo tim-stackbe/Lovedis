@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Lovedis brand color swatches for print production -->
+<!-- Physical size: 210mm × 60mm -->
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="60mm" viewBox="0 0 630 180">
+  <title>Lovedis Brand Color Swatches</title>
+  <rect width="630" height="180" fill="#ffffff"/>
+
+  <!-- Lovedis Blue -->
+  <rect x="20" y="20" width="130" height="90" fill="#2926e5" stroke="#0a0a0f" stroke-width="1"/>
+  <text x="85" y="135" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#0a0a0f">Lovedis Blue</text>
+  <text x="85" y="150" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" fill="#0a0a0f">#2926e5</text>
+  <text x="85" y="163" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8" fill="#666">CMYK 88/72/0/0 · Pantone 2728 C</text>
+
+  <!-- Lovedis Coral -->
+  <rect x="170" y="20" width="130" height="90" fill="#ff5736" stroke="#0a0a0f" stroke-width="1"/>
+  <text x="235" y="135" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#0a0a0f">Lovedis Coral</text>
+  <text x="235" y="150" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" fill="#0a0a0f">#ff5736</text>
+  <text x="235" y="163" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8" fill="#666">CMYK 0/78/82/0 · Pantone 1655 C</text>
+
+  <!-- Black keyline -->
+  <rect x="320" y="20" width="130" height="90" fill="#0a0a0f" stroke="#0a0a0f" stroke-width="1"/>
+  <text x="385" y="135" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#0a0a0f">Keyline Black</text>
+  <text x="385" y="150" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" fill="#0a0a0f">#0a0a0f</text>
+  <text x="385" y="163" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8" fill="#666">CMYK 75/68/58/78 · Pantone Black 6 C</text>
+
+  <!-- White -->
+  <rect x="470" y="20" width="130" height="90" fill="#ffffff" stroke="#0a0a0f" stroke-width="1"/>
+  <text x="535" y="135" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#0a0a0f">White</text>
+  <text x="535" y="150" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" fill="#0a0a0f">#ffffff</text>
+  <text x="535" y="163" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8" fill="#666">CMYK 0/0/0/0 · Underbase / knockouts</text>
+</svg>

@@ -57,7 +57,7 @@ export default async function EvaluationDetailPage({
       <SectionLabel
         number="02"
         label="Bewerten"
-        title="Bewerte die sieben Dimensionen"
+        title="Bewerte die sechs Challenge-Kriterien"
       />
 
       <EvaluationForm

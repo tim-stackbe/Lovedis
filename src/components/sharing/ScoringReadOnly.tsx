@@ -1,15 +1,17 @@
 import {
-  QuadrantBadge,
+  EvaluationStatusBadge,
   RecommendationBadge,
 } from "@/components/shared/badges";
 import { Card } from "@/components/ui/Card";
 import type { Recommendation, ScoreDimension } from "@/generated/prisma/enums";
 import {
+  CHALLENGE_FIT_GATE_MIN,
   DIMENSION_LABELS,
+  GATE_STATUS_LABEL,
   MAX_SCORE,
   SCORE_DIMENSIONS,
 } from "@/lib/constants";
-import { deriveQuadrant } from "@/lib/scoring";
+import { isChallengeFitGated } from "@/lib/scoring";
 import { cn } from "@/lib/utils";
 
 interface ScoringReadOnlyProps {
@@ -17,8 +19,6 @@ interface ScoringReadOnlyProps {
   industry: string;
   scores: Partial<Record<ScoreDimension, number>>;
   overallScore: number;
-  potential: number;
-  feasibility: number;
   recommendation: Recommendation;
   notes?: string | null;
 }
@@ -29,11 +29,10 @@ export function ScoringReadOnly({
   industry,
   scores,
   overallScore,
-  potential,
-  feasibility,
   recommendation,
   notes,
 }: ScoringReadOnlyProps) {
+  const gated = isChallengeFitGated(scores);
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <Card className="p-6">
@@ -93,21 +92,18 @@ export function ScoringReadOnly({
         </div>
         <div className="space-y-3 p-5 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-lv-secondary">Potenzial</span>
-            <span className="font-bold tabular-nums">
-              {potential.toFixed(1)}
-            </span>
+            <span className="text-lv-secondary">Status</span>
+            <EvaluationStatusBadge
+              recommendation={recommendation}
+              gated={gated}
+            />
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-lv-secondary">Machbarkeit</span>
-            <span className="font-bold tabular-nums">
-              {feasibility.toFixed(1)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-lv-secondary">Quadrant</span>
-            <QuadrantBadge value={deriveQuadrant(potential, feasibility)} />
-          </div>
+          {gated && (
+            <p className="text-xs text-lv-orange">
+              {GATE_STATUS_LABEL}: „Challenge Fit“ liegt unter{" "}
+              {CHALLENGE_FIT_GATE_MIN}.
+            </p>
+          )}
           <div className="flex items-center justify-between border-t border-lv-border pt-3">
             <span className="text-lv-secondary">Empfehlung</span>
             <RecommendationBadge value={recommendation} />

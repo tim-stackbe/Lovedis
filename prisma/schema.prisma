@@ -1,6 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  // Size-optimized query compiler WASM (~half the size of the default "fast"
+  // build). Keeps the Cloudflare Worker bundle under the size limit; same
+  // base64+WebAssembly.Module loader works under both Node and workerd.
+  compilerBuild = "small"
 }
 
 datasource db {
@@ -17,6 +21,17 @@ enum UserRole {
   BUSINESS_PARTNER
   INVESTOR
   STARTUP
+}
+
+// Company-scoped role — an ORTHOGONAL dimension to the platform-level `UserRole`
+// above. It only governs what a user may do *inside their own Company account*
+// (managing employees + invitations). The platform superadmin is still the
+// platform-level `UserRole.ADMIN`; company OWNER/ADMIN never grant any
+// cross-company or platform power. Every Company must keep at least one OWNER.
+enum CompanyRole {
+  OWNER  // highest company role — manages employees, invites & other admins
+  ADMIN  // manages employees & invitations, cannot remove/demote the last owner
+  MEMBER // regular employee, no management rights
 }
 
 enum StartupStage {
@@ -36,11 +51,17 @@ enum PipelineStage {
   PASSED
 }
 
+// Technology-radar fields — aligned to the LOVEDIS Challenge verticals used in
+// the "Strategischer Ökosystem-Fit" criterion. CONSTRUCTION (Bau), HEALTH_TECH
+// and INDUSTRY are the core verticals; AI_DATA (KI & Daten) and CLIMATE_ENERGY
+// (Klima & Energie) are cross-cutting fields. This classification stays MANUAL
+// and is independent of the weighted score.
 enum RadarQuadrant {
   AI_DATA
   CLIMATE_ENERGY
-  HEALTH_BIO
-  INDUSTRY_40
+  CONSTRUCTION
+  HEALTH_TECH
+  INDUSTRY
 }
 
 enum RadarRing {
@@ -50,16 +71,21 @@ enum RadarRing {
   HOLD
 }
 
+// LOVEDIS Challenge Program — 6-criteria weighted matrix (each rated 0–5).
+// Weights live in src/lib/constants.ts (CHALLENGE_WEIGHTS) and must sum to 100%.
 enum ScoreDimension {
-  MARKET
-  PRODUCT
-  TRACTION
-  COMPETITIVE_POSITION
-  TEAM
-  BUSINESS_MODEL
-  STRATEGIC_FIT
+  CHALLENGE_FIT            // 30% — how precisely the startup solves the challenge
+  MATURITY_FEASIBILITY     // 20% — technology/pilot readiness, PoC speed
+  TEAM_EXECUTION           // 15% — competence, completeness, delivery ability
+  MARKET_SCALABILITY       // 15% — market size, transferability, growth
+  STRATEGIC_ECOSYSTEM_FIT  // 10% — fit to verticals & hub partners
+  TRACTION_REFERENCES      // 10% — customers, pilots, revenue, validated cases
 }
 
+// Recommendation is recalculated from the weighted total (see src/lib/scoring.ts).
+// The 4-band challenge scheme uses STRONG_YES / YES / NO / STRONG_NO. MAYBE is
+// retained for backwards compatibility (old data / DB default) but is no longer
+// produced by the scoring engine.
 enum Recommendation {
   STRONG_YES
   YES
@@ -73,6 +99,17 @@ enum AttachmentType {
   DOCUMENT
   DECK
   OTHER
+}
+
+// Curated Knowledge-Board recommendations (books, videos, articles, …) that
+// live in the SSOT hub next to roadmap/content/media.
+enum KnowledgeResourceType {
+  BOOK
+  VIDEO
+  ARTICLE
+  PODCAST
+  TOOL
+  COURSE
 }
 
 enum ChallengeStatus {
@@ -111,6 +148,131 @@ enum IntroStatus {
   CONNECTED
 }
 
+// --- Partner/Startup-SSOT & Screening platform (Plan: partner-startup-ssot) ---
+
+enum PartnerVerdict {
+  PENDING  // noch nicht entschieden
+  CONTINUE // „spannend, weitermachen"
+  PASS     // „nicht weiter"
+}
+
+enum SourceType {
+  INBOUND
+  OUTBOUND
+}
+
+// Kind of batch/program a Match-Matrix belongs to.
+enum BatchType {
+  ACCELERATOR
+  INDUSTRIEPROGRAMM
+  SONSTIGES
+}
+
+enum ReminderStatus {
+  SCHEDULED
+  SENT
+  DONE
+  CANCELLED
+}
+
+enum EngagementStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum RoadmapStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+}
+
+enum ContentAudience {
+  PARTNER
+  STARTUP
+  BOTH
+}
+
+enum CreditTxType {
+  GRANT      // Gutschrift
+  SPEND      // Verbrauch
+  ADJUSTMENT // Korrektur
+}
+
+// Zwei zweckgebundene Töpfe des 12-Credit-Onboarding-Budgets (Notion-Modell):
+//   FIX  — 6 Credits, reserviert für das exklusive Programm „Sales, Pricing &
+//          Growth" (Verbrauch durch Anmeldung/Programm-Buchung, nicht flexibel).
+//   FLEX — 6 Credits, frei einsetzbar für Mentor:innen-Sessions + Support-Angebote.
+// Jede CreditTransaction gehört genau zu einem Topf; die gecachten Teilsalden
+// (CreditAccount.fixBalance/flexBalance) werden atomar mitgeführt, `balance`
+// bleibt die (rückwärtskompatible) Gesamtsumme.
+enum CreditBucket {
+  FIX
+  FLEX
+}
+
+// --- Startup-Marktplatz (Plan: plan-startup-marketplace) ---
+
+enum MarketplaceOfferingType {
+  PROGRAM        // Exklusive Programme — 0 Credits
+  MENTOR_SESSION // Mentor:innen-Netzwerk — Credits
+  SUPPORT        // Individuelle Support-Angebote — Credits
+}
+
+enum SupportCategory {
+  FUNDRAISING
+  LEGAL
+  MARKETING
+  PRODUCT_TECH
+  SALES
+  OTHER
+}
+
+enum ProgramStatus {
+  DRAFT
+  OPEN   // im Marktplatz sichtbar/anfragbar
+  CLOSED
+}
+
+enum BookingStatus {
+  REQUESTED       // Startup hat angefragt
+  IN_COORDINATION // LOVEDIS koordiniert mit Partner/Mentor
+  CONFIRMED       // Termin bestätigt → Credits werden eingelöst
+  COMPLETED       // Session/Workshop fand statt
+  DECLINED        // Team lehnt ab (kein Credit-Abzug)
+  CANCELLED       // Startup/Team storniert (ggf. Rückbuchung)
+}
+
+// --- Match-Matrix (Plan: plan-match-matrix) ---
+
+// Beidseitige Passung Hoch/Mittel/Niedrig (Startup-Sicht + Partner-Sicht).
+enum RelevanceLevel {
+  HIGH   // Hoch
+  MEDIUM // Mittel
+  LOW    // Niedrig
+}
+
+// Möglicher Kooperations-Use-Case je Paarung. Eine Paarung kann mehrere Typen
+// kombinieren (z. B. „Pilotprojekt, Co-Development"). Der Original-Freitext aus
+// dem Sheet bleibt zusätzlich in PartnerStartupMatch.useCaseNote erhalten.
+enum MatchUseCaseType {
+  PILOT             // Pilotprojekt
+  CO_DEVELOPMENT    // Co-Development
+  CUSTOMER_RELATION // Kundenbeziehung
+  WHITE_LABEL       // White-label
+  TECH_LICENSE      // Technologielizenz
+  SPARRING          // Sparring
+}
+
+// Kontakt-/Intro-Status je Paarung (aus „Intro Mail / Calls" + „Next steps").
+enum MatchContactStatus {
+  NONE         // kein Kontakt / offen
+  IN_CONTACT   // bereits in Kontakt
+  FOLLOW_UP    // Folgetermin / Call geplant
+  PILOT_AGREED // Pilotprojekt vereinbart
+}
+
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------
@@ -122,9 +284,39 @@ model User {
   name         String
   role         UserRole @default(MEMBER)
   isActive     Boolean  @default(true)
+  // Legacy free-text company name. Superseded by the `company` relation below
+  // (Company account) but kept for backwards compatibility / display; the
+  // migration backfills a real Company from these values.
   company      String?
+  // Partner approval gate: self-registered BUSINESS_PARTNER accounts start
+  // null (= pending) and cannot reach partner-facing data until an admin
+  // approves them. All other roles (and admin-created users) are set to now()
+  // at creation, so they are never gated.
+  approvedAt   DateTime?
+  // Last successful credentials login (set in auth.ts on authorize). Surfaced
+  // in the team/company member lists.
+  lastLoginAt  DateTime?
+  // First-login password change gate. Admin-provisioned accounts are created
+  // with a temporary password and `mustChangePassword = true`; middleware then
+  // forces the user to /change-password before any app surface is reachable.
+  // Cleared (set false) once the user sets their own password.
+  mustChangePassword Boolean @default(false)
+  // Timestamp of the last self-service password change (null until first set).
+  passwordChangedAt  DateTime?
+  // One-time DSGVO data-sharing notice acknowledgment. Null = not yet
+  // acknowledged, so new users get the info modal on their first login; set to
+  // now() once they confirm. Existing users are backfilled to now() at rollout
+  // so they are never re-prompted.
+  dataSharingNoticeAckAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // Company account membership. A user belongs to at most one Company; the
+  // company-scoped role (OWNER/ADMIN/MEMBER) is a separate dimension from the
+  // platform `role`. SetNull so removing a Company doesn't delete its people.
+  companyId    String?
+  companyRel   Company?     @relation("CompanyMembers", fields: [companyId], references: [id], onDelete: SetNull)
+  companyRole  CompanyRole?
 
   ownedStartup       Startup?              @relation("StartupOwner")
   evaluations        Evaluation[]          @relation("Evaluator")
@@ -139,7 +331,96 @@ model User {
   introRequests      IntroRequest[]            @relation("IntroInvestor")
   handledIntros      IntroRequest[]            @relation("IntroHandler")
 
+  // Partner/Startup-SSOT
+  partnerReviews     PartnerStartupReview[]    @relation("PartnerReviewer")
+  screenedStartups   Startup[]                 @relation("StartupScreener")
+  pushesReceived     StartupPush[]             @relation("PushPartner")
+  pushesAuthored     StartupPush[]             @relation("PushAuthor")
+  checkInReminders   CheckInReminder[]         @relation("ReminderPartner")
+  partnerEngagements Engagement[]              @relation("EngagementPartner")
+  createdEngagements Engagement[]              @relation("EngagementCreator")
+  creditTxAuthored   CreditTransaction[]       @relation("CreditTxAuthor")
+  partnerVotes       PartnerVote[]             @relation("PartnerVoter")
+
+  // Startup-Marktplatz
+  programsCreated    Program[]            @relation("ProgramCreator")
+  mentorProfile      MentorProfile?       @relation("MentorUser")
+  bookingsRequested  MarketplaceBooking[] @relation("BookingRequester")
+  bookingsHandled    MarketplaceBooking[] @relation("BookingHandler")
+
+  // Match-Matrix — welche Team-Person eine Zelle zuletzt gepflegt hat.
+  matchCellUpdates   PartnerStartupMatch[] @relation("MatchUpdater")
+
+  // Self-service password reset — outstanding/used reset tokens for this user.
+  passwordResetTokens PasswordResetToken[] @relation("UserResetTokens")
+
+  // Support-Tickets
+  supportTicketsCreated SupportTicket[]        @relation("SupportTicketCreator")
+  supportTicketsHandled SupportTicket[]        @relation("SupportTicketHandler")
+  supportTicketMessages SupportTicketMessage[] @relation("SupportTicketMessageAuthor")
+
   @@index([role])
+  @@index([isActive])
+  @@index([companyId])
+}
+
+// ---------------------------------------------------------------------------
+// Self-service password reset
+//
+// A short-lived, single-use token for the "forgot password" flow. We store ONLY
+// a SHA-256 hash of the raw token (never the raw value); the raw token lives
+// solely in the emailed reset link. Lookups happen by hash, so a leaked DB row
+// can't be turned back into a usable link. Tokens expire quickly (see
+// PASSWORD_RESET_TTL_MINUTES) and are marked `usedAt` on redemption; requesting
+// a new reset invalidates any earlier outstanding tokens for the same user.
+// ---------------------------------------------------------------------------
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+  // SHA-256 hex digest of the raw token. Unique so a hash maps to at most one row.
+  tokenHash String   @unique
+  expiresAt DateTime
+  // Set once when the token is redeemed; a non-null value means single-use spent.
+  usedAt    DateTime?
+  // Optional request metadata for light abuse forensics (never security-critical).
+  requestIp String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Company accounts (Partner organisations)
+//
+// A Company is the top-level Partner account. It has many employee Users
+// (User.companyRel) each carrying a company-scoped role. Company managers
+// (OWNER/ADMIN) invite new members from the Team page: the invitee's account is
+// provisioned immediately with a temporary password + the first-login password
+// change gate (User.mustChangePassword), so no separate invitation entity is
+// needed. This is DISTINct from `PartnerCompany` further down, which is a
+// lightweight match-matrix column (cross-partner internal data), not a
+// login/account entity.
+// ---------------------------------------------------------------------------
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  // Optional short profile fields, mirroring other account-ish models.
+  website   String?
+  // Optional seat cap. null = unlimited. Enforced when inviting/adding members.
+  seatLimit Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     User[]       @relation("CompanyMembers")
+  // Optional match-matrix column this partner org owns (self-service side).
+  matrixColumn PartnerCompany? @relation("CompanyMatrixColumn")
+
+  @@index([name])
   @@index([isActive])
 }
 
@@ -147,18 +428,63 @@ model User {
 // Venture Scout module
 // ---------------------------------------------------------------------------
 
+// A "Batch" / program (Accelerator, Industrieprogramm, …). Each batch defines
+// its own Match-Matrix: the startups assigned to it (BatchStartup) evaluated by
+// the partner companies assigned to it (BatchPartner). The legacy `startups`
+// back-relation (Startup.campaignId) is the sourcing origin and is kept
+// separate from matrix membership.
 model ScoutingCampaign {
   id          String    @id @default(cuid())
   name        String
   description String?
+  type        BatchType @default(SONSTIGES)
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Legacy: startups sourced under this campaign (Startup.campaignId).
   startups Startup[]
 
+  // Matrix membership (many-to-many, admin-curated).
+  batchStartups BatchStartup[]
+  batchPartners BatchPartner[]
+  matches       PartnerStartupMatch[]
+  partnerVotes  PartnerVote[]
+
   @@index([name])
+  @@index([type])
+}
+
+// A startup assigned to a batch's matrix (admin-curated). A startup can belong
+// to several batches; each batch evaluates it independently.
+model BatchStartup {
+  id        String           @id @default(cuid())
+  batchId   String
+  batch     ScoutingCampaign @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  startupId String
+  startup   Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  addedById String? // team member who added it (scalar audit; no back-relation)
+  createdAt DateTime         @default(now())
+
+  @@unique([batchId, startupId])
+  @@index([batchId])
+  @@index([startupId])
+}
+
+// A partner company assigned as a column of a batch's matrix (admin-curated).
+model BatchPartner {
+  id               String           @id @default(cuid())
+  batchId          String
+  batch            ScoutingCampaign @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  partnerCompanyId String
+  partnerCompany   PartnerCompany   @relation(fields: [partnerCompanyId], references: [id], onDelete: Cascade)
+  sortOrder        Int              @default(0) // column order within the batch
+  createdAt        DateTime         @default(now())
+
+  @@unique([batchId, partnerCompanyId])
+  @@index([batchId])
+  @@index([partnerCompanyId])
 }
 
 model Startup {
@@ -188,6 +514,18 @@ model Startup {
   isPublished    Boolean   @default(false)
   publishedAt    DateTime?
 
+  // Sourcing provenance (Inbound vs. Outbound screening data).
+  sourceType   SourceType?
+  sourceDetail String?     // e.g. "Glassdollar", "Inbound-Form", referrer
+
+  // Internal "Erst-Einordnung" — lightweight, kept separate from deep scoring
+  // (Variante A from the plan: fields directly on the Startup).
+  screenSummary        String?
+  screenRecommendation Recommendation?
+  screenedAt           DateTime?
+  screenedById         String?
+  screenedBy           User?           @relation("StartupScreener", fields: [screenedById], references: [id], onDelete: SetNull)
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -205,12 +543,28 @@ model Startup {
   updates       StartupUpdate[]
   introRequests IntroRequest[]
 
+  // Partner/Startup-SSOT
+  partnerReviews PartnerStartupReview[]
+  pushes         StartupPush[]
+  reminders      CheckInReminder[]
+  engagements    Engagement[]
+  creditAccount  CreditAccount?
+
+  // Startup-Marktplatz
+  bookings       MarketplaceBooking[]
+
+  // Match-Matrix (beidseitige Passung je Partner-Unternehmen, je Batch)
+  matches        PartnerStartupMatch[]
+  batchStartups  BatchStartup[]
+  partnerVotes   PartnerVote[]
+
   @@index([name])
   @@index([industry])
   @@index([pipelineStage])
   @@index([radarQuadrant, radarRing])
   @@index([stage])
   @@index([isPublished])
+  @@index([sourceType])
 }
 
 model Contact {
@@ -248,9 +602,7 @@ model Evaluation {
   evaluatorId    String
   evaluator      User           @relation("Evaluator", fields: [evaluatorId], references: [id], onDelete: Cascade)
   overallScore   Float          @default(0)
-  potential      Float          @default(0)
-  feasibility    Float          @default(0)
-  recommendation Recommendation @default(MAYBE)
+  recommendation Recommendation @default(STRONG_NO)
   notes          String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -292,7 +644,8 @@ model Challenge {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  applications ChallengeApplication[]
+  applications   ChallengeApplication[]
+  partnerReviews PartnerStartupReview[]
 
   @@index([status])
   @@index([createdById])
@@ -419,17 +772,25 @@ model StartupFollow {
 
 model StartupUpdate {
   id        String         @id @default(cuid())
-  startupId String
-  startup   Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  // Optional startup origin. Regular startup updates carry a startupId; official
+  // Lovedis-team broadcasts (isOfficial=true) have none — they are not tied to a
+  // single startup. Nullable is an additive change; existing rows keep their id.
+  startupId String?
+  startup   Startup?       @relation(fields: [startupId], references: [id], onDelete: Cascade)
   authorId  String
   author    User           @relation("UpdateAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   title     String
   body      String
   category  UpdateCategory @default(GENERAL)
+  // Broadcast/"official" Lovedis-team post. When true, the update appears in
+  // EVERY user's feed regardless of follows (de-facto: everyone follows the
+  // official Lovedis feed). Only the internal team (requireTeam) can set this.
+  isOfficial Boolean       @default(false)
   createdAt DateTime       @default(now())
 
   @@index([startupId, createdAt])
   @@index([createdAt])
+  @@index([isOfficial, createdAt])
 }
 
 model IntroRequest {
@@ -450,4 +811,513 @@ model IntroRequest {
   @@index([startupId])
   @@index([investorId])
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Screening — partner verdict feedback (central screening signal)
+// ---------------------------------------------------------------------------
+
+model PartnerStartupReview {
+  id          String         @id @default(cuid())
+  partnerId   String
+  partner     User           @relation("PartnerReviewer", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId   String
+  startup     Startup        @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  challengeId String? // optional Use-Case reference (Journey 1b)
+  challenge   Challenge?     @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  verdict     PartnerVerdict @default(PENDING)
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([partnerId, startupId, challengeId])
+  @@index([startupId])
+  @@index([partnerId])
+  @@index([challengeId])
+  @@index([verdict])
+}
+
+// ---------------------------------------------------------------------------
+// Accelerator-independent push + automated check-in reminders
+// ---------------------------------------------------------------------------
+
+model StartupPush {
+  id         String   @id @default(cuid())
+  partnerId  String
+  partner    User     @relation("PushPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId  String
+  startup    Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  pushedById String
+  pushedBy   User     @relation("PushAuthor", fields: [pushedById], references: [id], onDelete: Cascade)
+  context    String?
+  createdAt  DateTime @default(now())
+
+  reminders CheckInReminder[]
+
+  @@unique([partnerId, startupId])
+  @@index([partnerId])
+  @@index([startupId])
+}
+
+model CheckInReminder {
+  id        String         @id @default(cuid())
+  partnerId String
+  partner   User           @relation("ReminderPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId String?
+  startup   Startup?       @relation(fields: [startupId], references: [id], onDelete: SetNull)
+  pushId    String?
+  push      StartupPush?   @relation(fields: [pushId], references: [id], onDelete: SetNull)
+  dueAt     DateTime
+  status    ReminderStatus @default(SCHEDULED)
+  sentAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([status, dueAt])
+  @@index([partnerId])
+}
+
+// ---------------------------------------------------------------------------
+// Accelerator-independent collaboration ("Engagement" — Oberbegriff für PoC)
+// ---------------------------------------------------------------------------
+
+model Engagement {
+  id          String           @id @default(cuid())
+  partnerId   String
+  partner     User             @relation("EngagementPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId   String
+  startup     Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  title       String
+  status      EngagementStatus @default(ACTIVE)
+  kpis        Json             @default("[]") // [{ name, target, current, unit }]
+  milestones  Json             @default("[]") // [{ title, dueDate, done }]
+  startDate   DateTime?
+  endDate     DateTime?
+  notes       String?
+  createdById String
+  createdBy   User             @relation("EngagementCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([partnerId])
+  @@index([startupId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Partner-SSOT content (Notion replacement)
+// ---------------------------------------------------------------------------
+
+model RoadmapItem {
+  id        String          @id @default(cuid())
+  title     String
+  body      String?
+  phase     String? // e.g. "Q3 2026" / batch name
+  status    RoadmapStatus   @default(PLANNED)
+  audience  ContentAudience @default(PARTNER)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([audience])
+  @@index([status])
+}
+
+model ContentPage {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  body        String // Markdown
+  audience    ContentAudience @default(PARTNER)
+  isPublished Boolean         @default(false)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([audience])
+  @@index([isPublished])
+}
+
+model MediaAsset {
+  id        String          @id @default(cuid())
+  name      String
+  url       String
+  type      AttachmentType  @default(DOCUMENT)
+  audience  ContentAudience @default(PARTNER)
+  createdAt DateTime        @default(now())
+
+  @@index([audience])
+}
+
+// Knowledge-Board: curated learning recommendations (books, videos, articles,
+// podcasts, tools, courses) with an optional "why we recommend it" note.
+// Audience-filtered exactly like the rest of the SSOT hub.
+model KnowledgeResource {
+  id        String                @id @default(cuid())
+  title     String
+  url       String?
+  author    String?
+  type      KnowledgeResourceType @default(ARTICLE)
+  note      String?
+  audience  ContentAudience       @default(BOTH)
+  sortOrder Int                   @default(0)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([audience])
+  @@index([type])
+}
+
+// ---------------------------------------------------------------------------
+// Venture Credit System (Startup-Venture-Platform)
+// ---------------------------------------------------------------------------
+
+model CreditAccount {
+  id        String   @id @default(cuid())
+  startupId String   @unique
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  balance   Int      @default(0) // cached running total of ALL transactions (FIX + FLEX)
+  // Cached per-bucket balances. Kept race-safe with the same conditional
+  // `updateMany` guard used for `balance`, and always updated atomically in the
+  // same statement/transaction that touches `balance`. Invariant:
+  // balance == fixBalance + flexBalance.
+  fixBalance  Int    @default(0) // reserviertes Programm-Kontingent (FIX)
+  flexBalance Int    @default(0) // frei einsetzbares Kontingent (FLEX)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions CreditTransaction[]
+}
+
+model CreditTransaction {
+  id          String        @id @default(cuid())
+  accountId   String
+  account     CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type        CreditTxType
+  // Zweckbindung: FLEX (Standard) für Mentor:innen/Support, FIX fürs Programm.
+  bucket      CreditBucket @default(FLEX)
+  amount      Int // positive = grant, negative = spend
+  reason      String
+  createdById String?
+  createdBy   User?         @relation("CreditTxAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+
+  // 1:1 back-reference: which marketplace booking triggered this SPEND/refund.
+  redeemedBooking MarketplaceBooking? @relation("BookingRedemption")
+
+  @@index([accountId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Startup-Marktplatz — Kataloge (Programme, Mentor:innen, Support-Angebote)
+// + Buchungs-Lifecycle mit Verzahnung in den Venture-Credit-Ledger.
+// ---------------------------------------------------------------------------
+
+model Program {
+  id          String        @id @default(cuid())
+  title       String
+  summary     String
+  description String
+  focusTags   String[]      @default([])
+  status      ProgramStatus @default(DRAFT)
+  sortOrder   Int           @default(0)
+  // Notion-Metadaten (dedizierte Felder statt Freitext im description).
+  contactPerson String?     // Kontaktperson lt. Notion
+  sessionDate   String?     // Termin/Datum der Programm-Session (Freitext)
+  // Programme kosten KEINE flexiblen Credits (offeringType=PROGRAM ⇒ creditCost=0),
+  // verbrauchen aber beim Anmelden/Buchen einen Teil des FIX-Kontingents. Notion:
+  // 6 fixe Credits für „Sales, Pricing & Growth". `fixCreditCost` modelliert das
+  // explizit; 0 = klassisches inklusives Programm ohne FIX-Verbrauch.
+  fixCreditCost Int         @default(0)
+  createdById String
+  createdBy   User          @relation("ProgramCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  bookings    MarketplaceBooking[]
+
+  @@index([status])
+}
+
+model MentorProfile {
+  id          String   @id @default(cuid())
+  // Optionaler Login-Bezug: Mentor:in kann ein User-Konto haben.
+  userId      String?  @unique
+  user        User?    @relation("MentorUser", fields: [userId], references: [id], onDelete: SetNull)
+  name        String
+  company     String?
+  role        String?
+  expertise   String[] @default([])
+  bio         String?
+  photoUrl    String?
+  website     String?  // Profil-/Unternehmens-Link (Notion: URL)
+  creditCost  Int      @default(0)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings    MarketplaceBooking[]
+
+  @@index([isActive])
+}
+
+model SupportOffering {
+  id          String          @id @default(cuid())
+  title       String
+  category    SupportCategory @default(OTHER)
+  summary     String
+  description String
+  format      String?
+  // Notion-Metadaten (dedizierte Felder statt Freitext im description).
+  providerCompany String?     // Anbieter/Unternehmen lt. Notion
+  contactPerson   String?     // Kontaktperson lt. Notion
+  website         String?     // Website/Link lt. Notion
+  sessionDate     String?     // Termin/Datum lt. Notion (Freitext)
+  creditCost  Int             @default(0)
+  isActive    Boolean         @default(true)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  bookings    MarketplaceBooking[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model MarketplaceBooking {
+  id            String                  @id @default(cuid())
+  offeringType  MarketplaceOfferingType
+  status        BookingStatus           @default(REQUESTED)
+
+  // Anfragendes Startup (Self-Service)
+  startupId     String
+  startup       Startup                 @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  requestedById String
+  requestedBy   User                    @relation("BookingRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  // Genau EINE Ziel-Referenz ist gesetzt (je nach offeringType).
+  programId     String?
+  program       Program?                @relation(fields: [programId], references: [id], onDelete: SetNull)
+  mentorId      String?
+  mentor        MentorProfile?          @relation(fields: [mentorId], references: [id], onDelete: SetNull)
+  offeringId    String?
+  offering      SupportOffering?        @relation(fields: [offeringId], references: [id], onDelete: SetNull)
+
+  // Anfrage-Formular
+  message       String
+  contactName   String
+  contactEmail  String
+  preferredAt   String?
+
+  // Preis-Snapshot bei Anfrage. `creditCost` = FLEX-Preis (Mentor:innen/Support;
+  // Programme: 0). `fixCreditCost` = FIX-Verbrauch (nur Programme, sonst 0) —
+  // beim Anmelden aus Program.fixCreditCost übernommen. Erst bei CONFIRMED
+  // entsteht die SPEND-CreditTransaction (im passenden Topf); ihre id wird hier
+  // verlinkt (volle Nachvollziehbarkeit, ermöglicht Storno-Rückbuchung).
+  creditCost          Int                @default(0)
+  fixCreditCost       Int                @default(0)
+  creditTransactionId String?            @unique
+  creditTransaction   CreditTransaction? @relation("BookingRedemption", fields: [creditTransactionId], references: [id], onDelete: SetNull)
+
+  // Team-Koordination
+  handledById     String?
+  handledBy       User?                 @relation("BookingHandler", fields: [handledById], references: [id], onDelete: SetNull)
+  coordinatorNote String?
+
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@index([status])
+  @@index([startupId])
+  @@index([offeringType])
+}
+
+// ---------------------------------------------------------------------------
+// Match-Matrix — beidseitige Passung zwischen Startups und Partner-Unternehmen
+// (Plan: plan-match-matrix). Spiegelt die geteilte „Matrix"-Tabelle wider und
+// wird vom internen Team gepflegt (requireScoutModule). Enthält interne
+// Cross-Partner-Daten und ist NICHT für Partner/Startups/Investoren sichtbar.
+//
+// Partner-Identität: Die Sheet-Partner (FingerHaus, Lupp, Weimer, INNEXIS,
+// Sälzer) sind UNTERNEHMEN, keine (zwingend existierenden) User-Konten. Wir
+// modellieren sie deshalb als eigenständiges, leichtgewichtiges PartnerCompany
+// (name/slug), auf das die Matrix referenziert. So funktioniert die Matrix
+// unabhängig davon, ob es Partner-User-Accounts gibt. (Das getrennte
+// PartnerStartupReview — das Screening-Verdikt eines Partner-USERS — bleibt
+// unangetastet.)
+// ---------------------------------------------------------------------------
+
+model PartnerCompany {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0) // Spaltenreihenfolge in der Matrix
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Optional link to a real Company login account. When set, that company's
+  // OWNER/ADMIN/MEMBER users can self-service their own matrix column (their
+  // partner-side relevance + use-cases per startup) via /matrix. SetNull so
+  // deleting the Company keeps the matrix column (team-managed) intact.
+  companyId String?  @unique
+  company   Company? @relation("CompanyMatrixColumn", fields: [companyId], references: [id], onDelete: SetNull)
+
+  matches       PartnerStartupMatch[]
+  batchPartners BatchPartner[]
+  partnerVotes  PartnerVote[]
+
+  @@index([sortOrder])
+}
+
+model PartnerStartupMatch {
+  id               String              @id @default(cuid())
+  // Batch (program/accelerator) this evaluation belongs to. The same
+  // (partner, startup) pair can be evaluated independently in several batches.
+  batchId          String
+  batch            ScoutingCampaign    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  partnerId        String // -> PartnerCompany (Unternehmen, nicht User)
+  partner          PartnerCompany      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId        String
+  startup          Startup             @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  startupRelevance RelevanceLevel? // Sicht des Startups auf diesen Partner
+  partnerRelevance RelevanceLevel? // Sicht des Partners auf dieses Startup
+
+  // Team-curated / consolidated view (the original master-sheet columns). Kept
+  // for the internal team board + CSV import; both self-service sides below are
+  // separate so partner and startup can coordinate independently.
+  useCaseTypes     MatchUseCaseType[]  @default([])
+  useCaseNote      String? // Original-Freitext zum Use-Case aus dem Sheet
+  nextSteps        String?
+  contactStatus    MatchContactStatus  @default(NONE)
+
+  // --- Startup-side self-service (the startup's questionnaire about THIS
+  // partner: mirrors the shared Google-Sheet tab). startupRelevance above is
+  // the headline; these enrich it.
+  startupUseCaseTypes   MatchUseCaseType[] @default([])
+  startupUseCaseNote    String?
+  startupFollowUp       Boolean?           // "Folgegespräch erwünscht?"
+  startupOpenQuestions  String?            // "Welche Fragen sind offen geblieben?"
+  startupNotes          String?            // "Sonstige Anmerkungen"
+  startupContacted      Boolean?           // "Gespräch / Erstkontakt stattgefunden?"
+  startupUpdatedAt      DateTime?          // when the startup last edited its side
+  startupUpdatedById    String?            // scalar audit; no back-relation
+
+  // --- Partner-side AGGREGATE (computed from the individual PartnerVote rows
+  // of all voting members of the partner company; see src/lib/partner-votes.ts).
+  // partnerRelevance above holds the aggregated (most-common) Relevanz; these
+  // enrich it. Recomputed on every vote change; never edited directly.
+  partnerUseCaseTypes   MatchUseCaseType[] @default([]) // union of voters' use-cases
+  partnerUseCaseNote    String?
+  partnerFollowUp       Boolean?           // any voter "Ja"
+  partnerOpenQuestions  String?
+  partnerNotes          String?
+  partnerContacted      Boolean?           // any voter "Ja"
+  partnerInterested     Boolean?           // aggregated outcome: majority "Ja" (ties = positiv)
+  partnerVotesYes       Int                @default(0)
+  partnerVotesNo        Int                @default(0)
+  partnerUpdatedAt      DateTime?          // latest vote timestamp
+  partnerUpdatedById    String?            // scalar audit; no back-relation
+
+  // Letzte pflegende Team-Person (SetNull, damit Löschen eines Users die
+  // Matrix-Zelle nicht mitreißt).
+  updatedById      String?
+  updatedBy        User?               @relation("MatchUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@unique([batchId, partnerId, startupId])
+  @@index([batchId])
+  @@index([startupId])
+  @@index([partnerId])
+  @@index([contactStatus])
+}
+
+// One partner EMPLOYEE's vote on a startup within a batch. Every active member
+// of the partner company (owner + sub-accounts) may cast exactly one vote per
+// (batch, partner, startup); the votes are aggregated into the partner side of
+// PartnerStartupMatch (majority "Interesse: Ja" = positiv). Mirrors the shared
+// Excel where several people from a partner rated the same startup.
+model PartnerVote {
+  id        String           @id @default(cuid())
+  batchId   String
+  batch     ScoutingCampaign @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  partnerId String // -> PartnerCompany
+  partner   PartnerCompany   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  startupId String
+  startup   Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  voterId   String // -> User (a member of the partner company)
+  voter     User             @relation("PartnerVoter", fields: [voterId], references: [id], onDelete: Cascade)
+
+  interested    Boolean? // "Interesse: Ja/Nein" — the aggregated signal (null = noch offen)
+  relevance     RelevanceLevel?
+  useCaseTypes  MatchUseCaseType[] @default([])
+  useCaseNote   String?
+  followUp      Boolean?
+  openQuestions String?
+  notes         String?
+  contacted     Boolean?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([batchId, partnerId, startupId, voterId])
+  @@index([batchId, partnerId, startupId])
+  @@index([voterId])
+}
+
+// ---------------------------------------------------------------------------
+// Support-Tickets — externe Nutzer (Startup, Partner, Investor) melden Anliegen;
+// ADMIN bearbeitet und beantwortet über /support/admin.
+// ---------------------------------------------------------------------------
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_USER
+  RESOLVED
+}
+
+enum SupportTicketCategory {
+  ACCOUNT
+  PLATFORM
+  MARKETPLACE
+  CREDITS
+  OTHER
+}
+
+model SupportTicket {
+  id          String                @id @default(cuid())
+  number      Int                   @unique @default(autoincrement())
+  subject     String
+  category    SupportTicketCategory @default(OTHER)
+  status      SupportTicketStatus   @default(OPEN)
+
+  createdById String
+  createdBy   User                  @relation("SupportTicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  handledById String?
+  handledBy   User?                 @relation("SupportTicketHandler", fields: [handledById], references: [id], onDelete: SetNull)
+
+  messages    SupportTicketMessage[]
+
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  closedAt    DateTime?
+
+  @@index([status, updatedAt])
+  @@index([createdById])
+}
+
+model SupportTicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body      String
+  authorId  String
+  author    User          @relation("SupportTicketMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  isStaff   Boolean
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
 }

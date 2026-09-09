@@ -17,7 +17,9 @@ import {
   RADAR_RINGS,
   STARTUP_STAGES,
 } from "@/lib/constants";
+import { grantOnboardingCredits } from "@/lib/onboarding-credits";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
 
 const startupSchema = z.object({
   name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein").max(160),
@@ -37,6 +39,7 @@ const startupSchema = z.object({
     .enum(RADAR_QUADRANTS as [RadarQuadrant, ...RadarQuadrant[]])
     .optional(),
   radarRing: z.enum(RADAR_RINGS as [RadarRing, ...RadarRing[]]).optional(),
+  campaignId: z.string().min(1).optional(),
 });
 
 function parseStartupForm(formData: FormData) {
@@ -54,6 +57,7 @@ function parseStartupForm(formData: FormData) {
     pipelineStage: formData.get("pipelineStage") ?? "DISCOVERED",
     radarQuadrant: formData.get("radarQuadrant") || undefined,
     radarRing: formData.get("radarRing") || undefined,
+    campaignId: formData.get("campaignId") || undefined,
   });
 }
 
@@ -69,6 +73,7 @@ export async function createStartup(
     data: { ...parsed.data, website: parsed.data.website || null },
   });
   revalidatePath("/startups");
+  revalidatePath("/longlist");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
   redirect(`/startups/${startup.id}`);
@@ -90,10 +95,12 @@ export async function updateStartup(
       website: parsed.data.website || null,
       radarQuadrant: parsed.data.radarQuadrant ?? null,
       radarRing: parsed.data.radarRing ?? null,
+      campaignId: parsed.data.campaignId ?? null,
     },
   });
   revalidatePath("/startups");
   revalidatePath(`/startups/${startupId}`);
+  revalidatePath("/longlist");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
   return { success: "Startup aktualisiert." };
@@ -101,7 +108,14 @@ export async function updateStartup(
 
 export async function deleteStartup(startupId: string): Promise<void> {
   await requireScoutModule();
-  await prisma.startup.delete({ where: { id: startupId } });
+  // A stale id (already deleted elsewhere) is a no-op: the desired end state —
+  // the startup being gone — already holds, so we revalidate + redirect rather
+  // than 500 on P2025.
+  try {
+    await prisma.startup.delete({ where: { id: startupId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath("/startups");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
@@ -121,10 +135,15 @@ export async function updatePipelineStage(
   const parsed = stageSchema.safeParse({ startupId, stage });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  await prisma.startup.update({
-    where: { id: parsed.data.startupId },
-    data: { pipelineStage: parsed.data.stage },
-  });
+  try {
+    await prisma.startup.update({
+      where: { id: parsed.data.startupId },
+      data: { pipelineStage: parsed.data.stage },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) return { error: "Startup nicht gefunden." };
+    throw err;
+  }
   revalidatePath("/pipeline");
   revalidatePath("/startups");
   revalidatePath(`/startups/${startupId}`);
@@ -171,7 +190,11 @@ export async function deleteContact(
   startupId: string
 ): Promise<void> {
   await requireScoutModule();
-  await prisma.contact.delete({ where: { id: contactId } });
+  try {
+    await prisma.contact.delete({ where: { id: contactId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath(`/startups/${startupId}`);
 }
 
@@ -209,7 +232,11 @@ export async function deleteAttachment(
   startupId: string
 ): Promise<void> {
   await requireScoutModule();
-  await prisma.attachment.delete({ where: { id: attachmentId } });
+  try {
+    await prisma.attachment.delete({ where: { id: attachmentId } });
+  } catch (err) {
+    if (!isRecordNotFoundError(err)) throw err;
+  }
   revalidatePath(`/startups/${startupId}`);
 }
 
@@ -260,11 +287,16 @@ export async function upsertOwnStartupProfile(
   if (existing) {
     await prisma.startup.update({ where: { id: existing.id }, data });
   } else {
-    await prisma.startup.create({
+    const created = await prisma.startup.create({
       data: { ...data, ownerUserId: session.user.id },
     });
+    // Newly onboarded startups receive the 12-credit onboarding balance
+    // ("sponsored by LOVEDIS") via the existing ledger. Idempotent: the helper
+    // guards on an existing onboarding GRANT, so this never double-grants.
+    await grantOnboardingCredits(prisma, created.id, session.user.id);
   }
   revalidatePath("/profile");
   revalidatePath("/dashboard/startup");
+  revalidatePath("/venture/credits");
   return { success: "Profil gespeichert." };
 }

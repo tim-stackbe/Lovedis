@@ -15,29 +15,40 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Challenges" };
 
 const COPY = {
   ADMIN: {
-    title: "Alle Challenges",
-    subtitle: "Plattformweiter Überblick über jede Partner-Challenge.",
+    title: "Challenges (Use-Cases)",
+    subtitle:
+      "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
+  },
+  MEMBER: {
+    title: "Challenges (Use-Cases)",
+    subtitle:
+      "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
   },
   BUSINESS_PARTNER: {
     title: "Meine Challenges",
     subtitle:
-      "Stelle Innovations-Challenges und prüfe die Startups, die sich bewerben.",
+      "Deine vom Lovedis-Team betreuten Use-Cases und die Startups, die sich bewerben.",
   },
   STARTUP: {
     title: "Offene Challenges",
-    subtitle:
-      "Entdecke Corporate-Innovations-Challenges und pitche deine Lösung.",
+    subtitle: "Entdecke die Challenges der Unternehmenspartner.",
   },
 } as const;
 
 export default async function ChallengesPage() {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "STARTUP"]);
+  const session = await requireRole([
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "STARTUP",
+  ]);
   const role = session.user.role as keyof typeof COPY;
 
   const where: Prisma.ChallengeWhereInput =
@@ -70,7 +81,8 @@ export default async function ChallengesPage() {
     );
   }
 
-  const canCreate = role === "ADMIN" || role === "BUSINESS_PARTNER";
+  // Only the Lovedis team creates/manages challenges (on behalf of partners).
+  const canCreate = isTeamRole(session.user.role);
 
   return (
     <>
@@ -80,9 +92,9 @@ export default async function ChallengesPage() {
         subtitle={COPY[role].subtitle}
         actions={
           canCreate ? (
-            <LinkButton href="/challenges/new" variant="white">
+            <LinkButton href="/challenges/new" variant="white" size="lg">
               <Plus className="h-4 w-4" />
-              Neue Challenge
+              Challenge erstellen
             </LinkButton>
           ) : undefined
         }
@@ -91,7 +103,9 @@ export default async function ChallengesPage() {
       <SectionLabel
         number="01"
         label="Challenges"
-        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}`}
+        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}${
+          role === "STARTUP" ? " – Wissensmanagement" : ""
+        }`}
       />
 
       {challenges.length === 0 ? (
@@ -107,7 +121,7 @@ export default async function ChallengesPage() {
             canCreate ? (
               <LinkButton href="/challenges/new">
                 <Plus className="h-4 w-4" />
-                Neue Challenge
+                Challenge erstellen
               </LinkButton>
             ) : undefined
           }
@@ -159,11 +173,14 @@ export default async function ChallengesPage() {
                       <ApplicationStatusBadge
                         value={applied as "PENDING" | "ACCEPTED" | "REJECTED"}
                       />
-                    ) : (
-                      <span className="font-semibold text-lv-blue">
-                        {c.status === "OPEN" ? "Bewirb dich jetzt →" : ""}
-                      </span>
-                    )
+                    ) : c.status === "OPEN" ? (
+                      <Link
+                        href={`/challenges/${c.id}#bewerben`}
+                        className="font-semibold text-lv-blue hover:underline"
+                      >
+                        Bewirb dich jetzt →
+                      </Link>
+                    ) : null
                   ) : (
                     <span>
                       {c._count.applications} Bewerbung

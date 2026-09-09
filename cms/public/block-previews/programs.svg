@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Inter,Segoe UI,Arial,sans-serif">
+  <rect width="480" height="320" fill="#ffffff"/>
+  <rect width="480" height="72" fill="#0EA5E9"/>
+  <text x="24" y="46" fill="#ffffff" font-size="30" font-weight="700">Programme</text>
+  <g>
+    <rect x="24" y="96" width="132" height="150" rx="10" fill="#f3f4f6"/>
+    <rect x="24" y="96" width="132" height="80" rx="10" fill="#e0f2fe"/>
+    <rect x="40" y="188" width="90" height="12" rx="4" fill="#111827"/>
+    <rect x="40" y="208" width="70" height="10" rx="4" fill="#d1d5db"/>
+  </g>
+  <g>
+    <rect x="174" y="96" width="132" height="150" rx="10" fill="#f3f4f6"/>
+    <rect x="174" y="96" width="132" height="80" rx="10" fill="#e0f2fe"/>
+    <rect x="190" y="188" width="90" height="12" rx="4" fill="#111827"/>
+    <rect x="190" y="208" width="70" height="10" rx="4" fill="#d1d5db"/>
+  </g>
+  <g>
+    <rect x="324" y="96" width="132" height="150" rx="10" fill="#f3f4f6"/>
+    <rect x="324" y="96" width="132" height="80" rx="10" fill="#e0f2fe"/>
+    <rect x="340" y="188" width="90" height="12" rx="4" fill="#111827"/>
+    <rect x="340" y="208" width="70" height="10" rx="4" fill="#d1d5db"/>
+  </g>
+  <text x="24" y="300" fill="#6b7280" font-size="16">Programme als Bild-Karten</text>
+</svg>
