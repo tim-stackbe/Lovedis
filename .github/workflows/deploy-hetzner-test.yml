@@ -43,26 +43,9 @@ jobs:
             else
               cd /opt/lovedis
             fi
-            docker compose pull platform || true
+            docker compose pull platform
             docker compose up -d platform
-            bash ./migrate.sh || true
-            # Schema sync (project uses db push — no migrations folder)
-            set -a; source ./.env; set +a
-            DB_CID="$(docker compose ps -q db)"
-            NETWORK="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$DB_CID" | head -1)"
-            docker run --rm \
-              --network "$NETWORK" \
-              -e DATABASE_URL \
-              -v /opt/lovedis:/app \
-              -w /app \
-              node:22-bookworm-slim \
-              bash -lc '
-                set -euo pipefail
-                apt-get update -qq
-                apt-get install -y -qq openssl ca-certificates >/dev/null
-                npm ci --ignore-scripts
-                npx prisma db push
-              '
+            bash ./migrate-db-push.sh
 
       - name: Post-deploy smoke test
         run: |
