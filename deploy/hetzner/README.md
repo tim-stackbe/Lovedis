@@ -15,9 +15,9 @@ Or via npm:
 npm run deploy:hetzner
 ```
 
-**Prerequisites on Mac:** `ssh deploy@49.13.222.76` works (your deploy key in Keychain). The script rsyncs the repo to `/opt/lovedis`, pulls the platform image, runs `migrate-db-push.sh`, and smoke-tests the stack.
+**Prerequisites on Mac:** `ssh deploy@49.13.222.76` works (your deploy key in Keychain). The script rsyncs the repo to `/opt/lovedis`, runs `docker build --no-cache` on the server, restarts the platform container, runs `migrate-db-push.sh`, and smoke-tests the stack.
 
-**Cloud Agents / CI:** cannot deploy without server SSH access. Run the script above from your Mac after merging changes. GitHub Actions deploy is disabled by default (`workflow_dispatch` only) until `SSH_HOST`, `SSH_USER`, and `SSH_KEY` secrets are configured.
+**Cloud Agents / CI:** cannot deploy without server SSH access. Run the script above from your Mac after merging changes. Optional GitHub Actions deploy is documented in `github-actions-deploy.yml.example` (copy manually if you want CI-based deploy).
 
 ---
 
@@ -70,9 +70,13 @@ cp .env.example .env                    # first time only; fill secrets
 cp homepage.env.example homepage.env    # first time only; Storyblok token
 chmod 600 .env homepage.env
 
-docker compose pull platform homepage
-docker compose up -d
-./migrate.sh
+# From your Mac (preferred — rsync + server-side build):
+./deploy/hetzner/deploy-platform.sh
+
+# Or manually on the server:
+docker build --no-cache -t "$PLATFORM_IMAGE" -f Dockerfile /opt/lovedis
+docker compose up -d platform
+./migrate-db-push.sh
 
 # From your laptop (or on the server):
 ./smoke-test.sh 49.13.222.76

@@ -4,6 +4,12 @@
 # Primary path: local SSH via macOS Keychain / ssh-agent (no env vars required).
 # Optional: set SSH_KEY to a private key file contents (CI / automation only).
 #
+# Flow (same as the 30-day working pipeline):
+#   1. rsync repo → deploy@49.13.222.76:/opt/lovedis
+#   2. docker build --no-cache on the server (not GHCR pull)
+#   3. docker compose up -d platform
+#   4. prisma db push via migrate-db-push.sh
+#
 # Usage (from repo root on Mac):
 #   ./deploy/hetzner/deploy-platform.sh
 #
@@ -11,7 +17,6 @@
 #   SSH_HOST=49.13.222.76
 #   SSH_USER=deploy
 #   REMOTE_DIR=/opt/lovedis
-#   PLATFORM_IMAGE=ghcr.io/tim-stackbe/lovedis:test
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -19,7 +24,6 @@ HOST="${SSH_HOST:-49.13.222.76}"
 USER="${SSH_USER:-deploy}"
 REMOTE_DIR="${REMOTE_DIR:-/opt/lovedis}"
 COMPOSE_DIR="${REMOTE_DIR}/deploy/hetzner"
-IMAGE="${PLATFORM_IMAGE:-ghcr.io/tim-stackbe/lovedis:test}"
 SHA="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15)
@@ -64,7 +68,6 @@ RSYNC=(rsync -az --delete
 
 echo "==> LOVEDIS Hetzner deploy (${SHA})"
 echo "    Target: ${USER}@${HOST}:${REMOTE_DIR}"
-echo "    Image:  ${IMAGE}"
 echo
 
 echo "→ Testing SSH to ${USER}@${HOST}…"
@@ -91,16 +94,23 @@ echo "→ Syncing repo to ${REMOTE_DIR}…"
 "${RSYNC[@]}" "$ROOT/" "${USER}@${HOST}:${REMOTE_DIR}/"
 echo "   Sync complete"
 
-echo "→ Pulling platform image and restarting container…"
+echo "→ Building platform image on server (docker build --no-cache)…"
 "${SSH_CMD[@]}" bash -s <<REMOTE
 set -euo pipefail
-cd "${COMPOSE_DIR}"
-if [ ! -f .env ]; then
+if [ ! -f "${COMPOSE_DIR}/.env" ]; then
   echo "Missing ${COMPOSE_DIR}/.env on server — copy from .env.example and fill secrets." >&2
   exit 1
 fi
-export PLATFORM_IMAGE="${IMAGE}"
-docker compose pull platform
+set -a
+source "${COMPOSE_DIR}/.env"
+set +a
+if [ -z "\${PLATFORM_IMAGE:-}" ]; then
+  echo "PLATFORM_IMAGE is not set in ${COMPOSE_DIR}/.env" >&2
+  exit 1
+fi
+cd "${REMOTE_DIR}"
+docker build --no-cache -t "\${PLATFORM_IMAGE}" -f Dockerfile .
+cd "${COMPOSE_DIR}"
 docker compose up -d platform
 REMOTE
 echo "   Platform container up"
