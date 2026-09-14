@@ -3,13 +3,18 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@/generated/prisma/client";
 import { PoCStatusBadge } from "@/components/shared/badges";
+import {
+  CreatePoCForm,
+  type ApplicationOption,
+  type TrackerOption,
+} from "@/components/pocs/CreatePoCForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
-import { isTeamRole } from "@/lib/roles";
+import { isTeamRole, ROLE_LABELS } from "@/lib/roles";
 import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
@@ -52,6 +57,50 @@ export default async function PoCsPage() {
   const running = pocs.filter((p) => p.status === "RUNNING").length;
   const completed = pocs.filter((p) => p.status === "COMPLETED").length;
 
+  // Creating a PoC is a DELIBERATE, ADMIN-only step (see `createPoC`). Only the
+  // admin sees the create control and the eligible-application data behind it.
+  const isAdmin = session.user.role === "ADMIN";
+  const applicationOptions: ApplicationOption[] = [];
+  const trackerOptions: TrackerOption[] = [];
+  if (isAdmin) {
+    const [eligibleApplications, trackerUsers] = await Promise.all([
+      // Only ACCEPTED applications that do not yet have a PoC are eligible —
+      // `applicationId` is @unique, so one PoC per application.
+      prisma.challengeApplication.findMany({
+        where: { status: "ACCEPTED", poc: null },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          startup: { select: { name: true } },
+          challenge: { select: { title: true, createdById: true } },
+        },
+      }),
+      prisma.user.findMany({
+        where: {
+          isActive: true,
+          role: { in: ["BUSINESS_PARTNER", "INVESTOR"] },
+        },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, company: true, role: true },
+      }),
+    ]);
+    for (const a of eligibleApplications) {
+      const label = `${a.startup.name} × ${a.challenge.title}`;
+      applicationOptions.push({
+        id: a.id,
+        label,
+        defaultTrackerId: a.challenge.createdById,
+        defaultTitle: `PoC — ${label}`,
+      });
+    }
+    for (const t of trackerUsers) {
+      trackerOptions.push({
+        id: t.id,
+        label: `${t.name}${t.company ? ` · ${t.company}` : ""} (${ROLE_LABELS[t.role]})`,
+      });
+    }
+  }
+
   return (
     <>
       <HeroBanner
@@ -66,7 +115,29 @@ export default async function PoCsPage() {
         </div>
       </HeroBanner>
 
-      <SectionLabel number="01" label="PoCs" title="Getrackte PoCs" />
+      {isAdmin && (
+        <>
+          <SectionLabel number="01" label="Anlegen" title="Neuen PoC anlegen" />
+          {applicationOptions.length === 0 ? (
+            <EmptyState
+              icon={FlaskConical}
+              title="Keine offenen Bewerbungen"
+              description="Sobald eine Challenge-Bewerbung angenommen wurde und noch keinen PoC hat, kannst du hier einen PoC anlegen."
+            />
+          ) : (
+            <CreatePoCForm
+              applications={applicationOptions}
+              trackers={trackerOptions}
+            />
+          )}
+        </>
+      )}
+
+      <SectionLabel
+        number={isAdmin ? "02" : "01"}
+        label="PoCs"
+        title="Getrackte PoCs"
+      />
 
       {pocs.length === 0 ? (
         <EmptyState

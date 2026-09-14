@@ -65,6 +65,7 @@ vi.mock("@/components/challenges/ShareChallengeButton", () => ({
 
 import { auth } from "@/auth";
 import { decideApplication } from "@/app/actions/challenges";
+import { createPoC } from "@/app/actions/pocs";
 import ChallengeApplicationsPage from "@/app/(main)/challenge-applications/page";
 import ChallengeDetailPage from "@/app/(main)/challenges/[id]/page";
 import type { UserRole } from "@/generated/prisma/enums";
@@ -297,7 +298,7 @@ const OVERVIEW_ROWS = [
   },
 ];
 
-describe("/challenge-applications — decision controls are ADMIN-only", () => {
+describe("/challenge-applications — a READ-ONLY overview, no decision controls", () => {
   beforeEach(() => {
     mockGroupBy.mockResolvedValue([
       { status: "PENDING", _count: 1 },
@@ -311,26 +312,24 @@ describe("/challenge-applications — decision controls are ADMIN-only", () => {
     return ChallengeApplicationsPage({ searchParams: Promise.resolve({}) });
   }
 
-  it("renders a control for each PENDING application when an ADMIN opens it", async () => {
-    signIn("ADMIN");
+  // The overview is a cross-challenge reading surface only. Accept/reject was
+  // removed from it — the single place to decide is the ADMIN-only pitch review
+  // on /challenges/[id]. So NO role (not even ADMIN) gets a control here.
+  for (const role of ["ADMIN", "MEMBER"] as const) {
+    it(`lists the applications but shows NO accept/reject control for a ${role}`, async () => {
+      signIn(role);
 
-    const targets = decisionTargetsOf(await renderOverview());
+      const tree = await renderOverview();
+      const text = textOf(tree).join("");
 
-    // Exactly the pending row gets accept/reject; the decided one does not.
-    expect(targets).toContain("app_pending");
-    expect(targets).not.toContain("app_accepted");
-  });
-
-  it("renders NO decision control for a MEMBER (view-only)", async () => {
-    signIn("MEMBER");
-
-    const tree = await renderOverview();
-
-    // MEMBER still sees the list…
-    expect(textOf(tree).join("")).toContain("EPINOIA");
-    // …but no accept/reject affordance anywhere.
-    expect(decisionTargetsOf(tree)).toHaveLength(0);
-  });
+      // The list itself still renders (status, links, PoC column, etc.).
+      expect(text).toContain("EPINOIA");
+      // …but there is no decision affordance anywhere, for anyone.
+      expect(decisionTargetsOf(tree)).toHaveLength(0);
+      expect(text).not.toContain("Annehmen");
+      expect(text).not.toContain("Ablehnen");
+    });
+  }
 });
 
 describe("/challenges/[id] — the pitch review section decides ADMIN-only", () => {
@@ -386,5 +385,211 @@ describe("/challenges/[id] — the pitch review section decides ADMIN-only", () 
     // …but the decision buttons are gone.
     expect(text).not.toContain("Annehmen");
     expect(text).not.toContain("Ablehnen");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createPoC — a PoC is created ONLY as a deliberate, ADMIN-only step.
+//
+// Accepting an application no longer spawns a PoC (see above). Instead an admin
+// opens one later via `createPoC`, guarded by `requireRole(["ADMIN"])`. The
+// guard must bite BEFORE any read/write for every non-admin role and no-session
+// request. Beyond authorization it enforces the business rules: the target must
+// be an ACCEPTED application that does not already have a PoC (respecting the
+// `PoCPerformance.applicationId @unique` one-to-one), and the tracker must be an
+// active partner/investor. The REAL guards and rules run here (only `@/auth`,
+// Prisma, `next/navigation` and `next/cache` are mocked).
+// ---------------------------------------------------------------------------
+
+const mockUserFindUniqueForCreate = vi.mocked(prisma.user.findUnique);
+
+/** Builds a FormData the `createPoC` action reads via `formData.get(...)`. */
+function pocForm(fields: Record<string, string>): FormData {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(fields)) fd.set(key, value);
+  return fd;
+}
+
+/**
+ * Signs in an ADMIN whose id differs from the tracker's, then wires
+ * `user.findUnique` to answer BOTH lookups `createPoC` makes: the session-user
+ * check inside `requireAuth` (keyed on the admin id) and the tracker lookup
+ * (keyed on the tracker id).
+ */
+function signInAdminWithTracker(
+  trackerRole: UserRole = "BUSINESS_PARTNER",
+  { trackerActive = true, adminId = "admin_1", trackerId = "tracker_1" } = {}
+): void {
+  mockAuth.mockResolvedValue({
+    user: { id: adminId, role: "ADMIN" },
+  } as never);
+  mockUserFindUniqueForCreate.mockImplementation((async (args: {
+    where: { id: string };
+  }) => {
+    if (args.where.id === adminId) {
+      return { id: adminId, isActive: true, role: "ADMIN" };
+    }
+    if (args.where.id === trackerId) {
+      return { role: trackerRole, isActive: trackerActive };
+    }
+    return null;
+  }) as never);
+}
+
+describe("createPoC — ADMIN opens a PoC as a deliberate step", () => {
+  beforeEach(() => {
+    // A well-formed ACCEPTED application without a PoC is the eligible default.
+    mockAppFindUnique.mockResolvedValue({
+      id: "app_acc",
+      status: "ACCEPTED",
+      poc: null,
+      startup: { name: "EPINOIA" },
+      challenge: { title: "Wartung ohne Stillstand" },
+    } as never);
+    mockPoCCreate.mockResolvedValue({ id: "poc_new" } as never);
+  });
+
+  it("creates a PoC with the chosen application/tracker and a derived title", async () => {
+    signInAdminWithTracker("BUSINESS_PARTNER");
+
+    const state = await createPoC(
+      undefined,
+      pocForm({ applicationId: "app_acc", trackerId: "tracker_1", title: "" })
+    );
+
+    expect(state.error).toBeUndefined();
+    expect(state.success).toBeTruthy();
+    expect(mockPoCCreate).toHaveBeenCalledOnce();
+    expect(mockPoCCreate.mock.calls[0]![0]).toEqual({
+      data: {
+        applicationId: "app_acc",
+        title: "PoC — EPINOIA × Wartung ohne Stillstand",
+        trackedById: "tracker_1",
+      },
+    });
+  });
+
+  it("honours an explicit title over the derived default", async () => {
+    signInAdminWithTracker("INVESTOR");
+
+    const state = await createPoC(
+      undefined,
+      pocForm({
+        applicationId: "app_acc",
+        trackerId: "tracker_1",
+        title: "PoC — Sonderfall",
+      })
+    );
+
+    expect(state.error).toBeUndefined();
+    expect(mockPoCCreate.mock.calls[0]![0]).toEqual({
+      data: {
+        applicationId: "app_acc",
+        title: "PoC — Sonderfall",
+        trackedById: "tracker_1",
+      },
+    });
+  });
+
+  it("refuses when the application already has a PoC — no duplicate write", async () => {
+    signInAdminWithTracker();
+    mockAppFindUnique.mockResolvedValue({
+      id: "app_acc",
+      status: "ACCEPTED",
+      poc: { id: "poc_existing" },
+      startup: { name: "EPINOIA" },
+      challenge: { title: "Wartung ohne Stillstand" },
+    } as never);
+
+    const state = await createPoC(
+      undefined,
+      pocForm({ applicationId: "app_acc", trackerId: "tracker_1" })
+    );
+
+    expect(state.error).toContain("bereits ein PoC");
+    expect(mockPoCCreate).not.toHaveBeenCalled();
+  });
+
+  it("treats a lost unique-constraint race (P2002) as an existing PoC", async () => {
+    signInAdminWithTracker();
+    mockPoCCreate.mockRejectedValue({ code: "P2002" } as never);
+
+    const state = await createPoC(
+      undefined,
+      pocForm({ applicationId: "app_acc", trackerId: "tracker_1" })
+    );
+
+    expect(state.error).toContain("bereits ein PoC");
+  });
+
+  it("refuses to open a PoC for a non-ACCEPTED application", async () => {
+    signInAdminWithTracker();
+    mockAppFindUnique.mockResolvedValue({
+      id: "app_pending",
+      status: "PENDING",
+      poc: null,
+      startup: { name: "EPINOIA" },
+      challenge: { title: "Wartung ohne Stillstand" },
+    } as never);
+
+    const state = await createPoC(
+      undefined,
+      pocForm({ applicationId: "app_pending", trackerId: "tracker_1" })
+    );
+
+    expect(state.error).toBeTruthy();
+    expect(mockPoCCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a tracker who is not an active partner/investor", async () => {
+    // Tracker resolves to a STARTUP — not an eligible tracker role.
+    signInAdminWithTracker("STARTUP");
+
+    const state = await createPoC(
+      undefined,
+      pocForm({ applicationId: "app_acc", trackerId: "tracker_1" })
+    );
+
+    expect(state.error).toContain("Tracker");
+    expect(mockPoCCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe("createPoC — every non-admin role is blocked before any read/write", () => {
+  for (const role of [
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "INVESTOR",
+    "STARTUP",
+  ] as const) {
+    it(`redirects a ${role} home and never reads the application or writes`, async () => {
+      signIn(role);
+
+      const url = await redirectUrlOf(() =>
+        createPoC(
+          undefined,
+          pocForm({ applicationId: "app_acc", trackerId: "tracker_1" })
+        )
+      );
+
+      expect(url).toBe(ROLE_HOMES[role]);
+      // Guard bites first: no application read, no PoC write.
+      expect(mockAppFindUnique).not.toHaveBeenCalled();
+      expect(mockPoCCreate).not.toHaveBeenCalled();
+    });
+  }
+
+  it("sends a request without a session to /login", async () => {
+    mockAuth.mockResolvedValue(null as never);
+
+    const url = await redirectUrlOf(() =>
+      createPoC(
+        undefined,
+        pocForm({ applicationId: "app_acc", trackerId: "tracker_1" })
+      )
+    );
+
+    expect(url).toBe("/login");
+    expect(mockPoCCreate).not.toHaveBeenCalled();
   });
 });
