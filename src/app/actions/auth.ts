@@ -48,10 +48,11 @@ export async function login(
       ? callbackUrl
       : null;
 
-  // Single lookup for BOTH the role home and the first-login gate.
+  // Single lookup for the role home, the first-login gate AND the partner
+  // approval gate.
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email.toLowerCase() },
-    select: { role: true, mustChangePassword: true },
+    select: { role: true, mustChangePassword: true, approvedAt: true },
   });
 
   // First-login accounts (admin-provisioned, temporary password) MUST land on
@@ -60,9 +61,22 @@ export async function login(
   // that breaks the first navigation in Next.js 16. So force /change-password
   // directly, taking precedence over any callbackUrl (middleware would bounce a
   // non-exempt callback for these users anyway).
+  //
+  // Self-registered business partners still awaiting admin approval
+  // (approvedAt null) MUST land on /pending for the exact same reason: sending
+  // them to their role home first would make the app-shell guard
+  // (requireApprovedAccess) bounce role-home → /pending — a chained redirect
+  // (Server Action redirect + layout redirect) that aborts the first
+  // client-side navigation after login in Next.js 16 (the landing page fails
+  // to load and only a manual reload recovers). Land straight on /pending —
+  // the same single-hop fix the signup action already applies to a freshly
+  // self-registered partner. /pending itself only uses requireAuth, so it
+  // never redirect-loops.
   let redirectTo: string;
   if (user?.mustChangePassword) {
     redirectTo = "/change-password";
+  } else if (user?.role === "BUSINESS_PARTNER" && !user.approvedAt) {
+    redirectTo = "/pending";
   } else {
     redirectTo = safeCallback ?? (user ? ROLE_HOMES[user.role] : "/");
   }
