@@ -69,6 +69,11 @@ lovedis.de  ──▶  NOT pointed here yet (production stays where it is)
 
 ## Deploy / update the TEST stack
 
+**SSH reliability:** The server uses UFW `LIMIT` on port 22 — rapid parallel SSH
+(from agents or scripts) triggers temporary `Connection refused`. Admin IP
+`87.147.184.12` is whitelisted (UFW + fail2ban). Use `./deploy/hetzner/deploy-platform.sh`
+from your laptop; it multiplexes SSH via `~/.ssh/config` (`ControlMaster`).
+
 On the server (`/opt/lovedis/deploy/hetzner`):
 
 ```bash
