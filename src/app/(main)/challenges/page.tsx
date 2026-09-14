@@ -13,10 +13,12 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { partnerChallengeWhere } from "@/lib/challenges";
+import { extractChallengeTeaser } from "@/lib/challenge-description";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
-import { formatDate, truncate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Challenges" };
 
@@ -32,9 +34,9 @@ const COPY = {
       "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
   },
   BUSINESS_PARTNER: {
-    title: "Meine Challenges",
+    title: "Challenges",
     subtitle:
-      "Deine vom Lovedis-Team betreuten Use-Cases und die Startups, die sich bewerben.",
+      "Hier findest du die identifizierten und ausgeschriebenen Challenges.",
   },
   STARTUP: {
     title: "Offene Challenges",
@@ -53,7 +55,7 @@ export default async function ChallengesPage() {
 
   const where: Prisma.ChallengeWhereInput =
     role === "BUSINESS_PARTNER"
-      ? { createdById: session.user.id }
+      ? partnerChallengeWhere(session.user.id)
       : role === "STARTUP"
         ? { status: { in: ["OPEN", "IN_REVIEW", "CLOSED"] } }
         : {};
@@ -104,7 +106,9 @@ export default async function ChallengesPage() {
         number="01"
         label="Challenges"
         title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}${
-          role === "STARTUP" ? " – Wissensmanagement" : ""
+          role === "STARTUP" || role === "BUSINESS_PARTNER"
+            ? " – Wissensmanagement"
+            : ""
         }`}
       />
 
@@ -151,8 +155,11 @@ export default async function ChallengesPage() {
                     />
                   </div>
                 </div>
-                <p className="mt-2 flex-1 text-sm text-lv-secondary">
-                  {truncate(c.description, 160)}
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-lv-secondary">
+                  {role === "STARTUP" || role === "BUSINESS_PARTNER"
+                    ? extractChallengeTeaser(c.description)
+                    : c.description.slice(0, 160) +
+                      (c.description.length > 160 ? "…" : "")}
                 </p>
                 {c.tags.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">

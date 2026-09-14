@@ -78,7 +78,7 @@ export default async function StartupDashboard() {
   return (
     <>
       <HeroBanner
-        kicker="Sektion 00 — Startup"
+        kicker="Section 00 — Startup"
         title={
           startup
             ? `${startup.name}, willkommen zurück`
@@ -260,7 +260,7 @@ export default async function StartupDashboard() {
       <section className="space-y-4">
         <SectionLabel
           number="04"
-          label="Chancen"
+          label="Challenges"
           title="Offene Challenges für dich"
         />
         {openChallenges.length === 0 ? (

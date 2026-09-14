@@ -17,6 +17,7 @@ import { BannerStat, Card, ToneCard } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
+import { partnerChallengeWhere } from "@/lib/challenges";
 import { requireRole } from "@/lib/auth-guards";
 import { parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
@@ -28,11 +29,15 @@ export const metadata: Metadata = { title: "Partner-Dashboard" };
 export default async function PartnerDashboard() {
   const session = await requireRole(["BUSINESS_PARTNER", "ADMIN", "MEMBER"]);
   const userId = session.user.id;
+  const isPartner = session.user.role === "BUSINESS_PARTNER";
+  const challengeWhere = isPartner
+    ? partnerChallengeWhere(userId)
+    : { createdById: userId };
 
   const [challenges, pocs, shares, pendingCount, screenedStartups, checkIns] =
     await Promise.all([
       prisma.challenge.findMany({
-        where: { createdById: userId },
+        where: challengeWhere,
         include: { _count: { select: { applications: true } } },
         orderBy: { updatedAt: "desc" },
         take: 5,
@@ -159,7 +164,7 @@ export default async function PartnerDashboard() {
           <SectionLabel number="03" label="Challenges" title="Deine Challenges" />
           {challenges.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
-              Noch keine Challenges — das Lovedis-Team legt deine Use-Cases für
+              Noch keine Challenges — das LOVEDIS-Team legt deine Use-Cases für
               dich an.
             </Card>
           ) : (

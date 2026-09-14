@@ -6,6 +6,7 @@ import {
   deleteChallenge,
 } from "@/app/actions/challenges";
 import { ApplyForm } from "@/components/challenges/ApplyForm";
+import { ChallengeDescription } from "@/components/challenges/ChallengeDescription";
 import { ChallengeForm } from "@/components/challenges/ChallengeForm";
 import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
 import {
@@ -16,6 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { partnerCanViewChallenge } from "@/lib/challenges";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
@@ -42,14 +44,18 @@ export default async function ChallengeDetailPage({
   const challenge = await prisma.challenge.findUnique({
     where: { id },
     include: {
-      createdBy: { select: { id: true, name: true, company: true } },
+      createdBy: {
+        select: { id: true, name: true, company: true, role: true },
+      },
     },
   });
   if (!challenge) notFound();
 
-  // Partners only ever see their own attributed use-cases; another partner's
-  // challenge (incl. DRAFTs) must stay hidden. Team keeps full access.
-  if (role === "BUSINESS_PARTNER" && challenge.createdById !== session.user.id) {
+  // Partners: own use-cases + read-only view of team-published industry challenges.
+  if (
+    role === "BUSINESS_PARTNER" &&
+    !partnerCanViewChallenge(challenge, session.user.id)
+  ) {
     notFound();
   }
 
@@ -116,9 +122,13 @@ export default async function ChallengeDetailPage({
       </div>
 
       <Card className="p-6">
-        <p className="whitespace-pre-line text-sm leading-relaxed">
-          {challenge.description}
-        </p>
+        {role === "BUSINESS_PARTNER" || role === "STARTUP" ? (
+          <ChallengeDescription description={challenge.description} />
+        ) : (
+          <p className="whitespace-pre-line text-sm leading-relaxed">
+            {challenge.description}
+          </p>
+        )}
         {challenge.tags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {challenge.tags.map((t) => (
