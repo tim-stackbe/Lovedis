@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isStaleDeploymentError } from "@/lib/stale-deployment";
+import {
+  isStaleDeploymentError,
+  shouldAutoReloadForStaleDeployment,
+  STALE_RELOAD_FLAG,
+  STALE_RELOAD_GUARD_MS,
+} from "@/lib/stale-deployment";
 
 describe("isStaleDeploymentError — stale client bundle after a deploy", () => {
   // Proven on the Hetzner TEST box on 2026-09-14: the `login` Server Action id
@@ -77,5 +82,76 @@ describe("isStaleDeploymentError — everything else stays a real error", () => 
     for (const value of [null, undefined, "boom", 42]) {
       expect(isStaleDeploymentError(value)).toBe(false);
     }
+  });
+});
+
+/** Minimal in-memory Storage stand-in for the guard logic. */
+function memoryStorage(
+  overrides: Partial<Pick<Storage, "getItem" | "setItem">> = {}
+): Pick<Storage, "getItem" | "setItem"> {
+  const map = new Map<string, string>();
+  return {
+    getItem: overrides.getItem ?? ((k) => map.get(k) ?? null),
+    setItem: overrides.setItem ?? ((k, v) => void map.set(k, String(v))),
+  };
+}
+
+describe("shouldAutoReloadForStaleDeployment — invisible one-time recovery", () => {
+  it("reloads the first time and stamps the flag", () => {
+    const store = memoryStorage();
+    expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    expect(store.getItem(STALE_RELOAD_FLAG)).toBe("1000");
+  });
+
+  it("does NOT reload again within the guard window (loop guard)", () => {
+    const store = memoryStorage();
+    expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    // Same error fires again almost immediately (would-be loop) → declined.
+    expect(
+      shouldAutoReloadForStaleDeployment(store, 1_000 + STALE_RELOAD_GUARD_MS - 1)
+    ).toBe(false);
+  });
+
+  it("reloads again once the guard window has elapsed (a later deploy)", () => {
+    const store = memoryStorage();
+    expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    expect(
+      shouldAutoReloadForStaleDeployment(store, 1_000 + STALE_RELOAD_GUARD_MS)
+    ).toBe(true);
+  });
+
+  it("treats a malformed flag as 'never reloaded'", () => {
+    const store = memoryStorage();
+    store.setItem(STALE_RELOAD_FLAG, "not-a-number");
+    expect(shouldAutoReloadForStaleDeployment(store, 5_000)).toBe(true);
+  });
+
+  it("treats a flag stamped in the future as stale and reloads", () => {
+    // Clock skew / restored session: a future timestamp must not wedge recovery.
+    const store = memoryStorage();
+    store.setItem(STALE_RELOAD_FLAG, String(10_000));
+    expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+  });
+
+  it("declines the reload if the flag cannot be persisted (no loop guard possible)", () => {
+    const store = memoryStorage({
+      getItem: () => null,
+      setItem: () => {
+        throw new Error("QuotaExceeded / storage disabled");
+      },
+    });
+    expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(false);
+  });
+
+  it("recovers once when reads throw but writes succeed", () => {
+    const map = new Map<string, string>();
+    const store = memoryStorage({
+      getItem: () => {
+        throw new Error("SecurityError: storage blocked");
+      },
+      setItem: (k, v) => void map.set(k, String(v)),
+    });
+    expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    expect(map.get(STALE_RELOAD_FLAG)).toBe("1000");
   });
 });
