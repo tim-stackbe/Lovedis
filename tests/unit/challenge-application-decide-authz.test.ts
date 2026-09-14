@@ -122,7 +122,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("decideApplication — ADMIN may decide", () => {
-  it("accepts an application, writes ACCEPTED and spawns the PoC", async () => {
+  it("accepts an application, writes ACCEPTED and does NOT spawn a PoC", async () => {
     signIn("ADMIN");
 
     const state = await decideApplication("app_1", "ACCEPTED");
@@ -133,12 +133,9 @@ describe("decideApplication — ADMIN may decide", () => {
       where: { id: "app_1" },
       data: { status: "ACCEPTED" },
     });
-    // Accepting also opens the PoC, tracked by the owning partner.
-    expect(mockPoCCreate).toHaveBeenCalledOnce();
-    expect(mockPoCCreate.mock.calls[0]![0]!.data).toMatchObject({
-      applicationId: "app_1",
-      trackedById: "partner_1",
-    });
+    // Accepting only moves the status. The PoC is created later as a separate,
+    // deliberate step — accepting must never put one down as a side effect.
+    expect(mockPoCCreate).not.toHaveBeenCalled();
   });
 
   it("rejects an application, writes REJECTED and opens no PoC", async () => {
@@ -153,6 +150,36 @@ describe("decideApplication — ADMIN may decide", () => {
     });
     expect(mockPoCCreate).not.toHaveBeenCalled();
   });
+});
+
+// ---------------------------------------------------------------------------
+// The side effect that must NOT happen — accepting must never create a PoC.
+//
+// A PoC is only ever created later, as a separate deliberate step, once the
+// partner and startup have informed the team. `decideApplication` must not
+// call the PoC-create for ANY role or ANY decision.
+// ---------------------------------------------------------------------------
+
+describe("decideApplication — never creates a PoC", () => {
+  for (const role of [
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "INVESTOR",
+    "STARTUP",
+  ] as const) {
+    for (const decision of ["ACCEPTED", "REJECTED"] as const) {
+      it(`does not create a PoC for a ${role} ${decision.toLowerCase()}`, async () => {
+        signIn(role);
+
+        // Non-admins redirect home before any write; admins run the mutation.
+        // Either way, the PoC-create must never fire.
+        await redirectUrlOf(() => decideApplication("app_1", decision));
+
+        expect(mockPoCCreate).not.toHaveBeenCalled();
+      });
+    }
+  }
 });
 
 describe("decideApplication — every non-admin role is blocked before any write", () => {

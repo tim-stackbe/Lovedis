@@ -246,29 +246,18 @@ export async function decideApplication(
 
   const application = await prisma.challengeApplication.findUnique({
     where: { id: applicationId },
-    include: {
-      challenge: { select: { id: true, title: true, createdById: true } },
-      startup: { select: { name: true } },
-      poc: { select: { id: true } },
-    },
+    select: { id: true, challenge: { select: { id: true } } },
   });
   if (!application) return { error: "Bewerbung nicht gefunden." };
 
+  // Deciding an application ONLY moves its status. Accepting must NOT spawn a
+  // PoC: per the business process the partner and startup first inform the
+  // team, and a PoC is created later as a separate, deliberate step. So there
+  // is intentionally no `poCPerformance.create` side effect here.
   await prisma.challengeApplication.update({
     where: { id: applicationId },
     data: { status: parsed.data },
   });
-
-  // Accepted applications spawn a PoC tracked by the challenge owner.
-  if (parsed.data === "ACCEPTED" && !application.poc) {
-    await prisma.poCPerformance.create({
-      data: {
-        applicationId,
-        title: `PoC — ${application.startup.name} × ${application.challenge.title}`,
-        trackedById: application.challenge.createdById,
-      },
-    });
-  }
 
   revalidatePath(`/challenges/${application.challenge.id}`);
   revalidatePath("/challenges");
