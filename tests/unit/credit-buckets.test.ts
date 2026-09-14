@@ -113,11 +113,16 @@ describe("marketplace catalog — only real Notion entries", () => {
       "Nightmare Competitor",
       "Sales",
     ]);
-    // The three moved sessions keep their 0-credit ("keine Credits") nature.
+    // The three moved sessions were repriced to 2 credits on 2026-09-14.
     const moved = MARKETPLACE_OFFERINGS.filter(
       (o) => o.category === "SALES" && o.title !== "Sales"
     );
-    expect(moved.every((o) => o.creditCost === 0)).toBe(true);
+    expect(moved.every((o) => o.creditCost === 2)).toBe(true);
+    // The standalone "Sales" offering stays at 1 credit (not repriced).
+    const standaloneSales = MARKETPLACE_OFFERINGS.find(
+      (o) => o.category === "SALES" && o.title === "Sales"
+    );
+    expect(standaloneSales?.creditCost).toBe(1);
   });
 
   // The eight mentor profiles were removed from the Venture Store on
@@ -152,14 +157,17 @@ describe("marketplace catalog — only real Notion entries", () => {
     ).toBe(true);
   });
 
-  it("spends 2 credits on the GAL-Digital 1:1 formats, Live Hacking and the Notion „1-2\" Legal offerings", () => {
+  it("spends 2 credits on the GAL-Digital 1:1 formats, Live Hacking, the Notion „1-2\" Legal offerings and the 3 moved Sales sessions", () => {
     const twoCredit = MARKETPLACE_OFFERINGS.filter((o) => o.creditCost === 2)
       .map((o) => o.title)
       .sort();
     expect(twoCredit).toEqual([
       "AI Act & Datenschutz",
+      "Aufbau strukturierter Pipelines",
+      "Community / Ökosystem Sales",
       "Exit Readiness & Due Diligence",
       "Live Hacking",
+      "Nightmare Competitor",
       "SaaS Contracting",
       "Schutz des geistigen Eigentums / IP-Rechte",
       "Tech-Stack Check-up",

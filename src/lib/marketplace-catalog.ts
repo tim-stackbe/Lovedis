@@ -554,9 +554,9 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
 
   // --- 🤝 Sales ------------------------------------------------------------
   // Am 14.09.2026 aus dem Programm-Bereich (MARKETPLACE_PROGRAMS) in die
-  // Support-Angebote verschoben. creditCost 0 erhält den „keine Credits
-  // erforderlich"-Charakter der ursprünglichen Programm-Sessions;
-  // providerCompany/format sind aus der Original-Beschreibung übernommen.
+  // Support-Angebote verschoben; providerCompany/format sind aus der Original-
+  // Beschreibung übernommen. creditCost 2 (auf Wunsch am 14.09.2026 von 0
+  // heraufgesetzt) — Kaufpreis der drei verschobenen Sessions.
   {
     title: "Community / Ökosystem Sales",
     category: "SALES",
@@ -566,7 +566,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "unusual business",
     contactPerson: "Sina Wans",
-    creditCost: 0,
+    creditCost: 2,
     sortOrder: 31,
   },
   {
@@ -578,7 +578,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "GAL Digital",
     contactPerson: "Tobias Auradniczek",
-    creditCost: 0,
+    creditCost: 2,
     sortOrder: 32,
   },
   {
@@ -590,7 +590,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Live Workshop",
     providerCompany: "Uni Marburg / StartMiUp",
     contactPerson: "Michael Stephan",
-    creditCost: 0,
+    creditCost: 2,
     sortOrder: 33,
   },
   // Neues generisches „Sales"-Angebot (14.09.2026); Defaults aus dem DRAFT-
