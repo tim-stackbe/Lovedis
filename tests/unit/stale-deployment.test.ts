@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  canAutoReloadForStaleDeployment,
   isStaleDeploymentError,
+  markStaleDeploymentReload,
   shouldAutoReloadForStaleDeployment,
   STALE_RELOAD_FLAG,
   STALE_RELOAD_GUARD_MS,
@@ -156,12 +158,13 @@ describe("isStaleDeploymentError — everything else stays a real error", () => 
 
 /** Minimal in-memory Storage stand-in for the guard logic. */
 function memoryStorage(
-  overrides: Partial<Pick<Storage, "getItem" | "setItem">> = {}
-): Pick<Storage, "getItem" | "setItem"> {
+  overrides: Partial<Pick<Storage, "getItem" | "setItem" | "removeItem">> = {}
+): Pick<Storage, "getItem" | "setItem" | "removeItem"> {
   const map = new Map<string, string>();
   return {
     getItem: overrides.getItem ?? ((k) => map.get(k) ?? null),
     setItem: overrides.setItem ?? ((k, v) => void map.set(k, String(v))),
+    removeItem: overrides.removeItem ?? ((k) => void map.delete(k)),
   };
 }
 
@@ -222,5 +225,83 @@ describe("shouldAutoReloadForStaleDeployment — invisible one-time recovery", (
     });
     expect(shouldAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
     expect(map.get(STALE_RELOAD_FLAG)).toBe("1000");
+  });
+});
+
+// Regression guard for the release-day bug where a stale tab was left on the
+// manual "Bitte Seite neu laden" card with the loop-guard flag ALREADY stamped,
+// so the invisible auto-reload never fired. Root cause: the reload decision was
+// a check-AND-stamp made during render, so a boundary render that never
+// committed its reload (a `ChunkLoadError` is thrown twice, re-rendering the
+// boundary) consumed the one-shot guard, and the next render then declined.
+// `error.tsx` now READS with canAutoReload… during render and STAMPS with
+// markStaleDeploymentReload… only in the reload effect. These tests pin that
+// the read never consumes the guard and the stamp is what consumes it.
+describe("canAutoReloadForStaleDeployment — read-only render-phase check", () => {
+  it("permits a reload but does NOT consume the guard, no matter how many renders", () => {
+    const store = memoryStorage();
+    // Simulate a boundary that renders repeatedly (doubled ChunkLoadError).
+    expect(canAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    expect(canAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    expect(canAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    // The guard flag was NEVER stamped by the read-only check…
+    expect(store.getItem(STALE_RELOAD_FLAG)).toBeNull();
+    // …so a subsequent instance can still trigger the actual reload.
+    expect(canAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+  });
+
+  it("declines while inside the loop-guard window (already reloaded)", () => {
+    const store = memoryStorage();
+    store.setItem(STALE_RELOAD_FLAG, "1000");
+    expect(
+      canAutoReloadForStaleDeployment(store, 1_000 + STALE_RELOAD_GUARD_MS - 1)
+    ).toBe(false);
+  });
+
+  it("declines when the guard cannot be persisted (readable but not writable)", () => {
+    // Safari private mode: getItem works, setItem throws. Without a durable
+    // guard we must NOT promise an auto-reload → show the manual card instead.
+    const store = memoryStorage({
+      setItem: () => {
+        throw new Error("QuotaExceeded / storage disabled");
+      },
+    });
+    expect(canAutoReloadForStaleDeployment(store, 1_000)).toBe(false);
+  });
+
+  it("leaves no probe residue behind after the writability check", () => {
+    const store = memoryStorage();
+    canAutoReloadForStaleDeployment(store, 1_000);
+    expect(store.getItem(`${STALE_RELOAD_FLAG}:probe`)).toBeNull();
+    expect(store.getItem(STALE_RELOAD_FLAG)).toBeNull();
+  });
+});
+
+describe("markStaleDeploymentReload — commit-phase stamp", () => {
+  it("stamps the flag with the reload time and reports success", () => {
+    const store = memoryStorage();
+    expect(markStaleDeploymentReload(store, 1_000)).toBe(true);
+    expect(store.getItem(STALE_RELOAD_FLAG)).toBe("1000");
+  });
+
+  it("reports failure (and does not throw) when the flag cannot be persisted", () => {
+    const store = memoryStorage({
+      setItem: () => {
+        throw new Error("storage disabled");
+      },
+    });
+    expect(markStaleDeploymentReload(store, 1_000)).toBe(false);
+  });
+
+  it("stamping after a permitted read closes the loop-guard window", () => {
+    const store = memoryStorage();
+    // Render phase: read-only check permits.
+    expect(canAutoReloadForStaleDeployment(store, 1_000)).toBe(true);
+    // Commit phase: stamp + (would) reload.
+    expect(markStaleDeploymentReload(store, 1_000)).toBe(true);
+    // A re-thrown error moments later must now be declined (no reload loop).
+    expect(
+      canAutoReloadForStaleDeployment(store, 1_000 + STALE_RELOAD_GUARD_MS - 1)
+    ).toBe(false);
   });
 });

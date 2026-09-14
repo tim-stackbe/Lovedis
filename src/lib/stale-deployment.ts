@@ -89,21 +89,30 @@ export const STALE_RELOAD_FLAG = "lv:stale-deploy-reloaded-at";
  */
 export const STALE_RELOAD_GUARD_MS = 30_000;
 
+/** Throwaway key used to probe storage writability without touching the guard. */
+const STALE_RELOAD_PROBE = `${STALE_RELOAD_FLAG}:probe`;
+
 /**
- * Decides whether a stale-deployment error should trigger a one-time automatic
- * hard reload. Pure and storage-injected so it is unit-testable without a DOM.
+ * READ-ONLY check: may this tab auto-reload right now? Safe to call during
+ * render (including the multiple re-renders a doubled `ChunkLoadError` triggers)
+ * because it NEVER stamps the guard — it only reads it and probes, via a
+ * throwaway key, whether the guard could later be persisted. Stamping is
+ * deferred to {@link markStaleDeploymentReload}, called from the reload effect.
  *
- * Returns true AT MOST once per {@link STALE_RELOAD_GUARD_MS} window: the first
- * call stamps the flag and returns true (reload now); any call within the guard
- * window returns false (we already reloaded — show the manual fallback instead
- * of looping). A malformed/absent flag is treated as "never reloaded".
+ * This split is what makes recovery robust: if the decision to reload were made
+ * with a check-and-stamp in the render phase, a boundary render that never
+ * commits its reload (webpack throws `ChunkLoadError` twice, so the boundary can
+ * render more than once) would "spend" the one-shot guard, and the next
+ * render/instance would then see the flag, decline, and strand the user on the
+ * manual card even though NO reload ever fired. Reading here and stamping in the
+ * effect guarantees the guard is consumed only when a reload actually happens.
  *
- * The caller reloads only on a true return, so users self-heal invisibly after
- * a deploy instead of ever seeing an error screen, and a persistently broken
- * fresh bundle degrades to the manual "reload" UI rather than a reload loop.
+ * Returns true only when (a) we are outside the {@link STALE_RELOAD_GUARD_MS}
+ * loop-guard window AND (b) storage is writable (otherwise we could not guard a
+ * loop, so we decline and let the manual card handle it).
  */
-export function shouldAutoReloadForStaleDeployment(
-  storage: Pick<Storage, "getItem" | "setItem">,
+export function canAutoReloadForStaleDeployment(
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem">,
   now: number = Date.now()
 ): boolean {
   let last = Number.NaN;
@@ -121,12 +130,56 @@ export function shouldAutoReloadForStaleDeployment(
     return false;
   }
 
+  // Confirm we can PERSIST the loop guard before promising a reload; without a
+  // durable guard a re-throw would loop. Probe a throwaway key so this read-only
+  // check never consumes the one-shot guard itself.
   try {
-    storage.setItem(STALE_RELOAD_FLAG, String(now));
+    storage.setItem(STALE_RELOAD_PROBE, "1");
+    storage.removeItem(STALE_RELOAD_PROBE);
   } catch {
-    // If we cannot persist the flag we cannot guard against a loop, so decline
-    // the automatic reload and let the user reload manually instead.
     return false;
   }
   return true;
+}
+
+/**
+ * Stamps the loop-guard flag with `now`, recording that this tab is about to
+ * auto-reload. Call this in the COMMIT phase, immediately before
+ * `window.location.reload()`, so the one-shot guard is consumed only when a
+ * reload truly happens. Returns false if the flag could not be persisted.
+ */
+export function markStaleDeploymentReload(
+  storage: Pick<Storage, "setItem">,
+  now: number = Date.now()
+): boolean {
+  try {
+    storage.setItem(STALE_RELOAD_FLAG, String(now));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Decides whether a stale-deployment error should trigger a one-time automatic
+ * hard reload, checking the loop guard AND stamping it in one call. Pure and
+ * storage-injected so it is unit-testable without a DOM.
+ *
+ * Returns true AT MOST once per {@link STALE_RELOAD_GUARD_MS} window: the first
+ * call stamps the flag and returns true (reload now); any call within the guard
+ * window returns false (we already reloaded — show the manual fallback instead
+ * of looping). A malformed/absent flag is treated as "never reloaded".
+ *
+ * `error.tsx` no longer uses this combined form directly — it reads with
+ * {@link canAutoReloadForStaleDeployment} during render and stamps with
+ * {@link markStaleDeploymentReload} in the reload effect so the guard is never
+ * consumed by a render that fails to reload. This function is retained as the
+ * single-call equivalent for callers/tests that want an atomic decision.
+ */
+export function shouldAutoReloadForStaleDeployment(
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem">,
+  now: number = Date.now()
+): boolean {
+  if (!canAutoReloadForStaleDeployment(storage, now)) return false;
+  return markStaleDeploymentReload(storage, now);
 }

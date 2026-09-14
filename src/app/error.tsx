@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
+  canAutoReloadForStaleDeployment,
   isStaleDeploymentError,
-  shouldAutoReloadForStaleDeployment,
+  markStaleDeploymentReload,
 } from "@/lib/stale-deployment";
 
 /**
@@ -31,25 +32,37 @@ export default function RootError({
 }) {
   const isStale = isStaleDeploymentError(error);
 
-  // Decide ONCE, at first render, whether to auto-recover from a stale bundle.
-  // A lazy initializer runs exactly once per boundary instance, so it stamps the
-  // loop-guard flag a single time and keeps the reload decision out of an effect
-  // (no setState-in-effect). Client-only: sessionStorage is absent during SSR.
+  // Decide in the RENDER phase whether we will auto-recover, using a READ-ONLY
+  // check that never stamps the loop guard. `useState`'s lazy initializer runs
+  // once per boundary instance; because the check does not consume the guard, a
+  // boundary that renders more than once (webpack throws `ChunkLoadError` twice)
+  // — or a fresh instance after a remount — still sees the guard as available
+  // and can reload. This is the fix for the tab that got stranded on the manual
+  // card with the guard already stamped: stamping now happens ONLY in the effect
+  // below, right before the actual reload. Client-only (no sessionStorage in SSR).
   const [autoReloading] = useState(
     () =>
       isStale &&
       typeof window !== "undefined" &&
-      shouldAutoReloadForStaleDeployment(window.sessionStorage)
+      canAutoReloadForStaleDeployment(window.sessionStorage)
   );
+
+  // Guarantees the stamp-and-reload runs at most once per boundary instance.
+  const reloadedRef = useRef(false);
 
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   useEffect(() => {
-    // A stale bundle can only be replaced by a full document request — a fresh
-    // load pulls the new build's chunks; reset() would re-run the same stale JS.
-    if (autoReloading) window.location.reload();
+    if (!autoReloading || reloadedRef.current) return;
+    reloadedRef.current = true;
+    // Stamp the loop guard and reload together, in the commit phase, so the
+    // one-shot guard is consumed only when a reload truly fires. A stale bundle
+    // can only be replaced by a full document request — a fresh load pulls the
+    // new build's chunks; reset() would re-run the same stale JS.
+    markStaleDeploymentReload(window.sessionStorage);
+    window.location.reload();
   }, [autoReloading]);
 
   // While the one-time hard reload is in flight, show a neutral "updating" state
