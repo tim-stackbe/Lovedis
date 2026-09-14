@@ -36,6 +36,188 @@ them. Both now refuse to run unless `DATABASE_URL` points at `localhost` /
 require `I_KNOW_THIS_DELETES_EVERYTHING=1` for any remote database. Never point
 them at the TEST box without a `pg_dump` first.
 
+## Database backups
+
+**Status (2026-09-14):** before this date there were **no database backups at all** —
+no cron entry, no systemd timer, no dump files anywhere on the host. The old
+`backup-postgres.sh` had never run: it sourced a `.env` that does not exist and
+called an `aws` CLI that is not installed. It is now rewritten and scheduled.
+
+| | |
+|---|---|
+| Schedule | twice daily, `17 3,15 * * *` in the server's local Europe/Berlin time (`deploy` user crontab) — 01:17 / 13:17 UTC in summer, 02:17 / 14:17 UTC in winter |
+| Runs | `/opt/lovedis/scripts/backup-postgres.sh` |
+| Output | `/opt/lovedis/backups/lovedis-<UTC-timestamp>.dump` (+ `.sha256`), mode `600` |
+| Format | `pg_dump --format=custom --compress=9` (whole database, all schemas) |
+| Retention | every dump from the last 14 days, plus the Sunday dump of the last 8 weeks |
+| Log | `/opt/lovedis/logs/backup.log` |
+| Off-box copy | **not enabled** — see [Enabling off-box backups](#enabling-off-box-backups) |
+
+The runnable script lives in `/opt/lovedis/scripts/`, *not* in the rsync'd
+`platform/` checkout, so an application deploy can never delete or downgrade the
+scheduled backup. After changing the script in this repo, re-run the installer to
+publish it:
+
+```bash
+ssh hetzner-lovedis /opt/lovedis/platform/deploy/hetzner/install-backup-cron.sh
+```
+
+The installer is idempotent — re-running updates the script and rewrites the cron
+entry instead of adding a duplicate.
+
+Every run refuses to keep a bad dump: it writes to a `.part` file, then checks the
+size against `BACKUP_MIN_BYTES` (default 100 KB) and confirms `pg_restore --list`
+reports table data for `User`, `Company` and `Program`. Only then is the file moved
+into place. A `flock` prevents overlapping runs. Any failure exits non-zero and
+prints `[backup FAILED ...]`.
+
+Dump filenames are UTC but the cron schedule is not: Ubuntu's cron ignores
+`CRON_TZ`, so crontab times are always the host's local Europe/Berlin time.
+
+### Confirm the schedule is running
+
+```bash
+ssh hetzner-lovedis 'crontab -l | grep -A1 lovedis-postgres-backup'
+ssh hetzner-lovedis 'tail -20 /opt/lovedis/logs/backup.log'
+ssh hetzner-lovedis 'ls -la /opt/lovedis/backups/'
+```
+
+A healthy log tail ends with `done: lovedis-<stamp>.dump (N dumps retained, …)`.
+If the newest dump is more than ~12 h old, the schedule is not firing.
+
+### List backups
+
+```bash
+ssh hetzner-lovedis 'ls -la /opt/lovedis/backups/'
+# verify integrity of every dump
+ssh hetzner-lovedis 'cd /opt/lovedis/backups && sha256sum -c *.sha256'
+```
+
+`latest.dump` is a symlink to the most recent dump.
+
+### Restore to a scratch database (safe — do this to verify a backup)
+
+Runs a throwaway `postgres:18` container on a tmpfs. The live database is never
+touched. Set `BASE` to the dump you want to test.
+
+```bash
+ssh hetzner-lovedis
+BASE=$(readlink /opt/lovedis/backups/latest.dump)
+
+docker run -d --name pg-restoretest \
+  -e POSTGRES_USER=lovedis -e POSTGRES_PASSWORD=scratch \
+  -e POSTGRES_DB=lovedis_restoretest -e PGDATA=/var/lib/postgresql/data \
+  -v /opt/lovedis/backups:/backups:ro \
+  --tmpfs /var/lib/postgresql/data:rw,size=512m postgres:18
+
+until docker exec pg-restoretest pg_isready -U lovedis -d lovedis_restoretest; do sleep 1; done
+
+docker exec pg-restoretest pg_restore -U lovedis -d lovedis_restoretest \
+  --no-owner --no-privileges "/backups/$BASE"
+
+# spot-check the tables that matter
+docker exec pg-restoretest psql -U lovedis -d lovedis_restoretest -c '
+  SELECT (SELECT count(*) FROM "User") AS users,
+         (SELECT count(*) FROM "Challenge") AS challenges,
+         (SELECT count(*) FROM "Program") AS programs,
+         (SELECT count(*) FROM "SupportOffering") AS offerings,
+         (SELECT count(*) FROM "Company") AS companies;'
+
+# ALWAYS clean up
+docker rm -f -v pg-restoretest
+```
+
+### Emergency restore over the live database
+
+> **⚠️ This overwrites live data.** Every row created after the dump was taken is
+> lost. Do not run it to "check" a backup — use the scratch procedure above for
+> that. Take a fresh dump first if the current database is at all salvageable.
+
+```bash
+ssh hetzner-lovedis
+cd /opt/lovedis
+
+# 1. Capture the current state first — even if it looks broken.
+/opt/lovedis/scripts/backup-postgres.sh
+BASE=$(readlink /opt/lovedis/backups/latest.dump)   # or pick an older dump
+
+# 2. Stop the app so nothing writes mid-restore. Leave `db` running.
+docker compose stop platform
+
+# 3. Restore. --clean --if-exists drops and recreates each object.
+docker cp "/opt/lovedis/backups/$BASE" lovedis-db-1:/tmp/restore.dump
+docker exec lovedis-db-1 pg_restore -U lovedis -d lovedis \
+  --clean --if-exists --no-owner --no-privileges /tmp/restore.dump
+docker exec lovedis-db-1 rm -f /tmp/restore.dump
+
+# 4. Bring the app back.
+docker compose start platform
+```
+
+`pg_restore` prints errors for objects it could not drop; those are usually
+harmless on a `--clean` run. A non-zero exit with `error: could not execute query`
+on a `COPY` is not harmless — stop and investigate before starting the app.
+
+### Verify a restore succeeded
+
+```bash
+# row counts present
+ssh hetzner-lovedis 'docker exec lovedis-db-1 psql -U lovedis -d lovedis -c "
+  SELECT (SELECT count(*) FROM \"User\") AS users,
+         (SELECT count(*) FROM \"Company\") AS companies,
+         (SELECT count(*) FROM \"Program\") AS programs;"'
+
+# app healthy and talking to the database
+curl -s https://app.49.13.222.76.nip.io/api/health
+```
+
+Then log in and confirm a known account and a known Challenge are present.
+
+### Enabling off-box backups
+
+**Current risk: backups sit on `/dev/sda1`, the same disk as the Postgres volume.**
+They protect against a bad migration or an accidental delete. They do **not**
+protect against loss of the server — that would take the database and every backup
+with it. Closing this gap needs a bucket the host can actually reach.
+
+The R2 credentials in `platform.env` are not usable for this: the host cannot
+complete a TLS handshake to `<account>.r2.cloudflarestorage.com` over IPv4 or IPv6,
+while `s3.amazonaws.com` and `nbg1.your-objectstorage.com` both respond normally.
+Hetzner Object Storage in the same region is the path of least resistance.
+
+To enable, create a bucket, then on the server write `/opt/lovedis/backup.env`
+(mode `600`, never committed — the script sources it if present):
+
+```bash
+ssh hetzner-lovedis
+umask 077
+cat > /opt/lovedis/backup.env <<'EOF'
+BACKUP_S3_BUCKET=lovedis-backups-test
+BACKUP_S3_ENDPOINT=https://nbg1.your-objectstorage.com
+BACKUP_S3_ACCESS_KEY_ID=<key>
+BACKUP_S3_SECRET_ACCESS_KEY=<secret>
+EOF
+chmod 600 /opt/lovedis/backup.env
+
+# verify: the run should end with "off-box copy confirmed"
+/opt/lovedis/scripts/backup-postgres.sh
+```
+
+Upload uses the `amazon/aws-cli` container, so no `aws` CLI is needed on the host.
+A failed upload fails the whole run loudly rather than passing silently. Set
+`BACKUP_S3_PREFIX` to change the key prefix (default `lovedis-postgres`). The
+upload path has been tested end-to-end against a local S3 mock — the uploaded
+object came back byte-identical and restored cleanly — so all that is missing is
+a real bucket and credentials.
+
+Two things to settle when you enable it. Retention is enforced on local dumps
+only, so prune the bucket with a lifecycle rule. And these dumps contain real
+user records, so an off-box copy should be encrypted at rest — either enable
+bucket-level encryption, or pipe through `gpg --symmetric` and store the
+passphrase somewhere that survives the server (a lost passphrase is a lost
+backup). Local dumps are unencrypted by design: they are `600`-mode on a box
+where `deploy` can already read the database.
+
 ## Deploy (Cursor agents, Mac, or CI)
 
 ```bash
@@ -100,7 +282,8 @@ lovedis.de  ──▶  NOT pointed here yet (production stays where it is)
 | `smoke-test.sh` | Read-only HTTP checks against the TEST URLs |
 | `deployment-audit.sh` | Extended smoke + TLS + headers + DNS probe |
 | `migrate.sh` | Prisma migrations via one-off Node container (not in app image) |
-| `backup-postgres.sh` | Nightly encrypted `pg_dump` → Object Storage (cron) |
+| `backup-postgres.sh` | Twice-daily validated `pg_dump`, retention + optional S3 upload |
+| `install-backup-cron.sh` | Idempotent installer for the backup schedule |
 | `github-actions-deploy.yml.example` | CI build + SSH deploy to TEST |
 
 ## Deploy / update the TEST stack
@@ -163,10 +346,10 @@ Only when TEST is green and you are ready to move real traffic:
 
 1. **CX32** or **CAX21** (Ubuntu 24.04) + Cloud Volume at `/mnt/pgdata`.
 2. Harden: SSH keys, UFW/firewall (22/80/443), fail2ban, unattended-upgrades.
-3. Docker + Compose + `aws` CLI (for backups).
+3. Docker + Compose (backups use the `amazon/aws-cli` image — no host `aws` CLI needed).
 4. Object Storage bucket for TEST backups (`lovedis-backups-test`).
 5. Clone repo → `/opt/lovedis`, copy env files, update `Caddyfile` IP if not `49.13.222.76`.
-6. `docker compose up -d` + migrations + backup cron.
+6. `docker compose up -d` + migrations + `./install-backup-cron.sh`.
 
 ## Prerequisites
 
