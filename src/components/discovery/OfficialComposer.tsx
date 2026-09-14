@@ -36,7 +36,7 @@ export function OfficialComposer() {
       <div className="mb-4 flex items-start gap-3 rounded-card border border-lv-blue-soft bg-lv-blue-soft/50 p-3">
         <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-lv-blue" />
         <p className="text-xs text-lv-secondary">
-          Offizielle Beiträge des Lovedis-Teams erscheinen im Feed{" "}
+          Offizielle Beiträge des LOVEDIS-Teams erscheinen im Feed{" "}
           <span className="font-semibold text-lv-text">aller Accounts</span> —
           unabhängig davon, wem jemand folgt. Ideal für Ankündigungen zu neuen
           Programmen.

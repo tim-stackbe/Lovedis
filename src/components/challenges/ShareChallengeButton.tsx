@@ -106,7 +106,7 @@ export function ShareChallengeButton({
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const shareText = `Schau dir diese Challenge auf Lovedis an: ${title}`;
+  const shareText = `Schau dir diese Challenge auf LOVEDIS an: ${title}`;
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedText = encodeURIComponent(shareText);
   const encodedTitle = encodeURIComponent(title);

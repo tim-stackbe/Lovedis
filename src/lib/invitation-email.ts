@@ -40,10 +40,10 @@ export async function sendPartnerInvitationEmail(opts: {
 
   return sendEmail({
     to: opts.to,
-    subject: `Dein Zugang zu ${opts.companyName} auf Lovedis`,
+    subject: `Dein Zugang zu ${opts.companyName} auf LOVEDIS`,
     text:
       `${greeting}\n\n` +
-      `${invitedBy} zum Team von ${opts.companyName} auf Lovedis eingeladen. ` +
+      `${invitedBy} zum Team von ${opts.companyName} auf LOVEDIS eingeladen. ` +
       `Wir haben dir bereits ein Konto eingerichtet — du kannst dich sofort anmelden.\n\n` +
       `Anmelden:\n${loginUrl}\n\n` +
       `E-Mail: ${opts.to}\n` +
@@ -51,6 +51,6 @@ export async function sendPartnerInvitationEmail(opts: {
       `Aus Sicherheitsgründen wirst du bei der ersten Anmeldung aufgefordert, ` +
       `ein eigenes Passwort festzulegen. Das temporäre Passwort ist danach ungültig.\n\n` +
       `Bei Fragen erreichst du uns jederzeit — wir freuen uns auf die Zusammenarbeit.\n\n` +
-      `Viele Grüße\nDein Lovedis-Team`,
+      `Viele Grüße\nDein LOVEDIS-Team`,
   });
 }

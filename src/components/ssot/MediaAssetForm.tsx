@@ -36,7 +36,7 @@ export function MediaAssetForm() {
           <Input
             id="ma-name"
             name="name"
-            placeholder="Lovedis Logo-Paket"
+            placeholder="LOVEDIS Logo-Paket"
             required
           />
         </Field>

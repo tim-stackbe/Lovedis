@@ -269,7 +269,7 @@ export default async function DiscoverDetailPage({
                   </LinkButton>
                 ) : intro.status === "PENDING" ? (
                   <p className="text-sm text-lv-secondary">
-                    Das Lovedis-Team prüft deine Anfrage und stellt bei Eignung
+                    Das LOVEDIS-Team prüft deine Anfrage und stellt bei Eignung
                     den Kontakt her.
                   </p>
                 ) : intro.status === "APPROVED" ? (

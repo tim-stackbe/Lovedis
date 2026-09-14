@@ -8,7 +8,7 @@ export default function PartnerSignupPage() {
   return (
     <AuthLayout
       headline={["Kuratiert screenen.", "Schnell entscheiden.", "Dranbleiben."]}
-      subline="Erhalte vom Lovedis-Team vorsortierte Startups, gib schnelle Verdikte ab und verfolge Check-ins — gebündelt im Partner-Hub."
+      subline="Erhalte vom LOVEDIS-Team vorsortierte Startups, gib schnelle Verdikte ab und verfolge Check-ins — gebündelt im Partner-Hub."
     >
       <SignupForm kind="partner" />
     </AuthLayout>

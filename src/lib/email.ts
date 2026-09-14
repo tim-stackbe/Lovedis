@@ -9,7 +9,7 @@
 //
 // Configuration:
 //   RESEND_API_KEY  — enables real delivery via Resend when present.
-//   EMAIL_FROM      — sender address (default: "Lovedis <noreply@lovedis.de>").
+//   EMAIL_FROM      — sender address (default: "LOVEDIS <noreply@lovedis.de>").
 //                     Real delivery requires this domain to be a verified
 //                     sending domain in the Resend account.
 // ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ export interface EmailAdapter {
   send(message: EmailMessage): Promise<EmailSendResult>;
 }
 
-const DEFAULT_FROM = "Lovedis <noreply@lovedis.de>";
+const DEFAULT_FROM = "LOVEDIS <noreply@lovedis.de>";
 
 function fromAddress(): string {
   return process.env.EMAIL_FROM?.trim() || DEFAULT_FROM;

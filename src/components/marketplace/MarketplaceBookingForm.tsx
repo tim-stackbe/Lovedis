@@ -122,7 +122,7 @@ export function MarketplaceBookingForm({
       <Field
         label="Anliegen / Wunsch-Session"
         htmlFor="message"
-        hint="Das Lovedis-Team koordiniert Matching & Termin mit dem Partner."
+        hint="Das LOVEDIS-Team koordiniert Matching & Termin mit dem Partner."
       >
         <Textarea
           id="message"

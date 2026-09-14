@@ -16,14 +16,14 @@ export default function OdiePage() {
     <main className="flex min-h-dvh flex-col items-center justify-center bg-lv-cover px-6 py-16 text-center text-white">
       <div className="w-full max-w-md rounded-card bg-white/10 p-8 shadow-card backdrop-blur-sm">
         <p className="lv-wordmark mb-4 text-[11px] text-white/80">
-          Lovedis · Office Dog
+          LOVEDIS · Office Dog
         </p>
 
         <div className="mx-auto mb-6 overflow-hidden rounded-card bg-white/15">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/odie.png"
-            alt="Odie, the Lovedis office dog"
+            alt="Odie, the LOVEDIS office dog"
             className="mx-auto block h-64 w-full object-contain"
             draggable={false}
           />
@@ -32,7 +32,7 @@ export default function OdiePage() {
         <h1 className="text-3xl font-bold tracking-tight">Who&apos;s a good boy?</h1>
         <p className="mt-2 text-base text-white/85">
           Das ist <span className="font-semibold">Odie</span> — der inoffizielle
-          Chief Happiness Officer von Lovedis. 🐾
+          Chief Happiness Officer von LOVEDIS. 🐾
         </p>
         <p className="mt-1 text-sm text-white/70">
           Du hast die geheime Seite gefunden. Gut gemacht!

@@ -35,16 +35,16 @@ export async function sendPasswordResetEmail(opts: {
 
   return sendEmail({
     to: opts.to,
-    subject: "Passwort zurücksetzen — Lovedis",
+    subject: "Passwort zurücksetzen — LOVEDIS",
     text:
       `${greeting}\n\n` +
-      `für dein Lovedis-Konto wurde das Zurücksetzen des Passworts angefordert. ` +
+      `für dein LOVEDIS-Konto wurde das Zurücksetzen des Passworts angefordert. ` +
       `Über den folgenden Link kannst du ein neues Passwort festlegen:\n\n` +
       `${resetUrl}\n\n` +
       `Der Link ist aus Sicherheitsgründen nur ${PASSWORD_RESET_TTL_MINUTES} Minuten gültig ` +
       `und kann nur einmal verwendet werden.\n\n` +
       `Wenn du diese Anfrage nicht gestellt hast, kannst du diese E-Mail einfach ` +
       `ignorieren — dein Passwort bleibt dann unverändert.\n\n` +
-      `Viele Grüße\nDein Lovedis-Team`,
+      `Viele Grüße\nDein LOVEDIS-Team`,
   });
 }

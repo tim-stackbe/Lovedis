@@ -429,7 +429,7 @@ async function main() {
           email: "admin@lovedis.dev",
           name: "Alex Admin",
           role: "ADMIN",
-          company: "Lovedis",
+          company: "LOVEDIS",
           passwordHash,
           approvedAt: new Date(),
         },
@@ -440,7 +440,7 @@ async function main() {
           email: "member@lovedis.dev",
           name: "Mia Member",
           role: "MEMBER",
-          company: "Lovedis",
+          company: "LOVEDIS",
           passwordHash,
           approvedAt: new Date(),
         },
@@ -484,7 +484,7 @@ async function main() {
           email: "jonas@lovedis.dev",
           name: "Jonas Scout",
           role: "MEMBER",
-          company: "Lovedis",
+          company: "LOVEDIS",
           passwordHash,
           approvedAt: new Date(),
         },
@@ -1310,7 +1310,7 @@ async function main() {
   await prisma.mediaAsset.createMany({
     data: [
       {
-        name: "Lovedis Logo-Paket (SVG/PNG)",
+        name: "LOVEDIS Logo-Paket (SVG/PNG)",
         url: "https://example.com/media/lovedis-logos.zip",
         type: "DOCUMENT",
         audience: "BOTH",

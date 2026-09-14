@@ -45,8 +45,8 @@ export async function processDueReminders(
         `Hallo ${reminder.partner.name},\n\n` +
         `dies ist eine Erinnerung für deinen Check-in zu ${startupName}.` +
         `${context}\n\n` +
-        `Bitte gib in der Lovedis-Plattform unter „Check-ins" ein kurzes Update ab.\n\n` +
-        `Viele Grüße\nDein Lovedis-Team`,
+        `Bitte gib in der LOVEDIS-Plattform unter „Check-ins" ein kurzes Update ab.\n\n` +
+        `Viele Grüße\nDein LOVEDIS-Team`,
     });
 
     if (result.ok) {

@@ -915,7 +915,7 @@ export function MatchMatrixBoard({
 
       <p className="flex items-center gap-2 text-xs text-lv-secondary">
         <LayoutGrid className="h-3.5 w-3.5" />
-        Interne Cross-Partner-Ansicht — nur fürs Lovedis-Team. Zelle anklicken,
+        Interne Cross-Partner-Ansicht — nur fürs LOVEDIS-Team. Zelle anklicken,
         um Details zu sehen und die Passung zu pflegen.
       </p>
 

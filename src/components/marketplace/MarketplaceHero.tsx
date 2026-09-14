@@ -70,7 +70,7 @@ export function MarketplaceHero({
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
             Entdecke passende Programme, Mentor:innen und Support-Angebote für
-            dein Startup — kuratiert vom Lovedis-Team.
+            dein Startup — kuratiert vom LOVEDIS-Team.
           </p>
           <div className="mt-6">
             <LinkButton

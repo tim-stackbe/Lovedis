@@ -207,7 +207,7 @@ export async function requestBooking(
     success:
       creditCost > 0
         ? "Anfrage gesendet — Credits werden erst nach Bestätigung eingelöst."
-        : "Anfrage gesendet — das Lovedis-Team meldet sich.",
+        : "Anfrage gesendet — das LOVEDIS-Team meldet sich.",
   };
 }
 
@@ -432,7 +432,7 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
     }
     if (booking.status === "CONFIRMED" || booking.status === "COMPLETED") {
       return {
-        error: "Bestätigte Buchungen kann nur das Lovedis-Team stornieren.",
+        error: "Bestätigte Buchungen kann nur das LOVEDIS-Team stornieren.",
       };
     }
   }
@@ -536,7 +536,7 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
       return { error: "Buchung nicht gefunden." };
     }
     if (err instanceof Error && err.message === "FORBIDDEN") {
-      return { error: "Bestätigte Buchungen kann nur das Lovedis-Team stornieren." };
+      return { error: "Bestätigte Buchungen kann nur das LOVEDIS-Team stornieren." };
     }
     if (err instanceof Error && err.message === "COMPLETED") {
       return {

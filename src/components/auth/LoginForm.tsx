@@ -21,7 +21,7 @@ export function LoginForm({
       <p className="lv-wordmark text-xs text-lv-blue">Willkommen zurück</p>
       <h2 className="mt-2 text-2xl font-bold tracking-tight">Anmelden</h2>
       <p className="mt-1 text-sm text-lv-secondary">
-        Melde dich mit deinem Lovedis-Konto an.
+        Melde dich mit deinem LOVEDIS-Konto an.
       </p>
 
       {resetSuccess && (

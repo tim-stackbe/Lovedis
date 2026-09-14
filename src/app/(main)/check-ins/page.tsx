@@ -28,7 +28,7 @@ export default async function CheckInsPage() {
       <HeroBanner
         kicker="Deine Check-ins"
         title="Check-in-Erinnerungen"
-        subtitle="Startups, die das Lovedis-Team dir zugewiesen hat — mit Erinnerung, dranzubleiben."
+        subtitle="Startups, die das LOVEDIS-Team dir zugewiesen hat — mit Erinnerung, dranzubleiben."
       >
         <div className="grid grid-cols-2 gap-3 sm:max-w-md">
           <BannerStat label="Offen" value={items.length} />

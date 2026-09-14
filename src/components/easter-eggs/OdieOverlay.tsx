@@ -106,7 +106,7 @@ export function OdieOverlay({ title, subtitle, badge, onClose }: OdieOverlayProp
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/odie.png"
-            alt="Odie, the Lovedis office dog"
+            alt="Odie, the LOVEDIS office dog"
             className="mx-auto block h-56 w-full object-contain"
             draggable={false}
           />

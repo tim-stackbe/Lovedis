@@ -62,7 +62,7 @@ export default async function FeedPage() {
       <HeroBanner
         kicker="Ökosystem"
         title="Dein Feed"
-        subtitle="Offizielle Lovedis-Ankündigungen und die neuesten Updates der Startups, denen du folgst — Meilensteine, Finanzierungen, Produktnews."
+        subtitle="Offizielle LOVEDIS-Ankündigungen und die neuesten Updates der Startups, denen du folgst — Meilensteine, Finanzierungen, Produktnews."
         actions={
           <LinkButton href="/discover" variant="white">
             <Compass className="h-4 w-4" />

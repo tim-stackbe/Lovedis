@@ -10,8 +10,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lovedis — Startup-Bewertung & Tech-Scouting",
-    template: "%s · Lovedis",
+    default: "LOVEDIS — Startup-Bewertung & Tech-Scouting",
+    template: "%s · LOVEDIS",
   },
   description:
     "Die Startup-Scouting- und Bewertungsplattform für Innovation Engineers und Venture Scouts — mit Rollen für Partner, Investoren und Startups.",

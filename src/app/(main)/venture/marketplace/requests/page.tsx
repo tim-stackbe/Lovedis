@@ -56,7 +56,7 @@ export default async function MyBookingsPage() {
       <HeroBanner
         kicker="Venture Platform"
         title={teamMode ? "Anfragen & Buchungen (alle Startups)" : "Meine Anfragen & Buchungen"}
-        subtitle="Status der Marktplatz-Anfragen. Credits werden erst nach Bestätigung durch das Lovedis-Team eingelöst."
+        subtitle="Status der Marktplatz-Anfragen. Credits werden erst nach Bestätigung durch das LOVEDIS-Team eingelöst."
         actions={
           <LinkButton href="/venture/marketplace" variant="white" size="sm">
             Zum Marktplatz

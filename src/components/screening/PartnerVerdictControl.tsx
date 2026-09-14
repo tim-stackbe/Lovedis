@@ -116,7 +116,7 @@ export function PartnerVerdictControl({
       <ConfirmDialog
         open={passConfirm}
         title="Nicht weiter verfolgen?"
-        description="Du markierst dieses Startup als „Nicht weiter“. Deine Einordnung wird dem Lovedis-Team übermittelt."
+        description="Du markierst dieses Startup als „Nicht weiter“. Deine Einordnung wird dem LOVEDIS-Team übermittelt."
         confirmLabel="Nicht weiter"
         tone="danger"
         pending={pending}

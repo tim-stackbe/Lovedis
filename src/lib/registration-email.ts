@@ -22,13 +22,13 @@ export async function sendRegistrationConfirmationEmail(opts: {
 
   return sendEmail({
     to: opts.to,
-    subject: "Willkommen bei Lovedis — Registrierung bestätigt",
+    subject: "Willkommen bei LOVEDIS — Registrierung bestätigt",
     text:
       `${greeting}\n\n` +
-      `willkommen bei Lovedis! Dein Konto wurde erfolgreich angelegt.\n\n` +
+      `willkommen bei LOVEDIS! Dein Konto wurde erfolgreich angelegt.\n\n` +
       `Du kannst dich ab sofort mit deiner E-Mail-Adresse anmelden:\n` +
       `${loginUrl}\n\n` +
       `Bei Fragen erreichst du uns jederzeit — wir freuen uns auf die Zusammenarbeit.\n\n` +
-      `Viele Grüße\nDein Lovedis-Team`,
+      `Viele Grüße\nDein LOVEDIS-Team`,
   });
 }

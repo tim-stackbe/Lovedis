@@ -200,7 +200,7 @@ export default async function InvestorDashboard() {
           {introRequests.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
               Noch keine Intros angefragt. Auf einem öffentlichen Profil kannst
-              du über das Lovedis-Team eine Einführung anfragen.
+              du über das LOVEDIS-Team eine Einführung anfragen.
             </Card>
           ) : (
             <Card className="divide-y divide-lv-border">

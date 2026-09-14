@@ -59,7 +59,7 @@ export function OdieEggs() {
   useEffect(() => {
     const url = `${window.location.origin}/odie.png`;
     console.log(
-      "%c🐾 Woof! You found Odie — the Lovedis office dog. %c\nGood human. Try the Konami code, type \"odie\", click the logo 7×, or visit /odie.\nHere's a treat: " +
+      "%c🐾 Woof! You found Odie — the LOVEDIS office dog. %c\nGood human. Try the Konami code, type \"odie\", click the logo 7×, or visit /odie.\nHere's a treat: " +
         url,
       "background:#2926e5;color:#fff;font-weight:800;padding:6px 10px;border-radius:8px;font-size:13px;",
       "color:#6b6b7b;font-size:12px;"

@@ -97,7 +97,7 @@ export async function requestIntro(
   revalidatePath(`/discover/${startupId}`);
   revalidatePath("/dashboard/investor");
   revalidatePath("/intros");
-  return { success: "Intro angefragt — das Lovedis-Team meldet sich." };
+  return { success: "Intro angefragt — das LOVEDIS-Team meldet sich." };
 }
 
 /** Team brokering: approve (opens a chat) or decline an intro request. */

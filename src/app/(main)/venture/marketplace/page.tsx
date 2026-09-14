@@ -133,7 +133,7 @@ export default async function MarketplacePage() {
           <EmptyState
             icon={UsersIcon}
             title="Noch keine Mentor:innen"
-            description="Das Lovedis-Team kuratiert das Mentor:innen-Netzwerk."
+            description="Das LOVEDIS-Team kuratiert das Mentor:innen-Netzwerk."
           />
         </section>
       ) : (

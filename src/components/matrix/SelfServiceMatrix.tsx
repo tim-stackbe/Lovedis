@@ -637,10 +637,10 @@ export function SelfServiceMatrix({
 
       <p className="text-xs text-lv-secondary">
         {showInterest
-          ? "Jede Person aus eurem Unternehmen stimmt einzeln ab; das Ergebnis ergibt sich aus der Mehrheit. Andere Partner sehen eure Stimmen nicht."
+          ? "Deine Einschätzungen sind nur für dich und das LOVEDIS-Team sichtbar — andere Partner sehen sie nicht."
           : mode === "partner"
-            ? "Deine Einschätzungen sind nur für dich und das Lovedis-Team sichtbar — andere Partner sehen sie nicht."
-            : "Deine Einschätzungen sind nur für dich und das Lovedis-Team sichtbar — andere Startups sehen sie nicht."}
+            ? "Deine Einschätzungen sind nur für dich und das LOVEDIS-Team sichtbar — andere Partner sehen sie nicht."
+            : "Deine Einschätzungen sind nur für dich und das LOVEDIS-Team sichtbar — andere Startups sehen sie nicht."}
       </p>
 
       {target && (

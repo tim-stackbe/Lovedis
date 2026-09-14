@@ -33,7 +33,7 @@ export default async function PendingPage() {
   return (
     <AuthLayout
       headline={["Willkommen.", "Fast geschafft.", "Freigabe folgt."]}
-      subline="Business-Partner-Konten werden vom Lovedis-Team geprüft, bevor die kuratierte Longlist und die Screening-Masken sichtbar werden."
+      subline="Business-Partner-Konten werden vom LOVEDIS-Team geprüft, bevor die kuratierte Longlist und die Screening-Masken sichtbar werden."
     >
       <div className="space-y-6">
         <div className="space-y-2">

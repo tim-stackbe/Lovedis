@@ -102,7 +102,7 @@ export default async function VentureCreditsPage() {
             <EmptyState
               icon={CreditsIcon}
               title="Noch keine Buchungen"
-              description="Sobald das Lovedis-Team dir Credits gutschreibt, erscheinen sie hier."
+              description="Sobald das LOVEDIS-Team dir Credits gutschreibt, erscheinen sie hier."
             />
           ) : (
             <TableCard>

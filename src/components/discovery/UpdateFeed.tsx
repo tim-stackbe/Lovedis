@@ -57,7 +57,7 @@ export function UpdateFeed({ updates }: { updates: FeedUpdate[] }) {
                 {u.official ? (
                   <>
                     <span className="text-sm font-bold text-lv-text">
-                      Lovedis-Team
+                      LOVEDIS-Team
                     </span>
                     <Badge tone="blue">
                       <BadgeCheck className="h-3 w-3" />
