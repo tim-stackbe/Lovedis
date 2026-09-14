@@ -40,6 +40,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# Deployed-version metadata, passed by deploy/hetzner/deploy-platform.sh and
+# reported by GET /api/health so the live commit is verifiable. Non-sensitive:
+# short SHA (with a `-dirty` suffix for uncommitted deploys), branch, timestamp.
+ARG APP_VERSION=unknown
+ARG APP_BRANCH=unknown
+ARG APP_DEPLOYED_AT=unknown
+ENV APP_VERSION=${APP_VERSION}
+ENV APP_BRANCH=${APP_BRANCH}
+ENV APP_DEPLOYED_AT=${APP_DEPLOYED_AT}
+
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
 

@@ -1,5 +1,41 @@
 # Hetzner deployment (Storyblok hybrid)
 
+## How to not lose your changes
+
+**The deploy ships your local working tree, not a commit.** `deploy-platform.sh`
+runs `rsync --delete`, so whatever is in your checkout becomes the server state —
+and anything *not* in your checkout is deleted there. Uncommitted work that was
+deployed on Friday disappears the moment someone deploys a clean tree (this is
+exactly how last week's Challenges / Partner Hub edits vanished).
+
+So:
+
+1. **Commit before you deploy.** The deploy now aborts on a dirty tree and lists
+   the offending files. Commit them and re-run.
+2. **Escape hatch, use sparingly:** `DEPLOY_ALLOW_DIRTY=1 ./deploy/hetzner/deploy-platform.sh`
+   deploys uncommitted work and prints a loud warning. The deployed content then
+   matches no commit and the next clean deploy silently reverts it.
+3. **Push your commits.** The deploy warns (does not block) when your branch has
+   commits that are not on its upstream — nobody else could reproduce what's live.
+4. **Verify what is actually live** after every deploy:
+
+   ```bash
+   curl -s https://app.49.13.222.76.nip.io/api/health
+   # {"status":"ok","database":"up","version":"6a0e82a","branch":"Dedalus","deployedAt":"…"}
+   ```
+
+   A `-dirty` suffix (`6a0e82a-dirty`) means the live code does not match any
+   commit. The deploy script prints this comparison itself at the end, and also
+   writes a manifest on the server (`.deployed-version` in the rsync target) with
+   the sha, dirty flag, branch, deploying user/host and UTC timestamp.
+
+**Destructive data scripts are guarded.** `prisma/seed.ts` and
+`prisma/cleanup-demo-data.ts` delete users, companies and everything attached to
+them. Both now refuse to run unless `DATABASE_URL` points at `localhost` /
+`127.0.0.1`, print the target host plus exactly what would be destroyed, and
+require `I_KNOW_THIS_DELETES_EVERYTHING=1` for any remote database. Never point
+them at the TEST box without a `pg_dump` first.
+
 ## Deploy (Cursor agents, Mac, or CI)
 
 ```bash

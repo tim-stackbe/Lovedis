@@ -17,6 +17,11 @@
 # Usage (from repo root):
 #   ./deploy/hetzner/deploy-platform.sh
 #
+# IMPORTANT: this script deploys your LOCAL WORKING TREE (rsync --delete), not a
+# committed git state. A dirty tree therefore aborts the deploy, because the next
+# clean deploy would silently revert those files on the server. Commit first.
+#   DEPLOY_ALLOW_DIRTY=1   escape hatch — deploy uncommitted work anyway
+#
 # Optional env (cloud):
 #   SSH_HOST=49.13.222.76
 #   SSH_USER=deploy
@@ -32,6 +37,143 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SHA="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+DIRTY=no
+# Honest version label: "<sha>" only when the tree matches the commit,
+# "<sha>-dirty" otherwise. Set by preflight_git_checks.
+VERSION="$SHA"
+
+# Paths rsync never ships. Changes confined to these cannot reach the server, so
+# they must not block a deploy either. Keep in sync with the --exclude flags.
+RSYNC_EXCLUDES=(node_modules .git .env .env.local .next cms/node_modules)
+
+# Working-tree changes rsync WOULD ship: staged, unstaged and untracked files
+# (excluding the rsync excludes). Emitted one porcelain line per change.
+deployable_changes() {
+  local line path ex excluded
+  { git -C "$ROOT" status --porcelain --untracked-files=all 2>/dev/null || true; } | while IFS= read -r line; do
+    path="${line:3}"
+    # Renames/copies read as "old -> new"; the new path is what gets synced.
+    case "$path" in
+      *' -> '*) path="${path##* -> }" ;;
+    esac
+    path="${path#\"}"
+    path="${path%\"}"
+    excluded=no
+    for ex in "${RSYNC_EXCLUDES[@]}"; do
+      case "$path" in
+        "$ex" | "$ex"/* | */"$ex" | */"$ex"/*)
+          excluded=yes
+          break
+          ;;
+      esac
+    done
+    [ "$excluded" = yes ] || printf '%s\n' "$line"
+  done
+}
+
+# Abort on a dirty tree: the deploy would ship files that exist in no commit, and
+# the next clean deploy would delete them again (this is how last week's
+# Challenges / Partner Hub work vanished from TEST).
+assert_clean_tree() {
+  local changes
+  changes="$(deployable_changes)"
+  [ -n "$changes" ] || return 0
+
+  DIRTY=yes
+  VERSION="${SHA}-dirty"
+
+  if [ "${DEPLOY_ALLOW_DIRTY:-}" = "1" ]; then
+    echo
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+    echo "!!  DEPLOY_ALLOW_DIRTY=1 — DEPLOYING UNCOMMITTED WORK               !!" >&2
+    echo "!!                                                                  !!" >&2
+    echo "!!  The deployed content matches NO COMMIT. Nobody can reproduce or !!" >&2
+    echo "!!  review it, and the NEXT CLEAN DEPLOY WILL SILENTLY REVERT IT.   !!" >&2
+    echo "!!  Commit and re-deploy as soon as possible.                       !!" >&2
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+    echo >&2
+    printf '%s\n' "$changes" | sed 's/^/  /' >&2
+    echo >&2
+    return 0
+  fi
+
+  echo "deploy-platform.sh: working tree is dirty — deploy aborted." >&2
+  echo >&2
+  echo "This script rsyncs your WORKING TREE with --delete; it does not deploy a" >&2
+  echo "commit. Deploying uncommitted files puts code on the server that exists in" >&2
+  echo "no commit, and the next clean deploy silently deletes it again." >&2
+  echo >&2
+  echo "Uncommitted changes that would be deployed:" >&2
+  printf '%s\n' "$changes" | sed 's/^/  /' >&2
+  echo >&2
+  echo "Fix it — commit (or stash) the changes above, then re-run:" >&2
+  echo "  git add -A && git commit -m '<what you changed>'" >&2
+  echo "  ./deploy/hetzner/deploy-platform.sh" >&2
+  echo >&2
+  echo "Only if you truly need an unreproducible test deploy:" >&2
+  echo "  DEPLOY_ALLOW_DIRTY=1 ./deploy/hetzner/deploy-platform.sh" >&2
+  exit 1
+}
+
+# Warn (never block) when HEAD is ahead of its upstream: the server would run
+# code no teammate can check out from origin.
+warn_unpushed_commits() {
+  local upstream ahead
+  upstream="$(git -C "$ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+  if [ -z "$upstream" ]; then
+    echo "   ⚠ Branch ${BRANCH} has no upstream — nothing on origin matches this deploy."
+    return
+  fi
+  ahead="$(git -C "$ROOT" rev-list --count "${upstream}..HEAD" 2>/dev/null || echo 0)"
+  if [ "$ahead" -gt 0 ]; then
+    echo "   ⚠ ${ahead} commit(s) on ${BRANCH} are not on ${upstream} — push them so"
+    echo "     teammates can reproduce what is live: git push"
+  fi
+}
+
+preflight_git_checks() {
+  echo "→ Preflight: git state…"
+  if [ "$SHA" = unknown ]; then
+    echo "   ⚠ Not a git checkout — cannot verify what is being deployed." >&2
+    echo "   Version to deploy: unknown (branch ${BRANCH})"
+    echo
+    return
+  fi
+  assert_clean_tree
+  warn_unpushed_commits
+  echo "   Version to deploy: ${VERSION} (branch ${BRANCH})"
+  echo
+}
+
+# Deploy manifest written onto the server so anyone can see what is actually live.
+# Non-sensitive: sha, branch, who deployed, when.
+deploy_manifest() {
+  cat <<EOF
+version=${VERSION}
+sha=${SHA}
+dirty=${DIRTY}
+branch=${BRANCH}
+mode=${DEPLOY_MODE}
+deployed_by=$(whoami 2>/dev/null || echo unknown)@$(hostname -s 2>/dev/null || echo unknown)
+deployed_at=${DEPLOYED_AT}
+EOF
+}
+
+# Confirm the running app reports the version we just deployed.
+report_live_version() {
+  local base_url="$1" body live
+  body="$(curl -sS --max-time 15 "${base_url}/api/health" 2>/dev/null || echo '')"
+  live="$(printf '%s' "$body" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')"
+  if [ -z "$live" ]; then
+    echo "    Live version: unavailable — check GET ${base_url}/api/health"
+  elif [ "$live" = "$VERSION" ]; then
+    echo "    Live version: ${live} ✓ matches this deploy"
+  else
+    echo "    Live version: ${live} ✗ expected ${VERSION} — container may not have restarted"
+  fi
+}
 
 resolve_deploy_mode() {
   if [ -n "${DEPLOY_MODE:-}" ]; then
@@ -77,7 +219,7 @@ deploy_mac() {
   image="${HETZNER_PLATFORM_IMAGE:-lovedis-platform:test}"
   app_url="${HETZNER_APP_URL:-https://app.49.13.222.76.nip.io}"
 
-  echo "==> LOVEDIS Hetzner deploy (${SHA}) [mac]"
+  echo "==> LOVEDIS Hetzner deploy (${VERSION}) [mac]"
   echo "    Target: ${ssh_target}:${platform_dir}"
   echo "    Compose: ${compose_dir}"
   echo "    Image:   ${image}"
@@ -102,13 +244,22 @@ deploy_mac() {
     --exclude .env.local \
     --exclude .next \
     --exclude cms/node_modules \
+    --exclude .deployed-version \
     "$ROOT/" "${ssh_target}:${platform_dir}/"
   echo "   Sync complete"
+
+  echo "→ Writing deploy manifest (${platform_dir}/.deployed-version)…"
+  deploy_manifest | ssh "$ssh_target" "cat > '${platform_dir}/.deployed-version'"
+  echo "   Manifest written"
 
   echo "→ Building platform image and restarting container…"
   ssh "$ssh_target" "set -euo pipefail
     cd '${platform_dir}'
-    docker build -t '${image}' .
+    docker build \
+      --build-arg APP_VERSION='${VERSION}' \
+      --build-arg APP_BRANCH='${BRANCH}' \
+      --build-arg APP_DEPLOYED_AT='${DEPLOYED_AT}' \
+      -t '${image}' .
     cd '${compose_dir}'
     docker compose up -d platform
     docker compose ps platform
@@ -122,9 +273,10 @@ deploy_mac() {
   echo "→ Smoke test (platform + homepage)…"
   bash "$ROOT/deploy/hetzner/smoke-test.sh" "49.13.222.76"
   echo
-  echo "==> Deploy complete (${SHA})"
+  echo "==> Deploy complete (${VERSION})"
   echo "    Platform: ${app_url}"
   echo "    Homepage: https://home.49.13.222.76.nip.io"
+  report_live_version "$app_url"
 }
 
 deploy_cloud() {
@@ -165,9 +317,10 @@ deploy_cloud() {
     --exclude .git
     --exclude .next
     --exclude cms/node_modules
+    --exclude .deployed-version
     -e "$rsync_ssh")
 
-  echo "==> LOVEDIS Hetzner deploy (${SHA}) [cloud]"
+  echo "==> LOVEDIS Hetzner deploy (${VERSION}) [cloud]"
   echo "    Target: ${user}@${host}:${remote_dir}"
   echo
 
@@ -194,6 +347,10 @@ deploy_cloud() {
   "${rsync[@]}" "$ROOT/" "${user}@${host}:${remote_dir}/"
   echo "   Sync complete"
 
+  echo "→ Writing deploy manifest (${remote_dir}/.deployed-version)…"
+  deploy_manifest | "${ssh_cmd[@]}" "cat > '${remote_dir}/.deployed-version'"
+  echo "   Manifest written"
+
   echo "→ Building platform image on server (docker build --no-cache)…"
   "${ssh_cmd[@]}" bash -s <<REMOTE
 set -euo pipefail
@@ -209,7 +366,11 @@ if [ -z "\${PLATFORM_IMAGE:-}" ]; then
   exit 1
 fi
 cd "${remote_dir}"
-docker build --no-cache -t "\${PLATFORM_IMAGE}" -f Dockerfile .
+docker build --no-cache \
+  --build-arg APP_VERSION='${VERSION}' \
+  --build-arg APP_BRANCH='${BRANCH}' \
+  --build-arg APP_DEPLOYED_AT='${DEPLOYED_AT}' \
+  -t "\${PLATFORM_IMAGE}" -f Dockerfile .
 cd "${compose_dir}"
 docker compose up -d platform
 REMOTE
@@ -222,10 +383,14 @@ REMOTE
   bash "$ROOT/deploy/hetzner/smoke-test.sh" "$host"
 
   echo
-  echo "==> Deploy complete (${SHA})"
+  echo "==> Deploy complete (${VERSION})"
   echo "    Platform: https://app.${host}.nip.io"
   echo "    Homepage: https://home.${host}.nip.io"
+  report_live_version "https://app.${host}.nip.io"
 }
+
+# Shared safety gate — runs before the mode dispatch so neither path can skip it.
+preflight_git_checks
 
 case "$DEPLOY_MODE" in
   mac) deploy_mac ;;
