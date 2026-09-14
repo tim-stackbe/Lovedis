@@ -40,6 +40,49 @@ const PASSWORD = "Lovedis2026!";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+/** Hosts we accept as "obviously a local dev database". */
+const LOCAL_DB_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);
+
+function databaseHost(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^\[|\]$/g, "") || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+/**
+ * Refuse to wipe anything but an obviously local database. A stray
+ * `DATABASE_URL` pointing at the Hetzner TEST box would otherwise delete every
+ * real account. Override only with I_KNOW_THIS_DELETES_EVERYTHING=1.
+ */
+function assertDestructiveRunAllowed(script: string, destroys: string[]): void {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is required.");
+  const host = databaseHost(url);
+
+  console.log(`\n${script}: DESTRUKTIV — Ziel-Datenbank-Host: ${host}`);
+  console.log("Wird unwiderruflich gelöscht:");
+  for (const item of destroys) console.log(`  • ${item}`);
+  console.log("");
+
+  if (LOCAL_DB_HOSTS.has(host)) return;
+
+  if (process.env.I_KNOW_THIS_DELETES_EVERYTHING === "1") {
+    console.warn(
+      `!! I_KNOW_THIS_DELETES_EVERYTHING=1 — lösche auf NICHT-lokalem Host ${host}. !!`
+    );
+    return;
+  }
+
+  throw new Error(
+    `${script}: Abbruch — DATABASE_URL zeigt auf ${host}, nicht auf eine lokale ` +
+      `Datenbank (${[...LOCAL_DB_HOSTS].join(", ")}). Es wurde nichts gelöscht.\n` +
+      `Falls das wirklich beabsichtigt ist (Backup zuerst!):\n` +
+      `  I_KNOW_THIS_DELETES_EVERYTHING=1 ... ${script}`
+  );
+}
+
 interface StartupSeed {
   name: string;
   website: string;
@@ -380,6 +423,15 @@ async function main() {
     );
     return;
   }
+
+  assertDestructiveRunAllowed("prisma/seed.ts", [
+    "ALLE Nutzerkonten (user) — inkl. echter Admin-/Partner-Logins",
+    "ALLE Firmen (company) und Partner-Spalten der Match-Matrix",
+    "ALLE Startups, Evaluations, Scores, Challenges, Applications, PoCs",
+    "ALLE Nachrichten, Conversations, Intros, Follows, Updates",
+    "ALLEN Marketplace-Katalog, Credits und Bookings",
+    "ALLE SSOT-Inhalte (Content Pages, Media, Roadmap)",
+  ]);
 
   console.log("Datenbank wird geseedet (DEMO, SEED_DEMO=1)…");
 

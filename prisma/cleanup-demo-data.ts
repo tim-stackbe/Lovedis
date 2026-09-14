@@ -14,8 +14,9 @@
  * of it cascades from the demo User/Startup deletes; the standalone content
  * tables (which hold only demo rows) are wiped explicitly.
  *
- * SAFETY: no-op unless CONFIRM_CLEANUP=1 is set. Always back up first
- * (pg_dump) before running against production.
+ * SAFETY: no-op unless CONFIRM_CLEANUP=1 is set, and refuses to run against a
+ * non-local DATABASE_URL unless I_KNOW_THIS_DELETES_EVERYTHING=1 is also set.
+ * Always back up first (pg_dump) before running against production.
  *
  * Usage:
  *   CONFIRM_CLEANUP=1 DATABASE_URL=<target> npx tsx prisma/cleanup-demo-data.ts
@@ -28,6 +29,49 @@ const prisma = new PrismaClient({ adapter });
 
 const REAL_ADMIN_EMAIL = process.env.REAL_ADMIN_EMAIL ?? "admin@lovedis.dev";
 
+/** Hosts we accept as "obviously a local dev database". */
+const LOCAL_DB_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);
+
+function databaseHost(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^\[|\]$/g, "") || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+/**
+ * Refuse to delete on anything but an obviously local database unless the
+ * operator explicitly opts in. A stray remote DATABASE_URL would otherwise
+ * wipe real accounts on the TEST box.
+ */
+function assertDestructiveRunAllowed(script: string, destroys: string[]): void {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is required.");
+  const host = databaseHost(url);
+
+  console.log(`\n${script}: DESTRUKTIV — Ziel-Datenbank-Host: ${host}`);
+  console.log("Wird unwiderruflich gelöscht:");
+  for (const item of destroys) console.log(`  • ${item}`);
+  console.log("");
+
+  if (LOCAL_DB_HOSTS.has(host)) return;
+
+  if (process.env.I_KNOW_THIS_DELETES_EVERYTHING === "1") {
+    console.warn(
+      `!! I_KNOW_THIS_DELETES_EVERYTHING=1 — lösche auf NICHT-lokalem Host ${host}. !!`
+    );
+    return;
+  }
+
+  throw new Error(
+    `${script}: Abbruch — DATABASE_URL zeigt auf ${host}, nicht auf eine lokale ` +
+      `Datenbank (${[...LOCAL_DB_HOSTS].join(", ")}). Es wurde nichts gelöscht.\n` +
+      `Falls das wirklich beabsichtigt ist (pg_dump zuerst!):\n` +
+      `  I_KNOW_THIS_DELETES_EVERYTHING=1 CONFIRM_CLEANUP=1 npx tsx ${script}`
+  );
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
   if (process.env.CONFIRM_CLEANUP !== "1") {
@@ -36,6 +80,16 @@ async function main() {
     );
     return;
   }
+
+  assertDestructiveRunAllowed("prisma/cleanup-demo-data.ts", [
+    `ALLE Nutzer außer ${REAL_ADMIN_EMAIL} und den Partner-Mitgliedern echter Matrix-Firmen`,
+    "ALLE Firmen ohne Match-Matrix-Spalte (Demo-Firmen)",
+    "ALLE Startups, die nicht in der Match-Matrix stehen",
+    "ALLE Evaluations, Scores, Challenges, Applications, PoCs, Reviews, Pushes",
+    "ALLE Nachrichten, Conversations, Intros, Follows, Updates, Reminders",
+    "ALLEN Marketplace-Katalog, Credits, Bookings und Scouting-Kampagnen",
+    "ALLE SSOT-Inhalte (Content Pages, Media, Roadmap, Knowledge)",
+  ]);
 
   console.log("Real-Data-Cutover: entferne alle Demo-Daten…");
 
