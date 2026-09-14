@@ -9,6 +9,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Meine Bewerbungen" };
@@ -38,6 +39,12 @@ export default async function ApplicationsPage() {
   const applications = startup?.applications ?? [];
   const accepted = applications.filter((a) => a.status === "ACCEPTED").length;
 
+  // This page is the STARTUP-owned "Meine Bewerbungen" view: it resolves the
+  // startup by `ownerUserId`, so the internal team (who has no Startup row)
+  // legitimately sees nothing here. Rather than leave them on a dead end, point
+  // them at the cross-challenge overview that actually answers their question.
+  const isTeamPreview = isTeamRole(session.user.role);
+
   return (
     <>
       <HeroBanner
@@ -53,7 +60,18 @@ export default async function ApplicationsPage() {
 
       <SectionLabel number="01" label="Bewerbungen" title="Status-Überblick" />
 
-      {applications.length === 0 ? (
+      {applications.length === 0 && isTeamPreview ? (
+        <EmptyState
+          icon={Building2}
+          title="Startup-Sicht ohne eigenes Startup"
+          description="Diese Seite zeigt die Bewerbungen des eingeloggten Startups — als Team hast du keine. Alle Bewerbungen aller Startups liegen in der Challenge-Bewerbungen-Übersicht."
+          action={
+            <LinkButton href="/challenge-applications">
+              Alle Challenge-Bewerbungen
+            </LinkButton>
+          }
+        />
+      ) : applications.length === 0 ? (
         <EmptyState
           icon={Building2}
           title="Noch keine Bewerbungen"

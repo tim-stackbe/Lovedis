@@ -358,6 +358,7 @@ const MATCHMAKING_SECTION: NavSection = {
   items: [
     { label: "Batches", href: "/batches", icon: "batches" },
     { label: "Match-Matrix", href: "/match-matrix", icon: "matchMatrix" },
+    { label: "Challenge-Bewerbungen", href: "/challenge-applications", icon: "applications" },
     { label: "Use-Case-Bewertung (Partner)", href: "/use-cases", icon: "useCases" },
   ],
 };
@@ -429,6 +430,7 @@ const MATCHMAKING_SECTION_ADMIN: NavSection = {
   items: [
     { label: "Batches", href: "/batches", icon: "batches" },
     { label: "Startup-Partner Matchmaking", href: "/match-matrix", icon: "matchMatrix" },
+    { label: "Challenge-Bewerbungen", href: "/challenge-applications", icon: "applications" },
   ],
 };
 

@@ -232,6 +232,12 @@ export const CHALLENGE_STATUS_LABELS: Record<ChallengeStatus, string> = {
   CLOSED: "Geschlossen",
 };
 
+export const APPLICATION_STATUSES: ApplicationStatus[] = [
+  "PENDING",
+  "ACCEPTED",
+  "REJECTED",
+];
+
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   PENDING: "Ausstehend",
   ACCEPTED: "Angenommen",
