@@ -7,14 +7,20 @@ import {
 } from "@/lib/stale-deployment";
 
 describe("isStaleDeploymentError — stale client bundle after a deploy", () => {
-  // Proven on the Hetzner TEST box on 2026-09-14: the `login` Server Action id
-  // was 604b46e2…403 in the 12:33 build and 6089cc90…ab0 in the 13:19 build.
-  // Posting the older id returned `404` + `x-nextjs-action-not-found: 1`, and
-  // the platform log showed `Failed to find Server Action "600e3bd0…"` at
-  // 13:09:59 CEST — an id from a build that had already been replaced.
-  it("matches the error Next.js throws for an unknown Server Action", () => {
-    const error = new Error(
-      'Server Action "600e3bd0b063c60b37916c2f4ead466e8668add61d" was not found on the server.'
+  // Captured LIVE in the browser on the Hetzner TEST box on 2026-09-14 against
+  // the deployed build: submitting the `login` form with a stale action id
+  // returned `404` + `x-nextjs-action-not-found: 1` and the client threw this
+  // exact object into the root error boundary. Note the object had:
+  //   name: "UnrecognizedActionError"  (assigned explicitly; survives minify)
+  //   __NEXT_ERROR_CODE: "E715"
+  //   message: 'Server Action "602a8f74…" was not found on the server. …'
+  //   constructor.name: "l"  (minified — so we must NOT rely on class identity)
+  it("matches the REAL production UnrecognizedActionError (E715) shape", () => {
+    const error = Object.assign(
+      new Error(
+        'Server Action "602a8f74addf7a53658359a334a8157c097a48bf77" was not found on the server. \nRead more: https://nextjs.org/docs/messages/failed-to-find-server-action'
+      ),
+      { __NEXT_ERROR_CODE: "E715" }
     );
     error.name = "UnrecognizedActionError";
     expect(isStaleDeploymentError(error)).toBe(true);
@@ -24,6 +30,19 @@ describe("isStaleDeploymentError — stale client bundle after a deploy", () => 
     expect(
       isStaleDeploymentError(
         Object.assign(new Error("boom"), { __NEXT_ERROR_CODE: "E715" })
+      )
+    ).toBe(true);
+  });
+
+  it("matches a stale MPA Server Action submit (E975)", () => {
+    expect(
+      isStaleDeploymentError(
+        Object.assign(
+          new Error(
+            "Failed to find Server Action. This request might be from an older or newer deployment."
+          ),
+          { __NEXT_ERROR_CODE: "E975" }
+        )
       )
     ).toBe(true);
   });
@@ -53,6 +72,43 @@ describe("isStaleDeploymentError — stale client bundle after a deploy", () => 
       )
     ).toBe(true);
   });
+
+  // The class of error the previous fix missed: a stale tab that soft-navigates
+  // to a route whose hashed JS chunk the new deploy has already deleted. The
+  // webpack runtime throws a `ChunkLoadError` — NOT a Server Action error — so
+  // it was classified non-stale and the user saw the generic
+  // "Diese Seite konnte nicht geladen werden" card instead of self-healing.
+  it("matches a webpack ChunkLoadError by name (minify-safe)", () => {
+    const error = new Error(
+      "Loading chunk 4823 failed.\n(missing: https://app.example/_next/static/chunks/4823-abc123.js)"
+    );
+    error.name = "ChunkLoadError";
+    expect(isStaleDeploymentError(error)).toBe(true);
+  });
+
+  it("matches a chunk-load failure by message even if the name is generic", () => {
+    // Minified/re-thrown copies can lose the ChunkLoadError name; the message
+    // still carries the tell-tale "Loading chunk … failed".
+    expect(
+      isStaleDeploymentError(new Error("Loading chunk app/dashboard/page failed."))
+    ).toBe(true);
+  });
+
+  it("matches a failed CSS chunk load", () => {
+    const error = new Error("Loading CSS chunk 91 failed.");
+    error.name = "ChunkLoadError";
+    expect(isStaleDeploymentError(error)).toBe(true);
+  });
+
+  it("matches dynamic-import failures across engines", () => {
+    for (const message of [
+      "Failed to fetch dynamically imported module: https://app.example/_next/static/chunks/x.js",
+      "error loading dynamically imported module: https://app.example/_next/static/chunks/x.js",
+      "Importing a module script failed.",
+    ]) {
+      expect(isStaleDeploymentError(new Error(message))).toBe(true);
+    }
+  });
 });
 
 describe("isStaleDeploymentError — everything else stays a real error", () => {
@@ -75,6 +131,19 @@ describe("isStaleDeploymentError — everything else stays a real error", () => 
       isStaleDeploymentError(
         Object.assign(new Error("Connection closed."), { digest: "1720008400" })
       )
+    ).toBe(false);
+  });
+
+  it("does not match a bare network failure (not a stale-chunk signal)", () => {
+    // A generic `TypeError: Failed to fetch` is an ordinary connectivity error,
+    // not a missing-chunk error — auto-reloading it could loop offline users.
+    const error = new TypeError("Failed to fetch");
+    expect(isStaleDeploymentError(error)).toBe(false);
+  });
+
+  it("does not match an unrelated error that merely mentions 'chunk'", () => {
+    expect(
+      isStaleDeploymentError(new Error("Uploaded chunk size exceeds the limit"))
     ).toBe(false);
   });
 

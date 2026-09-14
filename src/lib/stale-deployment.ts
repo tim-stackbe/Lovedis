@@ -2,16 +2,34 @@
  * Detects the client-side errors a browser hits when its JS bundle is older
  * than the running server build.
  *
- * Every deploy produces a fresh `BUILD_ID` and re-derives EVERY Server Action
- * id. A tab that was loaded before the deploy still holds the previous ids, so
- * the next form submit posts an id the server no longer knows. The server
- * answers `404` with `x-nextjs-action-not-found: 1` and the Next.js client
- * router throws `UnrecognizedActionError` (E715). Soft navigations fail the
- * same way, with a router state tree the new build cannot parse.
+ * Every deploy produces a fresh `BUILD_ID`, re-derives EVERY Server Action id
+ * AND re-hashes the per-route JavaScript chunks (deleting the previous ones).
+ * A tab that was loaded before the deploy still holds the previous bundle, so
+ * it fails in one of two ways after a deploy:
+ *
+ *   1. SERVER ACTION SUBMIT (e.g. the `login` form). The tab posts an action id
+ *      the server no longer knows; the server answers `404` with
+ *      `x-nextjs-action-not-found: 1` and the client throws
+ *      `UnrecognizedActionError` (`__NEXT_ERROR_CODE` `E715`,
+ *      message "…was not found on the server."). A stale MPA submit instead
+ *      throws "Failed to find Server Action…" (`E975`). Soft navigations can
+ *      fail with a router state tree the new build cannot parse.
+ *
+ *   2. SOFT NAVIGATION / LAZY ROUTE. The tab navigates to a route it has not
+ *      loaded yet and asks for a hashed chunk (`/_next/static/chunks/….js`)
+ *      that the deploy has already deleted. The webpack runtime then throws a
+ *      `ChunkLoadError` ("Loading chunk … failed"). Firefox/Safari word the
+ *      dynamic-import variant differently ("error loading dynamically imported
+ *      module", "Importing a module script failed"). THIS is the case the
+ *      previous fix missed: it is not a Server Action error at all, so it was
+ *      classified NON-stale and the user saw the generic
+ *      "Diese Seite konnte nicht geladen werden" card with no auto-recovery.
  *
  * The error crosses into an error boundary in the browser, so `name` and
- * `message` survive, but `instanceof` does not (the class is internal to Next
- * and not part of its public API). Match on the shape instead.
+ * `message` survive, but `instanceof` does not (the classes are internal to
+ * Next/webpack and are minified — the observed `constructor.name` was `"l"`).
+ * Match on the stable, explicitly-assigned `name`, on the `__NEXT_ERROR_CODE`,
+ * and on the human-readable message/digest text instead.
  */
 export function isStaleDeploymentError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -22,16 +40,34 @@ export function isStaleDeploymentError(error: unknown): boolean {
     digest?: unknown;
   };
 
+  // Stale Server Action id (login and every other form submit after a deploy).
+  // `name` is assigned explicitly in the Next constructor, so it survives
+  // minification even though the class identity does not.
   if (name === "UnrecognizedActionError") return true;
-  if ((error as { __NEXT_ERROR_CODE?: unknown }).__NEXT_ERROR_CODE === "E715") {
-    return true;
-  }
+
+  // Stale route chunk after a deploy. `ChunkLoadError` is likewise a name the
+  // webpack runtime assigns explicitly, so it survives minification.
+  if (name === "ChunkLoadError") return true;
+
+  const code = (error as { __NEXT_ERROR_CODE?: unknown }).__NEXT_ERROR_CODE;
+  // E715: UnrecognizedActionError. E975: stale MPA Server Action submit.
+  if (code === "E715" || code === "E975") return true;
 
   const text = [message, digest].filter((v) => typeof v === "string").join(" ");
   return (
+    // Stale Server Action (fetch + MPA phrasings) / stale soft navigation.
     text.includes("was not found on the server") ||
     text.includes("Failed to find Server Action") ||
-    text.includes("router state header was sent but could not be parsed")
+    text.includes("router state header was sent but could not be parsed") ||
+    // Stale route chunk / dynamic import across engines (webpack, Chrome,
+    // Firefox, Safari). A failed chunk/module fetch in a deployed SPA is, in
+    // practice, always the current tab referencing assets a newer build has
+    // already removed — recover the same way as a stale action.
+    /Loading chunk [^\s]+ failed/i.test(text) ||
+    text.includes("Loading CSS chunk") ||
+    text.includes("Failed to fetch dynamically imported module") ||
+    text.includes("error loading dynamically imported module") ||
+    text.includes("Importing a module script failed")
   );
 }
 
