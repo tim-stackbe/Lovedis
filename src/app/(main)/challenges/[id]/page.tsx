@@ -226,7 +226,7 @@ export default async function ChallengeDetailPage({
                         >
                           <Button type="submit" size="sm">
                             <Check className="h-4 w-4" />
-                            Annehmen & PoC starten
+                            Annehmen
                           </Button>
                         </form>
                         <form
