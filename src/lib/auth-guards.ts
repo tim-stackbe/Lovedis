@@ -4,9 +4,12 @@ import { auth } from "@/auth";
 import type { UserRole } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import {
+  APPROVAL_GATED_ROLES,
   FEED_ROLES,
+  isAwaitingApproval,
   MARKETPLACE_ROLES,
   PARTNER_VIEW_ROLES,
+  PENDING_APPROVAL_PATH,
   ROLE_HOMES,
   VENTURE_SCOUT_ROLES,
   VENTURE_VIEW_ROLES,
@@ -47,19 +50,30 @@ export async function requireAuth(): Promise<Session> {
 
 /**
  * App-shell gate for the main authenticated layout. On top of `requireAuth`,
- * this blocks self-registered business partners whose account is still pending
- * admin approval (`approvedAt` null) from reaching any partner-facing data and
- * sends them to `/pending`. Kept OUT of `requireAuth` itself so the standalone
- * `/pending` page (which uses `requireAuth`) never redirect-loops.
+ * this blocks accounts still pending admin approval (an approval-gated role
+ * with `approvedAt` null — today: self-registered business partners) from
+ * reaching any app data and sends them to `/pending`. Kept OUT of `requireAuth`
+ * itself so the standalone `/pending` page (which uses `requireAuth`) never
+ * redirect-loops.
+ *
+ * The gate condition lives in `isAwaitingApproval` because the auth actions
+ * derive their post-sign-in destination from the very same predicate: landing
+ * on a route this guard immediately redirects away from costs a second redirect
+ * hop, which aborts the first client-side navigation after sign-in.
  */
 export async function requireApprovedAccess(): Promise<Session> {
   const session = await requireAuth();
-  if (session.user.role === "BUSINESS_PARTNER") {
+  const role = session.user.role;
+  // Only approval-gated roles need the extra read; everyone else is approved
+  // at creation.
+  if (APPROVAL_GATED_ROLES.includes(role)) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { approvedAt: true },
     });
-    if (!user?.approvedAt) redirect("/pending");
+    if (isAwaitingApproval({ role, approvedAt: user?.approvedAt ?? null })) {
+      redirect(PENDING_APPROVAL_PATH);
+    }
   }
   return session;
 }

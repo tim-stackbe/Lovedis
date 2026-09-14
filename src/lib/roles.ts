@@ -70,6 +70,36 @@ export const MARKETPLACE_ROLES: UserRole[] = [
  */
 export const FEED_ROLES: UserRole[] = [...MARKETPLACE_ROLES, "STARTUP"];
 
+/**
+ * Roles whose accounts are gated behind admin approval: they are created with
+ * `approvedAt` null and stay out of the app shell until an admin approves them.
+ * Every other role is stamped approved at creation (see `signup`, `createUser`,
+ * company invites), so it is never gated.
+ *
+ * SINGLE SOURCE OF TRUTH for the gate. `requireApprovedAccess` enforces it and
+ * the auth actions read it to pick their post-sign-in destination, so the
+ * enforcing guard and the destination can never disagree — adding a role here
+ * automatically routes it to /pending on login instead of via a second,
+ * navigation-breaking redirect hop.
+ */
+export const APPROVAL_GATED_ROLES: UserRole[] = ["BUSINESS_PARTNER"];
+
+/** Holding page for accounts still waiting on approval. */
+export const PENDING_APPROVAL_PATH = "/pending";
+
+/**
+ * True while the account is still blocked by the approval gate. Note a null
+ * `approvedAt` only matters for an approval-gated role — for every other role
+ * it is meaningless (and must NOT route them to /pending, which bounces
+ * non-gated users straight back to their role home).
+ */
+export function isAwaitingApproval(user: {
+  role: UserRole;
+  approvedAt: Date | null;
+}): boolean {
+  return APPROVAL_GATED_ROLES.includes(user.role) && user.approvedAt == null;
+}
+
 export const ROLE_HOMES: Record<UserRole, string> = {
   ADMIN: "/dashboard/admin",
   MEMBER: "/dashboard/member",

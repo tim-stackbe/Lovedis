@@ -5,7 +5,7 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/Button";
 import { requireAuth } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { ROLE_HOMES } from "@/lib/roles";
+import { isAwaitingApproval, ROLE_HOMES } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Konto wird geprüft" };
 
@@ -17,17 +17,17 @@ export const metadata: Metadata = { title: "Konto wird geprüft" };
  */
 export default async function PendingPage() {
   const session = await requireAuth();
-
-  if (session.user.role !== "BUSINESS_PARTNER") {
-    redirect(ROLE_HOMES[session.user.role]);
-  }
+  const role = session.user.role;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { approvedAt: true },
   });
-  if (user?.approvedAt) {
-    redirect(ROLE_HOMES.BUSINESS_PARTNER);
+  // Exact complement of the app-shell gate (same predicate): only accounts
+  // actually awaiting approval belong here. Everyone else — approved, or a role
+  // the gate does not apply to — goes to their role home.
+  if (!isAwaitingApproval({ role, approvedAt: user?.approvedAt ?? null })) {
+    redirect(ROLE_HOMES[role]);
   }
 
   return (

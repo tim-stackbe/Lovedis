@@ -17,12 +17,54 @@ import {
 import { sendPasswordResetEmail } from "@/lib/password-reset-email";
 import { sendRegistrationConfirmationEmail } from "@/lib/registration-email";
 import { prisma } from "@/lib/prisma";
-import { ROLE_HOMES } from "@/lib/roles";
+import {
+  APPROVAL_GATED_ROLES,
+  isAwaitingApproval,
+  PENDING_APPROVAL_PATH,
+  ROLE_HOMES,
+} from "@/lib/roles";
 
 const loginSchema = z.object({
   email: z.email("Bitte gib eine gültige E-Mail-Adresse ein"),
   password: z.string().min(1, "Passwort ist erforderlich"),
 });
+
+/**
+ * The concrete URL a freshly signed-in user can land on WITHOUT a guard
+ * immediately sending them elsewhere.
+ *
+ * Any hop added after a Server Action redirect (by middleware or a layout
+ * guard) is a *chained* redirect, and that aborts the first client-side
+ * navigation after sign-in in Next.js 16 — the landing page fails to load and
+ * only a manual reload recovers ("reload error"). So the destination has to
+ * already satisfy every gate that would otherwise redirect.
+ *
+ * Precedence mirrors the order the gates run in:
+ *   1. `mustChangePassword` — middleware forces /change-password from anywhere,
+ *      so it wins even over an explicit callbackUrl.
+ *   2. The approval gate — the `(main)` app-shell guard forces /pending. Read
+ *      from `isAwaitingApproval`, the SAME predicate `requireApprovedAccess`
+ *      enforces, so the destination cannot drift from the gate when another
+ *      role becomes approval-gated.
+ *   3. The requested callbackUrl, else the role home.
+ */
+function postAuthDestination(
+  user: {
+    role: UserRole;
+    mustChangePassword: boolean;
+    approvedAt: Date | null;
+  } | null,
+  callbackUrl: string | null
+): string {
+  // No row (unknown email) — sign-in fails before any redirect happens.
+  if (!user) return callbackUrl ?? "/";
+  if (user.mustChangePassword) return "/change-password";
+  if (isAwaitingApproval(user)) return PENDING_APPROVAL_PATH;
+  // /pending bounces everyone who is NOT awaiting approval back to their role
+  // home, so honouring it as a callback would add exactly the hop we avoid.
+  if (callbackUrl && callbackUrl !== PENDING_APPROVAL_PATH) return callbackUrl;
+  return ROLE_HOMES[user.role];
+}
 
 export async function login(
   _prevState: ActionState | undefined,
@@ -35,11 +77,8 @@ export async function login(
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
   // Resolve a CONCRETE post-login destination so sign-in triggers exactly one
-  // redirect. Redirecting to "/" and letting middleware bounce "/" → the role
-  // home is a *chained* redirect (Server Action redirect + middleware redirect)
-  // which aborts the first client-side navigation after login in Next.js 16 —
-  // the landing page fails to load and only a manual reload recovers. Landing
-  // directly on the final URL avoids that second hop entirely.
+  // redirect — see `postAuthDestination` for why a second hop breaks the first
+  // navigation after login.
   const callbackUrl = formData.get("callbackUrl");
   const safeCallback =
     typeof callbackUrl === "string" &&
@@ -48,38 +87,14 @@ export async function login(
       ? callbackUrl
       : null;
 
-  // Single lookup for the role home, the first-login gate AND the partner
-  // approval gate.
+  // Single lookup feeding every gate the destination has to satisfy: the role
+  // home, the first-login gate AND the approval gate.
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email.toLowerCase() },
     select: { role: true, mustChangePassword: true, approvedAt: true },
   });
 
-  // First-login accounts (admin-provisioned, temporary password) MUST land on
-  // /change-password. Sending them to their role home first would make
-  // middleware bounce role-home → /change-password — the same chained redirect
-  // that breaks the first navigation in Next.js 16. So force /change-password
-  // directly, taking precedence over any callbackUrl (middleware would bounce a
-  // non-exempt callback for these users anyway).
-  //
-  // Self-registered business partners still awaiting admin approval
-  // (approvedAt null) MUST land on /pending for the exact same reason: sending
-  // them to their role home first would make the app-shell guard
-  // (requireApprovedAccess) bounce role-home → /pending — a chained redirect
-  // (Server Action redirect + layout redirect) that aborts the first
-  // client-side navigation after login in Next.js 16 (the landing page fails
-  // to load and only a manual reload recovers). Land straight on /pending —
-  // the same single-hop fix the signup action already applies to a freshly
-  // self-registered partner. /pending itself only uses requireAuth, so it
-  // never redirect-loops.
-  let redirectTo: string;
-  if (user?.mustChangePassword) {
-    redirectTo = "/change-password";
-  } else if (user?.role === "BUSINESS_PARTNER" && !user.approvedAt) {
-    redirectTo = "/pending";
-  } else {
-    redirectTo = safeCallback ?? (user ? ROLE_HOMES[user.role] : "/");
-  }
+  const redirectTo = postAuthDestination(user, safeCallback);
 
   try {
     await signIn("credentials", {
@@ -127,8 +142,8 @@ const changePasswordSchema = z
  * writes the new bcrypt hash, clears the `mustChangePassword` gate and stamps
  * `passwordChangedAt`. Re-authenticates with the new password so the JWT is
  * reissued WITHOUT the stale `mustChangePassword` flag (otherwise middleware
- * would keep bouncing the user back to /change-password), then lands them on
- * their role home in a single redirect.
+ * would keep bouncing the user back to /change-password), then lands them in a
+ * single redirect on whichever destination their remaining gates allow.
  */
 export async function changePassword(
   _prevState: ActionState | undefined,
@@ -148,7 +163,7 @@ export async function changePassword(
   const email = session.user.email.toLowerCase();
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, role: true, approvedAt: true },
   });
   if (!user || !user.isActive) {
     return { error: "Konto nicht gefunden. Bitte melde dich erneut an." };
@@ -164,11 +179,20 @@ export async function changePassword(
     },
   });
 
+  // `mustChangePassword` is cleared above, so this is the role home unless the
+  // approval gate still applies — an approval-gated account (e.g. an invited
+  // partner awaiting approval) must land on /pending directly, or the app-shell
+  // guard would add the second, navigation-breaking hop.
+  const redirectTo = postAuthDestination(
+    { ...user, mustChangePassword: false },
+    null
+  );
+
   try {
     await signIn("credentials", {
       email,
       password: parsed.data.password,
-      redirectTo: ROLE_HOMES[session.user.role],
+      redirectTo,
     });
     return {};
   } catch (error) {
@@ -207,9 +231,11 @@ async function signup(
     return { error: "Ein Konto mit dieser E-Mail existiert bereits." };
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  // Self-registered partners land in the approval queue (approvedAt null =
-  // pending); every other self-signup role is approved immediately so it is
-  // never gated.
+  // A self-signup in an approval-gated role lands in the approval queue
+  // (approvedAt null = pending); every other role is approved immediately so it
+  // is never gated. Derived from the gate itself, so creation and routing below
+  // always agree.
+  const approvedAt = APPROVAL_GATED_ROLES.includes(role) ? null : new Date();
   await prisma.user.create({
     data: {
       email,
@@ -217,17 +243,17 @@ async function signup(
       company: parsed.data.company,
       passwordHash,
       role,
-      approvedAt: role === "BUSINESS_PARTNER" ? null : new Date(),
+      approvedAt,
     },
   });
   await sendRegistrationConfirmationEmail({ to: email, name: parsed.data.name });
 
   // Land directly on the concrete destination (single redirect) — same reason
-  // as `login` above. A freshly self-registered partner is still pending
-  // approval, so the app-shell guard would bounce their role home → /pending;
-  // send them straight to /pending to keep it a single hop.
-  const redirectTo =
-    role === "BUSINESS_PARTNER" ? "/pending" : ROLE_HOMES[role];
+  // as `login` above.
+  const redirectTo = postAuthDestination(
+    { role, mustChangePassword: false, approvedAt },
+    null
+  );
   try {
     await signIn("credentials", {
       email,
