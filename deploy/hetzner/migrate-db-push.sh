@@ -96,9 +96,12 @@ docker run --rm \
     apt-get update -qq
     apt-get install -y -qq openssl ca-certificates >/dev/null
     npm ci --ignore-scripts
-    # db push applies the schema AND regenerates the Prisma client (into
-    # src/generated), which the catalog sync below imports.
     npx prisma db push
+    # db push only regenerates the Prisma client when it actually changes the
+    # schema, and --ignore-scripts skipped generation at install time, so on a
+    # no-schema-change deploy src/generated/prisma would not exist. Generate it
+    # explicitly for the catalog sync below.
+    npx prisma generate
     # Idempotent, non-destructive: upsert the marketplace catalog so edits to
     # src/lib/marketplace-catalog.ts actually reach the running site.
     npx tsx prisma/apply-marketplace-notion.ts
