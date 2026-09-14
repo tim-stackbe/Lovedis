@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# Apply Prisma schema via `db push` (this project has no migrations/ folder),
-# then idempotently sync the Notion-aligned marketplace catalog into the DB.
+# Apply the Prisma schema via `db push` (this project has no migrations/ folder).
 #
-# The catalog sync (prisma/apply-marketplace-notion.ts) is NON-destructive:
-# it upserts programs/mentors/offerings by natural key and never wipes users,
-# bookings or credits. Without this step a deploy only updates the schema, so
-# edits to src/lib/marketplace-catalog.ts never reach the data the site reads
-# and the storefront keeps showing the previously seeded rows.
+# Deliberately does NOT run prisma/apply-marketplace-notion.ts. That script is
+# destructive: after upserting it prunes every Program, MentorProfile and
+# SupportOffering that is not present in src/lib/marketplace-catalog.ts. The
+# Venture Store is curated directly in the database, so running it from a
+# deploy hard-deletes hand-curated rows (it did exactly that on 2026-09-14,
+# destroying 4 programs and re-creating 8 unwanted mentor profiles).
+# It stays in the repo as a manual, opt-in tool only: run it by hand, against a
+# known-good backup, when you have verified the catalog file is the source of
+# truth for every row it touches.
 #
 # Run on the Hetzner server from deploy/hetzner after syncing the repo.
 set -euo pipefail
@@ -84,7 +87,7 @@ if [ -z "$DB_CID" ]; then
 fi
 NETWORK="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$DB_CID" | head -1)"
 
-echo "[migrate-db-push] running prisma db push + marketplace catalog sync on network ${NETWORK}…"
+echo "[migrate-db-push] running prisma db push on network ${NETWORK}…"
 docker run --rm \
   --network "$NETWORK" \
   -e DATABASE_URL \
@@ -100,10 +103,7 @@ docker run --rm \
     # db push only regenerates the Prisma client when it actually changes the
     # schema, and --ignore-scripts skipped generation at install time, so on a
     # no-schema-change deploy src/generated/prisma would not exist. Generate it
-    # explicitly for the catalog sync below.
+    # explicitly so the built app has a client to import.
     npx prisma generate
-    # Idempotent, non-destructive: upsert the marketplace catalog so edits to
-    # src/lib/marketplace-catalog.ts actually reach the running site.
-    npx tsx prisma/apply-marketplace-notion.ts
   '
 echo "[migrate-db-push] done."
