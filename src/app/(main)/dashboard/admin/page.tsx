@@ -112,45 +112,66 @@ export default async function AdminDashboard() {
           </LinkButton>
         }
       >
+        {/* Each headline number opens the surface it counts, so the dashboard
+            is a way into the data rather than a read-only summary. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <BannerStat label="Aktive Nutzer" value={userCount} />
-          <BannerStat label="Startups" value={startupCount} />
-          <BannerStat label="Bewertungen" value={evaluationCount} />
-          <BannerStat label="Challenges" value={challengeCount} />
+          <Link href="/users">
+            <BannerStat label="Aktive Nutzer" value={userCount} />
+          </Link>
+          <Link href="/startups">
+            <BannerStat label="Startups" value={startupCount} />
+          </Link>
+          <Link href="/evaluations">
+            <BannerStat label="Bewertungen" value={evaluationCount} />
+          </Link>
+          <Link href="/challenges">
+            <BannerStat label="Challenges" value={challengeCount} />
+          </Link>
         </div>
       </HeroBanner>
 
       <section className="space-y-4">
         <SectionLabel number="01" label="Puls" title="Braucht Aufmerksamkeit" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ToneCard
-            tone="info"
-            icon={Target}
-            label="Offene Challenges"
-            value={openChallenges}
-            sub="nehmen Bewerbungen an"
-          />
-          <ToneCard
-            tone="attention"
-            icon={Inbox}
-            label="Ausstehende Bewerbungen"
-            value={pendingApplications}
-            sub="warten auf eine Entscheidung"
-          />
-          <ToneCard
-            tone="success"
-            icon={FlaskConical}
-            label="Laufende PoCs"
-            value={runningPoCs}
-            sub="in aktiven Piloten"
-          />
-          <ToneCard
-            tone="muted"
-            icon={Share2}
-            label="Geteilte Scorings"
-            value={shareCount}
-            sub="für Partner sichtbar"
-          />
+          <Link href="/challenges" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone="info"
+              icon={Target}
+              label="Offene Challenges"
+              value={openChallenges}
+              sub="nehmen Bewerbungen an →"
+            />
+          </Link>
+          <Link
+            href="/challenge-applications?status=PENDING"
+            className="block transition-transform hover:-translate-y-0.5"
+          >
+            <ToneCard
+              tone="attention"
+              icon={Inbox}
+              label="Ausstehende Bewerbungen"
+              value={pendingApplications}
+              sub="warten auf eine Entscheidung →"
+            />
+          </Link>
+          <Link href="/pocs" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone="success"
+              icon={FlaskConical}
+              label="Laufende PoCs"
+              value={runningPoCs}
+              sub="in aktiven Piloten →"
+            />
+          </Link>
+          <Link href="/sharing" className="block transition-transform hover:-translate-y-0.5">
+            <ToneCard
+              tone="muted"
+              icon={Share2}
+              label="Geteilte Scorings"
+              value={shareCount}
+              sub="für Partner sichtbar →"
+            />
+          </Link>
         </div>
       </section>
 
