@@ -79,6 +79,22 @@ export interface OfferingSeed {
 
 export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
   {
+    title: "Workshop 1: KI Trends & Modellvergleich",
+    summary:
+      "Gemeinsamer 2h-Einstieg für alle Startups: Markttrends, Modellvergleich und Cloud vs. On-Prem.",
+    description:
+      "Gemeinsamer 2h-Workshop für alle Startups im Batch. Follow-ups mit Effizienzanalyse können individuell gebucht werden.\n\n" +
+      "Der Einstieg schafft einen gemeinsamen Wissensstand. Tim gibt einen Überblick über den aktuellen Stand der KI-Entwicklung: Was bewegt den Markt, welche Modelle setzen sich durch, wohin geht die Entwicklung in den nächsten 12 bis 24 Monaten.\n\n" +
+      "Im zweiten Teil steht der Modellvergleich im Mittelpunkt. Die Startups analysieren gemeinsam, welche Modelle sie selbst einsetzen oder evaluieren, und stellen diese gegenüber: Leistung, Kosten, Einsatzbereich und On-Premise-Fähigkeit. Mittelständische Unternehmenskunden stellen die On-Prem-Anforderung regelmäßig — deshalb werden Vor- und Nachteile von Cloud- vs. On-Prem-Lösungen direkt an konkreten Modellen durchgespielt. Ein zentrales Thema: Durch den Wechsel auf ein alternatives Modell lassen sich in vielen Fällen erhebliche Kosten einsparen, ohne Leistungseinbußen hinnehmen zu müssen.\n\n" +
+      "Output: Startups kennen die relevanten Markttrends, sind auf dem gleichen Wissenstand, können ihre Modellwahl kritisch einordnen und wissen, wo Optimierungspotenzial bei Kosten und Infrastruktur liegt.\n\n" +
+      "Format: Gemeinsamer Online-Workshop (2h). Anbieter: LOVEDIS.",
+    focusTags: ["AI", "Product & Tech", "Workshop"],
+    status: "OPEN",
+    contactPerson: "Tim Meggert",
+    fixCreditCost: 0,
+    sortOrder: 5,
+  },
+  {
     title: "Sales, Pricing & Growth",
     summary:
       "Exklusives Programm rund um Vertrieb, Pricing und skalierbares Wachstum — 6 fixe Credits, du musst dich nur anmelden.",
@@ -254,7 +270,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     sortOrder: 4,
   },
 
-  // --- ⚖️ Legal (alle 1 Credit, Online Workshop ~2h) ----------------------
+  // --- ⚖️ Legal (1 Credit oder 2 wo Notion „1-2" angibt) -----------------
   {
     title: "Geschäftsführerhaftung",
     category: "LEGAL",
@@ -278,7 +294,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
     website: "https://www.aulinger.eu",
-    creditCost: 1,
+    creditCost: 2,
     sortOrder: 6,
   },
   {
@@ -291,7 +307,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
     website: "https://www.aulinger.eu",
-    creditCost: 1,
+    creditCost: 2,
     sortOrder: 7,
   },
   {
@@ -304,7 +320,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
     website: "https://www.aulinger.eu",
-    creditCost: 1,
+    creditCost: 2,
     sortOrder: 8,
   },
   {
@@ -317,7 +333,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Aulinger",
     contactPerson: "Axel Staudt",
     website: "https://www.aulinger.eu",
-    creditCost: 1,
+    creditCost: 2,
     sortOrder: 9,
   },
   {
@@ -330,7 +346,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
     website: "https://www.momentum-partner.de/",
-    creditCost: 1,
+    creditCost: 2,
     sortOrder: 10,
   },
   {

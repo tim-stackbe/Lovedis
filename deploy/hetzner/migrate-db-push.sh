@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# Apply Prisma schema via `db push` (this project has no migrations/ folder).
+# Apply Prisma schema via `db push` (this project has no migrations/ folder),
+# then idempotently sync the Notion-aligned marketplace catalog into the DB.
+#
+# The catalog sync (prisma/apply-marketplace-notion.ts) is NON-destructive:
+# it upserts programs/mentors/offerings by natural key and never wipes users,
+# bookings or credits. Without this step a deploy only updates the schema, so
+# edits to src/lib/marketplace-catalog.ts never reach the data the site reads
+# and the storefront keeps showing the previously seeded rows.
+#
 # Run on the Hetzner server from deploy/hetzner after syncing the repo.
 set -euo pipefail
 
@@ -76,7 +84,7 @@ if [ -z "$DB_CID" ]; then
 fi
 NETWORK="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$DB_CID" | head -1)"
 
-echo "[migrate-db-push] running prisma db push on network ${NETWORK}…"
+echo "[migrate-db-push] running prisma db push + marketplace catalog sync on network ${NETWORK}…"
 docker run --rm \
   --network "$NETWORK" \
   -e DATABASE_URL \
@@ -88,6 +96,11 @@ docker run --rm \
     apt-get update -qq
     apt-get install -y -qq openssl ca-certificates >/dev/null
     npm ci --ignore-scripts
+    # db push applies the schema AND regenerates the Prisma client (into
+    # src/generated), which the catalog sync below imports.
     npx prisma db push
+    # Idempotent, non-destructive: upsert the marketplace catalog so edits to
+    # src/lib/marketplace-catalog.ts actually reach the running site.
+    npx tsx prisma/apply-marketplace-notion.ts
   '
 echo "[migrate-db-push] done."
