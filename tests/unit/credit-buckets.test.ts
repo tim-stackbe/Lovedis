@@ -113,13 +113,18 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(MARKETPLACE_MENTORS.every((m) => Boolean(m.photoUrl))).toBe(true);
   });
 
-  it("only spends 2 credits on the GAL-Digital 1:1 formats + Live Hacking", () => {
+  it("spends 2 credits on the GAL-Digital 1:1 formats, Live Hacking and the Notion „1-2\" Legal offerings", () => {
     const twoCredit = MARKETPLACE_OFFERINGS.filter((o) => o.creditCost === 2)
       .map((o) => o.title)
       .sort();
     expect(twoCredit).toEqual([
+      "AI Act & Datenschutz",
+      "Exit Readiness & Due Diligence",
       "Live Hacking",
+      "SaaS Contracting",
+      "Schutz des geistigen Eigentums / IP-Rechte",
       "Tech-Stack Check-up",
+      "Vorbereitung einer Finanzierungsrunde",
       "Website-Strategie Starterkit",
     ]);
   });
