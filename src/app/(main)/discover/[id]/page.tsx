@@ -24,6 +24,10 @@ import { BannerStat, Card } from "@/components/ui/Card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireMarketplace } from "@/lib/auth-guards";
 import { STARTUP_STAGE_LABELS } from "@/lib/constants";
+import {
+  discoverStartupWhere,
+  resolveCurrentBatchId,
+} from "@/lib/discover-batch";
 import { prisma } from "@/lib/prisma";
 import { formatMillions } from "@/lib/utils";
 
@@ -37,8 +41,12 @@ export default async function DiscoverDetailPage({
   const session = await requireMarketplace();
   const { id } = await params;
 
+  // Same visibility filter as the list, so a direct link cannot open a profile
+  // Discover itself no longer offers.
+  const currentBatchId = await resolveCurrentBatchId();
+
   const startup = await prisma.startup.findFirst({
-    where: { id, isPublished: true },
+    where: { ...discoverStartupWhere(currentBatchId), id },
     select: {
       id: true,
       name: true,

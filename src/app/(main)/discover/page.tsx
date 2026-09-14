@@ -17,6 +17,10 @@ import {
   STARTUP_STAGES,
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
+import {
+  discoverStartupWhere,
+  resolveCurrentBatchId,
+} from "@/lib/discover-batch";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Entdecken" };
@@ -36,7 +40,13 @@ export default async function DiscoverPage({
   const session = await requireMarketplace();
   const { q, industry, stage, looking } = await searchParams;
 
-  const where: Prisma.StartupWhereInput = { isPublished: true };
+  // Discover is the shop window of the *current* batch, not of every published
+  // storefront: a leftover profile from a past batch (or an unrelated published
+  // startup) must not show up under the "aktuelles Industry Batch" promise.
+  const currentBatchId = await resolveCurrentBatchId();
+  const visible = discoverStartupWhere(currentBatchId);
+
+  const where: Prisma.StartupWhereInput = { ...visible };
   if (q) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
@@ -72,9 +82,9 @@ export default async function DiscoverPage({
       },
       orderBy: [{ publishedAt: "desc" }, { name: "asc" }],
     }),
-    prisma.startup.count({ where: { isPublished: true } }),
+    prisma.startup.count({ where: visible }),
     prisma.startup.findMany({
-      where: { isPublished: true },
+      where: visible,
       select: { industry: true },
       distinct: ["industry"],
       orderBy: { industry: "asc" },
