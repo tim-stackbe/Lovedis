@@ -23,7 +23,9 @@ import { PROGRAM_FIX_CREDIT_COST } from "@/lib/credit-buckets";
 //     Einträge (echte Links). Wo Notion keinen Link führt, bleibt das Feld leer.
 //   • „Individual Expert Session" existiert in Notion NUR in Legal, Marketing
 //     und AI/Product & Tech — dort echt gelistet. Fundraising nutzt stattdessen
-//     die echte Investor-Sparring-Datenbank; Sales hat kein Fallback-Angebot.
+//     die echte Investor-Sparring-Datenbank. Sales hatte ursprünglich kein
+//     Fallback-Angebot; am 14.09.2026 wurden drei aus dem Programm-Bereich
+//     verschobene Sessions plus ein generisches „Sales"-Angebot ergänzt.
 //   • Natürliche Schlüssel für Idempotenz: Program.title, MentorProfile.name,
 //     SupportOffering (title + category).
 // ---------------------------------------------------------------------------
@@ -78,42 +80,13 @@ export interface OfferingSeed {
 // ---------------------------------------------------------------------------
 
 export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
-  // Die vier „Exclusive"-Sessions. Werte 1:1 aus der forensischen
-  // Wiederherstellung vom 14.09.2026 (prisma/restore-venture-store-20260914.sql
-  // ist die Quelle der Wahrheit) — summary/description wörtlich übernommen.
-  {
-    title: "Community / Ökosystem Sales",
-    summary: "Online Workshop zu Community- und Ökosystem-Vertrieb.",
-    description:
-      "Session im Rahmen von Sales, Pricing & Growth: Community / Ökosystem Sales mit unusual business (Sina Wans). Format: Online Workshop.",
-    focusTags: ["Sales", "Growth", "GTM"],
-    status: "OPEN",
-    contactPerson: "Sina Wans",
-    fixCreditCost: 0,
-    sortOrder: 1,
-  },
-  {
-    title: "Aufbau strukturierter Pipelines",
-    summary: "Online Workshop zum Aufbau strukturierter Sales-Pipelines.",
-    description:
-      "Session im Rahmen von Sales, Pricing & Growth: Aufbau strukturierter Pipelines mit GAL Digital (Tobias Auradniczek). Format: Online Workshop.",
-    focusTags: ["Sales", "Pipeline", "GTM"],
-    status: "OPEN",
-    contactPerson: "Tobias Auradniczek",
-    fixCreditCost: 0,
-    sortOrder: 2,
-  },
-  {
-    title: "Nightmare Competitor",
-    summary: "Live Workshop zu Wettbewerbspositionierung.",
-    description:
-      "Session im Rahmen von Sales, Pricing & Growth: Nightmare Competitor mit Uni Marburg / StartMiUp (Michael Stephan). Format: Live Workshop.",
-    focusTags: ["Sales", "Positioning", "Growth"],
-    status: "OPEN",
-    contactPerson: "Michael Stephan",
-    fixCreditCost: 0,
-    sortOrder: 3,
-  },
+  // „Exclusive"-Sessions. Ursprünglich vier forensisch wiederhergestellte
+  // Sessions (prisma/restore-venture-store-20260914.sql). Am 14.09.2026 wurden
+  // drei davon — „Community / Ökosystem Sales", „Aufbau strukturierter
+  // Pipelines" und „Nightmare Competitor" — aus dem Programm-Bereich in die
+  // Support-Angebote (Kategorie SALES) verschoben (siehe MARKETPLACE_OFFERINGS
+  // und prisma/backups/venture-store-move-20260914T135212Z.sql). Hier bleibt
+  // nur „SaaS Contracting" als exklusives Programm.
   {
     title: "SaaS Contracting",
     summary: "Online Workshop zu SaaS-Vertragsgestaltung im Sales-Kontext.",
@@ -577,5 +550,62 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Sparring",
     creditCost: 1,
     sortOrder: 30,
+  },
+
+  // --- 🤝 Sales ------------------------------------------------------------
+  // Am 14.09.2026 aus dem Programm-Bereich (MARKETPLACE_PROGRAMS) in die
+  // Support-Angebote verschoben. creditCost 0 erhält den „keine Credits
+  // erforderlich"-Charakter der ursprünglichen Programm-Sessions;
+  // providerCompany/format sind aus der Original-Beschreibung übernommen.
+  {
+    title: "Community / Ökosystem Sales",
+    category: "SALES",
+    summary: "Online Workshop zu Community- und Ökosystem-Vertrieb.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: Community / Ökosystem Sales mit unusual business (Sina Wans). Format: Online Workshop.",
+    format: "Online Workshop",
+    providerCompany: "unusual business",
+    contactPerson: "Sina Wans",
+    creditCost: 0,
+    sortOrder: 31,
+  },
+  {
+    title: "Aufbau strukturierter Pipelines",
+    category: "SALES",
+    summary: "Online Workshop zum Aufbau strukturierter Sales-Pipelines.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: Aufbau strukturierter Pipelines mit GAL Digital (Tobias Auradniczek). Format: Online Workshop.",
+    format: "Online Workshop",
+    providerCompany: "GAL Digital",
+    contactPerson: "Tobias Auradniczek",
+    creditCost: 0,
+    sortOrder: 32,
+  },
+  {
+    title: "Nightmare Competitor",
+    category: "SALES",
+    summary: "Live Workshop zu Wettbewerbspositionierung.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: Nightmare Competitor mit Uni Marburg / StartMiUp (Michael Stephan). Format: Live Workshop.",
+    format: "Live Workshop",
+    providerCompany: "Uni Marburg / StartMiUp",
+    contactPerson: "Michael Stephan",
+    creditCost: 0,
+    sortOrder: 33,
+  },
+  // Neues generisches „Sales"-Angebot (14.09.2026); Defaults aus dem DRAFT-
+  // Programm „Sales, Pricing & Growth" abgeleitet, creditCost 1 wie die
+  // übrigen Support-Angebote.
+  {
+    title: "Sales",
+    category: "SALES",
+    summary:
+      "Individuelles Sales-Sparring rund um Vertrieb, Pricing und skalierbares Wachstum.",
+    description:
+      "Sparring rund um Sales, Pricing & Growth: geschärfte Value Proposition & ICP, strukturierte Pipeline und ein validiertes Pricing-Modell. Beschreibe deinen Bedarf — wir vermitteln die passende Expertise aus dem LOVEDIS-Netzwerk.",
+    format: "Sparring",
+    providerCompany: "LOVEDIS",
+    creditCost: 1,
+    sortOrder: 34,
   },
 ];

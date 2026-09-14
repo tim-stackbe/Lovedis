@@ -86,8 +86,10 @@ describe("marketplace catalog — Notion metadata in dedicated fields", () => {
 });
 
 describe("marketplace catalog — only real Notion entries", () => {
-  it("contains the 30 real Notion offerings (no fabricated fallbacks)", () => {
-    expect(MARKETPLACE_OFFERINGS).toHaveLength(30);
+  it("contains the 34 storefront offerings (30 Notion + 3 moved Sales sessions + generic Sales)", () => {
+    // 2026-09-14: the three Sales sessions moved from the programme into the
+    // Support-Angebote (SALES) and a generic "Sales" offering was added.
+    expect(MARKETPLACE_OFFERINGS).toHaveLength(34);
   });
 
   it("keeps the real 'Individual Expert Session' only in Legal, Marketing & Product/Tech", () => {
@@ -99,8 +101,23 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(categories).toEqual(["LEGAL", "MARKETING", "PRODUCT_TECH"]);
   });
 
-  it("has no standalone Sales support offerings (only the Sales program)", () => {
-    expect(MARKETPLACE_OFFERINGS.filter((o) => o.category === "SALES")).toHaveLength(0);
+  // 2026-09-14: the three recovered Sales sessions were moved out of the
+  // programme into the Support-Angebote, and a generic "Sales" offering added.
+  it("carries the four SALES support offerings (3 moved sessions + generic Sales)", () => {
+    const sales = MARKETPLACE_OFFERINGS.filter((o) => o.category === "SALES")
+      .map((o) => o.title)
+      .sort();
+    expect(sales).toEqual([
+      "Aufbau strukturierter Pipelines",
+      "Community / Ökosystem Sales",
+      "Nightmare Competitor",
+      "Sales",
+    ]);
+    // The three moved sessions keep their 0-credit ("keine Credits") nature.
+    const moved = MARKETPLACE_OFFERINGS.filter(
+      (o) => o.category === "SALES" && o.title !== "Sales"
+    );
+    expect(moved.every((o) => o.creditCost === 0)).toBe(true);
   });
 
   // The eight mentor profiles were removed from the Venture Store on
@@ -110,16 +127,15 @@ describe("marketplace catalog — only real Notion entries", () => {
   });
 
   // The four "Exclusive" sessions were hard-deleted by the 2026-09-14 sync and
-  // recovered in prisma/restore-venture-store-20260914.sql — the catalog has to
-  // agree with that restored state, otherwise the prune deletes them again.
-  it("carries the five OPEN storefront programs incl. the recovered sessions", () => {
+  // recovered in prisma/restore-venture-store-20260914.sql. On the same day
+  // three of them (Community / Ökosystem Sales, Aufbau strukturierter Pipelines,
+  // Nightmare Competitor) were moved into the Support-Angebote (see the SALES
+  // test above), leaving SaaS Contracting + Workshop 1 as OPEN programmes.
+  it("carries the two OPEN storefront programs after the Sales sessions moved out", () => {
     const open = MARKETPLACE_PROGRAMS.filter((p) => p.status === "OPEN")
       .map((p) => p.title)
       .sort();
     expect(open).toEqual([
-      "Aufbau strukturierter Pipelines",
-      "Community / Ökosystem Sales",
-      "Nightmare Competitor",
       "SaaS Contracting",
       "Workshop 1: KI Trends & Modellvergleich",
     ]);
@@ -128,12 +144,12 @@ describe("marketplace catalog — only real Notion entries", () => {
     );
     expect(saas?.contactPerson).toBe("Dr. Ralf Heine");
     expect(saas?.sessionDate).toBe("23. September, 10–12 Uhr");
-    // Recovered sessions are included in the programme → no FIX credits.
-    const recovered = MARKETPLACE_PROGRAMS.filter((p) =>
-      p.focusTags.includes("Sales") && p.title !== "Sales, Pricing & Growth"
-    );
-    expect(recovered).toHaveLength(4);
-    expect(recovered.every((p) => p.fixCreditCost === 0)).toBe(true);
+    // The remaining OPEN programmes are included → no FIX credits.
+    expect(
+      MARKETPLACE_PROGRAMS.filter((p) => p.status === "OPEN").every(
+        (p) => p.fixCreditCost === 0
+      )
+    ).toBe(true);
   });
 
   it("spends 2 credits on the GAL-Digital 1:1 formats, Live Hacking and the Notion „1-2\" Legal offerings", () => {
