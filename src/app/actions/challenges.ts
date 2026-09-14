@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ChallengeStatus } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireAuth, requireTeam } from "@/lib/auth-guards";
+import { requireAuth, requireRole, requireTeam } from "@/lib/auth-guards";
 import { CHALLENGE_STATUSES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -235,8 +235,12 @@ export async function decideApplication(
   applicationId: string,
   decision: "ACCEPTED" | "REJECTED"
 ): Promise<ActionState> {
-  // Deciding applications is challenge management → Lovedis team only.
-  await requireTeam();
+  // Accepting/rejecting an incoming challenge application is an ADMIN-only
+  // decision. Deliberately NOT `requireTeam()` (ADMIN + MEMBER) and NOT open to
+  // the owning BUSINESS_PARTNER: only Lovedis admins decide who advances to a
+  // PoC. Re-validated here server-side so the guard bites before any DB write,
+  // regardless of what the client renders.
+  await requireRole(["ADMIN"]);
   const parsed = z.enum(["ACCEPTED", "REJECTED"]).safeParse(decision);
   if (!parsed.success) return { error: "Ungültige Entscheidung." };
 
@@ -268,6 +272,7 @@ export async function decideApplication(
 
   revalidatePath(`/challenges/${application.challenge.id}`);
   revalidatePath("/challenges");
+  revalidatePath("/challenge-applications");
   revalidatePath("/applications");
   revalidatePath("/pocs");
   return {};

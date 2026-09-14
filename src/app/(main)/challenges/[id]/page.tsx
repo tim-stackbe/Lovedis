@@ -37,9 +37,13 @@ export default async function ChallengeDetailPage({
   const { id } = await params;
 
   const role = session.user.role;
-  // Managing a challenge (edit/delete, deciding applications) is a Lovedis-team
+  // Managing a challenge (edit/delete, viewing pitches) is a Lovedis-team
   // affordance. Partners get a read-only view of their attributed use-cases.
   const isManager = isTeamRole(role);
+  // Accepting/rejecting an application is ADMIN-only — MEMBER may read the
+  // pitches but not decide, and the owning partner never decides. Mirrors the
+  // `requireRole(["ADMIN"])` guard on `decideApplication`.
+  const isAdmin = role === "ADMIN";
 
   const challenge = await prisma.challenge.findUnique({
     where: { id },
@@ -212,7 +216,7 @@ export default async function ChallengeDetailPage({
                     <p className="mt-3 whitespace-pre-line rounded-button bg-lv-surface p-4 text-sm">
                       {a.pitch}
                     </p>
-                    {a.status === "PENDING" && (
+                    {isAdmin && a.status === "PENDING" && (
                       <div className="mt-4 flex gap-2">
                         <form
                           action={async () => {

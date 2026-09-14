@@ -1,10 +1,11 @@
-import { Inbox } from "lucide-react";
+import { Check, Inbox, X } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { decideApplication } from "@/app/actions/challenges";
 import type { Prisma } from "@/generated/prisma/client";
 import type { ApplicationStatus } from "@/generated/prisma/enums";
 import { ApplicationStatusBadge, PoCStatusBadge } from "@/components/shared/badges";
-import { LinkButton } from "@/components/ui/Button";
+import { Button, LinkButton } from "@/components/ui/Button";
 import { BannerStat, Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
@@ -56,6 +57,41 @@ function FilterChip({
 }
 
 /**
+ * Accept/reject controls for a single PENDING application. Rendered for ADMIN
+ * sessions only — `decideApplication` re-validates `requireRole(["ADMIN"])`
+ * server-side, so this is purely the affordance, never the authorization.
+ * Accepting also spawns the PoC (handled inside the action).
+ */
+function DecisionButtons({ applicationId }: { applicationId: string }) {
+  return (
+    <div className="mt-2 flex justify-end gap-2">
+      <form
+        action={async () => {
+          "use server";
+          await decideApplication(applicationId, "ACCEPTED");
+        }}
+      >
+        <Button type="submit" size="sm">
+          <Check className="h-4 w-4" />
+          Annehmen
+        </Button>
+      </form>
+      <form
+        action={async () => {
+          "use server";
+          await decideApplication(applicationId, "REJECTED");
+        }}
+      >
+        <Button type="submit" variant="danger" size="sm">
+          <X className="h-4 w-4" />
+          Ablehnen
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+/**
  * Team-wide overview of every startup application to every challenge.
  *
  * The per-challenge `Bewerbungen` list on /challenges/[id] only ever answers
@@ -71,7 +107,11 @@ export default async function ChallengeApplicationsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requireTeam();
+  const session = await requireTeam();
+  // The overview is team-visible (ADMIN + MEMBER), but only ADMIN may decide an
+  // application. MEMBER sees the list read-only; the accept/reject controls are
+  // rendered for ADMIN alone (and re-guarded server-side in `decideApplication`).
+  const isAdmin = session.user.role === "ADMIN";
   const { status, page: pageParam } = await searchParams;
 
   const activeStatus = APPLICATION_STATUSES.includes(status as ApplicationStatus)
@@ -246,6 +286,9 @@ export default async function ChallengeApplicationsPage({
                     </div>
                   )}
                 </dl>
+                {isAdmin && a.status === "PENDING" && (
+                  <DecisionButtons applicationId={a.id} />
+                )}
               </Card>
             ))}
           </div>
@@ -305,6 +348,9 @@ export default async function ChallengeApplicationsPage({
                   </Td>
                   <Td className="text-right">
                     <ApplicationStatusBadge value={a.status} />
+                    {isAdmin && a.status === "PENDING" && (
+                      <DecisionButtons applicationId={a.id} />
+                    )}
                   </Td>
                 </Tr>
               ))}
