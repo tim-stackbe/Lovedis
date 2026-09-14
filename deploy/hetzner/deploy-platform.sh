@@ -46,7 +46,13 @@ VERSION="$SHA"
 
 # Paths rsync never ships. Changes confined to these cannot reach the server, so
 # they must not block a deploy either. Keep in sync with the --exclude flags.
-RSYNC_EXCLUDES=(node_modules .git .env .env.local .next cms/node_modules)
+# src/generated is the Prisma client — a gitignored build artifact regenerated
+# in-image by `npm run build` (prisma generate) and never bind-mounted at
+# runtime. It must be excluded: migrate-db-push.sh generates it on the server, so
+# rsyncing it is redundant, and a root-owned copy from an older deploy would make
+# rsync --delete (run as the non-root deploy user) abort with "unlink … Permission
+# denied" (exit 23). Excluding it lets the sync proceed regardless of its owner.
+RSYNC_EXCLUDES=(node_modules .git .env .env.local .next cms/node_modules src/generated)
 
 # Working-tree changes rsync WOULD ship: staged, unstaged and untracked files
 # (excluding the rsync excludes). Emitted one porcelain line per change.
@@ -244,6 +250,7 @@ deploy_mac() {
     --exclude .env.local \
     --exclude .next \
     --exclude cms/node_modules \
+    --exclude src/generated \
     --exclude .deployed-version \
     "$ROOT/" "${ssh_target}:${platform_dir}/"
   echo "   Sync complete"
@@ -317,6 +324,7 @@ deploy_cloud() {
     --exclude .git
     --exclude .next
     --exclude cms/node_modules
+    --exclude src/generated
     --exclude .deployed-version
     -e "$rsync_ssh")
 

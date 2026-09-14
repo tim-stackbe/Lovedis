@@ -87,10 +87,22 @@ if [ -z "$DB_CID" ]; then
 fi
 NETWORK="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$DB_CID" | head -1)"
 
+# The container runs as root because `apt-get` (openssl/ca-certificates for
+# Prisma) needs root. But `prisma generate` writes the client into the mounted
+# host tree at src/generated, and root-owned files there break the NEXT deploy:
+# deploy-platform.sh rsyncs as the non-root `deploy` user and cannot unlink
+# root-owned paths (rsync exit 23). `--user` on `docker run` would fix ownership
+# but break apt-get, so instead we pass the invoking uid/gid in and chown the
+# generated tree back to it as the last step, while still running apt-get/npm as
+# root. Nothing here functionally changes; only the ownership of generated files.
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
 echo "[migrate-db-push] running prisma db push on network ${NETWORK}…"
 docker run --rm \
   --network "$NETWORK" \
   -e DATABASE_URL \
+  -e HOST_UID="$HOST_UID" \
+  -e HOST_GID="$HOST_GID" \
   -v "$ROOT:/app" \
   -w /app \
   node:22-bookworm-slim \
@@ -105,5 +117,11 @@ docker run --rm \
     # no-schema-change deploy src/generated/prisma would not exist. Generate it
     # explicitly so the built app has a client to import.
     npx prisma generate
+    # prisma generate ran as root and wrote src/generated as root:root. Hand the
+    # generated tree back to the invoking (deploy) user so the next rsync can
+    # update/delete it. node_modules is rsync-excluded, so its ownership is moot.
+    if [ -d src/generated ]; then
+      chown -R "${HOST_UID}:${HOST_GID}" src/generated
+    fi
   '
 echo "[migrate-db-push] done."
