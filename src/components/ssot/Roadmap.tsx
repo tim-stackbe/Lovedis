@@ -1,4 +1,4 @@
-import { CalendarRange, Check, Layers, Rocket } from "lucide-react";
+import { CalendarRange, Check, Layers, MapPin, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import type { BadgeTone } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -29,6 +29,8 @@ interface Milestone {
   title: string;
   type: string;
   details: string;
+  location?: string;
+  locationUrl?: string;
 }
 
 interface Phase {
@@ -138,10 +140,12 @@ const PHASES: Phase[] = [
     tone: "muted",
     milestones: [
       {
-        date: "Mitte Januar",
+        date: "20. Januar",
         title: "Closing des Industry Accelerators",
         type: "Event vor Ort",
         details: "Closing des Industry Accelerators.",
+        location: "Lokschuppen Marburg",
+        locationUrl: "https://share.google/HRxApqBa5BIyx23tN",
       },
     ],
   },
@@ -197,6 +201,26 @@ function MilestoneCard({ item, done }: { item: Milestone; done?: boolean }) {
         <p className="mt-2 text-sm leading-relaxed text-lv-secondary">
           {item.details}
         </p>
+        {item.location && (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-lv-secondary">
+            <MapPin
+              className="h-3.5 w-3.5 shrink-0 text-lv-blue"
+              strokeWidth={2}
+            />
+            {item.locationUrl ? (
+              <a
+                href={item.locationUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-lv-blue hover:underline"
+              >
+                {item.location}
+              </a>
+            ) : (
+              item.location
+            )}
+          </p>
+        )}
       </Card>
     </div>
   );

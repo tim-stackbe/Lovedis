@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PictogramChip } from "@/components/ui/PictogramChip";
 import { HeroBanner } from "@/components/ui/HeroBanner";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireVentureView } from "@/lib/auth-guards";
 import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +17,7 @@ import { audiencesForRole, getHubContent } from "@/lib/ssot";
 export const metadata: Metadata = { title: "Venture Platform" };
 
 // ALPHA: show a temporary "Coming soon" sticker on the
-// "Guthaben verfügbar" element (Section 01 · Venture-Credits).
+// "Guthaben verfügbar" element in the Venture-Credits card.
 // Set to false (or delete) to remove the sticker in a later release.
 const SHOW_CREDITS_COMING_SOON = true;
 
@@ -49,7 +48,7 @@ export default async function VenturePage() {
       <HeroBanner
         kicker="Venture Platform"
         title="Deine Accelerator Übersicht"
-        subtitle="Roadmap, Ressourcen und dein Venture-Guthaben — deine Single Source of Truth für die Zusammenarbeit mit Lovedis."
+        subtitle="Roadmap, Ressourcen und Venture-Credits, die du für dein individuelles Support-Programm einsetzen kannst. Die Plattform dient als deine Single Source of Truth für die Zusammenarbeit mit LOVEDIS."
       />
 
       {teamMode && (
@@ -67,8 +66,11 @@ export default async function VenturePage() {
         </PreviewBanner>
       )}
 
-      <SectionLabel number="01" label="Guthaben" title="Venture-Credits" />
-      <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
+          Venture Credits
+        </h2>
+        <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
         <div className="flex items-center gap-4">
           <PictogramChip icon={CreditsIcon} tone="info" size="lg" />
           <div>
@@ -97,12 +99,14 @@ export default async function VenturePage() {
           <ArrowRightIcon className="h-4 w-4" />
         </Link>
       </Card>
+      </section>
 
       <HubContent
         roadmap={hub.roadmap}
         pages={hub.pages}
         media={hub.media}
         knowledge={hub.knowledge}
+        showStartupExtras
       />
     </>
   );

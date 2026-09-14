@@ -26,7 +26,7 @@ import { PictogramChip } from "@/components/ui/PictogramChip";
  *
  * Logos, templates and photos are linked out to Google Drive rather than
  * embedded — the source (Notion) only exposes short-lived signed URLs.
- * Content source: LOVEDIS MediaKit (Notion), Juni 2026.
+ * Content source: LOVEDIS MediaKit (Notion).
  */
 
 const CONTACT_EMAIL = "hannah.freese@lovedis.de";
@@ -98,8 +98,9 @@ const LINKS = {
     "https://drive.google.com/drive/folders/1450_MiqCgN1m4Y1sygRWhLYB3j6GY4ik?usp=sharing",
   teaser: "https://www.youtube.com/watch?v=mupXOZrg418",
   photos:
-    "https://drive.google.com/drive/folders/1JgNJvjqPUMmjCC8li2T5G4VGdjS533wc",
+    "https://drive.google.com/drive/folders/1eOWLbZpIcT1NVFFDWcivOfCCx1bnE9Tj",
   photosPixieset: "https://markuslaubvogel.pixieset.com/lovedisruption2026/",
+  afterMovie: "https://www.youtube.com/watch?v=X16QWbTER2U",
   newsletter: "https://www.lovedis.de/lovedis-newsletter",
   news: "https://lovedis.de/de/news",
   website: "https://lovedis.de/de",
@@ -194,8 +195,7 @@ export function MediaKit() {
         <div className="flex items-start gap-4">
           <PictogramChip icon={Heart} tone="pink" size="lg" />
           <div>
-            <p className="lv-wordmark text-xs text-lv-blue">Juni 2026</p>
-            <h3 className="mt-1 text-2xl font-bold tracking-tight text-lv-text">
+            <h3 className="text-2xl font-bold tracking-tight text-lv-text">
               MediaKit LOVEDIS
             </h3>
           </div>
@@ -305,10 +305,13 @@ export function MediaKit() {
         </p>
         <div className="flex flex-wrap gap-3">
           <LinkPill href={LINKS.photos} icon={Camera}>
-            Zu Fotos & Videos
+            Roadshow
           </LinkPill>
           <LinkPill href={LINKS.photosPixieset} icon={Camera}>
             LOVE DISRUPTION 2026 (Pixieset)
+          </LinkPill>
+          <LinkPill href={LINKS.afterMovie} icon={SquarePlay}>
+            After Movie
           </LinkPill>
         </div>
       </Block>

@@ -23,7 +23,7 @@ export default async function PartnerHubPage() {
       <HeroBanner
         kicker="Wissen"
         title="Partner-Hub"
-        subtitle="Roadmap, Accelerator-Infos und Media-Kit — alles an einem Ort. Deine Single Source of Truth für die Zusammenarbeit mit Lovedis."
+        subtitle="Roadmap, Accelerator-Infos und Media-Kit — alles an einem Ort. Deine Single Source of Truth für die Zusammenarbeit mit LOVEDIS."
       />
       {teamMode && (
         <PreviewBanner title="Partner-Sicht – Vorschau">

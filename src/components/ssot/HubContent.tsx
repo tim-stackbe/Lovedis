@@ -1,4 +1,4 @@
-import { BookOpen, Download, FileText, Lightbulb } from "lucide-react";
+import { BookOpen, Download, Lightbulb } from "lucide-react";
 import type {
   ContentPageModel,
   KnowledgeResourceModel,
@@ -14,6 +14,8 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Markdown } from "@/components/ssot/Markdown";
 import { MediaKit } from "@/components/ssot/MediaKit";
 import { Roadmap } from "@/components/ssot/Roadmap";
+import { CoworkingPromo } from "@/components/ssot/CoworkingPromo";
+import { UpcomingEvents } from "@/components/ssot/UpcomingEvents";
 import { KNOWLEDGE_RESOURCE_TYPE_LABELS } from "@/lib/constants";
 
 interface HubContentProps {
@@ -23,6 +25,8 @@ interface HubContentProps {
   knowledge?: KnowledgeResourceModel[];
   /** Section numbers start here (so callers can compose multiple sections). */
   startNumber?: number;
+  /** When true, shows startup-only extras in Section 02 (e.g. Coworking promo). */
+  showStartupExtras?: boolean;
 }
 
 /** Read-only SSOT presentation shared by the partner hub and startup venture. */
@@ -32,6 +36,7 @@ export function HubContent({
   media,
   knowledge = [],
   startNumber = 1,
+  showStartupExtras = false,
 }: HubContentProps) {
   const n = (offset: number) => String(startNumber + offset).padStart(2, "0");
 
@@ -70,14 +75,10 @@ export function HubContent({
       </section>
 
       <section className="space-y-4">
-        <SectionLabel number={n(1)} label="Wissen" title="Infos & Wissensseiten" />
-        {pages.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="Noch keine Inhalte"
-            description="Hier erscheinen veröffentlichte Wissensseiten."
-          />
-        ) : (
+        <SectionLabel number={n(1)} label="Wissenswertes" title="Netzwerkmöglichkeiten" />
+        <UpcomingEvents />
+        {showStartupExtras && <CoworkingPromo />}
+        {pages.length > 0 && (
           <div className="space-y-4">
             {pages.map((page) => (
               <Card key={page.id} className="p-6">

@@ -166,7 +166,7 @@ async function PartnerMatrix() {
       <HeroBanner
         kicker={partnerCompany.name}
         title="Startup-Matrix"
-        subtitle="Jede Person aus eurem Unternehmen stimmt je Startup einzeln ab (Interesse Ja/Nein). Das Ergebnis ergibt sich aus der Mehrheit. Andere Partner sehen eure Stimmen nicht."
+        subtitle="Bewerte die Startups nach Relevanz für euer Unternehmen und eure Herausforderungen sowie nach potentiellen gemeinsamen Use Cases. Es können mehrere Personen aus eurem Unternehmen eine Einschätzung vornehmen."
       >
         <Stats rows={allRows} />
       </HeroBanner>
@@ -177,16 +177,18 @@ async function PartnerMatrix() {
       >
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
-          Bewerte die Startups nach Relevanz für euer Unternehmen und eure
-          Herausforderungen sowie nach potentiellen gemeinsamen Use Cases. Es
-          können mehrere Personen aus eurem Unternehmen eine Einschätzung
-          vornehmen.
+          Um weitere Mitarbeitende hinzuzufügen springe zur Section „Team“ auf der
+          linken Seite und trage alle relevanten Mitarbeitenden mit Namen und
+          E-Mail-Adresse ein. Die Mitarbeitenden erhalten eine E-Mail mit allen
+          Informationen zum Login, können nach einmaliger Anmeldung und Festlegung
+          eines Passworts die Startups im Reiter Screening/Matchmaking aus ihrer
+          Perspektive einordnen.
         </p>
       </div>
 
       {sections.length === 0 ? (
         <Card className="p-8 text-center text-sm text-lv-secondary">
-          Aktuell nimmst du an keinem Batch teil. Sobald das Lovedis-Team dich
+          Aktuell nimmst du an keinem Batch teil. Sobald das LOVEDIS-Team dich
           einem Programm zuweist, erscheinen die Startups hier.
         </Card>
       ) : (
@@ -301,7 +303,7 @@ async function StartupMatrix() {
 
       {sections.length === 0 ? (
         <Card className="p-8 text-center text-sm text-lv-secondary">
-          Aktuell bist du keinem Batch zugewiesen. Sobald das Lovedis-Team dich
+          Aktuell bist du keinem Batch zugewiesen. Sobald das LOVEDIS-Team dich
           einem Programm hinzufügt, erscheinen die Partner hier.
         </Card>
       ) : (

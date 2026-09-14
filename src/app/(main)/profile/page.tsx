@@ -25,7 +25,7 @@ export const metadata: Metadata = { title: "Mein Profil" };
 //
 // Pre-Alpha /profile content sections (below the HeroBanner hero), top→bottom:
 //   01  Profil       "Unternehmensdaten"                  (OwnProfileForm)
-//   02  Storefront   "Öffentliches Investoren-Profil"     (StorefrontForm)
+//   02  Storefront   "Öffentliches Profil"     (StorefrontForm)
 //   03  Traktion     "Dein Netzwerk"                      (Follower/Intro ToneCards + intro list)
 //   04  Updates      "Halte Follower auf dem Laufenden"   (UpdateComposer + updates timeline)
 //
@@ -92,7 +92,7 @@ export default async function ProfilePage() {
             <SectionLabel
               number="02"
               label="Storefront"
-              title="Öffentliches Investoren-Profil"
+              title="Öffentliches Profil"
             />
             <StorefrontForm
               startup={{
@@ -122,7 +122,7 @@ export default async function ProfilePage() {
                 tone={introCount > 0 ? "attention" : "muted"}
                 label="Intro-Anfragen"
                 value={introCount}
-                sub="über das Lovedis-Team"
+                sub="über das LOVEDIS-Team"
               />
             </div>
             {introCount > 0 && (
@@ -148,7 +148,7 @@ export default async function ProfilePage() {
                           <p className="text-xs text-lv-secondary">
                             {revealed
                               ? formatDate(r.createdAt)
-                              : "In Prüfung durch das Lovedis-Team"}
+                              : "In Prüfung durch das LOVEDIS-Team"}
                           </p>
                         </div>
                       </div>
