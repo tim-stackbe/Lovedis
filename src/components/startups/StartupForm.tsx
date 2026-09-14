@@ -207,6 +207,28 @@ export function StartupForm({ startup, campaigns = [] }: StartupFormProps) {
           </Select>
         </Field>
 
+        {/* Team-side publish switch: ADMIN/MEMBER can put a storefront live on
+            Entdecke without waiting for the founder to do it in self-service. */}
+        <label className="flex cursor-pointer items-start gap-3 rounded-card border border-lv-border bg-lv-surface/50 p-4">
+          <input
+            id="isPublished"
+            type="checkbox"
+            name="isPublished"
+            defaultChecked={startup?.isPublished ?? false}
+            className="mt-0.5 h-4 w-4 accent-lv-blue"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-lv-text">
+              Im Ökosystem veröffentlichen (Entdecke)
+            </span>
+            <span className="mt-1 block text-xs text-lv-secondary">
+              Sichtbar für Investoren und Partner, sobald das Startup dem
+              aktuellen Batch zugeordnet ist. Das Datum der
+              Erstveröffentlichung bleibt beim Deaktivieren erhalten.
+            </span>
+          </span>
+        </label>
+
         {state?.error && <ErrorChip>{state.error}</ErrorChip>}
         {state?.success && <SuccessChip>{state.success}</SuccessChip>}
 

@@ -40,6 +40,12 @@ const startupSchema = z.object({
     .optional(),
   radarRing: z.enum(RADAR_RINGS as [RadarRing, ...RadarRing[]]).optional(),
   campaignId: z.string().min(1).optional(),
+  // Marketplace visibility. Team-only: every action in this file goes through
+  // `requireScoutModule` (ADMIN + MEMBER), which is what keeps startups,
+  // partners and investors out. Startups publish their own profile through
+  // `updatePublicProfile` (scoped to `ownerUserId`) instead, so they can still
+  // only ever publish themselves.
+  isPublished: z.boolean(),
 });
 
 function parseStartupForm(formData: FormData) {
@@ -58,7 +64,29 @@ function parseStartupForm(formData: FormData) {
     radarQuadrant: formData.get("radarQuadrant") || undefined,
     radarRing: formData.get("radarRing") || undefined,
     campaignId: formData.get("campaignId") || undefined,
+    isPublished: formData.get("isPublished") === "on",
   });
+}
+
+/**
+ * `publishedAt` is the *first* publication timestamp: stamped once and then
+ * preserved, including across an unpublish (unlike the startup self-service
+ * path, which clears it). Discover orders by `publishedAt desc`, so keeping the
+ * original date stops an admin toggling visibility off and on again from
+ * shuffling a long-published startup to the top of the marketplace.
+ * `undefined` leaves the stored value untouched.
+ */
+function publishedAtUpdate(
+  isPublished: boolean,
+  currentPublishedAt: Date | null
+): Date | undefined {
+  return isPublished && !currentPublishedAt ? new Date() : undefined;
+}
+
+/** Marketplace surfaces that show a startup's published storefront. */
+function revalidateDiscover(startupId: string): void {
+  revalidatePath("/discover");
+  revalidatePath(`/discover/${startupId}`);
 }
 
 export async function createStartup(
@@ -70,12 +98,17 @@ export async function createStartup(
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
   const startup = await prisma.startup.create({
-    data: { ...parsed.data, website: parsed.data.website || null },
+    data: {
+      ...parsed.data,
+      website: parsed.data.website || null,
+      publishedAt: publishedAtUpdate(parsed.data.isPublished, null) ?? null,
+    },
   });
   revalidatePath("/startups");
   revalidatePath("/longlist");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
+  revalidateDiscover(startup.id);
   redirect(`/startups/${startup.id}`);
 }
 
@@ -88,6 +121,12 @@ export async function updateStartup(
   const parsed = parseStartupForm(formData);
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
+  const existing = await prisma.startup.findUnique({
+    where: { id: startupId },
+    select: { publishedAt: true },
+  });
+  if (!existing) return { error: "Startup nicht gefunden." };
+
   await prisma.startup.update({
     where: { id: startupId },
     data: {
@@ -96,6 +135,10 @@ export async function updateStartup(
       radarQuadrant: parsed.data.radarQuadrant ?? null,
       radarRing: parsed.data.radarRing ?? null,
       campaignId: parsed.data.campaignId ?? null,
+      publishedAt: publishedAtUpdate(
+        parsed.data.isPublished,
+        existing.publishedAt
+      ),
     },
   });
   revalidatePath("/startups");
@@ -103,7 +146,12 @@ export async function updateStartup(
   revalidatePath("/longlist");
   revalidatePath("/pipeline");
   revalidatePath("/radar");
-  return { success: "Startup aktualisiert." };
+  revalidateDiscover(startupId);
+  return {
+    success: parsed.data.isPublished
+      ? "Startup aktualisiert und im Ökosystem veröffentlicht."
+      : "Startup aktualisiert (nicht öffentlich).",
+  };
 }
 
 export async function deleteStartup(startupId: string): Promise<void> {
