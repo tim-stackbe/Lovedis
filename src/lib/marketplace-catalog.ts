@@ -78,6 +78,54 @@ export interface OfferingSeed {
 // ---------------------------------------------------------------------------
 
 export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
+  // Die vier „Exclusive"-Sessions. Werte 1:1 aus der forensischen
+  // Wiederherstellung vom 14.09.2026 (prisma/restore-venture-store-20260914.sql
+  // ist die Quelle der Wahrheit) — summary/description wörtlich übernommen.
+  {
+    title: "Community / Ökosystem Sales",
+    summary: "Online Workshop zu Community- und Ökosystem-Vertrieb.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: Community / Ökosystem Sales mit unusual business (Sina Wans). Format: Online Workshop.",
+    focusTags: ["Sales", "Growth", "GTM"],
+    status: "OPEN",
+    contactPerson: "Sina Wans",
+    fixCreditCost: 0,
+    sortOrder: 1,
+  },
+  {
+    title: "Aufbau strukturierter Pipelines",
+    summary: "Online Workshop zum Aufbau strukturierter Sales-Pipelines.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: Aufbau strukturierter Pipelines mit GAL Digital (Tobias Auradniczek). Format: Online Workshop.",
+    focusTags: ["Sales", "Pipeline", "GTM"],
+    status: "OPEN",
+    contactPerson: "Tobias Auradniczek",
+    fixCreditCost: 0,
+    sortOrder: 2,
+  },
+  {
+    title: "Nightmare Competitor",
+    summary: "Live Workshop zu Wettbewerbspositionierung.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: Nightmare Competitor mit Uni Marburg / StartMiUp (Michael Stephan). Format: Live Workshop.",
+    focusTags: ["Sales", "Positioning", "Growth"],
+    status: "OPEN",
+    contactPerson: "Michael Stephan",
+    fixCreditCost: 0,
+    sortOrder: 3,
+  },
+  {
+    title: "SaaS Contracting",
+    summary: "Online Workshop zu SaaS-Vertragsgestaltung im Sales-Kontext.",
+    description:
+      "Session im Rahmen von Sales, Pricing & Growth: SaaS Contracting mit Aulinger Rechtsanwälte Notare (Dr. Ralf Heine). Format: Online Workshop.",
+    focusTags: ["Sales", "Legal", "SaaS"],
+    status: "OPEN",
+    contactPerson: "Dr. Ralf Heine",
+    sessionDate: "23. September, 10–12 Uhr",
+    fixCreditCost: 0,
+    sortOrder: 4,
+  },
   {
     title: "Workshop 1: KI Trends & Modellvergleich",
     summary:
@@ -103,7 +151,10 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
       "Session „Sales Foundations: People, Process & Tools — ein Framework für skalierbares GTM“: Online Workshop, 90 Min., Q&A bei Bedarf.\n\n" +
       "Programmziele: geschärfte Value Proposition & ICP, ein Sales Handbook (Pipeline, GtM, Playbook, Deal Qualification, Skalierung) sowie eine Pricing-Strategie mit validiertem Pricing-Modell.",
     focusTags: ["Sales", "Pricing", "Growth", "GTM"],
-    status: "OPEN",
+    // Bewusst versteckt (DRAFT): der Sync hat dieses Dach-Programm am
+    // 14.09.2026 neu angelegt, im Store soll es nicht erscheinen. Inhalt bleibt
+    // erhalten, damit es jederzeit auf OPEN gesetzt werden kann.
+    status: "DRAFT",
     contactPerson: "Claudia Proß",
     sessionDate: "Input-Session am 27. August, 12:00–13:30 Uhr",
     fixCreditCost: PROGRAM_FIX_CREDIT_COST,
@@ -112,97 +163,20 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Mentor:innen — Führungskräfte/Expert:innen der LOVEDIS-Unternehmenspartner.
-// Company (Unternehmen), role (Position) und website (URL) stammen 1:1 aus der
-// Notion-Mentor:innen-Datenbank. Notion nennt KEINEN Credit-Preis → Entscheidung:
-// 1 Credit (analog zur Session-Skala). Notion liefert weder Expertise-Tags noch
-// eine Bio → bewusst leer (keine erfundenen Werte). Fotos liegen lokal unter
-// public/mentors/ (stabile Slugs, umlaut-transliteriert; Notion-Signed-URLs
-// laufen ab); die Endung entspricht dem tatsächlichen Bildformat der Quelle.
+// Mentor:innen — BEWUSST LEER.
+//
+// Die acht Mentor:innen-Profile wurden am 11.09.2026 aus dem Venture Store
+// entfernt; der Store soll KEINE Mentor:innen zeigen. Der Sync
+// (prisma/apply-marketplace-notion.ts) hat sie am 14.09.2026 aus diesem
+// Katalog heraus neu angelegt — deshalb ist die Liste jetzt leer: Soll-Zustand
+// der Datenbank ist 0 MentorProfile-Zeilen, und der Sync darf daran nichts
+// ändern (er prunt nur Zeilen, die NICHT im Katalog stehen, legt aber keine an).
+// Typ + Export bleiben erhalten, damit Seed/Sync/Tests weiter kompilieren.
+// Sollen wieder Mentor:innen erscheinen, hier mit echten Notion-Werten
+// (company/role/website, Foto unter public/mentors/) ergänzen.
 // ---------------------------------------------------------------------------
 
-export const MARKETPLACE_MENTORS: MentorSeed[] = [
-  {
-    name: "Elena Tiegs",
-    company: "Weimer",
-    role: "Umwelt-, Hygiene- und Sicherheitsingenieurwesen",
-    expertise: [],
-    website: "https://www.weimer-bau.de",
-    photoUrl: "/mentors/elena-tiegs.jpg",
-    creditCost: 1,
-    sortOrder: 1,
-  },
-  {
-    name: "Thomas Pregla",
-    company: "Sälzer",
-    role: "Head of Technology & Product-Development",
-    expertise: [],
-    website: "https://www.saelzer-security.com",
-    photoUrl: "/mentors/thomas-pregla.avif",
-    creditCost: 1,
-    sortOrder: 2,
-  },
-  {
-    name: "Marie Bender",
-    company: "Weimer",
-    role: "Digitalisierung & HR",
-    expertise: [],
-    website: "https://www.weimer-bau.de",
-    photoUrl: "/mentors/marie-bender.jpg",
-    creditCost: 1,
-    sortOrder: 3,
-  },
-  {
-    name: "Robin Sinemli",
-    company: "Lupp Living GmbH & Co. KG",
-    role: "Geschäftsführer",
-    expertise: [],
-    website: "https://www.lupp.de",
-    photoUrl: "/mentors/robin-sinemli.avif",
-    creditCost: 1,
-    sortOrder: 4,
-  },
-  {
-    name: "Henri Böwingloh",
-    company: "Sälzer",
-    role: "Project Manager Training & Innovation",
-    expertise: [],
-    website: "https://www.saelzer-security.com",
-    photoUrl: "/mentors/henri-boewingloh.jpg",
-    creditCost: 1,
-    sortOrder: 5,
-  },
-  {
-    name: "Celin Winter",
-    company: "Innexis",
-    role: "Product Manager Facilities",
-    expertise: [],
-    website: "https://www.innexis.com",
-    photoUrl: "/mentors/celin-winter.jpg",
-    creditCost: 1,
-    sortOrder: 6,
-  },
-  {
-    name: "Louisa Cronau",
-    company: "Fingerhaus",
-    role: "Geschäftsführerin",
-    expertise: [],
-    website: "https://www.fingerhaus.de",
-    photoUrl: "/mentors/louisa-cronau.avif",
-    creditCost: 1,
-    sortOrder: 7,
-  },
-  {
-    name: "Dr. Alexandra Hofmockel",
-    company: "Innexis",
-    role: "Business Development and Mergers & Acquisitions",
-    expertise: [],
-    website: "https://www.innexis.com",
-    photoUrl: "/mentors/dr-alexandra-hofmockel.png",
-    creditCost: 1,
-    sortOrder: 8,
-  },
-];
+export const MARKETPLACE_MENTORS: MentorSeed[] = [];
 
 // ---------------------------------------------------------------------------
 // Support-Angebote — echte Notion-Angebote je Kategorie. Anbieter/Kontakt/

@@ -67,6 +67,8 @@ describe("marketplace catalog — Notion metadata in dedicated fields", () => {
     expect(sales!.contactPerson).toBe("Claudia Proß");
     expect(sales!.sessionDate).toContain("27. August");
     expect(sales!.fixCreditCost).toBe(PROGRAM_FIX_CREDIT_COST);
+    // Kept as content but hidden from the storefront (matches the restored DB).
+    expect(sales!.status).toBe("DRAFT");
   });
 
   it("splits provider/company + contact person for a real offering", () => {
@@ -101,16 +103,37 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(MARKETPLACE_OFFERINGS.filter((o) => o.category === "SALES")).toHaveLength(0);
   });
 
-  it("uses the real per-mentor company/role/website from Notion (no round-robin)", () => {
-    expect(MARKETPLACE_MENTORS).toHaveLength(8);
-    const elena = MARKETPLACE_MENTORS.find((m) => m.name === "Elena Tiegs");
-    expect(elena?.company).toBe("Weimer");
-    expect(elena?.website).toBe("https://www.weimer-bau.de");
-    // Notion provides no expertise tags or bio for mentors → left empty.
-    expect(MARKETPLACE_MENTORS.every((m) => m.expertise.length === 0)).toBe(true);
-    expect(MARKETPLACE_MENTORS.every((m) => m.bio == null)).toBe(true);
-    // Every mentor keeps its curated local photo.
-    expect(MARKETPLACE_MENTORS.every((m) => Boolean(m.photoUrl))).toBe(true);
+  // The eight mentor profiles were removed from the Venture Store on
+  // 2026-09-11; the catalog must stay empty so a sync can never re-create them.
+  it("lists no mentors (Venture Store intentionally has none)", () => {
+    expect(MARKETPLACE_MENTORS).toHaveLength(0);
+  });
+
+  // The four "Exclusive" sessions were hard-deleted by the 2026-09-14 sync and
+  // recovered in prisma/restore-venture-store-20260914.sql — the catalog has to
+  // agree with that restored state, otherwise the prune deletes them again.
+  it("carries the five OPEN storefront programs incl. the recovered sessions", () => {
+    const open = MARKETPLACE_PROGRAMS.filter((p) => p.status === "OPEN")
+      .map((p) => p.title)
+      .sort();
+    expect(open).toEqual([
+      "Aufbau strukturierter Pipelines",
+      "Community / Ökosystem Sales",
+      "Nightmare Competitor",
+      "SaaS Contracting",
+      "Workshop 1: KI Trends & Modellvergleich",
+    ]);
+    const saas = MARKETPLACE_PROGRAMS.find(
+      (p) => p.title === "SaaS Contracting" && p.status === "OPEN"
+    );
+    expect(saas?.contactPerson).toBe("Dr. Ralf Heine");
+    expect(saas?.sessionDate).toBe("23. September, 10–12 Uhr");
+    // Recovered sessions are included in the programme → no FIX credits.
+    const recovered = MARKETPLACE_PROGRAMS.filter((p) =>
+      p.focusTags.includes("Sales") && p.title !== "Sales, Pricing & Growth"
+    );
+    expect(recovered).toHaveLength(4);
+    expect(recovered.every((p) => p.fixCreditCost === 0)).toBe(true);
   });
 
   it("spends 2 credits on the GAL-Digital 1:1 formats, Live Hacking and the Notion „1-2\" Legal offerings", () => {

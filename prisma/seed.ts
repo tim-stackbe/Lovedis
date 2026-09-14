@@ -1455,8 +1455,12 @@ async function main() {
 
   // Referenzen für die Demo-Buchungen (aus dem echten Notion-Katalog).
   const programGrowthId = programByTitle.get("Sales, Pricing & Growth")!;
-  const mentorRequestedId = mentorByName.get(MARKETPLACE_MENTORS[0].name)!;
-  const mentorDeclinedId = mentorByName.get(MARKETPLACE_MENTORS[1].name)!;
+  // MARKETPLACE_MENTORS ist bewusst leer (Venture Store ohne Mentor:innen) —
+  // die beiden Mentor-Demo-Buchungen werden dann übersprungen, statt auf
+  // undefined zu laufen. Kommen wieder Mentor:innen in den Katalog, greifen
+  // sie automatisch.
+  const mentorRequested = MARKETPLACE_MENTORS[0];
+  const mentorDeclined = MARKETPLACE_MENTORS[1];
   const offeringCoordId = offeringByKey.get(
     "FUNDRAISING::Individuelle Expert:innen Sessions (Investor-Sparring)"
   )!;
@@ -1467,21 +1471,23 @@ async function main() {
   )!;
 
   // --- Buchungen in verschiedenen Zuständen für NeuralForge (Demo-Startup) --
-  await prisma.marketplaceBooking.create({
-    data: {
-      offeringType: "MENTOR_SESSION",
-      status: "REQUESTED",
-      startupId: neuralForge.id,
-      requestedById: startupUser.id,
-      mentorId: mentorRequestedId,
-      message:
-        "Wir bereiten unsere Series B vor und würden gern Unit Economics und Finanzierungsstrategie im 1:1-Sparring durchgehen.",
-      contactName: startupUser.name,
-      contactEmail: startupUser.email,
-      preferredAt: "Nächste Woche Di/Mi nachmittags",
-      creditCost: MARKETPLACE_MENTORS[0].creditCost,
-    },
-  });
+  if (mentorRequested) {
+    await prisma.marketplaceBooking.create({
+      data: {
+        offeringType: "MENTOR_SESSION",
+        status: "REQUESTED",
+        startupId: neuralForge.id,
+        requestedById: startupUser.id,
+        mentorId: mentorByName.get(mentorRequested.name)!,
+        message:
+          "Wir bereiten unsere Series B vor und würden gern Unit Economics und Finanzierungsstrategie im 1:1-Sparring durchgehen.",
+        contactName: startupUser.name,
+        contactEmail: startupUser.email,
+        preferredAt: "Nächste Woche Di/Mi nachmittags",
+        creditCost: mentorRequested.creditCost,
+      },
+    });
+  }
   await prisma.marketplaceBooking.create({
     data: {
       offeringType: "SUPPORT",
@@ -1532,23 +1538,26 @@ async function main() {
       creditTransactionId: redemptionTx.id,
     },
   });
-  // DECLINED Mentor-Anfrage (kein Credit-Effekt).
-  await prisma.marketplaceBooking.create({
-    data: {
-      offeringType: "MENTOR_SESSION",
-      status: "DECLINED",
-      startupId: neuralForge.id,
-      requestedById: startupUser.id,
-      mentorId: mentorDeclinedId,
-      message: "Würden gern über den Markteintritt in der Bauzulieferung sprechen.",
-      contactName: startupUser.name,
-      contactEmail: startupUser.email,
-      creditCost: MARKETPLACE_MENTORS[1].creditCost,
-      handledById: member.id,
-      coordinatorNote:
-        "Aktuell kein passender Slot — wir melden uns im nächsten Quartal erneut.",
-    },
-  });
+  // DECLINED Mentor-Anfrage (kein Credit-Effekt). Nur bei ≥2 Mentor:innen im
+  // Katalog — bei leerer Liste entfällt die Demo-Buchung.
+  if (mentorDeclined) {
+    await prisma.marketplaceBooking.create({
+      data: {
+        offeringType: "MENTOR_SESSION",
+        status: "DECLINED",
+        startupId: neuralForge.id,
+        requestedById: startupUser.id,
+        mentorId: mentorByName.get(mentorDeclined.name)!,
+        message: "Würden gern über den Markteintritt in der Bauzulieferung sprechen.",
+        contactName: startupUser.name,
+        contactEmail: startupUser.email,
+        creditCost: mentorDeclined.creditCost,
+        handledById: member.id,
+        coordinatorNote:
+          "Aktuell kein passender Slot — wir melden uns im nächsten Quartal erneut.",
+      },
+    });
+  }
   // COMPLETED Programm — verbraucht das FIX-Kontingent (0 FLEX-Credits, aber
   // 6 FIX „durch Anmeldung"). FIX-SPEND-Tx verlinkt, fixBalance dekrementiert.
   const growthProgram = MARKETPLACE_PROGRAMS.find(
