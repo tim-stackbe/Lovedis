@@ -13,7 +13,7 @@ export default async function LoginPage({
   return (
     <AuthLayout
       headline={["Entdecken.", "Bewerten.", "Partnern."]}
-      subline="Die Scouting-Workbench für Innovation Engineers — vom ersten Signal bis zum unterschriebenen Proof-of-Concept."
+      subline="The LOVEDIS Ecosystem Platform"
     >
       <LoginForm callbackUrl={callbackUrl} resetSuccess={reset === "success"} />
     </AuthLayout>
