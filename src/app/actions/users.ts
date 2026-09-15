@@ -7,6 +7,8 @@ import type { UserRole } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
 import { requireAuth, requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFoundError } from "@/lib/prisma-errors";
+import { sendRegistrationConfirmationEmail } from "@/lib/registration-email";
 import { ALL_ROLES } from "@/lib/roles";
 
 const roleEnum = z.enum(ALL_ROLES as [UserRole, ...UserRole[]]);
@@ -39,6 +41,8 @@ export async function createUser(
   if (existing)
     return { error: "Ein Nutzer mit dieser E-Mail existiert bereits." };
 
+  // Admin-created accounts are trusted and approved immediately — even
+  // partners created here skip the self-registration approval queue.
   await prisma.user.create({
     data: {
       name: parsed.data.name,
@@ -46,7 +50,12 @@ export async function createUser(
       passwordHash: await bcrypt.hash(parsed.data.password, 10),
       role: parsed.data.role,
       company: parsed.data.company,
+      approvedAt: new Date(),
     },
+  });
+  await sendRegistrationConfirmationEmail({
+    to: email,
+    name: parsed.data.name,
   });
   revalidatePath("/users");
   return { success: "Nutzer erstellt." };
@@ -63,12 +72,45 @@ export async function updateUserRole(
   const parsed = roleEnum.safeParse(role);
   if (!parsed.success) return { error: "Ungültige Rolle." };
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { role: parsed.data },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role: parsed.data },
+    });
+  } catch (err) {
+    if (isRecordNotFoundError(err)) return { error: "Nutzer nicht gefunden." };
+    throw err;
+  }
   revalidatePath("/users");
-  return {};
+  return { success: "Rolle aktualisiert." };
+}
+
+/**
+ * Approves a pending self-registered business partner, lifting the /pending
+ * gate so they can access partner-facing data. ADMIN-only. Idempotent-ish:
+ * re-approving simply refreshes the timestamp. P2025 (row gone) is surfaced as
+ * a friendly error.
+ */
+export async function approvePartner(userId: string): Promise<ActionState> {
+  await requireRole(["ADMIN"]);
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { approvedAt: new Date() },
+    });
+  } catch (err) {
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? (err as { code?: string }).code
+        : undefined;
+    if (code === "P2025") return { error: "Nutzer nicht gefunden." };
+    throw err;
+  }
+
+  revalidatePath("/users");
+  revalidatePath("/dashboard/admin");
+  return { success: "Partner freigegeben." };
 }
 
 export async function toggleUserActive(userId: string): Promise<ActionState> {
@@ -87,7 +129,9 @@ export async function toggleUserActive(userId: string): Promise<ActionState> {
     data: { isActive: !user.isActive },
   });
   revalidatePath("/users");
-  return {};
+  return {
+    success: user.isActive ? "Nutzer deaktiviert." : "Nutzer reaktiviert.",
+  };
 }
 
 // ---------------------------------------------------------------------------

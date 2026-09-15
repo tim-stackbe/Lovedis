@@ -54,8 +54,6 @@ export default async function SharedScoringDetailPage({
         industry={e.startup.industry}
         scores={scoresToMap(e.scores)}
         overallScore={e.overallScore}
-        potential={e.potential}
-        feasibility={e.feasibility}
         recommendation={e.recommendation}
         notes={e.notes}
       />
