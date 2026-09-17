@@ -31,7 +31,7 @@ app.49.13.222.76.nip.io {
 	}
 }
 
-# --- ALPHA custom domain (dual-serve — inactive until DNS is in place) ------
+# --- ALPHA custom domain (dual-serve — ACTIVE: DNS live at alpha.lovedis.de) -
 # WHY: partners on corporate networks often cannot resolve nip.io (secure web
 # gateways / DNS filters block wildcard-DNS + DNS-rebinding services), so the
 # nip.io host works for the team but fails for them. A real subdomain on a
@@ -57,16 +57,16 @@ app.49.13.222.76.nip.io {
 # Keep the nip.io block during transition; remove it only once partners confirm
 # the new domain works everywhere.
 #
-# alpha.lovedis.de {
-# 	encode zstd gzip
-# 	reverse_proxy platform:3000
-#
-# 	header {
-# 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-# 		X-Content-Type-Options "nosniff"
-# 		X-Frame-Options "SAMEORIGIN"
-# 		Referrer-Policy "strict-origin-when-cross-origin"
-# 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
-# 		-Server
-# 	}
-# }
+alpha.lovedis.de {
+	encode zstd gzip
+	reverse_proxy platform:3000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+}
