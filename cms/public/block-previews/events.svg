@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Inter,Segoe UI,Arial,sans-serif">
+  <rect width="480" height="320" fill="#ffffff"/>
+  <rect width="480" height="72" fill="#F43F5E"/>
+  <text x="24" y="46" fill="#ffffff" font-size="30" font-weight="700">Events</text>
+  <g>
+    <rect x="24" y="104" width="210" height="140" rx="10" fill="#f3f4f6"/>
+    <rect x="40" y="120" width="60" height="24" rx="6" fill="#F43F5E"/>
+    <rect x="40" y="160" width="150" height="12" rx="4" fill="#111827"/>
+    <rect x="40" y="182" width="110" height="10" rx="4" fill="#d1d5db"/>
+    <rect x="40" y="210" width="80" height="20" rx="10" fill="#ffe4e6"/>
+  </g>
+  <g>
+    <rect x="246" y="104" width="210" height="140" rx="10" fill="#f3f4f6"/>
+    <rect x="262" y="120" width="60" height="24" rx="6" fill="#F43F5E"/>
+    <rect x="262" y="160" width="150" height="12" rx="4" fill="#111827"/>
+    <rect x="262" y="182" width="110" height="10" rx="4" fill="#d1d5db"/>
+    <rect x="262" y="210" width="80" height="20" rx="10" fill="#ffe4e6"/>
+  </g>
+  <text x="24" y="300" fill="#6b7280" font-size="16">Kommende Events als Karten</text>
+</svg>

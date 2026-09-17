@@ -6,6 +6,7 @@ import {
   deleteChallenge,
 } from "@/app/actions/challenges";
 import { ApplyForm } from "@/components/challenges/ApplyForm";
+import { ChallengeDescription } from "@/components/challenges/ChallengeDescription";
 import { ChallengeForm } from "@/components/challenges/ChallengeForm";
 import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
 import {
@@ -16,8 +17,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { partnerCanViewChallenge } from "@/lib/challenges";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 export default async function ChallengeDetailPage({
@@ -25,31 +28,65 @@ export default async function ChallengeDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "STARTUP"]);
+  const session = await requireRole([
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "STARTUP",
+  ]);
   const { id } = await params;
+
+  const role = session.user.role;
+  // Managing a challenge (edit/delete, viewing pitches) is a Lovedis-team
+  // affordance. Partners get a read-only view of their attributed use-cases.
+  const isManager = isTeamRole(role);
+  // Accepting/rejecting an application is ADMIN-only — MEMBER may read the
+  // pitches but not decide, and the owning partner never decides. Mirrors the
+  // `requireRole(["ADMIN"])` guard on `decideApplication`.
+  const isAdmin = role === "ADMIN";
 
   const challenge = await prisma.challenge.findUnique({
     where: { id },
     include: {
-      createdBy: { select: { id: true, name: true, company: true } },
-      applications: {
-        include: {
-          startup: { select: { id: true, name: true, industry: true } },
-          poc: { select: { id: true } },
-        },
-        orderBy: { createdAt: "desc" },
+      createdBy: {
+        select: { id: true, name: true, company: true, role: true },
       },
     },
   });
   if (!challenge) notFound();
 
-  const role = session.user.role;
-  const isManager =
-    role === "ADMIN" ||
-    (role === "BUSINESS_PARTNER" && challenge.createdById === session.user.id);
+  // Partners: own use-cases + read-only view of team-published industry challenges.
+  if (
+    role === "BUSINESS_PARTNER" &&
+    !partnerCanViewChallenge(challenge, session.user.id)
+  ) {
+    notFound();
+  }
 
   // Startup view: hide draft challenges entirely.
   if (role === "STARTUP" && challenge.status === "DRAFT") notFound();
+
+  // Application pitches are a team-only affordance (review/decide); don't
+  // over-fetch them for partners/startups who only get a read-only view.
+  const applications = isManager
+    ? await prisma.challengeApplication.findMany({
+        where: { challengeId: challenge.id },
+        include: {
+          startup: { select: { id: true, name: true, industry: true } },
+          poc: { select: { id: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+
+  // Partner-owned challenges the team manages need the partner selector.
+  const partners = isManager
+    ? await prisma.user.findMany({
+        where: { role: "BUSINESS_PARTNER" },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, company: true },
+      })
+    : [];
 
   const myStartup =
     role === "STARTUP"
@@ -59,7 +96,14 @@ export default async function ChallengeDetailPage({
         })
       : null;
   const myApplication = myStartup
-    ? challenge.applications.find((a) => a.startupId === myStartup.id)
+    ? await prisma.challengeApplication.findUnique({
+        where: {
+          challengeId_startupId: {
+            challengeId: challenge.id,
+            startupId: myStartup.id,
+          },
+        },
+      })
     : null;
 
   return (
@@ -82,9 +126,13 @@ export default async function ChallengeDetailPage({
       </div>
 
       <Card className="p-6">
-        <p className="whitespace-pre-line text-sm leading-relaxed">
-          {challenge.description}
-        </p>
+        {role === "BUSINESS_PARTNER" || role === "STARTUP" ? (
+          <ChallengeDescription description={challenge.description} />
+        ) : (
+          <p className="whitespace-pre-line text-sm leading-relaxed">
+            {challenge.description}
+          </p>
+        )}
         {challenge.tags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {challenge.tags.map((t) => (
@@ -97,7 +145,7 @@ export default async function ChallengeDetailPage({
       </Card>
 
       {role === "STARTUP" && (
-        <section className="space-y-4">
+        <section id="bewerben" className="space-y-4 scroll-mt-24">
           <SectionLabel number="02" label="Bewerben" title="Deine Bewerbung" />
           {myApplication ? (
             <Card className="p-6">
@@ -129,16 +177,16 @@ export default async function ChallengeDetailPage({
             <SectionLabel
               number="02"
               label="Prüfen"
-              title={`Bewerbungen (${challenge.applications.length})`}
+              title={`Bewerbungen (${applications.length})`}
             />
-            {challenge.applications.length === 0 ? (
+            {applications.length === 0 ? (
               <Card className="p-6 text-sm text-lv-secondary">
                 Noch keine Bewerbungen. Öffne die Challenge, um Pitches zu
                 erhalten.
               </Card>
             ) : (
               <div className="space-y-3">
-                {challenge.applications.map((a) => (
+                {applications.map((a) => (
                   <Card key={a.id} className="p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
@@ -168,7 +216,7 @@ export default async function ChallengeDetailPage({
                     <p className="mt-3 whitespace-pre-line rounded-button bg-lv-surface p-4 text-sm">
                       {a.pitch}
                     </p>
-                    {a.status === "PENDING" && (
+                    {isAdmin && a.status === "PENDING" && (
                       <div className="mt-4 flex gap-2">
                         <form
                           action={async () => {
@@ -178,7 +226,7 @@ export default async function ChallengeDetailPage({
                         >
                           <Button type="submit" size="sm">
                             <Check className="h-4 w-4" />
-                            Annehmen & PoC starten
+                            Annehmen
                           </Button>
                         </form>
                         <form
@@ -202,7 +250,7 @@ export default async function ChallengeDetailPage({
 
           <section className="space-y-4">
             <SectionLabel number="03" label="Verwalten" title="Challenge bearbeiten" />
-            <ChallengeForm challenge={challenge} />
+            <ChallengeForm challenge={challenge} partners={partners} />
             <div className="flex justify-end">
               <form action={deleteChallenge.bind(null, challenge.id)}>
                 <Button type="submit" variant="danger" size="sm">

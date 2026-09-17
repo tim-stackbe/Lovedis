@@ -13,6 +13,11 @@ next-env.d.ts
 .env
 .env.local
 .env*.local
+.dev.vars
+
+# cloudflare / opennext build + cache output
+/.open-next/
+/.wrangler/
 
 # generated prisma client
 /src/generated/prisma/
@@ -26,8 +31,15 @@ next-env.d.ts
 /architecture-reference/
 /design-reference/
 
+# database backups (may contain real/sensitive data — never commit)
+/backups/
+
 # misc
 .DS_Store
 *.pem
 npm-debug.log*
 *.tsbuildinfo
+.vercel
+.env.*
+!.env.example
+!**/.env.example

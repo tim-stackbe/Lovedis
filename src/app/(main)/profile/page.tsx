@@ -19,8 +19,23 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Mein Profil" };
 
+// ---------------------------------------------------------------------------
+// Alpha launch — hide Startup profile content sections 3 & 4 (restorable).
+// ---------------------------------------------------------------------------
+//
+// Pre-Alpha /profile content sections (below the HeroBanner hero), top→bottom:
+//   01  Profil       "Unternehmensdaten"                  (OwnProfileForm)
+//   02  Storefront   "Öffentliches Profil"     (StorefrontForm)
+//   03  Traktion     "Dein Netzwerk"                      (Follower/Intro ToneCards + intro list)
+//   04  Updates      "Halte Follower auf dem Laufenden"   (UpdateComposer + updates timeline)
+//
+// During Alpha we hide the 3rd and 4th content sections — 03 "Dein Netzwerk"
+// and 04 "Halte Follower auf dem Laufenden". Their code is kept and only
+// conditionally rendered. Set to `false` to fully restore the original page.
+const ALPHA_HIDE_STARTUP_PROFILE_SECTIONS = true;
+
 export default async function ProfilePage() {
-  const session = await requireRole(["STARTUP"]);
+  const session = await requireRole(["STARTUP", "ADMIN", "MEMBER"]);
 
   const startup = await prisma.startup.findUnique({
     where: { ownerUserId: session.user.id },
@@ -56,7 +71,7 @@ export default async function ProfilePage() {
       <HeroBanner
         kicker="Self-Service"
         title="Dein Startup-Profil"
-        subtitle="Pflege deine Daten, veröffentliche ein Storefront-Profil für Investoren und halte deine Follower mit Updates auf dem Laufenden."
+        subtitle="Pflege deine Daten, veröffentliche dein öffentliches Storefront-Profil für Partner und halte sie mit Updates auf dem Laufenden."
       >
         {startup && (
           <div className="grid grid-cols-2 gap-3 sm:max-w-md">
@@ -77,7 +92,7 @@ export default async function ProfilePage() {
             <SectionLabel
               number="02"
               label="Storefront"
-              title="Öffentliches Investoren-Profil"
+              title="Öffentliches Profil"
             />
             <StorefrontForm
               startup={{
@@ -92,6 +107,8 @@ export default async function ProfilePage() {
             />
           </section>
 
+          {!ALPHA_HIDE_STARTUP_PROFILE_SECTIONS && (
+            <>
           <section className="space-y-4">
             <SectionLabel number="03" label="Traktion" title="Dein Netzwerk" />
             <div className="grid gap-4 sm:grid-cols-2">
@@ -105,7 +122,7 @@ export default async function ProfilePage() {
                 tone={introCount > 0 ? "attention" : "muted"}
                 label="Intro-Anfragen"
                 value={introCount}
-                sub="über das Lovedis-Team"
+                sub="über das LOVEDIS-Team"
               />
             </div>
             {introCount > 0 && (
@@ -131,7 +148,7 @@ export default async function ProfilePage() {
                           <p className="text-xs text-lv-secondary">
                             {revealed
                               ? formatDate(r.createdAt)
-                              : "In Prüfung durch das Lovedis-Team"}
+                              : "In Prüfung durch das LOVEDIS-Team"}
                           </p>
                         </div>
                       </div>
@@ -181,6 +198,8 @@ export default async function ProfilePage() {
               </Card>
             )}
           </section>
+            </>
+          )}
         </>
       ) : (
         <Card className="flex items-center gap-3 p-6 text-sm text-lv-secondary">

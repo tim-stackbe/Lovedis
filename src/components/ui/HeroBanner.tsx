@@ -42,7 +42,9 @@ export function HeroBanner({
               </p>
             )}
           </div>
-          {actions && <div className="flex shrink-0 gap-3">{actions}</div>}
+          {actions && (
+            <div className="flex flex-wrap gap-3 sm:shrink-0">{actions}</div>
+          )}
         </div>
         {children && <div className="mt-6">{children}</div>}
       </div>

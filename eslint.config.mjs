@@ -7,11 +7,15 @@ const eslintConfig = defineConfig([
   ...nextTs,
   globalIgnores([
     ".next/**",
+    ".open-next/**",
+    ".wrangler/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
     "src/generated/**",
     "scripts/**",
+    // The headless CMS app is a self-contained sub-project with its own tooling.
+    "cms/**",
   ]),
 ]);
 

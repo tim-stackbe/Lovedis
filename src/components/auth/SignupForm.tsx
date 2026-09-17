@@ -16,7 +16,7 @@ const COPY = {
     kicker: "Business Partner",
     title: "Partner-Konto erstellen",
     description:
-      "Stelle Innovations-Challenges, prüfe Startup-Bewerbungen und tracke Proof-of-Concepts.",
+      "Erhalte kuratiertes Startup-Screening, gib mit einem Klick schnelle Verdikte ab, bleib über Check-ins dran und nutze den Partner-Hub.",
     companyLabel: "Unternehmen",
     companyPlaceholder: "ACME Industries GmbH",
   },

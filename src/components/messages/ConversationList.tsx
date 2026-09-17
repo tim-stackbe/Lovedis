@@ -71,7 +71,7 @@ export function ConversationList({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Konversation suchen…"
-            className="flex-1 bg-transparent text-sm text-lv-text placeholder:text-lv-secondary/60 outline-none"
+            className="flex-1 bg-transparent text-base sm:text-sm text-lv-text placeholder:text-lv-secondary/60 outline-none"
           />
         </div>
       </div>
