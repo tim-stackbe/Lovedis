@@ -12,7 +12,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Nutzerverwaltung" };
 
@@ -92,6 +92,12 @@ export default async function UsersPage() {
                     <dt className="text-xs text-lv-secondary">Erstellt</dt>
                     <dd>{formatDate(u.createdAt)}</dd>
                   </div>
+                  <div>
+                    <dt className="text-xs text-lv-secondary">
+                      Letzter Login
+                    </dt>
+                    <dd>{formatDateTime(u.lastLoginAt)}</dd>
+                  </div>
                 </dl>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <RoleSelect userId={u.id} role={u.role} disabled={isSelf} />
@@ -118,6 +124,7 @@ export default async function UsersPage() {
               <Th>Nutzer</Th>
               <Th>Unternehmen</Th>
               <Th>Erstellt</Th>
+              <Th>Letzter Login</Th>
               <Th>Rolle</Th>
               <Th>Status</Th>
               <Th className="text-right">Aktionen</Th>
@@ -134,6 +141,9 @@ export default async function UsersPage() {
                   </Td>
                   <Td className="text-lv-secondary">{u.company ?? "—"}</Td>
                   <Td className="text-lv-secondary">{formatDate(u.createdAt)}</Td>
+                  <Td className="text-lv-secondary">
+                    {formatDateTime(u.lastLoginAt)}
+                  </Td>
                   <Td>
                     <RoleSelect userId={u.id} role={u.role} disabled={isSelf} />
                   </Td>
