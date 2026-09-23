@@ -93,6 +93,12 @@ interface SelfServiceMatrixProps {
   sectionNumber?: string;
   /** Partner mode: render the "Interesse: Ja/Nein" vote field + company tally. */
   showInterest?: boolean;
+  /**
+   * Whether the counterparty's side (their rating, mutual fit, coordination
+   * state) is visible. Partners must not see the startups' votes — only the
+   * LOVEDIS team sees both sides.
+   */
+  showCounterparty?: boolean;
 }
 
 const FIT_LABEL: Record<MutualFitLevel, string> = {
@@ -158,6 +164,22 @@ function CoordChip({ state }: { state: MatchCoordState }) {
       )}
     >
       {COORD_LABEL[state]}
+    </span>
+  );
+}
+
+/** Status based solely on the current user's own side. */
+function OwnStatusChip({ rated }: { rated: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+        rated
+          ? "bg-lv-mint/50 text-lv-mint-deep"
+          : "bg-lv-surface text-lv-secondary"
+      )}
+    >
+      {rated ? "Bewertet" : "Offen"}
     </span>
   );
 }
@@ -275,6 +297,7 @@ function EditSideDialog({
   action,
   onClose,
   showInterest,
+  showCounterparty,
 }: {
   mode: "partner" | "startup";
   batchId: string;
@@ -283,6 +306,7 @@ function EditSideDialog({
   action: SelfServiceMatrixProps["action"];
   onClose: () => void;
   showInterest?: boolean;
+  showCounterparty: boolean;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -342,7 +366,7 @@ function EditSideDialog({
         </div>
 
         <div className="space-y-5 px-6 py-5">
-          <OtherSide side={other} title={otherTitle} />
+          {showCounterparty && <OtherSide side={other} title={otherTitle} />}
 
           {showInterest && target.row.tally && (
             <div className="flex items-center justify-between gap-3 rounded-card border border-lv-border px-4 py-3">
@@ -507,6 +531,7 @@ export function SelfServiceMatrix({
   title,
   sectionNumber = "01",
   showInterest,
+  showCounterparty = true,
 }: SelfServiceMatrixProps) {
   const [target, setTarget] = useState<EditTarget | null>(null);
 
@@ -556,12 +581,18 @@ export function SelfServiceMatrix({
                   </span>
                 )}
                 <span className="mt-1 inline-flex flex-wrap gap-1.5">
-                  <CoordChip state={coord} />
+                  {showCounterparty ? (
+                    <CoordChip state={coord} />
+                  ) : (
+                    !row.tally && (
+                      <OwnStatusChip rated={row.own.relevance !== null} />
+                    )
+                  )}
                   {row.tally && <OutcomeChip tally={row.tally} />}
                 </span>
               </span>
               <span className="flex items-center gap-2">
-                {fit !== "none" && <FitChip level={fit} />}
+                {showCounterparty && fit !== "none" && <FitChip level={fit} />}
                 <ChevronRight className="h-4 w-4 shrink-0 text-lv-secondary" />
               </span>
             </button>
@@ -575,7 +606,7 @@ export function SelfServiceMatrix({
           <tr>
             <Th>{counterpartyLabel}</Th>
             <Th>Deine Relevanz</Th>
-            <Th>Gegenseite</Th>
+            {showCounterparty && <Th>Gegenseite</Th>}
             <Th>Status</Th>
             <Th className="text-right">Aktion</Th>
           </tr>
@@ -602,21 +633,25 @@ export function SelfServiceMatrix({
                     <span className="text-sm text-lv-secondary">Offen</span>
                   )}
                 </Td>
-                <Td className="align-middle">
-                  {row.other.relevance ? (
-                    <RelevanceBadge value={row.other.relevance} />
-                  ) : (
-                    <span className="text-sm text-lv-secondary">—</span>
-                  )}
-                </Td>
+                {showCounterparty && (
+                  <Td className="align-middle">
+                    {row.other.relevance ? (
+                      <RelevanceBadge value={row.other.relevance} />
+                    ) : (
+                      <span className="text-sm text-lv-secondary">—</span>
+                    )}
+                  </Td>
+                )}
                 <Td className="align-middle">
                   <span className="flex flex-wrap items-center gap-1.5">
                     {row.tally ? (
                       <OutcomeChip tally={row.tally} />
-                    ) : (
+                    ) : showCounterparty ? (
                       <CoordChip state={coord} />
+                    ) : (
+                      <OwnStatusChip rated={row.own.relevance !== null} />
                     )}
-                    {fit === "top" && <FitChip level={fit} />}
+                    {showCounterparty && fit === "top" && <FitChip level={fit} />}
                   </span>
                 </Td>
                 <Td className="text-right align-middle">
@@ -653,6 +688,7 @@ export function SelfServiceMatrix({
           action={action}
           onClose={() => setTarget(null)}
           showInterest={showInterest}
+          showCounterparty={showCounterparty}
         />
       )}
     </>

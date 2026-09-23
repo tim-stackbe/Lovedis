@@ -32,31 +32,13 @@ const EMPTY_SIDE: SideView = {
   interested: null,
 };
 
-type StartupSideRow = {
-  startupRelevance: SideView["relevance"];
-  startupUseCaseTypes: SideView["useCaseTypes"];
-  startupUseCaseNote: string | null;
-  startupFollowUp: boolean | null;
-  startupOpenQuestions: string | null;
-  startupNotes: string | null;
-  startupContacted: boolean | null;
-};
-
-function startupSide(m: StartupSideRow | undefined): SideView {
-  if (!m) return EMPTY_SIDE;
-  return {
-    relevance: m.startupRelevance,
-    useCaseTypes: m.startupUseCaseTypes,
-    useCaseNote: m.startupUseCaseNote,
-    followUp: m.startupFollowUp,
-    openQuestions: m.startupOpenQuestions,
-    notes: m.startupNotes,
-    contacted: m.startupContacted,
-    interested: null,
-  };
-}
-
-function Stats({ rows }: { rows: CounterpartyRow[] }) {
+function Stats({
+  rows,
+  showCounterparty = true,
+}: {
+  rows: CounterpartyRow[];
+  showCounterparty?: boolean;
+}) {
   const rated = rows.filter((r) => r.own.relevance !== null).length;
   const mutual = rows.filter(
     (r) => r.own.relevance !== null && r.other.relevance !== null
@@ -68,8 +50,12 @@ function Stats({ rows }: { rows: CounterpartyRow[] }) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:max-w-2xl">
       <BannerStat label="Einträge" value={rows.length} />
       <BannerStat label="Von dir bewertet" value={rated} />
-      <BannerStat label="Beidseitig" value={mutual} />
-      <BannerStat label="Top-Matches" value={top} />
+      {showCounterparty && (
+        <>
+          <BannerStat label="Beidseitig" value={mutual} />
+          <BannerStat label="Top-Matches" value={top} />
+        </>
+      )}
     </div>
   );
 }
@@ -88,18 +74,12 @@ async function PartnerMatrix() {
       batchStartups: {
         select: { startup: { select: { id: true, name: true, industry: true } } },
       },
-      // The aggregated cell (startup side + partner tally) per startup.
+      // The partner company's tally per startup. The startup side is
+      // deliberately not selected: partners must never see startup votes.
       matches: {
         where: { partnerId: partnerCompany.id },
         select: {
           startupId: true,
-          startupRelevance: true,
-          startupUseCaseTypes: true,
-          startupUseCaseNote: true,
-          startupFollowUp: true,
-          startupOpenQuestions: true,
-          startupNotes: true,
-          startupContacted: true,
           partnerVotesYes: true,
           partnerVotesNo: true,
           partnerInterested: true,
@@ -148,7 +128,7 @@ async function PartnerMatrix() {
           name: bs.startup.name,
           sub: bs.startup.industry,
           own,
-          other: startupSide(match),
+          other: { ...EMPTY_SIDE },
           tally: {
             yes: match?.partnerVotesYes ?? 0,
             no: match?.partnerVotesNo ?? 0,
@@ -168,7 +148,7 @@ async function PartnerMatrix() {
         title="Startup-Matrix"
         subtitle="Bewerte die Startups nach Relevanz für euer Unternehmen und eure Herausforderungen sowie nach potentiellen gemeinsamen Use Cases. Es können mehrere Personen aus eurem Unternehmen eine Einschätzung vornehmen."
       >
-        <Stats rows={allRows} />
+        <Stats rows={allRows} showCounterparty={false} />
       </HeroBanner>
 
       <div
@@ -204,6 +184,7 @@ async function PartnerMatrix() {
             sectionNumber={String(i + 1).padStart(2, "0")}
             title={`${s.batch.name} · ${BATCH_TYPE_LABELS[s.batch.type]}`}
             showInterest
+            showCounterparty={false}
           />
         ))
       )}
@@ -237,12 +218,8 @@ async function StartupMatrix() {
           startupOpenQuestions: true,
           startupNotes: true,
           startupContacted: true,
-          // Partner aggregate side (from the partner company's votes).
-          partnerRelevance: true,
-          partnerUseCaseTypes: true,
-          partnerInterested: true,
-          partnerVotesYes: true,
-          partnerVotesNo: true,
+          // The partner side is deliberately not selected: startups must
+          // never see partner votes.
         },
       },
     },
@@ -264,26 +241,11 @@ async function StartupMatrix() {
             interested: null,
           }
         : { ...EMPTY_SIDE };
-      const other: SideView = {
-        relevance: match?.partnerRelevance ?? null,
-        useCaseTypes: match?.partnerUseCaseTypes ?? [],
-        useCaseNote: null,
-        followUp: null,
-        openQuestions: null,
-        notes: null,
-        contacted: null,
-        interested: match?.partnerInterested ?? null,
-      };
       return {
         id: bp.partnerCompany.id,
         name: bp.partnerCompany.name,
         own,
-        other,
-        tally: {
-          yes: match?.partnerVotesYes ?? 0,
-          no: match?.partnerVotesNo ?? 0,
-          outcome: match?.partnerInterested ?? null,
-        },
+        other: { ...EMPTY_SIDE },
       };
     });
     return { batch: b, rows };
@@ -298,7 +260,7 @@ async function StartupMatrix() {
         title="Partner-Matrix"
         subtitle="Bewerte die Partner-Unternehmen nach Relevanz für euer Startup und nach potentiellen gemeinsamen Use Cases."
       >
-        <Stats rows={allRows} />
+        <Stats rows={allRows} showCounterparty={false} />
       </HeroBanner>
 
       {sections.length === 0 ? (
@@ -318,6 +280,7 @@ async function StartupMatrix() {
             counterpartyLabel="Partner"
             sectionNumber={String(i + 1).padStart(2, "0")}
             title={`${s.batch.name} · ${BATCH_TYPE_LABELS[s.batch.type]}`}
+            showCounterparty={false}
           />
         ))
       )}
