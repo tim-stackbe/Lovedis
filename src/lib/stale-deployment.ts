@@ -65,10 +65,32 @@ export function isStaleDeploymentError(error: unknown): boolean {
     // already removed — recover the same way as a stale action.
     /Loading chunk [^\s]+ failed/i.test(text) ||
     text.includes("Loading CSS chunk") ||
+    // Turbopack (the production bundler here) words a missing chunk as
+    // "Failed to load chunk /_next/static/chunks/….js from module …" and throws
+    // a plain `Error`, so neither the webpack name nor phrasing above matches.
+    text.includes("Failed to load chunk") ||
+    // Turbopack: a stale module id whose factory the new build no longer ships.
+    text.includes("but the module factory is not available") ||
     text.includes("Failed to fetch dynamically imported module") ||
     text.includes("error loading dynamically imported module") ||
     text.includes("Importing a module script failed")
   );
+}
+
+/**
+ * Message-independent stale check: true when the server reports a different
+ * deployed version than the one baked into this tab's bundle. Catches any
+ * post-deploy failure whose wording we don't recognise. Unknown/missing
+ * versions (local dev, health endpoint down) never count as stale.
+ */
+export function isNewerBuildLive(
+  clientVersion: string | undefined,
+  serverVersion: unknown
+): boolean {
+  if (!clientVersion || clientVersion === "unknown") return false;
+  if (typeof serverVersion !== "string" || !serverVersion) return false;
+  if (serverVersion === "unknown") return false;
+  return serverVersion !== clientVersion;
 }
 
 /**

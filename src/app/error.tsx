@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
   canAutoReloadForStaleDeployment,
+  isNewerBuildLive,
   isStaleDeploymentError,
   markStaleDeploymentReload,
 } from "@/lib/stale-deployment";
+
+const CLIENT_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
 
 /**
  * Root error boundary. Without one, any client-side exception unmounts the whole
@@ -30,7 +33,8 @@ export default function RootError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const isStale = isStaleDeploymentError(error);
+  const [newerBuildLive, setNewerBuildLive] = useState(false);
+  const isStale = isStaleDeploymentError(error) || newerBuildLive;
 
   // Decide in the RENDER phase whether we will auto-recover, using a READ-ONLY
   // check that never stamps the loop guard. `useState`'s lazy initializer runs
@@ -40,12 +44,33 @@ export default function RootError({
   // and can reload. This is the fix for the tab that got stranded on the manual
   // card with the guard already stamped: stamping now happens ONLY in the effect
   // below, right before the actual reload. Client-only (no sessionStorage in SSR).
-  const [autoReloading] = useState(
+  const [autoReloading, setAutoReloading] = useState(
     () =>
       isStale &&
       typeof window !== "undefined" &&
       canAutoReloadForStaleDeployment(window.sessionStorage)
   );
+
+  // Fallback for post-deploy failures whose message we don't recognise: if the
+  // server now runs a different build than this tab, it is stale regardless of
+  // the error wording.
+  useEffect(() => {
+    if (isStale) return;
+    let cancelled = false;
+    fetch("/api/health", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((body: { version?: unknown }) => {
+        if (cancelled || !isNewerBuildLive(CLIENT_VERSION, body?.version)) return;
+        setNewerBuildLive(true);
+        if (canAutoReloadForStaleDeployment(window.sessionStorage)) {
+          setAutoReloading(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isStale]);
 
   // Guarantees the stamp-and-reload runs at most once per boundary instance.
   const reloadedRef = useRef(false);

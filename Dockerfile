@@ -31,6 +31,10 @@ ENV NEXTAUTH_SECRET="build-time-placeholder-secret-not-used-at-runtime"
 ENV AUTH_SECRET="build-time-placeholder-secret-not-used-at-runtime"
 ENV AUTH_TRUST_HOST="true"
 ENV NEXT_TELEMETRY_DISABLED=1
+# Baked into the client bundle so the root error boundary can detect a tab
+# running an older build than the server (compared against GET /api/health).
+ARG APP_VERSION=unknown
+ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
 # `npm run build` == `prisma generate && next build` (see package.json).
 RUN npm run build
 

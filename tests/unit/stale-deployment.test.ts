@@ -3,6 +3,7 @@ import {
   canAutoReloadForStaleDeployment,
   isStaleDeploymentError,
   markStaleDeploymentReload,
+  isNewerBuildLive,
   shouldAutoReloadForStaleDeployment,
   STALE_RELOAD_FLAG,
   STALE_RELOAD_GUARD_MS,
@@ -303,5 +304,49 @@ describe("markStaleDeploymentReload — commit-phase stamp", () => {
     expect(
       canAutoReloadForStaleDeployment(store, 1_000 + STALE_RELOAD_GUARD_MS - 1)
     ).toBe(false);
+  });
+});
+
+describe("isStaleDeploymentError — Turbopack chunk errors", () => {
+  // Turbopack's runtime (the production bundler) throws a plain Error with this
+  // wording when a tab requests a chunk the new deploy already removed.
+  it("matches Turbopack's 'Failed to load chunk' plain Error", () => {
+    const error = new Error(
+      "Failed to load chunk /_next/static/chunks/0a1b2c3d4e5f.js from module 12345: undefined"
+    );
+    expect(error.name).toBe("Error");
+    expect(isStaleDeploymentError(error)).toBe(true);
+  });
+
+  it("matches Turbopack's missing module factory error", () => {
+    expect(
+      isStaleDeploymentError(
+        new Error(
+          "Module 98765 was instantiated because it was required from module 4321, but the module factory is not available."
+        )
+      )
+    ).toBe(true);
+  });
+
+  it("still ignores unrelated errors", () => {
+    expect(isStaleDeploymentError(new Error("Cannot read properties of undefined"))).toBe(false);
+  });
+});
+
+describe("isNewerBuildLive — version-based stale detection", () => {
+  it("is stale when the server runs a different build", () => {
+    expect(isNewerBuildLive("3beb9d7", "a1b2c3d")).toBe(true);
+  });
+
+  it("is not stale when versions match", () => {
+    expect(isNewerBuildLive("3beb9d7", "3beb9d7")).toBe(false);
+  });
+
+  it("never counts unknown or missing versions as stale", () => {
+    expect(isNewerBuildLive(undefined, "3beb9d7")).toBe(false);
+    expect(isNewerBuildLive("unknown", "3beb9d7")).toBe(false);
+    expect(isNewerBuildLive("3beb9d7", "unknown")).toBe(false);
+    expect(isNewerBuildLive("3beb9d7", undefined)).toBe(false);
+    expect(isNewerBuildLive("3beb9d7", 42)).toBe(false);
   });
 });
