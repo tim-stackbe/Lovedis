@@ -33,11 +33,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!passwordMatches) return null;
 
+        // Record the successful login (best-effort; never block sign-in on it).
+        await prisma.user
+          .update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          })
+          .catch(() => {});
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),

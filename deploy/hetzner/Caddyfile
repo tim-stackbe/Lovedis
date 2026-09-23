@@ -1,0 +1,72 @@
+# Caddy — automatic HTTPS (Let's Encrypt) and reverse proxy.
+#
+# ACTIVE: TEST box only (nip.io). Production lovedis.de blocks live in
+# Caddyfile.production.example — do NOT enable until explicit cutover.
+{
+	email ops@lovedis.de
+}
+
+# --- TEST (active) ---------------------------------------------------------
+# Server: lovedis-prod @ 49.13.222.76 — replace the IP if the test box changes.
+# Public URLs (no DNS changes needed; Caddy auto-issues TLS for nip.io):
+#   https://home.49.13.222.76.nip.io  → Nuxt homepage (Storyblok content)
+#   https://app.49.13.222.76.nip.io   → Next.js platform
+
+home.49.13.222.76.nip.io {
+	encode zstd gzip
+	reverse_proxy homepage:3000
+}
+
+app.49.13.222.76.nip.io {
+	encode zstd gzip
+	reverse_proxy platform:3000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+}
+
+# --- ALPHA custom domain (dual-serve — ACTIVE: DNS live at alpha.lovedis.de) -
+# WHY: partners on corporate networks often cannot resolve nip.io (secure web
+# gateways / DNS filters block wildcard-DNS + DNS-rebinding services), so the
+# nip.io host works for the team but fails for them. A real subdomain on a
+# domain LOVEDIS controls (lovedis.de, on Cloudflare) fixes this.
+#
+# This block runs ALONGSIDE the nip.io host above, so nothing breaks during the
+# migration — both hostnames serve the same platform. Caddy auto-provisions a
+# publicly-trusted Let's Encrypt cert via HTTP-01 (needs :80 open to the world).
+#
+# CUTOVER (do NOT deploy until all are true):
+#   1. Confirm the Alpha hostname with the team (default below: alpha.lovedis.de,
+#      kept distinct from app.lovedis.de which is reserved for production cutover
+#      in Caddyfile.production.example).
+#   2. Create DNS A record  alpha.lovedis.de → 49.13.222.76  at Cloudflare.
+#      Set it DNS-only (grey cloud), NOT proxied, so Caddy can complete HTTP-01
+#      and terminate TLS itself.
+#   3. Uncomment this block, deploy, then `docker compose exec caddy caddy reload
+#      --config /etc/caddy/Caddyfile` (or a normal deploy restarts Caddy).
+#   4. Verify: curl https://alpha.lovedis.de/api/health  (cert should be valid).
+#   5. Update .env NEXTAUTH_URL to the new host so email links + redirects match,
+#      then restart platform (see .env.example note). Users may need to re-login
+#      (session cookies are host-scoped).
+# Keep the nip.io block during transition; remove it only once partners confirm
+# the new domain works everywhere.
+#
+alpha.lovedis.de {
+	encode zstd gzip
+	reverse_proxy platform:3000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+}

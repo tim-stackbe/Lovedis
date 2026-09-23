@@ -1,0 +1,1332 @@
+[
+  {
+    "id": 199118894334921,
+    "uuid": "b725f51e-d463-4e9c-b966-a51b5087044c",
+    "name": "Hessische Ministerium",
+    "full_slug": "partners/hessische-ministerium",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 199115750572925,
+    "uuid": "1f96632e-1bcd-4b22-91b3-6c7668c2abce",
+    "name": "StartMiUp",
+    "full_slug": "partners/startmiup",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 199111039648510,
+    "uuid": "ef31fb3e-ce9c-418a-a1c6-63944562e0c7",
+    "name": "Aulinger",
+    "full_slug": "partners/aulinger",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 199060267318930,
+    "uuid": "6d747b03-c0f3-4108-b0b3-7431588a1700",
+    "name": "ToolSense",
+    "full_slug": "partners/toolsense",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195210480230538,
+    "uuid": "760e34da-14fa-4cf6-aab0-c5195d899728",
+    "name": "Baurion",
+    "full_slug": "partners/baurion",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195209585647726,
+    "uuid": "675c11be-273a-4956-a84d-32772057e62b",
+    "name": "ContainerGrid",
+    "full_slug": "partners/containergrid",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195208234680743,
+    "uuid": "c1ad2614-fafa-4b54-bd73-1641a31b5e67",
+    "name": "Parallelum",
+    "full_slug": "partners/parallelum",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195207151997251,
+    "uuid": "097cb2fa-aeb9-4c49-a328-a82fed1a5fd6",
+    "name": "flinq",
+    "full_slug": "partners/flinq",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195205495652072,
+    "uuid": "5ffa2a23-2072-4e27-8262-541b7cc7e830",
+    "name": "Neibim",
+    "full_slug": "partners/neibim",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195204590836271,
+    "uuid": "bb213efe-0525-4121-95e3-23765a020841",
+    "name": "Procuras",
+    "full_slug": "partners/procuras",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195203676037080,
+    "uuid": "8e720f92-0885-4f5a-86fe-4f3a18d40ef2",
+    "name": "Green Mama Solutions",
+    "full_slug": "partners/green-mama-solutions",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195202619671173,
+    "uuid": "1a029d99-10e8-4b65-94da-fe108fd794d0",
+    "name": "VSight",
+    "full_slug": "partners/vsight",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195201461486487,
+    "uuid": "b9210dc1-f2fa-4887-b192-4e0537b9a0e7",
+    "name": "Flexxter",
+    "full_slug": "partners/flexxter",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195199391070776,
+    "uuid": "e9948b1c-1cc7-424f-9e78-68c8d3d49d03",
+    "name": "TYMBA",
+    "full_slug": "partners/tymba",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 193410002118956,
+    "uuid": "adc34c8d-5781-427f-a30f-b79f6ecd7545",
+    "name": "PreserviTec",
+    "full_slug": "partners/preservitec",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 193406360237319,
+    "uuid": "76a73856-dd88-4c1c-bde3-7c72b6e342e7",
+    "name": "Genow",
+    "full_slug": "partners/genow",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 116969308604452,
+    "uuid": "a56ef31c-c15f-4112-bc09-fa8a0568c807",
+    "name": "News",
+    "full_slug": "news/",
+    "is_folder": false,
+    "is_startpage": true,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 185970186914715,
+    "uuid": "ba718a5a-0746-472f-a931-aef2db5f1a37",
+    "name": "Justus-Liebig-Universität Gießen",
+    "full_slug": "partners/justus-liebig-universitaet-giessen",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 141752222489343,
+    "uuid": "936c7ec2-be84-4445-b4ab-720c80a587ba",
+    "name": "Heyligenstaedt Werkzeugmaschinen GmbH",
+    "full_slug": "partners/heyligenstaedt-werkzeugmaschinen-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 144542017400603,
+    "uuid": "015beeb7-125d-4f4d-99c7-257bfd3890af",
+    "name": "exist Leuchtturm konkret: Wie die Startup Factory FUTURY ihre Kräfte im Bausektor bündelt",
+    "full_slug": "news/exist-leuchtturm-konkret-wie-die-startup-factory-futury-ihre-kraefte-im-bausektor-buendelt",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 141683600244755,
+    "uuid": "acd1e75c-2f60-4003-a627-be4b43a7c2cc",
+    "name": "TIG",
+    "full_slug": "partners/tig",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 185228789175166,
+    "uuid": "e1460823-ad53-4ee7-a460-b16f24e02637",
+    "name": "Mission Construction: LOVEDIS bringt ClimateTech- und Construction-Startups nach Marburg",
+    "full_slug": "news/mission-construction-lovedis-bringt-climatetech-und-construction-startups-nach-marburg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 140411835835673,
+    "uuid": "c29dc8bc-229b-4c4f-ba9b-5b5349c95a96",
+    "name": "INNEXIS Holding GmbH & Co. KG",
+    "full_slug": "partners/innexis-holding-gmbh-co-kg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 136808359237762,
+    "uuid": "b050d742-ddd7-4600-8c66-95afba81cd7d",
+    "name": "Volksbank Mittelhessen eG",
+    "full_slug": "partners/volksbank-mittelhessen-eg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 136808357148801,
+    "uuid": "9b5192a8-fa5e-47b3-a60c-f5879239c451",
+    "name": "Sparkasse Marburg-Biedenkopf",
+    "full_slug": "partners/sparkasse-marburg-biedenkopf",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 136808354470015,
+    "uuid": "c7284a28-be0a-4964-8af9-b94b9eb2aed5",
+    "name": "Sparkasse Gießen",
+    "full_slug": "partners/sparkasse-gie-en",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 153368806561481,
+    "uuid": "fb901f9e-5c08-4374-82aa-e805aae38764",
+    "name": "Challenge_LCA and Subsidies",
+    "full_slug": "key-topics/challenge_LCA_and_Subsidies",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 144194354790868,
+    "uuid": "ae170cfa-bb28-4aa3-bca8-efdfef834859",
+    "name": "Innovationskräfte bündeln sich: LOVEDIS und FUTURY schließen strategische Allianz für „The Mission Construction“ 2026",
+    "full_slug": "news/innovationskraefte-buendeln-sich-lovedis-und-futury-schliessen-strategische-allianz-fuer-the-mission-construction-2026",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 136808352057469,
+    "uuid": "21163727-bc1b-441b-8ffb-aa6e904ea775",
+    "name": "Roth Industries",
+    "full_slug": "partners/roth-industries",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 205378826825911,
+    "uuid": "71ef888d-deb2-48bf-a1a2-2a5f0be78640",
+    "name": "Challenge 1_Bedienunterstützung und Onboarding",
+    "full_slug": "key-topics/challenge_bedienunterstuetzung-und-onboarding",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 181339348759687,
+    "uuid": "50368ea5-1cab-4ff5-8d1a-8ba0ffff7165",
+    "name": "The Mission Construction: Demo Day",
+    "full_slug": "news/the-mission-construction-demo-day",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 136808349673596,
+    "uuid": "4cdef343-852f-4667-ade7-61c92398f893",
+    "name": "Lupp",
+    "full_slug": "partners/lupp",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 205387278378435,
+    "uuid": "ba7850e0-4123-4b8a-91db-9c3e21d51961",
+    "name": "Challenge 4_Wissen strukturieren und abrufbar machen",
+    "full_slug": "key-topics/challenge-4_wissen-strukturieren-und-abrufbar-machen",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808346331258,
+    "uuid": "0dc69558-10e5-4d59-8078-3451834b19da",
+    "name": "Sälzer GmbH",
+    "full_slug": "partners/saelzer-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 116969312331909,
+    "uuid": "238daad6-a189-470b-995a-36f40e94bd2a",
+    "name": "Events",
+    "full_slug": "events/",
+    "is_folder": false,
+    "is_startpage": true,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 205387166549391,
+    "uuid": "343c9b89-dea1-482b-8c28-3854b2f96958",
+    "name": "Challenge 3_Erfahrungswissen sichern und weitergeben",
+    "full_slug": "key-topics/challenge-3_erfahrungswissen-sichern-und-weitergeben",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 205096319182457,
+    "uuid": "f7c52a0e-ca91-4364-89df-5d5f584a4634",
+    "name": "Test_LOVE DISRUPTION '26",
+    "full_slug": "events/test_love-disruption-26",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 136808344148089,
+    "uuid": "9a7628d8-d278-44d8-bb75-71e632ca9229",
+    "name": "SW-MOTECH GmbH & Co. KG",
+    "full_slug": "partners/sw-motech-gmbh-co-kg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 205387064915302,
+    "uuid": "0343e1e1-2910-4e34-853d-ba87a3114821",
+    "name": "Challenge 2_Wartungsunterstützung",
+    "full_slug": "key-topics/challenge-2_wartungsunterstuetzung",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808341485687,
+    "uuid": "b0c9024b-ec2b-43ec-a31b-44ac18c203eb",
+    "name": "Johannes Hübner Fabrik elektrischer Maschinen GmbH",
+    "full_slug": "partners/johannes-huebner-fabrik-elektrischer-maschinen-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 193359328458094,
+    "uuid": "68d5e814-2cd5-455a-8c4d-cd0b34b24b71",
+    "name": "IMPACT FESTIVAL 2026",
+    "full_slug": "events/impact-festival-2026",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 138950946128589,
+    "uuid": "cf047355-80d4-426a-8f7e-7ada93382cac",
+    "name": "OP: „Lovedis“ bringt Innovationen nach Mittelhessen",
+    "full_slug": "news/OP-lovedis-bringt-innovationen-nach-mittelhessen",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 136808337930357,
+    "uuid": "35df5d51-e0c2-40f4-9da9-8d2962e1aeb9",
+    "name": "Infrareal Holding GmbH & Co.KG",
+    "full_slug": "partners/infrareal-holding-gmbh-co-kg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 116969304831975,
+    "uuid": "1b6d1253-26df-4a3d-9cd0-4ca3d1eda41e",
+    "name": "Blog",
+    "full_slug": "blog/",
+    "is_folder": false,
+    "is_startpage": true,
+    "parent_id": 116605751961670,
+    "published": true
+  },
+  {
+    "id": 195110555137824,
+    "uuid": "ccc38284-caf3-491e-bd86-c847858802d1",
+    "name": "Echtzeit-Bettenmanagement und Patientenfluss",
+    "full_slug": "key-topics/echtzeit-bettenmanagement-und-patientenfluss",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 194098187830168,
+    "uuid": "652d54d1-f051-4b03-9022-c61c24c3d0fd",
+    "name": "Challenge_Digitale Erstaufnahme und Patientensteuerung",
+    "full_slug": "key-topics/challenge_digitale-erstaufnahme-und-patientensteuerung",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 142063692665287,
+    "uuid": "063c109e-9178-4612-9d56-50ef3372da9d",
+    "name": "Predicitve Maintenance",
+    "full_slug": "blog/predicitve-maintenance",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": true
+  },
+  {
+    "id": 136808335521908,
+    "uuid": "a8c2c088-6be4-4a83-9d2a-1d72a2843c23",
+    "name": "GAL Digital GmbH",
+    "full_slug": "partners/gal-digital-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 195111350583034,
+    "uuid": "5178d7da-2049-4d68-a72a-1fe3a61fc559",
+    "name": "Hybrid Care Pathways",
+    "full_slug": "key-topics/hybrid-care-pathways",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 193357829786378,
+    "uuid": "2e890788-466c-426e-ba00-138caaf5c423",
+    "name": "Health Xperience Day",
+    "full_slug": "events/health-xperience-day",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 181352520089904,
+    "uuid": "072c48b7-a5f9-4ca6-9efc-b082e47c61ea",
+    "name": "Tech Report Construction",
+    "full_slug": "blog/tech-report-construction",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 136808332929138,
+    "uuid": "2e96e897-461a-46a7-9ba4-e8c45158b375",
+    "name": "Dockweiler Chemicals GmbH",
+    "full_slug": "partners/dockweiler-chemicals-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 133278813788350,
+    "uuid": "1fe56e7c-d299-483c-a114-fdd3c11c1cac",
+    "name": "ITBoltwise: LOVEDIS: Neuer Innovationsmotor für Mittelhessen",
+    "full_slug": "news/itboltwise-lovedis-neuer-innovationsmotor-fuer-mittelhessen",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 195112219799320,
+    "uuid": "5659c89a-06ba-4c6c-b222-3589d1e51d4a",
+    "name": "KI für klinische Routineaufgaben",
+    "full_slug": "key-topics/ki-fuer-klinische-routineaufgaben",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808329132143,
+    "uuid": "9d6b677d-7e0a-407f-806a-c666fb303646",
+    "name": "Buderus Edelstahl",
+    "full_slug": "partners/buderus-edelstahl",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 199045143019223,
+    "uuid": "ede4ac28-922e-42d1-8824-640c00d0df7f",
+    "name": "Founder Insights Event",
+    "full_slug": "marketplace/founder-insights-event",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 193356307373153,
+    "uuid": "ea1fecc3-60c4-496f-b8f4-a5f237ffec40",
+    "name": "StartMiUp Kamingespräch #2",
+    "full_slug": "events/startmiup-kamingespraech-2",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 153460640007297,
+    "uuid": "1d174ae4-7710-42fb-b431-3c7f8945eac7",
+    "name": "Challenge_Site Monitoring",
+    "full_slug": "key-topics/challenge_SiteMonitoring",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808326309998,
+    "uuid": "28bdde3f-8e99-47be-9949-92486c6f0b2d",
+    "name": "Weimer Gruppe",
+    "full_slug": "partners/weimer-gruppe",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 199088084090360,
+    "uuid": "e3e08469-171d-4e2a-a65e-0eec8087b52f",
+    "name": "Pricing Workshop",
+    "full_slug": "marketplace/pricing-workshop",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 153469129040774,
+    "uuid": "df68d90d-e59e-4c98-845b-af8d196531b3",
+    "name": "Challenge_Closed-loop water systems",
+    "full_slug": "key-topics/challenge_Closed-loop_water_systems",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 139318502470482,
+    "uuid": "0bc0046b-99f9-44ff-83f1-dcbc6bf2060d",
+    "name": "Startup-Trends Hessen 2026: Rekord-Wachstum und DeepTech-Power",
+    "full_slug": "blog/startup-trends-hessen-2026-rekord-wachstum-und-deeptech-power",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": true
+  },
+  {
+    "id": 137080601993414,
+    "uuid": "874bdfe8-26db-427c-a9b4-25b5fd1f2cc1",
+    "name": "SEO Settings",
+    "full_slug": "seo-settings",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 136808323950700,
+    "uuid": "52e82987-a47d-4096-ab20-2fc640a882dc",
+    "name": "UKGM",
+    "full_slug": "partners/ukgm",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 200171795850834,
+    "uuid": "92aa22d9-e253-42f5-95f3-8eb379cf9b80",
+    "name": "Sales Foundations",
+    "full_slug": "marketplace/sales-foundations",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 193354399820743,
+    "uuid": "2d15bd86-39ed-4b2e-b6b4-1e7ea257d783",
+    "name": "Start-up-Lounge im Science Park Kassel",
+    "full_slug": "events/start-up-lounge-im-science-park-kassel",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 153485534463824,
+    "uuid": "cad0a0e8-0b5b-4467-b2f5-3860e004000c",
+    "name": "Challenge_Automated Calculation",
+    "full_slug": "key-topics/challenge_Automated_Calculation",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808321169514,
+    "uuid": "7228618b-9d51-4943-8837-c27527ff5af2",
+    "name": "Oculus Optikgeräte GmbH",
+    "full_slug": "partners/oculus-optikgeraete-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 116686629369491,
+    "uuid": "aab1cc39-cf53-4499-a2b9-e823da525551",
+    "name": "Podcast: Einfach Women",
+    "full_slug": "blog/Podcast-Einfach-Women",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": true
+  },
+  {
+    "id": 116270904380518,
+    "uuid": "934b5ecc-1fb7-47b3-9e84-d975753d20a3",
+    "name": "Site Settings",
+    "full_slug": "site-settings",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 153491005012901,
+    "uuid": "5183a5fc-a429-4a7a-92b8-d6b8329d6c47",
+    "name": "Challenge_Urban Mining",
+    "full_slug": "key-topics/challenge_Urban_Mining",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808318048361,
+    "uuid": "b21cc198-4845-4772-8879-90e668c9b70a",
+    "name": "Leica Camera AG",
+    "full_slug": "partners/leica-camera-ag",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 116686625732241,
+    "uuid": "9d2c2d13-5cc5-45b6-903d-c1c93b91152e",
+    "name": "Temporibus Autem Quibusdam Et Aut",
+    "full_slug": "blog/temporibus-autem",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 106069308172610,
+    "uuid": "ffa9d3b1-c7a7-4633-bb7f-83cb825777a7",
+    "name": "Home",
+    "full_slug": "home",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 170428186995758,
+    "uuid": "c37e9eb7-5699-4c34-a0be-64dfbdfc18f1",
+    "name": "test",
+    "full_slug": "events/test",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 153662036496658,
+    "uuid": "9400b625-44bd-42ae-bdbd-79d2bd301eaf",
+    "name": "Challenge_Modular Recycling Units",
+    "full_slug": "key-topics/challenge_modular-recycling-units",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808314738791,
+    "uuid": "36c36afc-233c-4966-818d-9c7b2307f414",
+    "name": "Deutsche Vermögensberatung",
+    "full_slug": "partners/deutsche-vermoegensberatung",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 121332910914520,
+    "uuid": "4ba07cdf-c66e-4ef3-be9b-0b9f30bbb02f",
+    "name": "Startups",
+    "full_slug": "startups",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116686621832848,
+    "uuid": "26757283-02bb-4c0b-b951-9b1d57f1f201",
+    "name": "At Vero Eos Et Accusamus Et Iusto",
+    "full_slug": "blog/at-vero-eos",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 199113628594859,
+    "uuid": "35f62be6-c938-4915-ba4e-8c2d4504769d",
+    "name": "Community ökosystem sales",
+    "full_slug": "marketplace/Community-ecosystem-sales",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 199113272902283,
+    "uuid": "ee11311f-3bd3-4ece-abfa-5724f0548b64",
+    "name": "Nightmare Competitor Workshop",
+    "full_slug": "marketplace/Nightmare-Competitor-Workshop",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 153367753832218,
+    "uuid": "ae44067a-4c41-41a3-a9b6-63c2f232c3ca",
+    "name": "test challenge listing page",
+    "full_slug": "key-topics/test-challenge-listing-page",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": false
+  },
+  {
+    "id": 136808311470181,
+    "uuid": "d755dc82-4f1c-443e-8b62-e461b002307f",
+    "name": "CSL Innovation GmbH",
+    "full_slug": "partners/csl-innovation-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 121336714796252,
+    "uuid": "4ef4a429-6907-407f-9400-e83fec9d5b67",
+    "name": "Corporates",
+    "full_slug": "corporates",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116686618121871,
+    "uuid": "3b66476d-dea7-4208-9cdc-2b3326d34fa2",
+    "name": "Quis Autem Vel Eum Iure Reprehenderit",
+    "full_slug": "blog/quis-autem-vel",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 199107207788441,
+    "uuid": "5e5107d6-1b9b-46ac-8a5b-7223cc4621e4",
+    "name": "SaaS Contracting",
+    "full_slug": "marketplace/saas-contracting",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 199101983004524,
+    "uuid": "cefcb40d-754a-4380-948b-85686c2e212d",
+    "name": "Aufbau strukturierter Pipelines ",
+    "full_slug": "marketplace/aufbau-strukturierter-pipelines",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 199043010843875,
+    "uuid": "96b59035-b5bb-467e-9861-60c449d58077",
+    "name": "Marketplace",
+    "full_slug": "marketplace",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": null,
+    "published": false
+  },
+  {
+    "id": 136808309266531,
+    "uuid": "41293a1e-2bc5-40e8-ac36-650a17c826ac",
+    "name": "LOKSCHUPPEN MARBURG",
+    "full_slug": "partners/lokschuppen-marburg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 124395647965173,
+    "uuid": "e5470697-a39b-43f8-bbe2-f72cafbeadf2",
+    "name": "Coworking",
+    "full_slug": "coworking",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116686614349454,
+    "uuid": "1843f998-b18d-40d2-9db7-ca47bc8b49a0",
+    "name": "Neque Porro Quisquam Est Qui Dolorem",
+    "full_slug": "blog/neque-porro-quisquam",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 149134465305307,
+    "uuid": "8e599138-9cc6-4095-b68f-86050fdb8a50",
+    "name": "Challenge: Fingerhaus_Vom digitalen Zwilling zum Förderantrag auf Knopfdruck",
+    "full_slug": "key-topics/challenge-fingerhaus-digitaltwin",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808305944673,
+    "uuid": "ecbd8df8-ba3a-42bf-b73f-ce4c8d09164d",
+    "name": "Weber Food Technology SE & Co. KG",
+    "full_slug": "partners/weber-food-technology-se-co-kg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 124528893511428,
+    "uuid": "2e57b196-3863-42eb-a200-4b3aba6e7162",
+    "name": "Ecosystem",
+    "full_slug": "ecosystem",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116686610036365,
+    "uuid": "93f003ea-014c-4c68-8e05-99923c4fdbc3",
+    "name": "Nemo Enim Ipsam Voluptatem Quia",
+    "full_slug": "blog/nemo-enim-ipsam",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 149465767338672,
+    "uuid": "f06339c7-f8de-48a8-9ed7-935e7e3eb5ad",
+    "name": "Test 2 Landing Page",
+    "full_slug": "test-landing-page",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": null,
+    "published": false
+  },
+  {
+    "id": 149136347171173,
+    "uuid": "b755adec-7b94-4ba3-9957-608e2d7db236",
+    "name": "Challenge: Fingerhaus_The Water Neutral Home - Autarke Wasserkreisläufe im Fertighaus",
+    "full_slug": "key-topics/challenge-fingerhaus_the-water-neutral-home-autarke-wasserkreislaeufe-im-fertighaus",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 136808303433824,
+    "uuid": "b8300252-2688-44e0-bece-48b1fc58094c",
+    "name": "Schneider GmbH & Co. KG",
+    "full_slug": "partners/schneider-gmbh-co-kg",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 136343048770756,
+    "uuid": "3a3ecfc9-f075-49f3-864b-a0bb5e20e882",
+    "name": "LOVE DISRUPTION '26",
+    "full_slug": "events/LOVE-DISRUPTION-2026",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 123678112947721,
+    "uuid": "bf62f74d-57d8-4e3d-a464-617709e158a0",
+    "name": "Legal: Imprint",
+    "full_slug": "legal/imprint",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 123678109363718,
+    "published": true
+  },
+  {
+    "id": 121356143930458,
+    "uuid": "2465f158-1554-44ea-882f-2e2131a439f7",
+    "name": "About",
+    "full_slug": "about",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116686606214795,
+    "uuid": "c82217a1-5a3d-466b-98ed-9a32dc927eb6",
+    "name": "Sed Ut Perspiciatis Unde Omnis Iste",
+    "full_slug": "blog/perspiciatis-unde",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 199024185436431,
+    "uuid": "748ee50c-331b-4858-b5b2-9b684ab7d943",
+    "name": "Sales, Pricing & Growth",
+    "full_slug": "marketplace/sales-pricing-growth",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 199043010843875,
+    "published": true
+  },
+  {
+    "id": 146370948296649,
+    "uuid": "f319bc77-134d-486c-af1e-8b6d49874569",
+    "name": "Jobs",
+    "full_slug": "jobs",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": null,
+    "published": true
+  },
+  {
+    "id": 136808300795998,
+    "uuid": "bd35aa42-a10b-4f19-afa6-57d6cf70330a",
+    "name": "Fingerhaus GmbH",
+    "full_slug": "partners/fingerhaus-gmbh",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 136808108509227,
+    "published": true
+  },
+  {
+    "id": 123678110531080,
+    "uuid": "a40e10df-08a9-4791-b5f7-104b44c1e7cc",
+    "name": "Legal: Privacy Policy",
+    "full_slug": "legal/privacy-policy",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 123678109363718,
+    "published": true
+  },
+  {
+    "id": 116686602417802,
+    "uuid": "86d6676b-612e-471e-9f19-20085cef503b",
+    "name": "Lorem Ipsum Dolor Sit Amet Consectetur",
+    "full_slug": "blog/lorem-ipsum-construction",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116605751961670,
+    "published": false
+  },
+  {
+    "id": 133296451009027,
+    "uuid": "5eb1fa04-cc2b-4a19-8854-6434174d302b",
+    "name": "Headline about a cool challenge that is happening",
+    "full_slug": "events/featured-challenge",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296448858626,
+    "uuid": "30c0c57c-d10d-4405-afe6-939628a4751b",
+    "name": "Startup Ecosystem Forum",
+    "full_slug": "events/partner-event-3",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 116261078789178,
+    "uuid": "a7e511cc-5edb-40ca-9ddf-dbdca256d695",
+    "name": "Key Topics Index",
+    "full_slug": "key-topics/index",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 133296446663168,
+    "uuid": "36185550-840b-449a-8951-247aeabc1424",
+    "name": "Regional Tech Summit",
+    "full_slug": "events/partner-event-2",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296444586494,
+    "uuid": "9665f783-0758-47c6-b4d2-7332fb49a863",
+    "name": "Partner Innovation Conference",
+    "full_slug": "events/partner-event-1",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296442481149,
+    "uuid": "d60a46b8-99cb-4f53-9346-7aabdb008a07",
+    "name": "Scale-up Masterclass",
+    "full_slug": "events/event-9",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296440343035,
+    "uuid": "9699edbd-468b-407f-b076-bbbebb351782",
+    "name": "Industry 4.0 Workshop",
+    "full_slug": "events/event-8",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296438143482,
+    "uuid": "40fd6e8e-2205-4cae-808e-af919423f97c",
+    "name": "Networking Breakfast",
+    "full_slug": "events/event-7",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 124528837658367,
+    "uuid": "fff672cd-4734-44c3-8b2b-0234dad59078",
+    "name": "New Partnership with Regional University Accelerates Research",
+    "full_slug": "news/partnership-announcement-regional-university",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969306650620,
+    "published": true
+  },
+  {
+    "id": 133296435997177,
+    "uuid": "b1e78c64-fcfd-42e4-b5ed-0a597179cbc6",
+    "name": "Demo Day Spring",
+    "full_slug": "events/event-6",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296433674743,
+    "uuid": "282c1eaf-8a87-41eb-a851-02eed6298ad7",
+    "name": "Corporate Innovation Day",
+    "full_slug": "events/event-5",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 133296431577590,
+    "uuid": "c85e6176-d6ff-4b01-b78d-4b71a9f9b790",
+    "name": "Founder Meetup",
+    "full_slug": "events/event-4",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 124509552386525,
+    "uuid": "f27c16e5-50cb-497a-89e2-ccfcadec8d5b",
+    "name": "Key Topics: Industrial",
+    "full_slug": "key-topics/industrial-engineering",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 133296429271540,
+    "uuid": "1108cd9d-0041-4ea5-8a10-e354d6409d83",
+    "name": "Tech Talks: AI & ML",
+    "full_slug": "events/event-3",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": false
+  },
+  {
+    "id": 124509550301660,
+    "uuid": "d35c8247-3f55-4741-a833-ca7b87b50ff7",
+    "name": "Key Topics: Health Tech",
+    "full_slug": "key-topics/health-tech",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 133296427198963,
+    "uuid": "5237fc49-098a-484d-a188-83601e2448f9",
+    "name": "  Idea Slam - Ideenwettbewerb der JLU",
+    "full_slug": "events/Idea-Slam_ECM",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 124509547717083,
+    "uuid": "a7aae95a-f0e9-4143-b285-c3ce98439af7",
+    "name": "Key Topics: Construction",
+    "full_slug": "key-topics/construction",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 133954311129327,
+    "published": true
+  },
+  {
+    "id": 133296424970738,
+    "uuid": "876997f2-f808-4430-a6b3-e49978625d41",
+    "name": "Demo Day: The Mission Construction",
+    "full_slug": "events/DemoDay_TheMissionConstruction",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 116969310464075,
+    "published": true
+  },
+  {
+    "id": 124507957526973,
+    "uuid": "0fe6361d-fc0a-4934-8a0c-7dbca5e49cef",
+    "name": "Contact",
+    "full_slug": "contact",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 138145437904037,
+    "uuid": "b784c909-3f00-4c3f-a048-31f267c1bf0c",
+    "name": "hidden content",
+    "full_slug": "hidden-content",
+    "is_folder": false,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 136808108509227,
+    "uuid": "4d3e474f-3a55-419a-8d08-0876c7c6aeb7",
+    "name": "Partners",
+    "full_slug": "partners",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": false
+  },
+  {
+    "id": 133954311129327,
+    "uuid": "cb501320-5705-4240-8cbc-017c70620779",
+    "name": "Key Topics",
+    "full_slug": "key-topics",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": false
+  },
+  {
+    "id": 116969310464075,
+    "uuid": "5899de2b-a31d-43a1-974a-2161c494c615",
+    "name": "Events",
+    "full_slug": "events",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116969306650620,
+    "uuid": "1239d2e3-ba8d-4fb7-8a40-ff0c3f54a952",
+    "name": "News",
+    "full_slug": "news",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 116605751961670,
+    "uuid": "c6a5650b-c943-4030-9021-bc3b0ff6a8c3",
+    "name": "Blog",
+    "full_slug": "blog",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": true
+  },
+  {
+    "id": 123678109363718,
+    "uuid": "22267a37-2f39-4937-a358-fbceb1376776",
+    "name": "Legal",
+    "full_slug": "legal",
+    "is_folder": true,
+    "is_startpage": false,
+    "parent_id": 0,
+    "published": false
+  }
+]

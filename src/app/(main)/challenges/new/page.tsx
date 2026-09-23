@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import { ChallengeForm } from "@/components/challenges/ChallengeForm";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireRole } from "@/lib/auth-guards";
+import { requireTeam } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Neue Challenge" };
 
 export default async function NewChallengePage() {
-  await requireRole(["ADMIN", "BUSINESS_PARTNER"]);
+  await requireTeam();
+  const partners = await prisma.user.findMany({
+    where: { role: "BUSINESS_PARTNER" },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, company: true },
+  });
   return (
     <>
       <SectionLabel
@@ -14,7 +20,7 @@ export default async function NewChallengePage() {
         label="Challenges"
         title="Neue Challenge veröffentlichen"
       />
-      <ChallengeForm />
+      <ChallengeForm partners={partners} />
     </>
   );
 }

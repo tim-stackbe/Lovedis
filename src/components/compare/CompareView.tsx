@@ -12,15 +12,14 @@ import {
   Legend,
 } from "recharts";
 import {
-  QuadrantBadge,
-  RecommendationBadge,
+  EvaluationStatusBadge,
   ScorePill,
 } from "@/components/shared/badges";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Recommendation, ScoreDimension } from "@/generated/prisma/enums";
 import { DIMENSION_LABELS, SCORE_DIMENSIONS } from "@/lib/constants";
-import { deriveQuadrant, evaluateScores } from "@/lib/scoring";
+import { evaluateScores, isChallengeFitGated } from "@/lib/scoring";
 import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
 
@@ -28,12 +27,14 @@ export interface CompareStartup {
   id: string;
   name: string;
   industry: string;
+  /** Team-consensus mean per criterion (0–5). */
   scores: Partial<Record<ScoreDimension, number>>;
+  /** Team-consensus weighted total (0–5). */
   overallScore: number;
-  potential: number;
-  feasibility: number;
   recommendation: Recommendation;
   hasEvaluation: boolean;
+  /** Number of scout-role evaluators behind the consensus. */
+  evaluatorCount: number;
 }
 
 const SERIES_COLORS = ["#2926E5", "#FF5736", "#0E7C4A", "#7A5A00"];
@@ -105,7 +106,7 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
         <EmptyState
           icon={GitCompare}
           title="Wähle mindestens zwei Startups"
-          description="Wähle oben bewertete Startups aus, um sie über alle sieben Scoring-Dimensionen zu vergleichen."
+          description="Wähle oben bewertete Startups aus, um sie über alle sechs Challenge-Kriterien zu vergleichen."
         />
       ) : (
         <>
@@ -156,6 +157,10 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
                       className="px-4 py-3 text-right font-semibold"
                     >
                       {s.name}
+                      <span className="block text-[11px] font-normal normal-case text-lv-secondary">
+                        Konsens · {s.evaluatorCount}{" "}
+                        {s.evaluatorCount === 1 ? "Bewertung" : "Bewertungen"}
+                      </span>
                     </th>
                   ))}
                 </tr>
@@ -200,20 +205,13 @@ export function CompareView({ startups }: { startups: CompareStartup[] }) {
                   ))}
                 </tr>
                 <tr className="border-t border-lv-border">
-                  <td className="px-4 py-3 font-semibold">Quadrant</td>
+                  <td className="px-4 py-3 font-semibold">Empfehlung / Status</td>
                   {selected.map((s) => (
                     <td key={s.id} className="px-4 py-3 text-right">
-                      <QuadrantBadge
-                        value={deriveQuadrant(s.potential, s.feasibility)}
+                      <EvaluationStatusBadge
+                        recommendation={s.recommendation}
+                        gated={isChallengeFitGated(s.scores)}
                       />
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-t border-lv-border">
-                  <td className="px-4 py-3 font-semibold">Empfehlung</td>
-                  {selected.map((s) => (
-                    <td key={s.id} className="px-4 py-3 text-right">
-                      <RecommendationBadge value={s.recommendation} />
                     </td>
                   ))}
                 </tr>
