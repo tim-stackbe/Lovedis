@@ -72,7 +72,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     ).toMatchObject({
       category: "FUNDRAISING",
       providerCompany: "DnA Ventures, HML Capital",
-      creditCost: 2,
+      creditCost: 1,
     });
     const pitch = MARKETPLACE_OFFERINGS.find((o) => o.title === "Pitch Deck Review");
     expect(pitch).toMatchObject({
@@ -144,7 +144,6 @@ describe("marketplace catalog — only real Notion entries", () => {
       "AI Act & Datenschutz",
       "Aufbau strukturierter Pipelines",
       "Exit Readiness & Due Diligence",
-      "Fördermittelberatung",
       "Geschäftsführerhaftung",
       "SaaS Contracting",
       "Schutz des geistigen Eigentums / IP-Rechte",

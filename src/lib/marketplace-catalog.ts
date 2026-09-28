@@ -242,7 +242,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
       "Beratung zu verschiedenen non-dilutive Finanzierungsformen, wie der Forschungszulage. Entweder als individuelle Session oder gemeinsamer Online Workshop buchbar.",
     format: "Individuelle Session oder Online Workshop",
     providerCompany: "DnA Ventures, HML Capital",
-    creditCost: 2,
+    creditCost: 1,
     sortOrder: 5,
   },
 
