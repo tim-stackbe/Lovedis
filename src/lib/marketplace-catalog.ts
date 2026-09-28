@@ -130,7 +130,9 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
     description:
       "Session im Rahmen von Sales, Pricing & Growth: SaaS Contracting mit Aulinger Rechtsanwälte Notare (Dr. Ralf Heine). Format: Online Workshop.",
     focusTags: ["Sales", "Legal", "SaaS"],
-    status: "OPEN",
+    // Seit 28.09.2026 nicht mehr unter „Exklusive Programme" (DRAFT = versteckt);
+    // das gleichnamige Legal-Angebot bleibt buchbar.
+    status: "DRAFT",
     contactPerson: "Dr. Ralf Heine",
     fixCreditCost: 0,
     sortOrder: 4,

@@ -100,13 +100,18 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(MARKETPLACE_MENTORS).toHaveLength(0);
   });
 
-  it("carries the two journeys + SaaS Contracting as free OPEN programs", () => {
+  it("carries only the two journeys as free OPEN programs", () => {
     const open = MARKETPLACE_PROGRAMS.filter((p) => p.status === "OPEN");
     expect(open.map((p) => p.title)).toEqual([
       "KI & Tech Journey",
       "Sales & Growth",
-      "SaaS Contracting",
     ]);
+    expect(
+      MARKETPLACE_PROGRAMS.find((p) => p.title === "SaaS Contracting")?.status
+    ).toBe("DRAFT");
+    expect(
+      MARKETPLACE_OFFERINGS.find((o) => o.title === "SaaS Contracting")?.category
+    ).toBe("LEGAL");
     expect(open.every((p) => p.fixCreditCost === 0)).toBe(true);
     expect(open.every((p) => !p.sessionDate)).toBe(true);
 
