@@ -1023,6 +1023,8 @@ model Program {
   // Notion-Metadaten (dedizierte Felder statt Freitext im description).
   contactPerson String?     // Kontaktperson lt. Notion
   sessionDate   String?     // Termin/Datum der Programm-Session (Freitext)
+  format        String?     // Dauer/Format, z. B. „4 Wochen · Online“ (Freitext)
+  sessions      String[]    @default([]) // Workshop-Reihe (Titel, in Reihenfolge)
   // Programme kosten KEINE flexiblen Credits (offeringType=PROGRAM ⇒ creditCost=0),
   // verbrauchen aber beim Anmelden/Buchen einen Teil des FIX-Kontingents. Notion:
   // 6 fixe Credits für „Sales, Pricing & Growth". `fixCreditCost` modelliert das

@@ -59,6 +59,7 @@ export function MarketplaceBookingForm({
   const insufficient =
     creditCost > 0 && showBalance && effectiveBalance < creditCost;
   const blockSubmit = teamMode && !selectedStartupId;
+  const isProgram = offeringType === "PROGRAM";
 
   return (
     <form action={formAction} className="space-y-4">
@@ -115,22 +116,36 @@ export function MarketplaceBookingForm({
             )}
           </>
         ) : (
-          <>Im Programm enthalten — keine Credits.</>
+          <>Für Startups in diesem Programm kostenlos — keine Credits.</>
         )}
       </div>
 
-      <Field
-        label="Anliegen / Wunsch-Session"
-        htmlFor="message"
-        hint="Das LOVEDIS-Team koordiniert Matching & Termin mit dem Partner."
-      >
-        <Textarea
-          id="message"
-          name="message"
-          placeholder="Worum geht es konkret? Was möchtest du aus der Session mitnehmen?"
-          required
-        />
-      </Field>
+      {isProgram ? (
+        <Field
+          label="Nachricht (optional)"
+          htmlFor="message"
+          hint="Das LOVEDIS-Team meldet sich mit allen Terminen bei dir."
+        >
+          <Textarea
+            id="message"
+            name="message"
+            placeholder="Gibt es etwas, das wir vorab wissen sollten?"
+          />
+        </Field>
+      ) : (
+        <Field
+          label="Anliegen / Wunsch-Session"
+          htmlFor="message"
+          hint="Das LOVEDIS-Team koordiniert Matching & Termin mit dem Partner."
+        >
+          <Textarea
+            id="message"
+            name="message"
+            placeholder="Worum geht es konkret? Was möchtest du aus der Session mitnehmen?"
+            required
+          />
+        </Field>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Kontaktname" htmlFor="contactName">
@@ -152,17 +167,19 @@ export function MarketplaceBookingForm({
         </Field>
       </div>
 
-      <Field
-        label="Wunschtermin (optional)"
-        htmlFor="preferredAt"
-        hint="z. B. „nächste Woche Di/Mi nachmittags“"
-      >
-        <Input
-          id="preferredAt"
-          name="preferredAt"
-          placeholder="Wunschtermin(e) als Freitext"
-        />
-      </Field>
+      {!isProgram && (
+        <Field
+          label="Wunschtermin (optional)"
+          htmlFor="preferredAt"
+          hint="z. B. „nächste Woche Di/Mi nachmittags“"
+        >
+          <Input
+            id="preferredAt"
+            name="preferredAt"
+            placeholder="Wunschtermin(e) als Freitext"
+          />
+        </Field>
+      )}
 
       {state?.error && <ErrorChip>{state.error}</ErrorChip>}
       <Button
@@ -174,8 +191,12 @@ export function MarketplaceBookingForm({
         {pending
           ? "Wird gesendet…"
           : teamMode
-            ? "Anfrage im Auftrag senden"
-            : "Anfrage senden"}
+            ? isProgram
+              ? "Im Auftrag anmelden"
+              : "Anfrage im Auftrag senden"
+            : isProgram
+              ? "Jetzt anmelden"
+              : "Anfrage senden"}
       </Button>
     </form>
   );

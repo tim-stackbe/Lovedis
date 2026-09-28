@@ -14,6 +14,8 @@ export interface ProgramCardData {
   focusTags: string[];
   sessionDate: string | null;
   contactPerson: string | null;
+  format: string | null;
+  sessionCount: number;
 }
 
 /**
@@ -48,10 +50,16 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-lv-secondary">
-          {program.sessionDate && (
+          {(program.format || program.sessionDate) && (
             <span className="flex items-center gap-1.5">
               <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
-              {program.sessionDate}
+              {program.format ?? program.sessionDate}
+            </span>
+          )}
+          {program.sessionCount > 0 && (
+            <span className="flex items-center gap-1.5">
+              <StartupsIcon className="h-3.5 w-3.5 shrink-0 text-lv-blue" />
+              {program.sessionCount} Workshops
             </span>
           )}
           {program.contactPerson && (

@@ -1,7 +1,6 @@
 import {
   ArrowRightIcon,
   GraduationCapIcon,
-  UsersIcon,
   VentureIcon,
   type IconRenderer,
 } from "@/components/icons/lovedis";
@@ -14,7 +13,6 @@ interface MarketplaceHeroProps {
   budget: CreditBudgetView;
   teamMode: boolean;
   programCount: number;
-  mentorCount: number;
   offeringCount: number;
 }
 
@@ -42,9 +40,9 @@ function WidgetStat({
 }
 
 /**
- * Editorial gradient hero for the Startup-Marktplatz storefront. On the left a
- * heading + subline; on the right an embedded white credit-budget widget that
- * reuses `CreditBudgetBreakdown` (bar variant) for the Fix/Flex breakdown. In
+ * Editorial gradient hero for the Startup Support Marketplace storefront. On the
+ * left a heading + subline; on the right an embedded white credit-budget widget
+ * that reuses `CreditBudgetBreakdown` (bar variant). In
  * the internal team's admin preview the budget (which is empty for team
  * accounts) is swapped for a catalog-overview widget.
  */
@@ -52,7 +50,6 @@ export function MarketplaceHero({
   budget,
   teamMode,
   programCount,
-  mentorCount,
   offeringCount,
 }: MarketplaceHeroProps) {
   return (
@@ -64,13 +61,20 @@ export function MarketplaceHero({
 
       <div className="relative grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-center">
         <div>
-          <p className="lv-wordmark text-xs text-white/75">Startup-Marktplatz</p>
+          <p className="lv-wordmark text-xs text-white/75">
+            LOVEDIS Startup Support Marketplace
+          </p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
             Wachse mit deinen Venture Credits
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
-            Entdecke passende Programme, Mentor:innen und Support-Angebote für
-            dein Startup — kuratiert vom LOVEDIS-Team.
+            Nutze deine Venture Credits für exklusive Programme rund um{" "}
+            <strong className="font-semibold text-white">KI &amp; Tech</strong>{" "}
+            und{" "}
+            <strong className="font-semibold text-white">Sales &amp; Growth</strong>
+            , um zentrale Wachstumsfelder deines Startups gezielt
+            weiterzuentwickeln. Greife ergänzend auf unser Expert:innen-Netzwerk
+            für individuelle Sessions zu.
           </p>
           <div className="mt-6">
             <LinkButton
@@ -94,16 +98,11 @@ export function MarketplaceHero({
               <p className="mt-1 text-sm text-lv-secondary">
                 Admin-Vorschau — Startups sehen hier ihr Credit-Budget.
               </p>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 <WidgetStat
                   icon={GraduationCapIcon}
                   label="Programme"
                   value={programCount}
-                />
-                <WidgetStat
-                  icon={UsersIcon}
-                  label="Mentor:innen"
-                  value={mentorCount}
                 />
                 <WidgetStat
                   icon={VentureIcon}

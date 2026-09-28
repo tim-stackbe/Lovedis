@@ -33,6 +33,10 @@ interface Props {
   contactPerson?: string | null;
   website?: string | null;
   sessionDate?: string | null;
+  /** Program format line, e.g. "4 Wochen · Online". */
+  format?: string | null;
+  /** Program workshop titles, listed in order. */
+  sessions?: string[];
   /** When true, render the internal-team on-behalf-of booking variant. */
   teamMode?: boolean;
   startups?: OnBehalfStartup[];
@@ -89,12 +93,15 @@ export function OfferingDetail({
   contactPerson,
   website,
   sessionDate,
+  format,
+  sessions = [],
   teamMode = false,
   startups = [],
 }: Props) {
   const hasMeta = Boolean(
-    providerCompany || contactPerson || website || sessionDate
+    providerCompany || contactPerson || website || sessionDate || format
   );
+  const isProgram = offeringType === "PROGRAM";
   return (
     <>
       <Link
@@ -151,6 +158,9 @@ export function OfferingDetail({
                     value={contactPerson}
                   />
                 )}
+                {format && (
+                  <MetaRow icon={CalendarIcon} label="Format" value={format} />
+                )}
                 {sessionDate && (
                   <MetaRow
                     icon={CalendarIcon}
@@ -168,11 +178,33 @@ export function OfferingDetail({
                 )}
               </div>
             )}
+            {sessions.length > 0 && (
+              <div className="border-t border-lv-border pt-4">
+                <p className="text-sm font-semibold text-lv-text">
+                  {sessions.length} Workshops
+                </p>
+                <ol className="mt-2 space-y-2">
+                  {sessions.map((s, i) => (
+                    <li key={`${i}-${s}`} className="flex items-baseline gap-3 text-sm">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lv-blue-soft text-xs font-semibold text-lv-blue">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 text-lv-text">{s}</span>
+                      <span className="text-xs text-lv-secondary">Termin folgt</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </Card>
         </section>
 
         <section className="space-y-4">
-          <SectionLabel number="02" label="Anfrage" title="Jetzt anfragen" />
+          <SectionLabel
+            number="02"
+            label={isProgram ? "Anmeldung" : "Anfrage"}
+            title={isProgram ? "Jetzt anmelden" : "Jetzt anfragen"}
+          />
           <Card className="p-6">
             <MarketplaceBookingForm
               offeringType={offeringType}

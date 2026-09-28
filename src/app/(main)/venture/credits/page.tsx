@@ -10,7 +10,7 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireVentureView } from "@/lib/auth-guards";
-import { CREDIT_BUCKET_LABELS, deriveCreditBudget } from "@/lib/credit-buckets";
+import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
@@ -46,18 +46,14 @@ export default async function VentureCreditsPage() {
         title="Mein Venture-Guthaben"
         subtitle="Dein aktuelles Credit-Guthaben und die komplette Buchungshistorie."
       >
-        <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
+        <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
           <BannerStat
             label="Guthaben"
             value={`${budget.remaining} von ${budget.total}`}
           />
           <BannerStat
-            label={CREDIT_BUCKET_LABELS.FIX}
-            value={`${budget.fixRemaining}/${budget.fixTotal}`}
-          />
-          <BannerStat
-            label={CREDIT_BUCKET_LABELS.FLEX}
-            value={`${budget.flexRemaining}/${budget.flexTotal}`}
+            label="Genutzt"
+            value={startup?.creditAccount ? budget.used : 0}
           />
         </div>
       </HeroBanner>
@@ -83,7 +79,11 @@ export default async function VentureCreditsPage() {
         />
       ) : (
         <>
-          <SectionLabel number="01" label="Budget" title="Dein 12-Credit-Budget" />
+          <SectionLabel
+            number="01"
+            label="Budget"
+            title={`Dein ${budget.total}-Credit-Budget`}
+          />
           <div className="rounded-card border border-lv-border bg-white p-6">
             <p className="text-3xl font-bold tracking-tight text-lv-text">
               {budget.remaining}{" "}

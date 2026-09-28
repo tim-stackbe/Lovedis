@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { bookCreditTransaction } from "@/app/actions/credits";
 import { CREDIT_TX_TYPES, CREDIT_TX_TYPE_LABELS } from "@/lib/constants";
-import { CREDIT_BUCKET_LABELS } from "@/lib/credit-buckets";
 import { Button } from "@/components/ui/Button";
 import {
   ErrorChip,
@@ -46,18 +45,6 @@ export function CreditBookingForm({ startups }: { startups: Option[] }) {
                 {CREDIT_TX_TYPE_LABELS[t]}
               </option>
             ))}
-          </Select>
-        </Field>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Topf"
-          htmlFor="credit-bucket"
-          hint="Flexibel = frei einsetzbar (Mentor:innen/Support). Fix = reserviertes Programm-Kontingent."
-        >
-          <Select id="credit-bucket" name="bucket" defaultValue="FLEX">
-            <option value="FLEX">{CREDIT_BUCKET_LABELS.FLEX}</option>
-            <option value="FIX">{CREDIT_BUCKET_LABELS.FIX}</option>
           </Select>
         </Field>
       </div>

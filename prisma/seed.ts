@@ -1396,6 +1396,8 @@ async function main() {
         status: p.status,
         contactPerson: p.contactPerson ?? null,
         sessionDate: p.sessionDate ?? null,
+        format: p.format ?? null,
+        sessions: p.sessions ?? [],
         fixCreditCost: p.fixCreditCost,
         sortOrder: p.sortOrder,
         createdById: member.id,
@@ -1443,7 +1445,7 @@ async function main() {
   }
 
   // --- Venture Credit System -----------------------------------------------
-  // Jedes Startup erhält das 12-Credit-Onboarding-Guthaben („sponsored by
+  // Jedes Startup erhält das 10-Credit-Onboarding-Guthaben („sponsored by
   // LOVEDIS") über den bestehenden Ledger (GRANT). Idempotent — nie doppelt.
   for (const s of startupRecords) {
     await grantOnboardingCredits(prisma, s.id, member.id);
@@ -1454,7 +1456,7 @@ async function main() {
   });
 
   // Referenzen für die Demo-Buchungen (aus dem echten Notion-Katalog).
-  const programGrowthId = programByTitle.get("Sales, Pricing & Growth")!;
+  const programGrowthId = programByTitle.get("Sales & Growth")!;
   // MARKETPLACE_MENTORS ist bewusst leer (Venture Store ohne Mentor:innen) —
   // die beiden Mentor-Demo-Buchungen werden dann übersprungen, statt auf
   // undefined zu laufen. Kommen wieder Mentor:innen in den Katalog, greifen
@@ -1558,42 +1560,19 @@ async function main() {
       },
     });
   }
-  // COMPLETED Programm — verbraucht das FIX-Kontingent (0 FLEX-Credits, aber
-  // 6 FIX „durch Anmeldung"). FIX-SPEND-Tx verlinkt, fixBalance dekrementiert.
-  const growthProgram = MARKETPLACE_PROGRAMS.find(
-    (p) => p.title === "Sales, Pricing & Growth"
-  )!;
-  const programFixTx = await prisma.creditTransaction.create({
-    data: {
-      accountId: nfAccount.id,
-      createdById: member.id,
-      type: "SPEND",
-      bucket: "FIX",
-      amount: -growthProgram.fixCreditCost,
-      reason: `Marktplatz-Buchung: ${growthProgram.title}`,
-    },
-  });
-  await prisma.creditAccount.update({
-    where: { id: nfAccount.id },
-    data: {
-      balance: { decrement: growthProgram.fixCreditCost },
-      fixBalance: { decrement: growthProgram.fixCreditCost },
-    },
-  });
+  // CONFIRMED Programm-Anmeldung — Programme sind kostenlos (kein Credit-Effekt).
   await prisma.marketplaceBooking.create({
     data: {
       offeringType: "PROGRAM",
-      status: "COMPLETED",
+      status: "CONFIRMED",
       startupId: neuralForge.id,
       requestedById: startupUser.id,
       programId: programGrowthId,
-      message: "Wir möchten an unserem Pricing und Sales-Playbook arbeiten.",
+      message: "Anmeldung zum Programm",
       contactName: startupUser.name,
       contactEmail: startupUser.email,
       creditCost: 0,
-      fixCreditCost: growthProgram.fixCreditCost,
       handledById: member.id,
-      creditTransactionId: programFixTx.id,
     },
   });
 

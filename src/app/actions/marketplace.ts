@@ -47,23 +47,30 @@ const requestSchema = z.object({
     ]
   ),
   targetId: z.string().min(1, "Angebot ist erforderlich."),
-  message: z
-    .string()
-    .trim()
-    .min(10, "Bitte beschreibe dein Anliegen in mindestens 10 Zeichen.")
-    .max(2000, "Nachricht ist zu lang."),
+  message: z.string().trim().max(2000, "Nachricht ist zu lang."),
   contactName: z.string().trim().min(2, "Bitte gib einen Kontaktnamen an.").max(160),
   contactEmail: z.email("Bitte gib eine gültige E-Mail an."),
   preferredAt: z.string().trim().max(280).optional(),
   // Set only when the internal team books on behalf of a startup ("Admin-Sicht").
   onBehalfStartupId: z.string().trim().min(1).optional(),
+}).superRefine((data, ctx) => {
+  // Program enrolment is a plain sign-up; everything else needs a brief.
+  if (data.offeringType !== "PROGRAM" && data.message.length < 10) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["message"],
+      message: "Bitte beschreibe dein Anliegen in mindestens 10 Zeichen.",
+    });
+  }
 });
+
+const PROGRAM_DEFAULT_MESSAGE = "Anmeldung zum Programm";
 
 /**
  * Resolves the catalog target for an offering type and returns the target id
- * field + the snapshotted costs. `creditCost` is the FLEX price (mentor/support);
- * `fixCreditCost` is the FIX consumption (programs only, otherwise 0). Programs
- * never cost FLEX credits but consume from the reserved FIX bucket on enrolment.
+ * field + the snapshotted costs. `creditCost` is the FLEX price (mentor/support).
+ * Programs are free for startups in the program, so both costs are 0 and
+ * enrolment confirms without a ledger entry.
  */
 async function resolveTarget(
   offeringType: MarketplaceOfferingType,
@@ -82,14 +89,14 @@ async function resolveTarget(
   if (offeringType === "PROGRAM") {
     const program = await prisma.program.findUnique({
       where: { id: targetId },
-      select: { status: true, fixCreditCost: true },
+      select: { status: true },
     });
     if (!program || program.status !== "OPEN") {
       return { ok: false, error: "Programm nicht gefunden." };
     }
     return {
       ok: true,
-      data: { creditCost: 0, fixCreditCost: program.fixCreditCost, field: "programId" },
+      data: { creditCost: 0, fixCreditCost: 0, field: "programId" },
     };
   }
   if (offeringType === "MENTOR_SESSION") {
@@ -130,7 +137,7 @@ export async function requestBooking(
   const parsed = requestSchema.safeParse({
     offeringType: formData.get("offeringType"),
     targetId: formData.get("targetId"),
-    message: formData.get("message"),
+    message: formData.get("message") ?? "",
     contactName: formData.get("contactName"),
     contactEmail: formData.get("contactEmail"),
     preferredAt: formData.get("preferredAt") || undefined,
@@ -169,7 +176,6 @@ export async function requestBooking(
 
   // Soft per-bucket balance check at request time (no charge yet). Credits are
   // only redeemed on CONFIRMED; the final, authoritative check happens there.
-  // Mentor/Support draw FLEX; program enrolment draws the reserved FIX bucket.
   if (creditCost > 0) {
     const flex = startup.creditAccount?.flexBalance ?? 0;
     if (flex < creditCost) {
@@ -193,7 +199,7 @@ export async function requestBooking(
       startupId: startup.id,
       requestedById: session.user.id,
       [field]: parsed.data.targetId,
-      message: parsed.data.message,
+      message: parsed.data.message || PROGRAM_DEFAULT_MESSAGE,
       contactName: parsed.data.contactName,
       contactEmail: parsed.data.contactEmail,
       preferredAt: parsed.data.preferredAt ?? null,
@@ -207,7 +213,9 @@ export async function requestBooking(
     success:
       creditCost > 0
         ? "Anfrage gesendet — Credits werden erst nach Bestätigung eingelöst."
-        : "Anfrage gesendet — das LOVEDIS-Team meldet sich.",
+        : parsed.data.offeringType === "PROGRAM"
+          ? "Anmeldung gesendet — das LOVEDIS-Team meldet sich mit allen Terminen."
+          : "Anfrage gesendet — das LOVEDIS-Team meldet sich.",
   };
 }
 

@@ -47,6 +47,8 @@ export default async function ProgramDetailPage({
       defaultEmail={user?.email ?? ""}
       contactPerson={program.contactPerson}
       sessionDate={program.sessionDate}
+      format={program.format}
+      sessions={program.sessions}
       teamMode={teamMode}
       startups={startups}
     />

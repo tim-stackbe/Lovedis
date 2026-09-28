@@ -1,5 +1,4 @@
 import type { SupportCategory } from "@/generated/prisma/enums";
-import { PROGRAM_FIX_CREDIT_COST } from "@/lib/credit-buckets";
 
 // ---------------------------------------------------------------------------
 // Marktplatz-Katalog — 1:1 aus der Notion-Seite „LOVEDIS Startup Support
@@ -11,10 +10,10 @@ import { PROGRAM_FIX_CREDIT_COST } from "@/lib/credit-buckets";
 //   • NUR echte Notion-Einträge — keine erfundenen Angebote, Programme oder
 //     Mentor:innen-Metadaten. Fehlt ein Wert in Notion, bleibt das Feld leer
 //     (null), statt Platzhalter zu erfinden.
-//   • Credit-Skala = Notion (1 Credit pro Session, 2 für die GAL-Digital-
-//     1:1-Formate + „Live Hacking"). Programme kosten 0 FLEX-Credits,
-//     verbrauchen aber beim Anmelden das reservierte FIX-Kontingent
-//     (Notion: 6 fixe Credits).
+//   • Credit-Skala (seit 28.09.2026): 2 Credits für alles, was ~2h dauert oder
+//     extern kostet (GAL Digital, Aulinger, Momentum-2h-Workshops); 1 Credit
+//     für Sparrings mit Investor:innen, Berater:innen oder LOVEDIS. Programme
+//     sind kostenlos (keine Credits).
 //   • Anbieter/Kontakt/Website/Termin liegen in DEDIZIERTEN Feldern (nicht im
 //     Freitext description/bio): SupportOffering.providerCompany/contactPerson/
 //     website/sessionDate, MentorProfile.company/role/website, Program.
@@ -38,7 +37,11 @@ export interface ProgramSeed {
   status: "DRAFT" | "OPEN" | "CLOSED";
   contactPerson?: string;
   sessionDate?: string;
-  /** FIX credits an enrolment consumes (Notion: 6 for Sales, Pricing & Growth). */
+  /** Duration/format line, e.g. "4 Wochen · Online". */
+  format?: string;
+  /** Workshop series titles, in order. */
+  sessions?: string[];
+  /** FIX credits an enrolment consumes (always 0 since programs are free). */
   fixCreditCost: number;
   sortOrder: number;
 }
@@ -85,8 +88,42 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
   // drei davon — „Community / Ökosystem Sales", „Aufbau strukturierter
   // Pipelines" und „Nightmare Competitor" — aus dem Programm-Bereich in die
   // Support-Angebote (Kategorie SALES) verschoben (siehe MARKETPLACE_OFFERINGS
-  // und prisma/backups/venture-store-move-20260914T135212Z.sql). Hier bleibt
-  // nur „SaaS Contracting" als exklusives Programm.
+  // und prisma/backups/venture-store-move-20260914T135212Z.sql). Seit
+  // 28.09.2026: die zwei Journeys „KI & Tech" und „Sales & Growth" plus
+  // „SaaS Contracting".
+  // Die beiden themenspezifischen Journeys (seit 28.09.2026). Kostenlos für
+  // Startups im Programm; Anbieter/Personen folgen, daher kein contactPerson.
+  {
+    title: "KI & Tech Journey",
+    summary:
+      "Nimm an unserem themenspezifischen Programm teil und arbeite gemeinsam mit Expert:innen an deiner KI-Weiterentwicklung – von Modellvergleichen über Skalierung hin zur Cyber-Resilienz.",
+    description:
+      "Nimm an unserem themenspezifischen Programm teil und arbeite gemeinsam mit Expert:innen an deiner KI-Weiterentwicklung – von Modellvergleichen über Skalierung hin zur Cyber-Resilienz.\n\n" +
+      "Die Journey besteht aus vier aufeinander aufbauenden Workshops über vier Wochen – als Mischung aus Online-Sessions und In-Person-Terminen im Lokschuppen. Die Termine geben wir rechtzeitig bekannt.",
+    focusTags: ["AI", "Product & Tech", "Workshop-Reihe"],
+    status: "OPEN",
+    format: "4 Wochen · Online & In-Person (Lokschuppen)",
+    sessions: [
+      "KI Trends & Modellvergleich",
+      "Cyber-Resilienz",
+      "Kaminabend",
+      "Titel folgt",
+    ],
+    fixCreditCost: 0,
+    sortOrder: 1,
+  },
+  {
+    title: "Sales & Growth",
+    summary:
+      "Nimm an unserem themenspezifischen Programm teil und arbeite gemeinsam mit Expert:innen an deiner Growth-Story.",
+    description:
+      "Nimm an unserem themenspezifischen Programm teil und arbeite gemeinsam mit Expert:innen an deiner Growth-Story. Ein praxisnahes Programm zu Kundenverständnis, Go-to-Market und B2B Sales. Die Sessions greifen zentrale Wachstumshebel von Startups auf und liefern konkrete Impulse für Positionierung, Markteintritt und Vertrieb.",
+    focusTags: ["Sales", "Growth", "GTM"],
+    status: "OPEN",
+    format: "4 Wochen · Online · Termine folgen",
+    fixCreditCost: 0,
+    sortOrder: 2,
+  },
   {
     title: "SaaS Contracting",
     summary: "Online Workshop zu SaaS-Vertragsgestaltung im Sales-Kontext.",
@@ -95,43 +132,8 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
     focusTags: ["Sales", "Legal", "SaaS"],
     status: "OPEN",
     contactPerson: "Dr. Ralf Heine",
-    sessionDate: "23. September, 10–12 Uhr",
     fixCreditCost: 0,
     sortOrder: 4,
-  },
-  {
-    title: "Workshop 1: KI Trends & Modellvergleich",
-    summary:
-      "Gemeinsamer 2h-Einstieg für alle Startups: Markttrends, Modellvergleich und Cloud vs. On-Prem.",
-    description:
-      "Gemeinsamer 2h-Workshop für alle Startups im Batch. Follow-ups mit Effizienzanalyse können individuell gebucht werden.\n\n" +
-      "Der Einstieg schafft einen gemeinsamen Wissensstand. Tim gibt einen Überblick über den aktuellen Stand der KI-Entwicklung: Was bewegt den Markt, welche Modelle setzen sich durch, wohin geht die Entwicklung in den nächsten 12 bis 24 Monaten.\n\n" +
-      "Im zweiten Teil steht der Modellvergleich im Mittelpunkt. Die Startups analysieren gemeinsam, welche Modelle sie selbst einsetzen oder evaluieren, und stellen diese gegenüber: Leistung, Kosten, Einsatzbereich und On-Premise-Fähigkeit. Mittelständische Unternehmenskunden stellen die On-Prem-Anforderung regelmäßig — deshalb werden Vor- und Nachteile von Cloud- vs. On-Prem-Lösungen direkt an konkreten Modellen durchgespielt. Ein zentrales Thema: Durch den Wechsel auf ein alternatives Modell lassen sich in vielen Fällen erhebliche Kosten einsparen, ohne Leistungseinbußen hinnehmen zu müssen.\n\n" +
-      "Output: Startups kennen die relevanten Markttrends, sind auf dem gleichen Wissenstand, können ihre Modellwahl kritisch einordnen und wissen, wo Optimierungspotenzial bei Kosten und Infrastruktur liegt.\n\n" +
-      "Format: Gemeinsamer Online-Workshop (2h). Anbieter: LOVEDIS.",
-    focusTags: ["AI", "Product & Tech", "Workshop"],
-    status: "OPEN",
-    contactPerson: "Tim Meggert",
-    fixCreditCost: 0,
-    sortOrder: 5,
-  },
-  {
-    title: "Sales, Pricing & Growth",
-    summary:
-      "Exklusives Programm rund um Vertrieb, Pricing und skalierbares Wachstum — 6 fixe Credits, du musst dich nur anmelden.",
-    description:
-      "Das exklusive LOVEDIS-Programm rund um Sales, Pricing & Growth. Von den 12 Venture Credits sind 6 fix für diese Journey verplant — du musst sie nicht einlösen, sondern dich nur offiziell anmelden.\n\n" +
-      "Session „Sales Foundations: People, Process & Tools — ein Framework für skalierbares GTM“: Online Workshop, 90 Min., Q&A bei Bedarf.\n\n" +
-      "Programmziele: geschärfte Value Proposition & ICP, ein Sales Handbook (Pipeline, GtM, Playbook, Deal Qualification, Skalierung) sowie eine Pricing-Strategie mit validiertem Pricing-Modell.",
-    focusTags: ["Sales", "Pricing", "Growth", "GTM"],
-    // Bewusst versteckt (DRAFT): der Sync hat dieses Dach-Programm am
-    // 14.09.2026 neu angelegt, im Store soll es nicht erscheinen. Inhalt bleibt
-    // erhalten, damit es jederzeit auf OPEN gesetzt werden kann.
-    status: "DRAFT",
-    contactPerson: "Claudia Proß",
-    sessionDate: "Input-Session am 27. August, 12:00–13:30 Uhr",
-    fixCreditCost: PROGRAM_FIX_CREDIT_COST,
-    sortOrder: 1,
   },
 ];
 
@@ -153,8 +155,8 @@ export const MARKETPLACE_MENTORS: MentorSeed[] = [];
 
 // ---------------------------------------------------------------------------
 // Support-Angebote — echte Notion-Angebote je Kategorie. Anbieter/Kontakt/
-// Website/Termin liegen in dedizierten Feldern. Fast alle 1 Credit; die
-// GAL-Digital-1:1-Formate + „Live Hacking" kosten 2. Die „Individual Expert
+// Website/Termin liegen in dedizierten Feldern. 2 Credits für ~2h-Workshops
+// und externe Anbieter (GAL Digital, Aulinger, Momentum), sonst 1. Die „Individual Expert
 // Session" ist ein echter Notion-Eintrag in Legal, Marketing und AI/Product &
 // Tech (Bedarf beschreiben → Team matcht passende Expert:innen).
 // ---------------------------------------------------------------------------
@@ -216,6 +218,19 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     creditCost: 1,
     sortOrder: 4,
   },
+  {
+    title: "Pitch Deck Review",
+    category: "FUNDRAISING",
+    summary: "1:1-Review deines Pitch Decks mit dem LOVEDIS-Team.",
+    description:
+      "Wir gehen gemeinsam dein Pitch Deck durch: Story, Aufbau, Zahlen und Ask – mit ehrlichem Feedback und konkreten Verbesserungen für deine nächsten Investor-Gespräche.",
+    format: "Sparring Session",
+    providerCompany: "LOVEDIS",
+    contactPerson: "Tim Meggert",
+    website: "https://lovedis.de",
+    creditCost: 1,
+    sortOrder: 4,
+  },
 
   // --- ⚖️ Legal (1 Credit oder 2 wo Notion „1-2" angibt) -----------------
   {
@@ -228,7 +243,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
     website: "https://www.momentum-partner.de/",
-    creditCost: 1,
+    creditCost: 2,
     sortOrder: 5,
   },
   {
@@ -538,7 +553,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "LOVEDIS",
     contactPerson: "Tim Meggert",
     website: "https://lovedis.de",
-    creditCost: 2,
+    creditCost: 1,
     sortOrder: 29,
   },
   {
@@ -555,8 +570,8 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
   // --- 🤝 Sales ------------------------------------------------------------
   // Am 14.09.2026 aus dem Programm-Bereich (MARKETPLACE_PROGRAMS) in die
   // Support-Angebote verschoben; providerCompany/format sind aus der Original-
-  // Beschreibung übernommen. creditCost 2 (auf Wunsch am 14.09.2026 von 0
-  // heraufgesetzt) — Kaufpreis der drei verschobenen Sessions.
+  // Beschreibung übernommen. creditCost 2 für GAL Digital (extern), 1 für die
+  // übrigen (Stand 28.09.2026).
   {
     title: "Community / Ökosystem Sales",
     category: "SALES",
@@ -566,7 +581,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Online Workshop",
     providerCompany: "unusual business",
     contactPerson: "Sina Wans",
-    creditCost: 2,
+    creditCost: 1,
     sortOrder: 31,
   },
   {
@@ -590,7 +605,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Live Workshop",
     providerCompany: "Uni Marburg / StartMiUp",
     contactPerson: "Michael Stephan",
-    creditCost: 2,
+    creditCost: 1,
     sortOrder: 33,
   },
   // Neues generisches „Sales"-Angebot (14.09.2026); Defaults aus dem DRAFT-

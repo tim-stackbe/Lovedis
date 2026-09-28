@@ -62,6 +62,8 @@ async function main() {
         status: p.status,
         contactPerson: p.contactPerson ?? null,
         sessionDate: p.sessionDate ?? null,
+        format: p.format ?? null,
+        sessions: p.sessions ?? [],
         fixCreditCost: p.fixCreditCost,
         sortOrder: p.sortOrder,
       };

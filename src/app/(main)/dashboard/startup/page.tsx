@@ -223,7 +223,7 @@ export default async function StartupDashboard() {
                 icon={Coins}
                 label="Venture-Guthaben"
                 value={`${creditBudget.remaining} von ${creditBudget.total}`}
-                sub={`Fix ${creditBudget.fixRemaining}/${creditBudget.fixTotal} · Flexibel ${creditBudget.flexRemaining}/${creditBudget.flexTotal} · Historie →`}
+                sub="Flexibel einsetzbar · Historie →"
               />
             </Link>
             {/* Alpha: hide the Section-03 "Marktplatz" card in sync with the
@@ -238,7 +238,7 @@ export default async function StartupDashboard() {
                   icon={Store}
                   label="Marktplatz"
                   value="Support finden"
-                  sub="Programme, Mentor:innen & Angebote →"
+                  sub="Programme & Support-Angebote →"
                 />
               </Link>
             )}

@@ -3,27 +3,17 @@ import type { CreditBucket } from "@/generated/prisma/enums";
 // ---------------------------------------------------------------------------
 // Venture-Credit-Töpfe (FIX / FLEX) — geteilte Konstanten + Anzeige-Helfer.
 //
-// Notion-Modell (siehe docs/plan-marketplace-notion-feedback.md §2.2 + §5.2/§5.3):
-// Jedes Startup erhält 12 Onboarding-Credits, aufgeteilt in
-//   • 6 FIX  — reserviert für das exklusive Programm „Sales, Pricing & Growth".
-//              Werden „nicht eingelöst, sondern nur angemeldet" — d. h. das
-//              Buchen/Anmelden eines Programms verbraucht FIX (kein FLEX-Preis).
-//   • 6 FLEX — frei einsetzbar für Mentor:innen-Sessions + Support-Angebote,
-//              eingelöst bei CONFIRMED wie bisher (1–2 Credits je Session).
-//
-// INTERPRETATION (Default, im Team revidierbar): Das eine exklusive Programm
-// verbraucht beim Anmelden das GESAMTE FIX-Kontingent (6 Credits) — 1:1 zu
-// „6 Credits sind fix für die Sales-Journey verplant". Mentor:innen/Support
-// ziehen aus FLEX. Beide Töpfe haben einen eigenen Boden bei 0.
+// Modell seit 28.09.2026: Jedes Startup erhält 10 Venture Credits, ALLE
+// flexibel (FLEX) — frei einsetzbar für Support-Angebote, eingelöst bei
+// CONFIRMED (1–2 Credits je Session). Die exklusiven Programme sind kostenlos
+// und verbrauchen keine Credits. Der FIX-Topf bleibt im Datenmodell erhalten
+// (Ledger-Historie), wird aber nicht mehr vergeben und nicht mehr angezeigt.
 // ---------------------------------------------------------------------------
 
-export const ONBOARDING_FIX_CREDITS = 6;
-export const ONBOARDING_FLEX_CREDITS = 6;
+export const ONBOARDING_FIX_CREDITS = 0;
+export const ONBOARDING_FLEX_CREDITS = 10;
 export const ONBOARDING_CREDIT_TOTAL =
-  ONBOARDING_FIX_CREDITS + ONBOARDING_FLEX_CREDITS; // 12
-
-/** FIX-Kontingent, das die Anmeldung zum exklusiven Programm verbraucht. */
-export const PROGRAM_FIX_CREDIT_COST = 6;
+  ONBOARDING_FIX_CREDITS + ONBOARDING_FLEX_CREDITS; // 10
 
 export const CREDIT_BUCKET_LABELS: Record<CreditBucket, string> = {
   FIX: "Fix",
@@ -38,7 +28,7 @@ export interface CreditBudget {
 }
 
 export interface CreditBudgetView {
-  /** Total budget the startup started with (default 12). */
+  /** Total budget the startup started with (default 10). */
   total: number;
   /** Remaining across both buckets (== balance). */
   remaining: number;
@@ -53,8 +43,8 @@ export interface CreditBudgetView {
 }
 
 /**
- * Derives a "X von 12" budget view from the cached account balances. The
- * per-bucket totals default to the onboarding split (6/6) but grow if the team
+ * Derives a "X von 10" budget view from the cached account balances. The
+ * per-bucket totals default to the onboarding split (0/10) but grow if the team
  * grants more than the onboarding amount into a bucket (used > 0 with a higher
  * remaining), so the "von N" figure never understates what a startup holds.
  */

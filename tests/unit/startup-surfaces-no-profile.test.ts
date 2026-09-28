@@ -90,7 +90,7 @@ describe("startup surfaces render an empty state when the user has no Startup ro
     const text = await renderWithoutStartup(
       () => import("@/app/(main)/dashboard/startup/page")
     );
-    expect(text).toContain("0 von 12");
+    expect(text).toContain("0 von 10");
   });
 
   it("/applications renders the no-applications empty state", async () => {
@@ -119,7 +119,7 @@ describe("startup surfaces render an empty state when the user has no Startup ro
     const text = await renderWithoutStartup(
       () => import("@/app/(main)/venture/credits/page")
     );
-    expect(text).toContain("0 von 12");
+    expect(text).toContain("0 von 10");
     expect(text).not.toContain("NaN");
   });
 });

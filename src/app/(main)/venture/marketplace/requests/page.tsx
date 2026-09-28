@@ -89,7 +89,7 @@ export default async function MyBookingsPage() {
         <EmptyState
           icon={InboxIcon}
           title="Noch keine Anfragen"
-          description="Wähle im Marktplatz ein Programm, eine:n Mentor:in oder ein Support-Angebot und sende eine Anfrage."
+          description="Wähle im Marktplatz ein Programm oder ein Support-Angebot und sende eine Anfrage."
           action={
             <Link
               href="/venture/marketplace"

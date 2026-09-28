@@ -1,17 +1,15 @@
 import {
   GraduationCapIcon,
-  UsersIcon,
   VentureIcon,
 } from "@/components/icons/lovedis";
+import { Info as InfoIcon } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { SupportCategory } from "@/generated/prisma/enums";
 import { CardTrack } from "@/components/marketplace/CardTrack";
 import { MarketplaceHero } from "@/components/marketplace/MarketplaceHero";
-import { MentorCard } from "@/components/marketplace/MentorCard";
 import { OfferingCard } from "@/components/marketplace/OfferingCard";
 import { ProgramFeatureCard } from "@/components/marketplace/ProgramFeatureCard";
-import { SectionRow } from "@/components/marketplace/SectionRow";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { requireVentureView } from "@/lib/auth-guards";
@@ -20,13 +18,12 @@ import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
 import { isTeamRole } from "@/lib/roles";
 
-export const metadata: Metadata = { title: "Marktplatz" };
-
+export const metadata: Metadata = { title: "Startup Support Marketplace" };
 export default async function MarketplacePage() {
   const session = await requireVentureView();
   const teamMode = isTeamRole(session.user.role);
 
-  const [startup, programs, mentors, offerings] = await Promise.all([
+  const [startup, programs, offerings] = await Promise.all([
     prisma.startup.findUnique({
       where: { ownerUserId: session.user.id },
       select: {
@@ -37,10 +34,6 @@ export default async function MarketplacePage() {
     }),
     prisma.program.findMany({
       where: { status: "OPEN" },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-    }),
-    prisma.mentorProfile.findMany({
-      where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     prisma.supportOffering.findMany({
@@ -63,14 +56,27 @@ export default async function MarketplacePage() {
         budget={budget}
         teamMode={teamMode}
         programCount={programs.length}
-        mentorCount={mentors.length}
         offeringCount={offerings.length}
       />
 
+      <div
+        role="note"
+        className="flex items-start gap-3 rounded-card border border-lv-blue-soft bg-lv-blue-soft px-5 py-4 text-sm leading-relaxed text-lv-blue"
+      >
+        <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          Du bekommst{" "}
+          <strong>10 Venture Credits für dein individuelles Programm</strong>,
+          sponsored by LOVEDIS. <strong>So geht&apos;s:</strong> Session
+          anfragen, Bedarf angeben, LOVEDIS koordiniert Matching und Termin.
+          Credits werden nach Bestätigung eingelöst.
+        </p>
+      </div>
+
       {teamMode && (
         <PreviewBanner>
-          Dies ist die Storefront, die Startups sehen — mit allen Partner-,
-          Mentor:innen- und Programm-Karten. Über „Details & Anfrage“ kannst du
+          Dies ist die Storefront, die Startups sehen — mit allen Programm- und
+          Angebots-Karten. Über „Details & Anfrage“ kannst du
           eine Anfrage im Auftrag eines Startups senden. Credits vergibst du
           unter{" "}
           <Link
@@ -90,8 +96,8 @@ export default async function MarketplacePage() {
             Exklusive Programme
           </h2>
           <p className="mt-1 text-sm text-lv-secondary">
-            Sorgfältig kuratierte Programme für deinen Wachstumsschub — keine
-            Credits erforderlich.
+            Für Startups in diesem Programm kostenlos — keine Credits
+            erforderlich.
           </p>
         </div>
         {programs.length === 0 ? (
@@ -112,6 +118,8 @@ export default async function MarketplacePage() {
                   focusTags: p.focusTags,
                   sessionDate: p.sessionDate,
                   contactPerson: p.contactPerson,
+                  format: p.format,
+                  sessionCount: p.sessions.length,
                 }}
               />
             ))}
@@ -119,53 +127,16 @@ export default async function MarketplacePage() {
         )}
       </section>
 
-      {/* Mentor:innen-Netzwerk — horizontal track ----------------------------- */}
-      {mentors.length === 0 ? (
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
-              Mentor:innen-Netzwerk
-            </h2>
-            <p className="mt-1 text-sm text-lv-secondary">
-              Erfahrene Expert:innen, die dich weiterbringen.
-            </p>
-          </div>
-          <EmptyState
-            icon={UsersIcon}
-            title="Noch keine Mentor:innen"
-            description="Das LOVEDIS-Team kuratiert das Mentor:innen-Netzwerk."
-          />
-        </section>
-      ) : (
-        <SectionRow
-          title="Mentor:innen-Netzwerk"
-          subtitle="Erfahrene Expert:innen, die dich weiterbringen."
-        >
-          {mentors.map((m) => (
-            <MentorCard
-              key={m.id}
-              mentor={{
-                id: m.id,
-                name: m.name,
-                company: m.company,
-                role: m.role,
-                expertise: m.expertise,
-                photoUrl: m.photoUrl,
-                creditCost: m.creditCost,
-              }}
-            />
-          ))}
-        </SectionRow>
-      )}
-
       {/* Support-Angebote — one row per category ------------------------------ */}
       <section className="space-y-5">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-lv-text sm:text-2xl">
-            Support-Angebote
+            Individuelle Support Angebote
           </h2>
-          <p className="mt-1 text-sm text-lv-secondary">
-            Die besten Services für jede Phase deines Startups — nach Kategorie.
+          <p className="mt-1 max-w-3xl text-sm text-lv-secondary">
+            Buche gemeinsame Workshops, individuelle Sparring Sessions oder
+            Expert:innen Support flexibel über deine Venture Credits. Erhalte
+            ehrliches Feedback, neue Perspektiven und praxisnahe Einblicke.
           </p>
         </div>
         {offeringsByCategory.length === 0 ? (
