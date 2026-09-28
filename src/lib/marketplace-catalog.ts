@@ -233,6 +233,18 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     creditCost: 1,
     sortOrder: 4,
   },
+  {
+    title: "Fördermittelberatung",
+    category: "FUNDRAISING",
+    summary:
+      "Beratung zu verschiedenen non-dilutive Finanzierungsformen, wie der Forschungszulage.",
+    description:
+      "Beratung zu verschiedenen non-dilutive Finanzierungsformen, wie der Forschungszulage. Entweder als individuelle Session oder gemeinsamer Online Workshop buchbar.",
+    format: "Individuelle Session oder Online Workshop",
+    providerCompany: "DnA Ventures, HML Capital",
+    creditCost: 2,
+    sortOrder: 5,
+  },
 
   // --- ⚖️ Legal (1 Credit oder 2 wo Notion „1-2" angibt) -----------------
   {

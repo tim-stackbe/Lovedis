@@ -65,8 +65,15 @@ describe("marketplace catalog — Notion metadata in dedicated fields", () => {
 });
 
 describe("marketplace catalog — only real Notion entries", () => {
-  it("contains the 35 storefront offerings (incl. Pitch Deck Review)", () => {
-    expect(MARKETPLACE_OFFERINGS).toHaveLength(35);
+  it("contains the 36 storefront offerings (incl. Pitch Deck Review + Fördermittelberatung)", () => {
+    expect(MARKETPLACE_OFFERINGS).toHaveLength(36);
+    expect(
+      MARKETPLACE_OFFERINGS.find((o) => o.title === "Fördermittelberatung")
+    ).toMatchObject({
+      category: "FUNDRAISING",
+      providerCompany: "DnA Ventures, HML Capital",
+      creditCost: 2,
+    });
     const pitch = MARKETPLACE_OFFERINGS.find((o) => o.title === "Pitch Deck Review");
     expect(pitch).toMatchObject({
       category: "FUNDRAISING",
@@ -137,6 +144,7 @@ describe("marketplace catalog — only real Notion entries", () => {
       "AI Act & Datenschutz",
       "Aufbau strukturierter Pipelines",
       "Exit Readiness & Due Diligence",
+      "Fördermittelberatung",
       "Geschäftsführerhaftung",
       "SaaS Contracting",
       "Schutz des geistigen Eigentums / IP-Rechte",
