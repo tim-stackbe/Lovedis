@@ -216,7 +216,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
       "Direktes Sparring mit Investor:innen zu Story, Runde und Bewertung. Wir matchen die passende Person aus unserem Netzwerk.",
     format: "Sparring Session",
     providerCompany:
-      "Realyze Ventures, HTGF, re:cap Technologies, Wunderland Capital, Business Angels FrankfurtRheinMain, Futury Capital, Business Angels Mittelhessen",
+      "Realyze Ventures, HTGF, re:cap Technologies, Wunderland Capital, Business Angels FrankfurtRheinMain, Futury Capital, Business Angels Mittelhessen, DnA Ventures",
     creditCost: 1,
     sortOrder: 4,
   },
