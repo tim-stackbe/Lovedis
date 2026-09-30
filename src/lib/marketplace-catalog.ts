@@ -103,7 +103,7 @@ export const KI_TECH_WORKSHOPS: ProgramWorkshop[] = [
       "**Output:** Startups kennen die relevanten Markttrends und alle sind auf dem gleichen Wissensstand, können ihre Modellwahl kritisch einordnen und wissen, wo Optimierungspotenzial bei Kosten und Infrastruktur liegt.",
   },
   {
-    title: "Kaminabend",
+    title: "KI Resilience Day",
     date: "2026-11-23",
     startTime: "15:00",
     format: "ON_SITE",

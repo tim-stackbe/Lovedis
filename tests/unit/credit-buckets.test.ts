@@ -129,7 +129,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(ki.format).toBe("4 Wochen · Online & In-Person (Lokschuppen)");
     expect(ki.sessions).toEqual([
       "KI Trends & Modellvergleich",
-      "Kaminabend",
+      "KI Resilience Day",
       "KI Skalieren",
       "AI Act (optional)",
     ]);
