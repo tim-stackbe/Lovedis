@@ -152,7 +152,7 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
       "Die Journey besteht aus aufeinander aufbauenden Workshops über drei Wochen als Mischung aus Online-Sessions und einem Onsite Workshop im Lokschuppen. Der letzte Workshop zum AI Act ist optional und wird nach Bedarf noch ergänzt.",
     focusTags: ["AI", "Product & Tech", "Workshop-Reihe"],
     status: "OPEN",
-    format: "4 Wochen · Online & In-Person (Lokschuppen)",
+    format: "3 Wochen · Online & Onsite (Lokschuppen)",
     sessions: KI_TECH_WORKSHOPS.map((w) => w.title),
     workshops: KI_TECH_WORKSHOPS,
     fixCreditCost: 0,

@@ -126,7 +126,7 @@ describe("marketplace catalog — only real Notion entries", () => {
 
     const ki = open.find((p) => p.title === "KI & Tech Journey")!;
     expect(ki.contactPerson).toBeUndefined();
-    expect(ki.format).toBe("4 Wochen · Online & In-Person (Lokschuppen)");
+    expect(ki.format).toBe("3 Wochen · Online & Onsite (Lokschuppen)");
     expect(ki.sessions).toEqual([
       "KI Trends & Modellvergleich",
       "KI Resilience Day",
