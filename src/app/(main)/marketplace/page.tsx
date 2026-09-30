@@ -108,7 +108,7 @@ export default async function MarketplaceInboxPage() {
                   </p>
                   <p className="mt-1 text-xs text-lv-secondary">
                     Kontakt: {b.contactName} · {b.contactEmail}
-                    {b.preferredAt && ` · Wunsch: ${b.preferredAt}`}
+                    {b.preferredAt && ` · Favorisiertes Format: ${b.preferredAt}`}
                   </p>
                   <p className="mt-1 text-xs text-lv-secondary">
                     {b.creditCost > 0

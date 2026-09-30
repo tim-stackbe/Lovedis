@@ -140,7 +140,7 @@ export default async function MyBookingsPage() {
                     </p>
                     <p className="mt-1 text-xs text-lv-secondary">
                       Angefragt {formatDate(b.createdAt)}
-                      {b.preferredAt && ` · Wunschtermin: ${b.preferredAt}`}
+                      {b.preferredAt && ` · Favorisiertes Format: ${b.preferredAt}`}
                     </p>
                     {b.coordinatorNote && (
                       <p className="mt-2 rounded-button bg-lv-surface px-3 py-2 text-sm text-lv-text">

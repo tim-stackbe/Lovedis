@@ -169,14 +169,13 @@ export function MarketplaceBookingForm({
 
       {!isProgram && (
         <Field
-          label="Wunschtermin (optional)"
+          label="Individuelle Session oder gemeinsamer Workshop favorisiert (optional)"
           htmlFor="preferredAt"
-          hint="z. B. „nächste Woche Di/Mi nachmittags“"
         >
           <Input
             id="preferredAt"
             name="preferredAt"
-            placeholder="Wunschtermin(e) als Freitext"
+            placeholder="Individuelle Session oder gemeinsamer Workshop"
           />
         </Field>
       )}

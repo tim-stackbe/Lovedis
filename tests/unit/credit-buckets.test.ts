@@ -158,13 +158,14 @@ describe("marketplace catalog — only real Notion entries", () => {
       "Aufbau strukturierter Pipelines",
       "Exit Readiness & Due Diligence",
       "Geschäftsführerhaftung",
+      "Nightmare Competitor",
       "SaaS Contracting",
       "Schutz des geistigen Eigentums / IP-Rechte",
       "Tech-Stack Check-up",
       "Vorbereitung einer Finanzierungsrunde",
       "Website-Strategie Starterkit",
     ]);
-    for (const title of ["Live Hacking", "Community / Ökosystem Sales", "Nightmare Competitor"]) {
+    for (const title of ["Live Hacking", "Community / Ökosystem Sales"]) {
       expect(MARKETPLACE_OFFERINGS.find((o) => o.title === title)?.creditCost).toBe(1);
     }
   });
