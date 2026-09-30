@@ -12,6 +12,7 @@ import { MarketplaceBookingForm } from "@/components/marketplace/MarketplaceBook
 import { WorkshopList } from "@/components/marketplace/WorkshopList";
 import { OfferingTypeBadge } from "@/components/shared/badges";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -39,6 +40,8 @@ interface Props {
   format?: string | null;
   /** Program workshop series, listed in order. */
   workshops?: ProgramWorkshop[];
+  /** Program not started yet: shows a "Coming Soon" sticker. */
+  comingSoon?: boolean;
   /** When true, render the internal-team on-behalf-of booking variant. */
   teamMode?: boolean;
   startups?: OnBehalfStartup[];
@@ -97,6 +100,7 @@ export function OfferingDetail({
   sessionDate,
   format,
   workshops = [],
+  comingSoon = false,
   teamMode = false,
   startups = [],
 }: Props) {
@@ -122,13 +126,27 @@ export function OfferingDetail({
         </PreviewBanner>
       )}
 
-      <HeroBanner kicker={kicker} title={title} subtitle={subtitle} />
+      <HeroBanner
+        kicker={kicker}
+        title={title}
+        subtitle={subtitle}
+        actions={
+          comingSoon ? (
+            <span className="rotate-3 rounded-full bg-lv-orange px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-white shadow-md">
+              Coming Soon
+            </span>
+          ) : undefined
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <section className="space-y-4">
           <SectionLabel number="01" label="Überblick" title="Das Angebot" />
           <Card className="space-y-4 p-6">
-            <OfferingTypeBadge value={offeringType} />
+            <div className="flex flex-wrap items-center gap-2">
+              <OfferingTypeBadge value={offeringType} />
+              {comingSoon && <Badge tone="orange">Coming Soon</Badge>}
+            </div>
             <p className="whitespace-pre-line text-sm leading-relaxed text-lv-text">
               {description}
             </p>

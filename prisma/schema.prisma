@@ -1028,6 +1028,7 @@ model Program {
   // Details je Workshop (Datum, Uhrzeit, Online/Vor Ort, Location, Aufklapptext);
   // Form siehe src/lib/program-workshops.ts. Leer ⇒ nur `sessions`-Titel.
   workshops     Json        @default("[]")
+  comingSoon    Boolean     @default(false) // „Coming Soon“-Sticker, Anmeldung bleibt möglich
   // Programme kosten KEINE flexiblen Credits (offeringType=PROGRAM ⇒ creditCost=0),
   // verbrauchen aber beim Anmelden/Buchen einen Teil des FIX-Kontingents. Notion:
   // 6 fixe Credits für „Sales, Pricing & Growth". `fixCreditCost` modelliert das

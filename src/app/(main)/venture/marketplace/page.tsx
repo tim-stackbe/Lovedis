@@ -120,6 +120,7 @@ export default async function MarketplacePage() {
                   contactPerson: p.contactPerson,
                   format: p.format,
                   sessionCount: p.sessions.length,
+                  comingSoon: p.comingSoon,
                 }}
               />
             ))}

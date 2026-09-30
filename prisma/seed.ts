@@ -1399,6 +1399,7 @@ async function main() {
         format: p.format ?? null,
         sessions: p.sessions ?? [],
         workshops: p.workshops ?? [],
+        comingSoon: p.comingSoon ?? false,
         fixCreditCost: p.fixCreditCost,
         sortOrder: p.sortOrder,
         createdById: member.id,

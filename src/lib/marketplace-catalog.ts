@@ -44,6 +44,8 @@ export interface ProgramSeed {
   sessions?: string[];
   /** Per-workshop details (date, format, location, expandable text). */
   workshops?: ProgramWorkshop[];
+  /** Shows a "Coming Soon" sticker; enrolment stays possible. */
+  comingSoon?: boolean;
   /** FIX credits an enrolment consumes (always 0 since programs are free). */
   fixCreditCost: number;
   sortOrder: number;
@@ -168,6 +170,7 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
     focusTags: ["Sales", "Growth", "GTM"],
     status: "OPEN",
     format: "4 Wochen · Online · Termine folgen",
+    comingSoon: true,
     fixCreditCost: 0,
     sortOrder: 2,
   },

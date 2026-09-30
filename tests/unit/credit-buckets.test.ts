@@ -142,7 +142,9 @@ describe("marketplace catalog — only real Notion entries", () => {
       ["2026-12-01", "11:00", "ONLINE", undefined],
       [undefined, undefined, undefined, undefined],
     ]);
+    expect(ki.comingSoon).toBeFalsy();
     const growth = open.find((p) => p.title === "Sales & Growth")!;
+    expect(growth.comingSoon).toBe(true);
     expect(growth.contactPerson).toBeUndefined();
     expect(growth.format).toBe("4 Wochen · Online · Termine folgen");
   });

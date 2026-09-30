@@ -50,6 +50,7 @@ export default async function ProgramDetailPage({
       sessionDate={program.sessionDate}
       format={program.format}
       workshops={programWorkshops(program)}
+      comingSoon={program.comingSoon}
       teamMode={teamMode}
       startups={startups}
     />

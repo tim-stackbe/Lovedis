@@ -6,6 +6,7 @@ import {
   StartupsIcon,
 } from "@/components/icons/lovedis";
 import { CreditCostBadge } from "@/components/shared/badges";
+import { Badge } from "@/components/ui/Badge";
 
 export interface ProgramCardData {
   id: string;
@@ -16,6 +17,7 @@ export interface ProgramCardData {
   contactPerson: string | null;
   format: string | null;
   sessionCount: number;
+  comingSoon: boolean;
 }
 
 /**
@@ -36,6 +38,11 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
         <span className="lv-wordmark absolute left-4 top-4 rounded-full bg-white/15 px-2.5 py-1 text-[10px] text-white backdrop-blur">
           Exklusiv
         </span>
+        {program.comingSoon && (
+          <span className="absolute right-4 top-4 rotate-3 rounded-full bg-lv-orange px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md">
+            Coming Soon
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col p-6">
@@ -44,6 +51,7 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
             {program.title}
           </h3>
           <CreditCostBadge cost={0} />
+          {program.comingSoon && <Badge tone="orange">Coming Soon</Badge>}
         </div>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-lv-secondary">
           {program.summary}
