@@ -139,7 +139,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     ).toEqual([
       ["2026-11-12", "11:00", "ONLINE", undefined],
       ["2026-11-23", "15:00", "ON_SITE", "Lokschuppen Marburg"],
-      ["2026-12-01", undefined, "ONLINE", undefined],
+      ["2026-12-01", "11:00", "ONLINE", undefined],
       [undefined, undefined, undefined, undefined],
     ]);
     const growth = open.find((p) => p.title === "Sales & Growth")!;

@@ -121,6 +121,7 @@ export const KI_TECH_WORKSHOPS: ProgramWorkshop[] = [
   {
     title: "KI Skalieren",
     date: "2026-12-01",
+    startTime: "11:00",
     format: "ONLINE",
     description:
       "### KI skalieren, ohne dass die Firma daran zerbricht\n\n" +
