@@ -487,7 +487,7 @@ export const SUPPORT_CATEGORY_LABELS: Record<SupportCategory, string> = {
   LEGAL: "Legal",
   MARKETING: "Marketing",
   PRODUCT_TECH: "Product & Tech",
-  SALES: "Sales",
+  SALES: "Sales & People",
   OTHER: "Sonstiges",
 };
 
