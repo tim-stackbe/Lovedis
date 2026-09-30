@@ -149,7 +149,7 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
       "Nimm an unserem themenspezifischen Programm teil und arbeite gemeinsam mit Expert:innen an deiner KI-Weiterentwicklung – von Modellvergleichen über Skalierung hin zur Cyber-Resilienz.",
     description:
       "Nimm an unserem themenspezifischen Programm teil und arbeite gemeinsam mit Expert:innen an deiner KI-Weiterentwicklung – von Modellvergleichen über Skalierung hin zur Cyber-Resilienz.\n\n" +
-      "Die Journey besteht aus vier aufeinander aufbauenden Workshops über vier Wochen – als Mischung aus Online-Sessions und In-Person-Terminen im Lokschuppen. Die Termine geben wir rechtzeitig bekannt.",
+      "Die Journey besteht aus aufeinander aufbauenden Workshops über drei Wochen als Mischung aus Online-Sessions und einem Onsite Workshop im Lokschuppen. Der letzte Workshop zum AI Act ist optional und wird nach Bedarf noch ergänzt.",
     focusTags: ["AI", "Product & Tech", "Workshop-Reihe"],
     status: "OPEN",
     format: "4 Wochen · Online & In-Person (Lokschuppen)",
