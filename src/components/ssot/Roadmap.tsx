@@ -16,7 +16,8 @@ import { PictogramChip } from "@/components/ui/PictogramChip";
  * with no DB mutation.
  *
  * Status note: the Notion DB lists every milestone as "Ausstehend"; Phase 1
- * (Kick-off) is intentionally shown as done/green per LOVEDIS.
+ * (Kick-off) and Phase 2 (Matching) are intentionally shown as done/green per
+ * LOVEDIS.
  * Content source: LOVEDIS Roadmap (Notion), 2026.
  */
 
@@ -44,7 +45,8 @@ interface Phase {
 
 /**
  * Phase-grouped milestone timeline. Each phase carries its status badge (Phase
- * 1 = green "Erledigt", the rest muted "Ausstehend") and its dated milestones.
+ * 1 and 2 = green "Erledigt", the rest muted "Ausstehend") and its dated
+ * milestones.
  */
 const PHASES: Phase[] = [
   {
@@ -76,8 +78,9 @@ const PHASES: Phase[] = [
   {
     title: "Phase 2 — Matching",
     period: "September",
-    status: "Ausstehend",
-    tone: "muted",
+    status: "Erledigt",
+    tone: "mint",
+    done: true,
     milestones: [
       {
         date: "07.09. – 17.09.",
