@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { OfferingDetail } from "@/components/marketplace/OfferingDetail";
 import { SUPPORT_CATEGORY_LABELS } from "@/lib/constants";
-import { requireVentureView } from "@/lib/auth-guards";
+import { requireVentureStoreView } from "@/lib/auth-guards";
 import { getOnBehalfStartups } from "@/lib/marketplace-view";
 import { prisma } from "@/lib/prisma";
-import { isTeamRole } from "@/lib/roles";
+import { isTeamRole, isVentureStoreViewOnly } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Support-Angebot" };
 
@@ -15,8 +15,9 @@ export default async function SupportDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await requireVentureView();
+  const session = await requireVentureStoreView();
   const teamMode = isTeamRole(session.user.role);
+  const viewOnly = isVentureStoreViewOnly(session.user.role);
 
   const [offering, user, startup, startups] = await Promise.all([
     prisma.supportOffering.findUnique({ where: { id } }),
@@ -54,6 +55,7 @@ export default async function SupportDetailPage({
       website={offering.website}
       sessionDate={offering.sessionDate}
       teamMode={teamMode}
+      viewOnly={viewOnly}
       startups={startups}
     />
   );

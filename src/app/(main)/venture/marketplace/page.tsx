@@ -12,16 +12,17 @@ import { OfferingCard } from "@/components/marketplace/OfferingCard";
 import { ProgramFeatureCard } from "@/components/marketplace/ProgramFeatureCard";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { requireVentureView } from "@/lib/auth-guards";
+import { requireVentureStoreView } from "@/lib/auth-guards";
 import { SUPPORT_CATEGORIES, SUPPORT_CATEGORY_LABELS } from "@/lib/constants";
 import { deriveCreditBudget } from "@/lib/credit-buckets";
 import { prisma } from "@/lib/prisma";
-import { isTeamRole } from "@/lib/roles";
+import { isTeamRole, isVentureStoreViewOnly } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Startup Support Marketplace" };
 export default async function MarketplacePage() {
-  const session = await requireVentureView();
+  const session = await requireVentureStoreView();
   const teamMode = isTeamRole(session.user.role);
+  const viewOnly = isVentureStoreViewOnly(session.user.role);
 
   const [startup, programs, offerings] = await Promise.all([
     prisma.startup.findUnique({
@@ -55,6 +56,7 @@ export default async function MarketplacePage() {
       <MarketplaceHero
         budget={budget}
         teamMode={teamMode}
+        viewOnly={viewOnly}
         programCount={programs.length}
         offeringCount={offerings.length}
       />
@@ -64,13 +66,23 @@ export default async function MarketplacePage() {
         className="flex items-start gap-3 rounded-card border border-lv-blue-soft bg-lv-blue-soft px-5 py-4 text-sm leading-relaxed text-lv-blue"
       >
         <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          Du bekommst{" "}
-          <strong>10 Venture Credits für dein individuelles Programm</strong>,
-          sponsored by LOVEDIS. <strong>So geht&apos;s:</strong> Session
-          anfragen, Bedarf angeben, LOVEDIS koordiniert Matching und Termin.
-          Credits werden nach Bestätigung eingelöst.
-        </p>
+        {viewOnly ? (
+          <p>
+            Hier siehst du, welche Programme und Support-Angebote den Startups
+            im LOVEDIS Programm zur Verfügung stehen. Gebucht werden sie von
+            den Startups mit ihren{" "}
+            <strong>Venture Credits</strong>, LOVEDIS koordiniert Matching und
+            Termin.
+          </p>
+        ) : (
+          <p>
+            Du bekommst{" "}
+            <strong>10 Venture Credits für dein individuelles Programm</strong>,
+            sponsored by LOVEDIS. <strong>So geht&apos;s:</strong> Session
+            anfragen, Bedarf angeben, LOVEDIS koordiniert Matching und Termin.
+            Credits werden nach Bestätigung eingelöst.
+          </p>
+        )}
       </div>
 
       {teamMode && (

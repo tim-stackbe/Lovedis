@@ -30,6 +30,23 @@ export const VENTURE_SCOUT_ROLES: UserRole[] = ["ADMIN", "MEMBER"];
 export const VENTURE_VIEW_ROLES: UserRole[] = ["STARTUP", "ADMIN", "MEMBER"];
 
 /**
+ * Roles allowed to BROWSE the Venture Store (storefront + program/offering
+ * detail pages). Partners and investors see the catalog read-only: no credit
+ * budget, no booking form, no bookings. Booking actions stay limited to
+ * STARTUP + team server-side.
+ */
+export const VENTURE_STORE_VIEW_ROLES: UserRole[] = [
+  ...VENTURE_VIEW_ROLES,
+  "BUSINESS_PARTNER",
+  "INVESTOR",
+];
+
+/** Read-only Venture Store viewers (browse, never book). */
+export function isVentureStoreViewOnly(role: UserRole): boolean {
+  return role === "BUSINESS_PARTNER" || role === "INVESTOR";
+}
+
+/**
  * Roles allowed to VIEW the partner-facing feedback/screening masks
  * (Longlist-Screening, Use-Case-Bewertung, Check-ins, Partner-Hub). Partners
  * use them to give feedback; the internal team (ADMIN + MEMBER) gets the exact
@@ -163,6 +180,7 @@ const ALPHA_VISIBLE_PARTNER_HREFS = [
   "/matrix", // Startup-Partner Matchmaking
   "/challenges", // Challenges
   "/partner-hub", // Partner-Hub
+  "/venture/marketplace", // Venture Store (read-only)
   "/team", // Team
   "/settings", // Einstellungen
 ] as const;
@@ -319,6 +337,12 @@ function applyStartupAlphaNav(sections: NavSection[]): NavSection[] {
 
   return result;
 }
+
+const VENTURE_STORE_ITEM: NavItem = {
+  label: "Venture Store",
+  href: "/venture/marketplace",
+  icon: "storefront",
+};
 
 const MESSAGES_ITEM: NavItem = {
   label: "Nachrichten",
@@ -584,6 +608,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       title: "Zusammenarbeit",
       items: [
         { label: "Challenges", href: "/challenges", icon: "challenges" },
+        VENTURE_STORE_ITEM,
         { label: "Engagements", href: "/engagements", icon: "engagements" },
         { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
         { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
@@ -610,6 +635,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       items: [
         { label: "PoC-Tracking", href: "/pocs", icon: "pocs" },
         { label: "Geteilte Scorings", href: "/scorings", icon: "scorings" },
+        VENTURE_STORE_ITEM,
         MESSAGES_ITEM,
       ],
     },

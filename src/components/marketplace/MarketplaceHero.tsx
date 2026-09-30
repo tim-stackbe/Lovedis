@@ -12,6 +12,8 @@ import type { CreditBudgetView } from "@/lib/credit-buckets";
 interface MarketplaceHeroProps {
   budget: CreditBudgetView;
   teamMode: boolean;
+  /** Partner/investor browse mode: catalog widget, no budget, no requests link. */
+  viewOnly?: boolean;
   programCount: number;
   offeringCount: number;
 }
@@ -49,9 +51,11 @@ function WidgetStat({
 export function MarketplaceHero({
   budget,
   teamMode,
+  viewOnly = false,
   programCount,
   offeringCount,
 }: MarketplaceHeroProps) {
+  const showCatalogWidget = teamMode || viewOnly;
   return (
     <section className="relative overflow-hidden rounded-card bg-lv-cover p-6 text-white shadow-card sm:p-8 lg:p-10">
       {/* Warm orange orb echoing the gradient's far edge */}
@@ -76,27 +80,31 @@ export function MarketplaceHero({
             weiterzuentwickeln. Greife ergänzend auf unser Expert:innen-Netzwerk
             für individuelle Sessions zu.
           </p>
-          <div className="mt-6">
-            <LinkButton
-              href={teamMode ? "/marketplace" : "/venture/marketplace/requests"}
-              variant="white"
-              size="md"
-            >
-              {teamMode ? "Zur Koordination" : "Meine Anfragen"}
-              <ArrowRightIcon className="h-4 w-4" />
-            </LinkButton>
-          </div>
+          {!viewOnly && (
+            <div className="mt-6">
+              <LinkButton
+                href={teamMode ? "/marketplace" : "/venture/marketplace/requests"}
+                variant="white"
+                size="md"
+              >
+                {teamMode ? "Zur Koordination" : "Meine Anfragen"}
+                <ArrowRightIcon className="h-4 w-4" />
+              </LinkButton>
+            </div>
+          )}
         </div>
 
         {/* Budget widget (startup) / catalog overview (team preview) */}
         <div className="rounded-card bg-white/95 p-5 text-lv-text shadow-card backdrop-blur sm:p-6">
-          {teamMode ? (
+          {showCatalogWidget ? (
             <>
               <p className="text-xs font-semibold uppercase tracking-wider text-lv-secondary">
                 Katalog-Überblick
               </p>
               <p className="mt-1 text-sm text-lv-secondary">
-                Admin-Vorschau — Startups sehen hier ihr Credit-Budget.
+                {teamMode
+                  ? "Admin-Vorschau: Startups sehen hier ihr Credit-Budget."
+                  : "Buchbar für Startups im Programm."}
               </p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 <WidgetStat

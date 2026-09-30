@@ -44,6 +44,8 @@ interface Props {
   comingSoon?: boolean;
   /** When true, render the internal-team on-behalf-of booking variant. */
   teamMode?: boolean;
+  /** Partner/investor browse mode: a note replaces the booking form. */
+  viewOnly?: boolean;
   startups?: OnBehalfStartup[];
 }
 
@@ -102,6 +104,7 @@ export function OfferingDetail({
   workshops = [],
   comingSoon = false,
   teamMode = false,
+  viewOnly = false,
   startups = [],
 }: Props) {
   const hasMeta = Boolean(
@@ -206,19 +209,39 @@ export function OfferingDetail({
           <SectionLabel
             number="02"
             label={isProgram ? "Anmeldung" : "Anfrage"}
-            title={isProgram ? "Jetzt anmelden" : "Jetzt anfragen"}
+            title={
+              viewOnly
+                ? "Für Startups"
+                : isProgram
+                  ? "Jetzt anmelden"
+                  : "Jetzt anfragen"
+            }
           />
           <Card className="p-6">
-            <MarketplaceBookingForm
-              offeringType={offeringType}
-              targetId={targetId}
-              creditCost={creditCost}
-              balance={balance}
-              defaultName={defaultName}
-              defaultEmail={defaultEmail}
-              teamMode={teamMode}
-              startups={startups}
-            />
+            {viewOnly ? (
+              <div className="space-y-2 text-sm leading-relaxed text-lv-secondary">
+                <p className="font-semibold text-lv-text">
+                  Buchbar für Startups im Programm.
+                </p>
+                <p>
+                  {isProgram
+                    ? "Startups im LOVEDIS Programm melden sich hier kostenlos an."
+                    : `Startups im LOVEDIS Programm fragen dieses Angebot mit ${creditCost} ${creditCost === 1 ? "Venture Credit" : "Venture Credits"} an.`}{" "}
+                  LOVEDIS koordiniert Matching und Termin.
+                </p>
+              </div>
+            ) : (
+              <MarketplaceBookingForm
+                offeringType={offeringType}
+                targetId={targetId}
+                creditCost={creditCost}
+                balance={balance}
+                defaultName={defaultName}
+                defaultEmail={defaultEmail}
+                teamMode={teamMode}
+                startups={startups}
+              />
+            )}
           </Card>
         </section>
       </div>

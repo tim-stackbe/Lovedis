@@ -12,6 +12,7 @@ import {
   PENDING_APPROVAL_PATH,
   ROLE_HOMES,
   VENTURE_SCOUT_ROLES,
+  VENTURE_STORE_VIEW_ROLES,
   VENTURE_VIEW_ROLES,
 } from "@/lib/roles";
 
@@ -151,6 +152,11 @@ export async function requireStartup(): Promise<Session> {
  */
 export async function requireVentureView(): Promise<Session> {
   return requireRole(VENTURE_VIEW_ROLES);
+}
+
+/** Venture Store browse gate: VENTURE_VIEW_ROLES plus read-only partners. */
+export async function requireVentureStoreView(): Promise<Session> {
+  return requireRole(VENTURE_STORE_VIEW_ROLES);
 }
 
 /**
