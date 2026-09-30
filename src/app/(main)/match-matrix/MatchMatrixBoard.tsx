@@ -37,6 +37,7 @@ import {
   type MatchSideInput,
   type MutualFitLevel,
   type PartnerTally,
+  type PartnerVoteBreakdown,
 } from "@/lib/match-matrix";
 import { cn } from "@/lib/utils";
 import { toast } from "@/stores/useToast";
@@ -344,13 +345,37 @@ function SideSummary({
   );
 }
 
+function PartnerVoteCard({ vote }: { vote: PartnerVoteBreakdown }) {
+  const interestLabel =
+    vote.interested === true
+      ? " · Interesse: Ja"
+      : vote.interested === false
+        ? " · Interesse: Nein"
+        : "";
+  return (
+    <SideSummary
+      title={`${vote.voterName}${interestLabel}`}
+      side={{
+        relevance: vote.relevance,
+        useCaseTypes: vote.useCaseTypes,
+        useCaseNote: vote.useCaseNote,
+        followUp: vote.followUp,
+        openQuestions: vote.openQuestions,
+        notes: vote.notes,
+        contacted: vote.contacted,
+        updatedAt: vote.updatedAt,
+      }}
+    />
+  );
+}
+
 function PartnerTallyBlock({ tally }: { tally: PartnerTally }) {
   const total = tally.yes + tally.no;
   return (
-    <div className="space-y-2 rounded-card border border-lv-border p-3">
+    <div className="space-y-3 rounded-card border border-lv-border p-3">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-lv-secondary">
-          Abstimmung des Partners
+          Einzelstimmen (Partner-Mitarbeitende)
         </p>
         {total > 0 ? (
           <span
@@ -361,7 +386,7 @@ function PartnerTallyBlock({ tally }: { tally: PartnerTally }) {
                 : "bg-lv-orange-soft text-lv-orange"
             )}
           >
-            {tally.outcome ? "positiv" : "negativ"} {tally.yes}:{tally.no}
+            Ergebnis {tally.outcome ? "positiv" : "negativ"} · {tally.yes}:{tally.no}
           </span>
         ) : (
           <span className="text-[11px] text-lv-secondary">offen</span>
@@ -370,35 +395,11 @@ function PartnerTallyBlock({ tally }: { tally: PartnerTally }) {
       {tally.votes.length === 0 ? (
         <p className="text-xs text-lv-secondary">Noch keine Stimmen abgegeben.</p>
       ) : (
-        <ul className="space-y-1">
+        <div className="space-y-2">
           {tally.votes.map((v, i) => (
-            <li
-              key={`${v.voterName}-${i}`}
-              className="flex items-center justify-between gap-2 text-xs"
-            >
-              <span className="min-w-0 truncate text-lv-text">{v.voterName}</span>
-              <span className="flex shrink-0 items-center gap-2">
-                {v.relevance && <RelevanceBadge value={v.relevance} />}
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                    v.interested === true
-                      ? "bg-lv-mint/60 text-lv-mint-deep"
-                      : v.interested === false
-                        ? "bg-lv-orange-soft text-lv-orange"
-                        : "bg-lv-surface text-lv-secondary"
-                  )}
-                >
-                  {v.interested === true
-                    ? "Ja"
-                    : v.interested === false
-                      ? "Nein"
-                      : "—"}
-                </span>
-              </span>
-            </li>
+            <PartnerVoteCard key={`${v.voterName}-${i}`} vote={v} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

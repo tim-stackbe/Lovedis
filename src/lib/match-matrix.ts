@@ -227,10 +227,18 @@ export interface PartnerTally {
   votes: PartnerVoteBreakdown[];
 }
 
+/** One partner employee's full vote — shown on the team Match-Matrix only. */
 export interface PartnerVoteBreakdown {
   voterName: string;
   interested: boolean | null;
   relevance: RelevanceLevel | null;
+  useCaseTypes: MatchUseCaseType[];
+  useCaseNote: string | null;
+  followUp: boolean | null;
+  openQuestions: string | null;
+  notes: string | null;
+  contacted: boolean | null;
+  updatedAt: Date | null;
 }
 
 export interface MatchRowView {

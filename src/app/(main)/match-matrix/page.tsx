@@ -13,6 +13,7 @@ import {
   isTopMatch,
   type MatchCellView,
   type MatchRowView,
+  type PartnerVoteBreakdown,
 } from "@/lib/match-matrix";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -118,6 +119,13 @@ export default async function MatchMatrixPage({
         startupId: true,
         interested: true,
         relevance: true,
+        useCaseTypes: true,
+        useCaseNote: true,
+        followUp: true,
+        openQuestions: true,
+        notes: true,
+        contacted: true,
+        updatedAt: true,
         voter: { select: { name: true, email: true } },
       },
     }),
@@ -126,7 +134,7 @@ export default async function MatchMatrixPage({
   // Group individual partner-member votes by pairing for the team breakdown.
   const votesByPairing = new Map<
     string,
-    { voterName: string; interested: boolean | null; relevance: typeof partnerVotes[number]["relevance"] }[]
+    PartnerVoteBreakdown[]
   >();
   for (const v of partnerVotes) {
     const key = `${v.partnerId}:${v.startupId}`;
@@ -135,6 +143,13 @@ export default async function MatchMatrixPage({
       voterName: v.voter.name?.trim() || v.voter.email,
       interested: v.interested,
       relevance: v.relevance,
+      useCaseTypes: v.useCaseTypes,
+      useCaseNote: v.useCaseNote,
+      followUp: v.followUp,
+      openQuestions: v.openQuestions,
+      notes: v.notes,
+      contacted: v.contacted,
+      updatedAt: v.updatedAt,
     });
     votesByPairing.set(key, list);
   }
