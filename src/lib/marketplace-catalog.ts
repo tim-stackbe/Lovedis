@@ -114,7 +114,7 @@ export const KI_TECH_WORKSHOPS: ProgramWorkshop[] = [
       "Im Anschluss folgen Roundtables mit erfahrenen Pentestern. In kleinen Gruppen können die Startups ihre eigenen Lösungen auf Schwachstellen testen lassen, konkrete Angriffsvektoren durchspielen und direkte Fragen stellen.\n\n" +
       "Speaker werden in Kürze bekannt gegeben.\n\n" +
       "### Teil 2: Ask Founder anything\n\n" +
-      "Ein offenes Kamingespräch mit Getränken und Snacks zum Abschluss des Tages. Gründer und KI-Experten, die den Weg bereits gegangen sind, berichten aus der Praxis: Was hat funktioniert, wo lagen die echten Stolpersteine und welche Entscheidungen würden sie heute anders treffen?\n\n" +
+      "Ein offenes Netzwerken mit Getränken und Snacks zum Abschluss des Tages. Gründer und KI-Experten, die den Weg bereits gegangen sind, berichten aus der Praxis: Was hat funktioniert, wo lagen die echten Stolpersteine und welche Entscheidungen würden sie heute anders treffen?\n\n" +
       "Raum für die Fragen, die im Tagesgeschäft selten gestellt werden.\n\n" +
       "Speaker werden in Kürze bekannt gegeben.",
   },
