@@ -666,7 +666,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Uni Marburg / StartMiUp",
     contactPerson: "Michael Stephan",
     creditCost: 1,
-    sortOrder: 33,
+    sortOrder: 34,
   },
   // Neues generisches „Sales"-Angebot (14.09.2026); Defaults aus dem DRAFT-
   // Programm „Sales, Pricing & Growth" abgeleitet, creditCost 1 wie die
@@ -681,7 +681,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     format: "Sparring",
     providerCompany: "LOVEDIS",
     creditCost: 1,
-    sortOrder: 34,
+    sortOrder: 35,
   },
   {
     title: "Recruiting, People Culture, Leadership",
@@ -694,6 +694,6 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     providerCompany: "Magnotherm",
     contactPerson: "Nadia von Oesterreich",
     creditCost: 1,
-    sortOrder: 35,
+    sortOrder: 33,
   },
 ];
