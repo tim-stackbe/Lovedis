@@ -66,8 +66,8 @@ describe("marketplace catalog — Notion metadata in dedicated fields", () => {
 });
 
 describe("marketplace catalog — only real Notion entries", () => {
-  it("contains the 36 storefront offerings (incl. Pitch Deck Review + Fördermittelberatung)", () => {
-    expect(MARKETPLACE_OFFERINGS).toHaveLength(36);
+  it("contains the 37 storefront offerings (incl. Pitch Deck Review + Fördermittelberatung)", () => {
+    expect(MARKETPLACE_OFFERINGS).toHaveLength(37);
     expect(
       MARKETPLACE_OFFERINGS.find((o) => o.title === "Fördermittelberatung")
     ).toMatchObject({
@@ -92,7 +92,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(categories).toEqual(["LEGAL", "MARKETING", "PRODUCT_TECH"]);
   });
 
-  it("carries the four SALES support offerings", () => {
+  it("carries the five SALES support offerings", () => {
     const sales = MARKETPLACE_OFFERINGS.filter((o) => o.category === "SALES")
       .map((o) => o.title)
       .sort();
@@ -100,6 +100,7 @@ describe("marketplace catalog — only real Notion entries", () => {
       "Aufbau strukturierter Pipelines",
       "Community / Ökosystem Sales",
       "Nightmare Competitor",
+      "Recruiting, People Culture, Leadership",
       "Sales",
     ]);
   });

@@ -683,4 +683,17 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     creditCost: 1,
     sortOrder: 34,
   },
+  {
+    title: "Recruiting, People Culture, Leadership",
+    category: "SALES",
+    summary:
+      "Individuelles Sparring oder gemeinsamer Workshop zu HR-Themen rund um Leadership, Recruiting und Kultur.",
+    description:
+      "Individuelles Sparring oder gemeinsamer Workshop zu HR-Themen rund um Leadership, Recruiting und Kultur.",
+    format: "Online Workshop oder individuelles Sparring",
+    providerCompany: "Magnotherm",
+    contactPerson: "Nadia von Oesterreich",
+    creditCost: 1,
+    sortOrder: 35,
+  },
 ];
