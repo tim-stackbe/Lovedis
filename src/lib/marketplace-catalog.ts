@@ -123,8 +123,11 @@ export const KI_TECH_WORKSHOPS: ProgramWorkshop[] = [
     date: "2026-12-01",
     format: "ONLINE",
     description:
-      "Ein KI-Business-Experte zeigt, wie beides zusammenwächst: Wann muss ich mein Modell neu trainieren oder wechseln? Wie verändert sich meine Unternehmensstruktur, wenn KI vom Feature zur Kerninfrastruktur wird? Welche organisatorischen Entscheidungen (auch Team-Aufbau) treffe ich heute, die morgen schwer rückgängig zu machen sind?\n\n" +
-      "**Output:** Startups haben einen konkreten Skalierungsrahmen für ihr Produkt und ihr Unternehmen.",
+      "### KI skalieren, ohne dass die Firma daran zerbricht\n\n" +
+      "Viele große Unternehmen scheitern daran, KI zu skalieren. Das liegt selten an der Technologie. Sie behandeln KI wie ein klassisches IT-Projekt, mit festem Scope, langen Planungszyklen und einem Go-live, nach dem das Thema abgehakt ist. KI funktioniert anders: Modelle altern, Daten verändern sich, und der Wert entsteht erst durch ständiges Lernen und Nachjustieren im laufenden Betrieb.\n\n" +
+      "Genau hier sind Startups im Vorteil. Sie bauen ihre Prozesse, Teams und Produkte von Anfang an rund um KI auf, statt sie nachträglich in gewachsene Strukturen einzupassen. Wir gehen der Frage nach, warum Startups so stark von KI profitieren, während etablierte Unternehmen oft auf der Strecke bleiben, und wie ihr diesen Vorsprung gezielt zu euren Kunden bringt.\n\n" +
+      "Ein KI-Business-Experte zeigt euch, wie Produkt und Organisation zusammenwachsen. Wann solltet ihr euer Modell neu trainieren oder wechseln? Wie verändert sich eure Unternehmensstruktur, wenn KI vom Feature zur Kerninfrastruktur wird? Welche organisatorischen Entscheidungen, etwa beim Team-Aufbau, trefft ihr heute, die sich morgen kaum noch rückgängig machen lassen?\n\n" +
+      "**Euer Ergebnis:** ein konkreter Skalierungsrahmen für euer Produkt und euer Unternehmen, dazu ein klares Verständnis dafür, wie ihr eure KI-Erfahrung für eure Kunden in echten Mehrwert übersetzt.",
   },
   { title: "Titel folgt" },
 ];
