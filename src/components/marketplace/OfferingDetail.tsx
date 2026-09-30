@@ -115,7 +115,7 @@ export function OfferingDetail({
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-lv-secondary hover:text-lv-blue"
       >
         <ArrowLeftIcon className="h-4 w-4" />
-        Zurück zum Marktplatz
+        Zurück zum Venture Store
       </Link>
 
       {teamMode && (

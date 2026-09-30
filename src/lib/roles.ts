@@ -217,12 +217,11 @@ export const ALPHA_HIDE_STARTUP_SECTIONS = true;
  * This is a denylist: any Startup nav item whose href IS listed here is hidden
  * during Alpha (and now-empty sections are dropped). Everything else stays.
  */
+// Venture Store (Marktplatz, Meine Anfragen, Mein Guthaben) is visible for
+// startups again since 30.09.2026; only Feed + Nachrichten stay hidden.
 const ALPHA_HIDDEN_STARTUP_HREFS = [
   "/feed", // Feed (empties the "Ökosystem" section → header dropped too)
   "/messages", // Nachrichten
-  "/venture/marketplace", // Marktplatz
-  "/venture/marketplace/requests", // Meine Anfragen
-  "/venture/credits", // Mein Guthaben
 ] as const;
 
 /**
@@ -256,7 +255,7 @@ export const isStartupMarketplaceHiddenForAlpha = (): boolean =>
 // ⚠️ RESTORE REMINDER: when the Venture Platform is fully re-enabled again,
 // set this back to `false` to bring Section 03 (Venture-Guthaben + Marktplatz)
 // back. Routing/pages are unchanged; this only hides the dashboard section body.
-export const ALPHA_HIDE_STARTUP_VENTURE_SECTION = true;
+export const ALPHA_HIDE_STARTUP_VENTURE_SECTION = false;
 
 /**
  * Whether the Startup dashboard "Section 03 — Venture Platform" (incl. the
@@ -639,7 +638,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
       title: "Venture Platform",
       items: [
         { label: "Venture Platform", href: "/venture", icon: "venture" },
-        { label: "Marktplatz", href: "/venture/marketplace", icon: "storefront" },
+        { label: "Venture Store", href: "/venture/marketplace", icon: "storefront" },
         { label: "Meine Anfragen", href: "/venture/marketplace/requests", icon: "requests" },
         { label: "Mein Guthaben", href: "/venture/credits", icon: "wallet" },
       ],

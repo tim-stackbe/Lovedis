@@ -84,13 +84,13 @@ export default async function StartupDashboard() {
             ? `${startup.name}, willkommen zurück`
             : "Lass uns dein Profil aufsetzen"
         }
-        subtitle="Entdecke Corporate-Challenges, hol dir Support über den Venture-Marktplatz und tracke deine Bewerbungen."
+        subtitle="Entdecke Corporate-Challenges, hol dir Support über den Venture Store und tracke deine Bewerbungen."
         actions={
           startup ? (
             <>
               {!marketplaceHidden && (
                 <LinkButton href="/venture/marketplace" variant="white">
-                  Zum Marktplatz
+                  Zum Venture Store
                 </LinkButton>
               )}
               <LinkButton href="/challenges" variant="white">
@@ -213,7 +213,7 @@ export default async function StartupDashboard() {
         <SectionLabel
           number="03"
           label="Venture Platform"
-          title="Marktplatz & Guthaben"
+          title="Venture Store & Guthaben"
         />
         {startup ? (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -236,7 +236,7 @@ export default async function StartupDashboard() {
                 <ToneCard
                   tone="info"
                   icon={Store}
-                  label="Marktplatz"
+                  label="Venture Store"
                   value="Support finden"
                   sub="Programme & Support-Angebote →"
                 />
@@ -247,7 +247,7 @@ export default async function StartupDashboard() {
           <Card className="flex flex-col items-start gap-3 p-6 text-sm text-lv-secondary">
             <span>
               Lege zuerst dein Startup-Profil an, um Venture-Credits zu erhalten
-              und den Marktplatz zu nutzen.
+              und den Venture Store zu nutzen.
             </span>
             <LinkButton href="/profile" size="sm" variant="secondary">
               Profil anlegen
