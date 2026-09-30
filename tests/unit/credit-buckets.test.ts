@@ -130,7 +130,7 @@ describe("marketplace catalog — only real Notion entries", () => {
       "KI Trends & Modellvergleich",
       "Kaminabend",
       "KI Skalieren",
-      "Titel folgt",
+      "AI Act (optional)",
     ]);
     expect(parseWorkshops(ki.workshops)).toEqual(ki.workshops);
     expect(

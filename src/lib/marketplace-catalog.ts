@@ -129,7 +129,7 @@ export const KI_TECH_WORKSHOPS: ProgramWorkshop[] = [
       "Ein KI-Business-Experte zeigt euch, wie Produkt und Organisation zusammenwachsen. Wann solltet ihr euer Modell neu trainieren oder wechseln? Wie verändert sich eure Unternehmensstruktur, wenn KI vom Feature zur Kerninfrastruktur wird? Welche organisatorischen Entscheidungen, etwa beim Team-Aufbau, trefft ihr heute, die sich morgen kaum noch rückgängig machen lassen?\n\n" +
       "**Euer Ergebnis:** ein konkreter Skalierungsrahmen für euer Produkt und euer Unternehmen, dazu ein klares Verständnis dafür, wie ihr eure KI-Erfahrung für eure Kunden in echten Mehrwert übersetzt.",
   },
-  { title: "Titel folgt" },
+  { title: "AI Act (optional)" },
 ];
 
 export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
