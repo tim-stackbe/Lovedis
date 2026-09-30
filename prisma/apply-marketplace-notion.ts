@@ -64,6 +64,7 @@ async function main() {
         sessionDate: p.sessionDate ?? null,
         format: p.format ?? null,
         sessions: p.sessions ?? [],
+        workshops: p.workshops ?? [],
         fixCreditCost: p.fixCreditCost,
         sortOrder: p.sortOrder,
       };

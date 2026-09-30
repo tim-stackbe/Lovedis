@@ -1,4 +1,5 @@
 import type { SupportCategory } from "@/generated/prisma/enums";
+import type { ProgramWorkshop } from "@/lib/program-workshops";
 
 // ---------------------------------------------------------------------------
 // Marktplatz-Katalog — 1:1 aus der Notion-Seite „LOVEDIS Startup Support
@@ -41,6 +42,8 @@ export interface ProgramSeed {
   format?: string;
   /** Workshop series titles, in order. */
   sessions?: string[];
+  /** Per-workshop details (date, format, location, expandable text). */
+  workshops?: ProgramWorkshop[];
   /** FIX credits an enrolment consumes (always 0 since programs are free). */
   fixCreditCost: number;
   sortOrder: number;
@@ -82,6 +85,50 @@ export interface OfferingSeed {
 // Programme (0 Credits — im Programm enthalten, „nur anmelden")
 // ---------------------------------------------------------------------------
 
+const LOKSCHUPPEN_MARBURG = {
+  location: "Lokschuppen Marburg",
+  locationUrl: "https://share.google/HRxApqBa5BIyx23tN",
+};
+
+// Workshop-Reihe der KI & Tech Journey (Stand 30.09.2026).
+export const KI_TECH_WORKSHOPS: ProgramWorkshop[] = [
+  {
+    title: "KI Trends & Modellvergleich",
+    date: "2026-11-12",
+    startTime: "11:00",
+    format: "ONLINE",
+    description:
+      "Was bewegt den Markt, welche Modelle setzen sich durch, wohin geht die Entwicklung in den nächsten 12 bis 24 Monaten.\n\n" +
+      "Im zweiten Teil steht der Modellvergleich im Mittelpunkt. Die Startups analysieren gemeinsam, welche Modelle sie selbst einsetzen oder evaluieren, und stellen diese gegenüber: Leistung, Kosten, Einsatzbereich und On-Premise-Fähigkeit. Mittelständische Unternehmenskunden stellen die On-Prem-Anforderung regelmäßig, deshalb werden Vor- und Nachteile von Cloud- vs. On-Prem-Lösungen direkt an konkreten Modellen durchgespielt. Ein zentrales Thema dabei: Durch den Wechsel auf ein alternatives Modell lassen sich in vielen Fällen erhebliche Kosten einsparen, ohne Leistungseinbußen hinnehmen zu müssen.\n\n" +
+      "**Output:** Startups kennen die relevanten Markttrends und alle sind auf dem gleichen Wissensstand, können ihre Modellwahl kritisch einordnen und wissen, wo Optimierungspotenzial bei Kosten und Infrastruktur liegt.",
+  },
+  {
+    title: "Kaminabend",
+    date: "2026-11-23",
+    startTime: "15:00",
+    format: "ON_SITE",
+    ...LOKSCHUPPEN_MARBURG,
+    description:
+      "### Teil 1: KI Security in der Praxis\n\n" +
+      "Ein CISO oder KI-Security-Verantwortlicher aus einem führenden deutschen Konzern gibt Einblicke in den Umgang mit KI-Sicherheit auf Enterprise-Ebene: Welche Angriffe auf KI-Systeme sind in der Praxis relevant, wie reagieren große Unternehmen darauf und was bedeutet das für Startups, die KI-Lösungen an Unternehmenskunden verkaufen?\n\n" +
+      "Im Anschluss folgen Roundtables mit erfahrenen Pentestern. In kleinen Gruppen können die Startups ihre eigenen Lösungen auf Schwachstellen testen lassen, konkrete Angriffsvektoren durchspielen und direkte Fragen stellen.\n\n" +
+      "Speaker werden in Kürze bekannt gegeben.\n\n" +
+      "### Teil 2: Ask Founder anything\n\n" +
+      "Ein offenes Kamingespräch mit Getränken und Snacks zum Abschluss des Tages. Gründer und KI-Experten, die den Weg bereits gegangen sind, berichten aus der Praxis: Was hat funktioniert, wo lagen die echten Stolpersteine und welche Entscheidungen würden sie heute anders treffen?\n\n" +
+      "Raum für die Fragen, die im Tagesgeschäft selten gestellt werden.\n\n" +
+      "Speaker werden in Kürze bekannt gegeben.",
+  },
+  {
+    title: "KI Skalieren",
+    date: "2026-12-01",
+    format: "ONLINE",
+    description:
+      "Ein KI-Business-Experte zeigt, wie beides zusammenwächst: Wann muss ich mein Modell neu trainieren oder wechseln? Wie verändert sich meine Unternehmensstruktur, wenn KI vom Feature zur Kerninfrastruktur wird? Welche organisatorischen Entscheidungen (auch Team-Aufbau) treffe ich heute, die morgen schwer rückgängig zu machen sind?\n\n" +
+      "**Output:** Startups haben einen konkreten Skalierungsrahmen für ihr Produkt und ihr Unternehmen.",
+  },
+  { title: "Titel folgt" },
+];
+
 export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
   // „Exclusive"-Sessions. Ursprünglich vier forensisch wiederhergestellte
   // Sessions (prisma/restore-venture-store-20260914.sql). Am 14.09.2026 wurden
@@ -103,12 +150,8 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
     focusTags: ["AI", "Product & Tech", "Workshop-Reihe"],
     status: "OPEN",
     format: "4 Wochen · Online & In-Person (Lokschuppen)",
-    sessions: [
-      "KI Trends & Modellvergleich",
-      "Cyber-Resilienz",
-      "Kaminabend",
-      "Titel folgt",
-    ],
+    sessions: KI_TECH_WORKSHOPS.map((w) => w.title),
+    workshops: KI_TECH_WORKSHOPS,
     fixCreditCost: 0,
     sortOrder: 1,
   },

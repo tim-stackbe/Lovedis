@@ -9,12 +9,14 @@ import {
 } from "@/components/icons/lovedis";
 import type { MarketplaceOfferingType } from "@/generated/prisma/enums";
 import { MarketplaceBookingForm } from "@/components/marketplace/MarketplaceBookingForm";
+import { WorkshopList } from "@/components/marketplace/WorkshopList";
 import { OfferingTypeBadge } from "@/components/shared/badges";
 import { PreviewBanner } from "@/components/shared/PreviewBanner";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import type { OnBehalfStartup } from "@/lib/marketplace-view";
+import type { ProgramWorkshop } from "@/lib/program-workshops";
 
 interface Props {
   offeringType: MarketplaceOfferingType;
@@ -35,8 +37,8 @@ interface Props {
   sessionDate?: string | null;
   /** Program format line, e.g. "4 Wochen · Online". */
   format?: string | null;
-  /** Program workshop titles, listed in order. */
-  sessions?: string[];
+  /** Program workshop series, listed in order. */
+  workshops?: ProgramWorkshop[];
   /** When true, render the internal-team on-behalf-of booking variant. */
   teamMode?: boolean;
   startups?: OnBehalfStartup[];
@@ -94,7 +96,7 @@ export function OfferingDetail({
   website,
   sessionDate,
   format,
-  sessions = [],
+  workshops = [],
   teamMode = false,
   startups = [],
 }: Props) {
@@ -178,24 +180,7 @@ export function OfferingDetail({
                 )}
               </div>
             )}
-            {sessions.length > 0 && (
-              <div className="border-t border-lv-border pt-4">
-                <p className="text-sm font-semibold text-lv-text">
-                  {sessions.length} Workshops
-                </p>
-                <ol className="mt-2 space-y-2">
-                  {sessions.map((s, i) => (
-                    <li key={`${i}-${s}`} className="flex items-baseline gap-3 text-sm">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lv-blue-soft text-xs font-semibold text-lv-blue">
-                        {i + 1}
-                      </span>
-                      <span className="flex-1 text-lv-text">{s}</span>
-                      <span className="text-xs text-lv-secondary">Termin folgt</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
+            {workshops.length > 0 && <WorkshopList workshops={workshops} />}
           </Card>
         </section>
 

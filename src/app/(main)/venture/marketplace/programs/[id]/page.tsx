@@ -4,6 +4,7 @@ import { OfferingDetail } from "@/components/marketplace/OfferingDetail";
 import { requireVentureView } from "@/lib/auth-guards";
 import { getOnBehalfStartups } from "@/lib/marketplace-view";
 import { prisma } from "@/lib/prisma";
+import { programWorkshops } from "@/lib/program-workshops";
 import { isTeamRole } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Programm" };
@@ -48,7 +49,7 @@ export default async function ProgramDetailPage({
       contactPerson={program.contactPerson}
       sessionDate={program.sessionDate}
       format={program.format}
-      sessions={program.sessions}
+      workshops={programWorkshops(program)}
       teamMode={teamMode}
       startups={startups}
     />

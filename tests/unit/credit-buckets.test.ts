@@ -11,6 +11,7 @@ import {
   ONBOARDING_FLEX_CREDITS,
   deriveCreditBudget,
 } from "@/lib/credit-buckets";
+import { parseWorkshops } from "@/lib/program-workshops";
 
 describe("deriveCreditBudget — X von 10 view", () => {
   it("maps a fresh onboarding account to 10/10, all flexible", () => {
@@ -127,9 +128,18 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(ki.format).toBe("4 Wochen · Online & In-Person (Lokschuppen)");
     expect(ki.sessions).toEqual([
       "KI Trends & Modellvergleich",
-      "Cyber-Resilienz",
       "Kaminabend",
+      "KI Skalieren",
       "Titel folgt",
+    ]);
+    expect(parseWorkshops(ki.workshops)).toEqual(ki.workshops);
+    expect(
+      ki.workshops!.map((w) => [w.date, w.startTime, w.format, w.location])
+    ).toEqual([
+      ["2026-11-12", "11:00", "ONLINE", undefined],
+      ["2026-11-23", "15:00", "ON_SITE", "Lokschuppen Marburg"],
+      ["2026-12-01", undefined, "ONLINE", undefined],
+      [undefined, undefined, undefined, undefined],
     ]);
     const growth = open.find((p) => p.title === "Sales & Growth")!;
     expect(growth.contactPerson).toBeUndefined();
