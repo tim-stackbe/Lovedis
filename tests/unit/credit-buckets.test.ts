@@ -78,7 +78,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     const pitch = MARKETPLACE_OFFERINGS.find((o) => o.title === "Pitch Deck Review");
     expect(pitch).toMatchObject({
       category: "FUNDRAISING",
-      contactPerson: "Tim Meggert",
+      contactPerson: "Tim Meggert, Polina Ko",
       creditCost: 1,
     });
   });
