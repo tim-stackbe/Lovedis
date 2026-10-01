@@ -16,8 +16,12 @@
  *   export PATH="$PWD/.tools/node/bin:$PATH"
  *   DATABASE_URL=postgres://…  npx tsx prisma/apply-marketplace-notion.ts
  *
- * Data values are the single source of truth in src/lib/marketplace-catalog.ts
- * (shared with prisma/seed.ts). Do NOT run against production without review.
+ * ⚠️ WARNUNG: Seit dem Venture Store Editor (/venture-store-editor) ist die
+ * LIVE-DATENBANK die Quelle für den Venture Store. Dieses Script überschreibt
+ * Live-Änderungen aus dem Editor mit den Werten aus
+ * src/lib/marketplace-catalog.ts und löscht bzw. deaktiviert jeden Eintrag,
+ * der dort nicht steht. Es wird deshalb NIE vom Deploy ausgeführt und bricht
+ * ohne I_KNOW_THIS_OVERWRITES_VENTURE_STORE=1 ab. Nur nach Backup und Review.
  */
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -32,6 +36,14 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  if (process.env.I_KNOW_THIS_OVERWRITES_VENTURE_STORE !== "1") {
+    throw new Error(
+      "apply-marketplace-notion: Abbruch. Die Live-DB ist die Quelle für den Venture Store; " +
+        "dieses Script würde Änderungen aus dem Venture Store Editor überschreiben und " +
+        "Einträge löschen. Es wurde nichts geändert.\n" +
+        "Nur nach Backup und Review: I_KNOW_THIS_OVERWRITES_VENTURE_STORE=1 npx tsx prisma/apply-marketplace-notion.ts"
+    );
+  }
   console.log("Marktplatz-Katalog (Notion) wird idempotent angewandt…");
 
   // A creator is required on Program. Use any existing team member/admin; fall

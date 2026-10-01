@@ -6,7 +6,7 @@ import { z } from "zod";
 // paragraphs, a leading "### " marks a sub-heading and **…** marks bold text.
 // ---------------------------------------------------------------------------
 
-const workshopSchema = z.object({
+export const workshopSchema = z.object({
   title: z.string().min(1),
   /** ISO date, e.g. "2026-11-12". */
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

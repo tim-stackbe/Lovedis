@@ -2,6 +2,12 @@
  * Seed script — creates one demo user per role plus a realistic universe of
  * startups, evaluations, challenges, applications, PoCs and shared scorings.
  *
+ * ⚠️ Nur für LOKALE Datenbanken: der Seed löscht und erzeugt den Venture Store
+ * (Programme, Mentor:innen, Support-Angebote) neu aus
+ * src/lib/marketplace-catalog.ts. Live ist die Datenbank die Quelle (gepflegt
+ * im Venture Store Editor); ein Seed gegen Live würde alle Editor-Änderungen
+ * überschreiben. Der Deploy führt den Seed nie aus.
+ *
  * Demo accounts (password for all: see PASSWORD below):
  *   admin@lovedis.dev     ADMIN
  *   member@lovedis.dev    MEMBER

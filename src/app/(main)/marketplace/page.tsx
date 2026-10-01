@@ -14,8 +14,9 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireTeam } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
+import { EDITOR_PATH } from "@/lib/venture-store-editor";
 
-export const metadata: Metadata = { title: "Marktplatz-Inbox" };
+export const metadata: Metadata = { title: "Venture-Store-Inbox" };
 
 const BOOKING_INCLUDE = {
   startup: { select: { name: true } },
@@ -35,7 +36,8 @@ function targetName(b: {
 }
 
 export default async function MarketplaceInboxPage() {
-  await requireTeam();
+  const session = await requireTeam();
+  const isAdmin = session.user.role === "ADMIN";
 
   const bookings = await prisma.marketplaceBooking.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
@@ -63,14 +65,16 @@ export default async function MarketplaceInboxPage() {
   return (
     <>
       <HeroBanner
-        kicker="Marktplatz"
-        title="Marktplatz-Koordination"
+        kicker="Venture Store"
+        title="Venture-Store-Koordination"
         subtitle="Koordiniere Matching & Termine mit Partnern/Mentor:innen. „Bestätigen“ löst die Venture Credits über den Ledger ein."
         actions={
-          <LinkButton href="/marketplace/catalog" variant="white" size="sm">
-            <Store className="h-4 w-4" />
-            Katalog pflegen
-          </LinkButton>
+          isAdmin ? (
+            <LinkButton href={EDITOR_PATH} variant="white" size="sm">
+              <Store className="h-4 w-4" />
+              Venture Store Editor
+            </LinkButton>
+          ) : undefined
         }
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:max-w-lg">
@@ -157,10 +161,15 @@ export default async function MarketplaceInboxPage() {
 
       {bookings.length === 0 && (
         <p className="text-center text-sm text-lv-secondary">
-          Noch keine Buchungen.{" "}
-          <Link href="/marketplace/catalog" className="font-semibold text-lv-blue hover:underline">
-            Pflege zuerst den Katalog.
-          </Link>
+          Noch keine Buchungen.
+          {isAdmin && (
+            <>
+              {" "}
+              <Link href={EDITOR_PATH} className="font-semibold text-lv-blue hover:underline">
+                Pflege zuerst den Katalog.
+              </Link>
+            </>
+          )}
         </p>
       )}
     </>

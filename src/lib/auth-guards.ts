@@ -134,6 +134,14 @@ export async function requireTeam(): Promise<Session> {
   return requireRole(VENTURE_SCOUT_ROLES);
 }
 
+/**
+ * ADMIN-only gate. Used for the Venture Store editor: catalog content is live
+ * data maintained in the database, so only admins (not members) may change it.
+ */
+export async function requireAdmin(): Promise<Session> {
+  return requireRole(["ADMIN"]);
+}
+
 /** Business-partner-only gate (curated, low-overload partner views). */
 export async function requirePartner(): Promise<Session> {
   return requireRole(["BUSINESS_PARTNER"]);

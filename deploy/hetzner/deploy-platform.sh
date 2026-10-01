@@ -273,9 +273,9 @@ deploy_mac() {
   "
   echo "   Platform container up"
 
-  echo "→ Applying Prisma schema (db push) + marketplace catalog sync…"
+  echo "→ Applying Prisma schema (db push, no seed, no catalog sync)…"
   ssh "$ssh_target" "bash ${platform_dir}/deploy/hetzner/migrate-db-push.sh"
-  echo "   Schema applied + catalog synced"
+  echo "   Schema applied"
 
   echo "→ Smoke test (platform + homepage)…"
   bash "$ROOT/deploy/hetzner/smoke-test.sh" "49.13.222.76"
@@ -384,7 +384,7 @@ docker compose up -d platform
 REMOTE
   echo "   Platform container up"
 
-  echo "→ Applying Prisma schema (db push) + marketplace catalog sync…"
+  echo "→ Applying Prisma schema (db push, no seed, no catalog sync)…"
   "${ssh_cmd[@]}" "bash ${compose_dir}/migrate-db-push.sh"
 
   echo "→ Smoke test (platform + homepage)…"

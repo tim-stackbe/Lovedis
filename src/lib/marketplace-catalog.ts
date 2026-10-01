@@ -7,6 +7,12 @@ import type { ProgramWorkshop } from "@/lib/program-workshops";
 // Single source of truth für den Seed (prisma/seed.ts) UND das idempotente
 // Sync-Script (prisma/apply-marketplace-notion.ts).
 //
+// ⚠️ NICHT die Quelle für den LIVE Venture Store: Live wird über den Venture
+// Store Editor (/venture-store-editor, nur ADMIN) direkt in der Datenbank
+// gepflegt. Änderungen hier landen NICHT automatisch live, und weder Deploy
+// noch migrate-db-push.sh spielen diese Datei ein. Diese Datei dient nur für
+// lokale Seeds und Tests.
+//
 // Guardrails:
 //   • NUR echte Notion-Einträge — keine erfundenen Angebote, Programme oder
 //     Mentor:innen-Metadaten. Fehlt ein Wert in Notion, bleibt das Feld leer

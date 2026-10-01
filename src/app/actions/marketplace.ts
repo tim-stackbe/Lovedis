@@ -5,12 +5,12 @@ import { z } from "zod";
 import type {
   CreditBucket,
   MarketplaceOfferingType,
-  SupportCategory,
 } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireRole, requireTeam } from "@/lib/auth-guards";
-import { MARKETPLACE_OFFERING_TYPES, SUPPORT_CATEGORIES } from "@/lib/constants";
+import { requireAdmin, requireRole, requireTeam } from "@/lib/auth-guards";
+import { MARKETPLACE_OFFERING_TYPES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { EDITOR_PATH } from "@/lib/venture-store-editor";
 
 // ---------------------------------------------------------------------------
 // Startup-Marktplatz. Startups fragen Programme/Mentor-Sessions/Support-Angebote
@@ -564,43 +564,9 @@ export async function cancelBooking(bookingId: string): Promise<ActionState> {
 }
 
 // ---------------------------------------------------------------------------
-// Team: catalog maintenance (Programme, Mentor:innen, Support-Angebote)
+// Admin: Mentor:innen-Pflege. Programme und Support-Angebote pflegt der
+// Venture Store Editor (src/app/actions/venture-store-editor.ts).
 // ---------------------------------------------------------------------------
-
-const programSchema = z.object({
-  title: z.string().trim().min(3, "Titel ist zu kurz.").max(160),
-  summary: z.string().trim().min(3, "Teaser ist zu kurz.").max(280),
-  description: z.string().trim().min(10, "Beschreibung ist zu kurz.").max(4000),
-  focusTags: z.string().trim().max(280).optional(),
-});
-
-export async function createProgram(
-  _prevState: ActionState | undefined,
-  formData: FormData
-): Promise<ActionState> {
-  const session = await requireTeam();
-  const parsed = programSchema.safeParse({
-    title: formData.get("title"),
-    summary: formData.get("summary"),
-    description: formData.get("description"),
-    focusTags: formData.get("focusTags") || undefined,
-  });
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
-
-  await prisma.program.create({
-    data: {
-      title: parsed.data.title,
-      summary: parsed.data.summary,
-      description: parsed.data.description,
-      focusTags: splitTags(parsed.data.focusTags),
-      status: "OPEN",
-      createdById: session.user.id,
-    },
-  });
-  revalidateMarketplace();
-  revalidatePath("/marketplace/catalog");
-  return { success: "Programm angelegt." };
-}
 
 const mentorSchema = z.object({
   name: z.string().trim().min(2, "Name ist erforderlich.").max(160),
@@ -615,7 +581,7 @@ export async function createMentor(
   _prevState: ActionState | undefined,
   formData: FormData
 ): Promise<ActionState> {
-  await requireTeam();
+  await requireAdmin();
   const parsed = mentorSchema.safeParse({
     name: formData.get("name"),
     company: formData.get("company") || undefined,
@@ -637,51 +603,12 @@ export async function createMentor(
     },
   });
   revalidateMarketplace();
-  revalidatePath("/marketplace/catalog");
+  revalidatePath(EDITOR_PATH);
   return { success: "Mentor:in angelegt." };
 }
 
-const offeringSchema = z.object({
-  title: z.string().trim().min(3, "Titel ist zu kurz.").max(160),
-  category: z.enum(SUPPORT_CATEGORIES as [SupportCategory, ...SupportCategory[]]),
-  summary: z.string().trim().min(3, "Teaser ist zu kurz.").max(280),
-  description: z.string().trim().min(10, "Beschreibung ist zu kurz.").max(4000),
-  format: z.string().trim().max(80).optional(),
-  creditCost: z.coerce.number().int().min(0).max(1_000_000),
-});
-
-export async function createOffering(
-  _prevState: ActionState | undefined,
-  formData: FormData
-): Promise<ActionState> {
-  await requireTeam();
-  const parsed = offeringSchema.safeParse({
-    title: formData.get("title"),
-    category: formData.get("category"),
-    summary: formData.get("summary"),
-    description: formData.get("description"),
-    format: formData.get("format") || undefined,
-    creditCost: formData.get("creditCost") ?? 0,
-  });
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
-
-  await prisma.supportOffering.create({
-    data: {
-      title: parsed.data.title,
-      category: parsed.data.category,
-      summary: parsed.data.summary,
-      description: parsed.data.description,
-      format: parsed.data.format ?? null,
-      creditCost: parsed.data.creditCost,
-    },
-  });
-  revalidateMarketplace();
-  revalidatePath("/marketplace/catalog");
-  return { success: "Support-Angebot angelegt." };
-}
-
 export async function toggleMentorActive(mentorId: string): Promise<void> {
-  await requireTeam();
+  await requireAdmin();
   const mentor = await prisma.mentorProfile.findUnique({
     where: { id: mentorId },
     select: { isActive: true },
@@ -692,37 +619,7 @@ export async function toggleMentorActive(mentorId: string): Promise<void> {
     data: { isActive: !mentor.isActive },
   });
   revalidateMarketplace();
-  revalidatePath("/marketplace/catalog");
-}
-
-export async function toggleOfferingActive(offeringId: string): Promise<void> {
-  await requireTeam();
-  const offering = await prisma.supportOffering.findUnique({
-    where: { id: offeringId },
-    select: { isActive: true },
-  });
-  if (!offering) return;
-  await prisma.supportOffering.update({
-    where: { id: offeringId },
-    data: { isActive: !offering.isActive },
-  });
-  revalidateMarketplace();
-  revalidatePath("/marketplace/catalog");
-}
-
-export async function toggleProgramOpen(programId: string): Promise<void> {
-  await requireTeam();
-  const program = await prisma.program.findUnique({
-    where: { id: programId },
-    select: { status: true },
-  });
-  if (!program) return;
-  await prisma.program.update({
-    where: { id: programId },
-    data: { status: program.status === "OPEN" ? "CLOSED" : "OPEN" },
-  });
-  revalidateMarketplace();
-  revalidatePath("/marketplace/catalog");
+  revalidatePath(EDITOR_PATH);
 }
 
 function splitTags(raw?: string): string[] {

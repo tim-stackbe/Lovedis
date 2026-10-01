@@ -19,7 +19,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 import { auth } from "@/auth";
-import { requireAuth, requireRole } from "@/lib/auth-guards";
+import { requireAdmin, requireAuth, requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 const mockAuth = vi.mocked(auth);
@@ -98,6 +98,26 @@ describe("requireRole — authorizes against the fresh role", () => {
       role: "ADMIN",
     } as never);
     const session = await requireRole(["ADMIN", "MEMBER"]);
+    expect(session.user.role).toBe("ADMIN");
+  });
+});
+
+describe("requireAdmin — Venture Store editor gate", () => {
+  it.each([
+    ["MEMBER", "/dashboard/member"],
+    ["BUSINESS_PARTNER", "/dashboard/partner"],
+    ["STARTUP", "/dashboard/startup"],
+    ["INVESTOR", "/dashboard/investor"],
+  ] as const)("rejects %s", async (role, home) => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", role } } as never);
+    mockFindUnique.mockResolvedValue({ id: "u1", isActive: true, role } as never);
+    expect(await redirectUrlOf(() => requireAdmin())).toBe(home);
+  });
+
+  it("lets an active ADMIN through", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", role: "ADMIN" } } as never);
+    mockFindUnique.mockResolvedValue({ id: "u1", isActive: true, role: "ADMIN" } as never);
+    const session = await requireAdmin();
     expect(session.user.role).toBe("ADMIN");
   });
 });

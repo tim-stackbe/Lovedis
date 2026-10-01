@@ -410,13 +410,24 @@ const SPACE_SECTION: NavSection = {
   ],
 };
 
-/** Marketplace & venture credits (team-side inbox + storefront + grants). */
+/** Venture Store & venture credits (team-side inbox + storefront + grants). */
 const MARKET_SECTION: NavSection = {
-  title: "Marktplatz & Credits",
+  title: "Venture Store & Credits",
   items: [
     { label: "Venture-Credits", href: "/credits", icon: "credits" },
-    { label: "Marktplatz-Inbox", href: "/marketplace", icon: "inbox" },
-    { label: "Marktplatz-Storefront", href: "/venture/marketplace", icon: "storefront" },
+    { label: "Venture-Store-Inbox", href: "/marketplace", icon: "inbox" },
+    { label: "Venture Store", href: "/venture/marketplace", icon: "storefront" },
+  ],
+};
+
+/** The catalog editor is ADMIN-only (see `requireAdmin`). */
+export const VENTURE_STORE_EDITOR_HREF = "/venture-store-editor";
+
+const MARKET_SECTION_ADMIN: NavSection = {
+  ...MARKET_SECTION,
+  items: [
+    ...MARKET_SECTION.items,
+    { label: "Venture Store Editor", href: VENTURE_STORE_EDITOR_HREF, icon: "ssot" },
   ],
 };
 
@@ -497,8 +508,8 @@ const PARTNER_FUNCTIONS_SECTION: NavSection = {
 /**
  * Cross-role access for the internal team: the startup-native surfaces the
  * admin (and member) must be able to open and work on, clearly labelled as a
- * startup view. The Marktplatz-Storefront (/venture/marketplace) already lives
- * in "Marktplatz & Credits" above, so it is intentionally NOT duplicated here.
+ * startup view. The Venture Store (/venture/marketplace) already lives in
+ * "Venture Store & Credits" above, so it is intentionally NOT duplicated here.
  * Data is scoped to the logged-in user, so the team sees safe empty states.
  */
 const STARTUP_FUNCTIONS_SECTION: NavSection = {
@@ -568,7 +579,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     MATCHMAKING_SECTION_ADMIN,
     COLLAB_SECTION_ADMIN,
     SPACE_SECTION_ADMIN,
-    MARKET_SECTION,
+    MARKET_SECTION_ADMIN,
     TRACKING_SECTION,
     MARKETPLACE_SECTION,
     PLATFORM_SECTION_ADMIN,
