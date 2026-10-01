@@ -446,7 +446,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     category: "MARKETING",
     summary: "1:1-Workshop für eine konversionsstarke Website.",
     description:
-      "Individueller 1:1-Workshop: Struktur, Messaging und Conversion-Elemente für deine Website.",
+      "Ein 2-stündiger 1:1-Workshop, der das Fundament für eine erfolgreiche Website legt. Wir analysieren die Zielgruppe und die Kernbotschaft und entwickeln eine klare Seitenstruktur (Wireframe).\n\nErgebnis: Ein ausformuliertes Konzept, mit dem das Startup seine Website gezielt selbst umsetzen kann.",
     format: "1:1 Online Workshop",
     providerCompany: "GAL Digital",
     contactPerson: "Tobias Auradniczek",
