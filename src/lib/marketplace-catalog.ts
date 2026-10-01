@@ -653,7 +653,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     category: "SALES",
     summary: "Online Workshop zum Aufbau strukturierter Sales-Pipelines.",
     description:
-      "Session im Rahmen von Sales, Pricing & Growth: Aufbau strukturierter Pipelines mit GAL Digital (Tobias Auradniczek). Format: Online Workshop.",
+      "Ein 2-stündiger 1:1-Workshop zur Entwicklung eines praxisnahen Fahrplans für die Kundengewinnung. Wir identifizieren die wirkungsvollsten Marketingkanäle und erarbeiten gemeinsam erste Kampagnenideen.\n\nErgebnis: Eine umsetzbare 3-Monats-Roadmap mit priorisierten Maßnahmen zur Steigerung der Neukundengewinnung.",
     format: "Online Workshop",
     providerCompany: "GAL Digital",
     contactPerson: "Tobias Auradniczek",
