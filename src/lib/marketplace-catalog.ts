@@ -642,7 +642,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     summary: "Online Workshop zu Community- und Ökosystem-Vertrieb.",
     description:
       "90-minütige Session: Diese interaktive Session ist für Start-ups und Scale-ups, die sich fragen, wie sie in Zeiten der Multikrise wachsen und gleichzeitig Risiken reduzieren können. Ihr erfahrt von Sina, wie ihr Wachstum auf der Basis von Business-Gemeinschaften gestaltet und daraus ein krisenfestes Geschäftsmodell entwickelt.\n\nInhalte der Session\n\nGrowth neu denken: Warum Wachstum nicht zwangsläufig mehr Akquisedruck, Kapital und den Aufbau eigener Ressourcen bedeuten muss und welche Alternativen und Chancen gemeinschaftsbasierte Geschäftsmodelle bieten.",
-    format: "Online Workshop",
+    format: "Online Session (90 Min.)",
     providerCompany: "unusual business",
     contactPerson: "Sina Wans",
     creditCost: 1,
