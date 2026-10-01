@@ -665,7 +665,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     category: "SALES",
     summary: "Live Workshop zu Wettbewerbspositionierung.",
     description:
-      "Session im Rahmen von Sales, Pricing & Growth: Nightmare Competitor mit Uni Marburg / StartMiUp (Michael Stephan). Format: Live Workshop.",
+      "Der Workshop führt Teilnehmende in einem strukturierten Prozess durch sechs Module: Einstieg und Zielklärung, Branchentrends und Status quo, Einführung in die NC-Methodik, Konstruktion des eigenen Nightmare Competitors, Stärken-/Schwächenvergleich und abschließend die Entwicklung einer strategischen Antwort.\n\nAm Ende des Tages haben die Teilnehmenden ein konkretes NC-Szenario für ihre Branche entwickelt, ihre eigenen blinden Flecken und strategischen Schwächen identifiziert und erste strategische Stoßrichtungen priorisiert (Impact-Feasibility-Matrix).",
     format: "Live Workshop",
     providerCompany: "Uni Marburg / StartMiUp",
     contactPerson: "Michael Stephan",
