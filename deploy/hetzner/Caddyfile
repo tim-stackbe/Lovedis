@@ -19,7 +19,15 @@ home.49.13.222.76.nip.io {
 
 app.49.13.222.76.nip.io {
 	encode zstd gzip
-	reverse_proxy platform:3000
+	# Every deploy recreates the platform container, leaving a few seconds with
+	# no upstream. Hold requests and retry the dial instead of answering 502,
+	# which the browser surfaces as "Diese Seite konnte nicht geladen werden"
+	# (e.g. a login submitted mid-deploy). Only failed dials are retried, so a
+	# POST that already reached the app is never replayed.
+	reverse_proxy platform:3000 {
+		lb_try_duration 60s
+		lb_try_interval 250ms
+	}
 
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -59,7 +67,10 @@ app.49.13.222.76.nip.io {
 #
 alpha.lovedis.de {
 	encode zstd gzip
-	reverse_proxy platform:3000
+	reverse_proxy platform:3000 {
+		lb_try_duration 60s
+		lb_try_interval 250ms
+	}
 
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

@@ -4,6 +4,7 @@ import {
   isStaleDeploymentError,
   markStaleDeploymentReload,
   isNewerBuildLive,
+  isTransientServerError,
   shouldAutoReloadForStaleDeployment,
   STALE_RELOAD_FLAG,
   STALE_RELOAD_GUARD_MS,
@@ -348,5 +349,36 @@ describe("isNewerBuildLive — version-based stale detection", () => {
     expect(isNewerBuildLive("3beb9d7", "unknown")).toBe(false);
     expect(isNewerBuildLive("3beb9d7", undefined)).toBe(false);
     expect(isNewerBuildLive("3beb9d7", 42)).toBe(false);
+  });
+});
+
+describe("isTransientServerError — server briefly unreachable (deploy restart)", () => {
+  it("matches the Server Action error a proxy 502/503 produces", () => {
+    expect(
+      isTransientServerError(
+        new Error("An unexpected response was received from the server.")
+      )
+    ).toBe(true);
+  });
+
+  it("matches fetch network failures across engines", () => {
+    expect(isTransientServerError(new TypeError("Failed to fetch"))).toBe(true);
+    expect(
+      isTransientServerError(
+        new TypeError("NetworkError when attempting to fetch resource.")
+      )
+    ).toBe(true);
+    expect(isTransientServerError(new TypeError("Load failed"))).toBe(true);
+  });
+
+  it("does not match real page errors or stale-bundle errors", () => {
+    expect(isTransientServerError(new Error("Cannot read properties of undefined"))).toBe(false);
+    expect(
+      isTransientServerError(
+        new Error('Server Action "abc" was not found on the server.')
+      )
+    ).toBe(false);
+    expect(isTransientServerError(null)).toBe(false);
+    expect(isTransientServerError("Failed to fetch")).toBe(false);
   });
 });

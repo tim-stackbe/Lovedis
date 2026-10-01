@@ -7,10 +7,14 @@ import {
   canAutoReloadForStaleDeployment,
   isNewerBuildLive,
   isStaleDeploymentError,
+  isTransientServerError,
   markStaleDeploymentReload,
 } from "@/lib/stale-deployment";
 
 const CLIENT_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
+
+const SERVER_WAIT_INTERVAL_MS = 1_000;
+const SERVER_WAIT_TIMEOUT_MS = 90_000;
 
 /**
  * Root error boundary. Without one, any client-side exception unmounts the whole
@@ -35,6 +39,47 @@ export default function RootError({
 }) {
   const [newerBuildLive, setNewerBuildLive] = useState(false);
   const isStale = isStaleDeploymentError(error) || newerBuildLive;
+  const isTransient = !isStale && isTransientServerError(error);
+
+  // A request that hit the server while it was restarting (deploy) or offline:
+  // wait until the app answers again, then reload once. Same loop guard as the
+  // stale path, so a server that stays broken ends on the manual card.
+  const [waitingForServer, setWaitingForServer] = useState(
+    () =>
+      isTransient &&
+      typeof window !== "undefined" &&
+      canAutoReloadForStaleDeployment(window.sessionStorage)
+  );
+
+  useEffect(() => {
+    if (!waitingForServer) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = Date.now() + SERVER_WAIT_TIMEOUT_MS;
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/health", { cache: "no-store" });
+        if (cancelled) return;
+        if (res.ok) {
+          markStaleDeploymentReload(window.sessionStorage);
+          window.location.reload();
+          return;
+        }
+      } catch {
+        if (cancelled) return;
+      }
+      if (Date.now() >= deadline) {
+        setWaitingForServer(false);
+        return;
+      }
+      timer = setTimeout(poll, SERVER_WAIT_INTERVAL_MS);
+    };
+    poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [waitingForServer]);
 
   // Decide in the RENDER phase whether we will auto-recover, using a READ-ONLY
   // check that never stamps the loop guard. `useState`'s lazy initializer runs
@@ -55,7 +100,7 @@ export default function RootError({
   // server now runs a different build than this tab, it is stale regardless of
   // the error wording.
   useEffect(() => {
-    if (isStale) return;
+    if (isStale || isTransient) return;
     let cancelled = false;
     fetch("/api/health", { cache: "no-store" })
       .then((res) => res.json())
@@ -70,7 +115,7 @@ export default function RootError({
     return () => {
       cancelled = true;
     };
-  }, [isStale]);
+  }, [isStale, isTransient]);
 
   // Guarantees the stamp-and-reload runs at most once per boundary instance.
   const reloadedRef = useRef(false);
@@ -92,17 +137,20 @@ export default function RootError({
 
   // While the one-time hard reload is in flight, show a neutral "updating" state
   // instead of flashing the error card — the user sees a brief refresh, not an error.
-  if (autoReloading) {
+  if (autoReloading || waitingForServer) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-lv-surface/60 px-4 py-12">
         <Card className="w-full max-w-md p-8 text-center">
-          <p className="lv-wordmark text-xs text-lv-blue">Neue Version verfügbar</p>
+          <p className="lv-wordmark text-xs text-lv-blue">
+            {autoReloading ? "Neue Version verfügbar" : "Einen Moment bitte"}
+          </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight">
-            Wird aktualisiert …
+            {autoReloading ? "Wird aktualisiert …" : "Verbindung wird wiederhergestellt …"}
           </h1>
           <p className="mt-3 text-sm text-lv-secondary">
-            LOVEDIS wurde aktualisiert. Wir laden die aktuelle Version — einen
-            Moment bitte.
+            {autoReloading
+              ? "LOVEDIS wurde aktualisiert. Wir laden die aktuelle Version, einen Moment bitte."
+              : "LOVEDIS war kurz nicht erreichbar. Die Seite lädt automatisch neu, sobald die Verbindung wieder steht."}
           </p>
         </Card>
       </div>
@@ -116,12 +164,18 @@ export default function RootError({
           {isStale ? "Neue Version verfügbar" : "Etwas ist schiefgelaufen"}
         </p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight">
-          {isStale ? "Bitte Seite neu laden" : "Diese Seite konnte nicht geladen werden"}
+          {isStale
+            ? "Bitte Seite neu laden"
+            : isTransient
+              ? "Server gerade nicht erreichbar"
+              : "Diese Seite konnte nicht geladen werden"}
         </h1>
         <p className="mt-3 text-sm text-lv-secondary">
           {isStale
-            ? "LOVEDIS wurde aktualisiert, während dieser Tab offen war. Lade die Seite neu, um mit der aktuellen Version weiterzuarbeiten — deine Eingaben im Formular musst du danach erneut machen."
-            : "Beim Laden dieser Seite ist ein Fehler aufgetreten. Versuche es erneut oder lade die Seite neu."}
+            ? "LOVEDIS wurde aktualisiert, während dieser Tab offen war. Lade die Seite neu, um mit der aktuellen Version weiterzuarbeiten. Deine Eingaben im Formular musst du danach erneut machen."
+            : isTransient
+              ? "LOVEDIS ist gerade nicht erreichbar. Bitte lade die Seite in ein paar Sekunden neu."
+              : "Beim Laden dieser Seite ist ein Fehler aufgetreten. Versuche es erneut oder lade die Seite neu."}
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">

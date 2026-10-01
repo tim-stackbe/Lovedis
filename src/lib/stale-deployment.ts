@@ -78,6 +78,28 @@ export function isStaleDeploymentError(error: unknown): boolean {
 }
 
 /**
+ * Detects a request that never got a usable answer from the app: the server
+ * was briefly unreachable (container restart during a deploy, network blip)
+ * or a proxy answered instead of Next.js (502/503 HTML). These are not bugs in
+ * the page, so the right recovery is to wait until `/api/health` answers again
+ * and reload, not to show the generic error card.
+ */
+export function isTransientServerError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const { message } = error as { message?: unknown };
+  if (typeof message !== "string") return false;
+  return (
+    // Next.js: a Server Action / RSC fetch got a non-RSC response (proxy 502).
+    message.includes("An unexpected response was received from the server") ||
+    // fetch() network failure: Chrome, Firefox, Safari phrasings.
+    message === "Failed to fetch" ||
+    message.startsWith("NetworkError when attempting to fetch resource") ||
+    message === "Load failed" ||
+    message === "network error"
+  );
+}
+
+/**
  * Message-independent stale check: true when the server reports a different
  * deployed version than the one baked into this tab's bundle. Catches any
  * post-deploy failure whose wording we don't recognise. Unknown/missing
