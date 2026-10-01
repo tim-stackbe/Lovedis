@@ -284,7 +284,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
       "Wir gehen gemeinsam dein Pitch Deck durch: Story, Aufbau, Zahlen und Ask – mit ehrlichem Feedback und konkreten Verbesserungen für deine nächsten Investor-Gespräche.",
     format: "Sparring Session",
     providerCompany: "LOVEDIS",
-    contactPerson: "Polina Ko",
+    contactPerson: "Polina Kon",
     website: "https://lovedis.de",
     creditCost: 1,
     sortOrder: 4,

@@ -78,7 +78,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     const pitch = MARKETPLACE_OFFERINGS.find((o) => o.title === "Pitch Deck Review");
     expect(pitch).toMatchObject({
       category: "FUNDRAISING",
-      contactPerson: "Polina Ko",
+      contactPerson: "Polina Kon",
       creditCost: 1,
     });
   });
