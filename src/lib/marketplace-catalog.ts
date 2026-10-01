@@ -302,7 +302,7 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     category: "LEGAL",
     summary: "Haftungsrisiken der Geschäftsführung verstehen und absichern.",
     description:
-      "Was Geschäftsführer:innen persönlich haftet — und wie du dich und dein Team absicherst.",
+      "Wofür Geschäftsführer:innen persönlich haften und wie ihr euch und euer Team absichert.",
     format: "Online Workshop (~2h)",
     providerCompany: "Momentum",
     contactPerson: "Philipp Weber",
