@@ -30,7 +30,7 @@
     #ff5736 130%
   );
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-greed-standard), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -40,7 +40,6 @@
 body {
   background: #ffffff;
   color: var(--color-lv-text);
-  font-feature-settings: "cv11", "ss01", "ss03";
   -webkit-font-smoothing: antialiased;
 }
 
