@@ -18,7 +18,19 @@ import {
   CHALLENGE_STATUS_LABELS,
 } from "@/lib/constants";
 
-export function ChallengeForm({ challenge }: { challenge?: Challenge }) {
+export interface PartnerOption {
+  id: string;
+  name: string;
+  company: string | null;
+}
+
+export function ChallengeForm({
+  challenge,
+  partners,
+}: {
+  challenge?: Challenge;
+  partners: PartnerOption[];
+}) {
   const action = challenge
     ? updateChallenge.bind(null, challenge.id)
     : createChallenge;
@@ -27,6 +39,27 @@ export function ChallengeForm({ challenge }: { challenge?: Challenge }) {
   return (
     <Card className="p-6 sm:p-8">
       <form action={formAction} className="space-y-5">
+        <Field
+          label="Partner (Use-Case-Inhaber)"
+          htmlFor="partnerId"
+          hint="Die Challenge wird diesem Business Partner zugeordnet."
+        >
+          <Select
+            id="partnerId"
+            name="partnerId"
+            defaultValue={challenge?.createdById ?? ""}
+            required
+          >
+            <option value="" disabled>
+              Partner auswählen…
+            </option>
+            {partners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.company ? `${p.company} — ${p.name}` : p.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
         <Field label="Titel" htmlFor="title">
           <Input
             id="title"

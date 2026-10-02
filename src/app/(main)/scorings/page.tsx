@@ -13,7 +13,12 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Geteilte Scorings" };
 
 export default async function ScoringsPage() {
-  const session = await requireRole(["BUSINESS_PARTNER", "INVESTOR"]);
+  const session = await requireRole([
+    "BUSINESS_PARTNER",
+    "INVESTOR",
+    "ADMIN",
+    "MEMBER",
+  ]);
 
   const shares = await prisma.sharedScoring.findMany({
     where: { recipientId: session.user.id },

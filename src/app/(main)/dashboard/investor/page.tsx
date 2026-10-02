@@ -1,4 +1,4 @@
-import { Compass, Newspaper } from "lucide-react";
+import { Compass, Eye, Handshake, Newspaper } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { StartupLogo } from "@/components/discovery/StartupLogo";
@@ -112,7 +112,7 @@ export default async function InvestorDashboard() {
     body: u.body,
     category: u.category,
     createdAt: u.createdAt,
-    startup: u.startup,
+    startup: u.startup ?? undefined,
   }));
 
   return (
@@ -141,18 +141,21 @@ export default async function InvestorDashboard() {
         <div className="grid gap-4 sm:grid-cols-3">
           <ToneCard
             tone={followedIds.length > 0 ? "info" : "muted"}
+            icon={Eye}
             label="Beobachtet"
             value={followedIds.length}
             sub="Startups, denen du folgst"
           />
           <ToneCard
             tone={openIntros > 0 ? "attention" : "muted"}
+            icon={Handshake}
             label="Offene Intros"
             value={openIntros}
             sub="in Anbahnung"
           />
           <ToneCard
             tone="success"
+            icon={Newspaper}
             label="Neue Updates"
             value={feedItems.length}
             sub="von deinen Startups"
@@ -197,7 +200,7 @@ export default async function InvestorDashboard() {
           {introRequests.length === 0 ? (
             <Card className="p-6 text-sm text-lv-secondary">
               Noch keine Intros angefragt. Auf einem öffentlichen Profil kannst
-              du über das Lovedis-Team eine Einführung anfragen.
+              du über das LOVEDIS-Team eine Einführung anfragen.
             </Card>
           ) : (
             <Card className="divide-y divide-lv-border">

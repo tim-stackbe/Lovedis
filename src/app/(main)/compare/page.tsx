@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import {
-  CompareView,
-  type CompareStartup,
-} from "@/components/compare/CompareView";
+import { CompareViewLazy as CompareView } from "@/components/compare/CompareViewLazy";
+import type { CompareStartup } from "@/components/compare/CompareView";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import { prisma } from "@/lib/prisma";
-import { scoresToMap } from "@/lib/scoring";
 
 export const metadata: Metadata = { title: "Vergleich" };
 
@@ -15,28 +13,27 @@ export default async function ComparePage() {
   await requireScoutModule();
 
   const startups = await prisma.startup.findMany({
-    include: {
-      evaluations: {
-        orderBy: { updatedAt: "desc" },
-        take: 1,
-        include: { scores: true },
-      },
-    },
+    select: { id: true, name: true, industry: true },
     orderBy: { name: "asc" },
   });
 
+  // Compare on the team consensus per startup: the radar plots the mean per
+  // criterion, the weighted total & status come from the aggregate.
+  const consensusByStartup = await getConsensusByStartup(
+    startups.map((s) => s.id)
+  );
+
   const compareStartups: CompareStartup[] = startups.map((s) => {
-    const latest = s.evaluations[0];
+    const consensus = consensusByStartup.get(s.id);
     return {
       id: s.id,
       name: s.name,
       industry: s.industry,
-      scores: latest ? scoresToMap(latest.scores) : {},
-      overallScore: latest?.overallScore ?? 0,
-      potential: latest?.potential ?? 0,
-      feasibility: latest?.feasibility ?? 0,
-      recommendation: latest?.recommendation ?? "MAYBE",
-      hasEvaluation: Boolean(latest),
+      scores: consensus?.perCriterionMean ?? {},
+      overallScore: consensus?.weightedTotal ?? 0,
+      recommendation: consensus?.recommendation ?? "STRONG_NO",
+      hasEvaluation: (consensus?.evaluatorCount ?? 0) > 0,
+      evaluatorCount: consensus?.evaluatorCount ?? 0,
     };
   });
 
@@ -45,7 +42,7 @@ export default async function ComparePage() {
       <HeroBanner
         kicker="Venture Scout"
         title="Direktvergleich"
-        subtitle="Stelle Startups über alle sieben Scoring-Dimensionen hinweg gegenüber."
+        subtitle="Stelle Startups über alle sechs Challenge-Kriterien hinweg gegenüber."
       />
       <SectionLabel number="03" label="Entscheiden" title="Vergleichs-Workbench" />
       <CompareView startups={compareStartups} />

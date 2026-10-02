@@ -1,0 +1,72 @@
+# Reference CI/CD: build images in GitHub Actions, push to GHCR, deploy to Hetzner TEST.
+#
+# TEST-only: deploys to 49.13.222.76 via nip.io URLs. Does NOT touch lovedis.de DNS.
+# To activate: copy to .github/workflows/deploy-hetzner-test.yml and set secrets:
+#   SSH_HOST=49.13.222.76
+#   SSH_USER=deploy
+#   SSH_KEY=<private key with access to the TEST VPS>
+name: Deploy TEST (Hetzner)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Dedalus, feat/hetzner-deploy]
+
+jobs:
+  build-and-deploy-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Platform (Next.js). Tags :test for the TEST server; :latest reserved for production cutover.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:test
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      # Homepage (Nuxt). Uncomment when the homepage repo is wired into CI.
+      # - uses: actions/checkout@v4
+      #   with:
+      #     repository: OWNER/lovedis-homepage
+      #     token: ${{ secrets.HOMEPAGE_REPO_TOKEN }}
+      # - uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}-homepage:test
+
+      - name: Deploy to TEST server over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+            # Prefer deploy/hetzner; fall back to legacy /opt/lovedis layout.
+            if [ -d /opt/lovedis/deploy/hetzner ]; then
+              cd /opt/lovedis/deploy/hetzner
+            else
+              cd /opt/lovedis
+            fi
+            docker compose pull platform homepage || true
+            docker compose up -d
+            # Standalone app image has no Prisma CLI — migrate via one-off Node container.
+            bash ./migrate.sh
+
+      - name: Post-deploy smoke test
+        run: |
+          chmod +x deploy/hetzner/smoke-test.sh
+          deploy/hetzner/smoke-test.sh 49.13.222.76

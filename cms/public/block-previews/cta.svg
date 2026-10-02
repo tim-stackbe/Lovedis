@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Inter,Segoe UI,Arial,sans-serif">
+  <rect width="480" height="320" fill="#ffffff"/>
+  <rect width="480" height="72" fill="#111827"/>
+  <text x="24" y="46" fill="#ffffff" font-size="30" font-weight="700">Call-to-Action</text>
+  <rect x="40" y="104" width="400" height="140" rx="14" fill="#f3f4f6"/>
+  <rect x="110" y="132" width="260" height="18" rx="4" fill="#111827"/>
+  <rect x="150" y="162" width="180" height="12" rx="4" fill="#9ca3af"/>
+  <rect x="180" y="192" width="120" height="34" rx="17" fill="#EC4899"/>
+  <text x="24" y="300" fill="#6b7280" font-size="16">Abschluss-Aufruf mit Button &amp; Bild</text>
+</svg>

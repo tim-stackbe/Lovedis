@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, X } from "lucide-react";
+import { useMemo } from "react";
 import type { UserRole } from "@/generated/prisma/enums";
+import { LovedisIcon } from "@/components/icons/lovedis";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { ROLE_LABELS, ROLE_NAV } from "@/lib/roles";
 import { cn, initials } from "@/lib/utils";
@@ -18,6 +19,27 @@ interface SidebarProps {
 export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const sections = ROLE_NAV[role];
+
+  // Highlight exactly ONE nav item: the most specific route that matches the
+  // current pathname. A plain prefix test would light up every ancestor href
+  // (e.g. "/venture" AND "/venture/marketplace" on /venture/marketplace), so we
+  // pick the single longest matching href instead. This keeps deep detail
+  // pages (e.g. /startups/123 → "Startups") highlighting their section while
+  // ensuring the previously active item clears on navigation.
+  const activeHref = useMemo(() => {
+    let best: string | null = null;
+    for (const section of sections) {
+      for (const item of section.items) {
+        const matches =
+          pathname === item.href ||
+          (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+        if (matches && (best === null || item.href.length > best.length)) {
+          best = item.href;
+        }
+      }
+    }
+    return best;
+  }, [sections, pathname]);
 
   const userChip = (
     <Link
@@ -36,7 +58,7 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
           {ROLE_LABELS[role]}
         </span>
       </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-lv-secondary" />
+      <LovedisIcon name="chevronRight" className="h-4 w-4 shrink-0 text-lv-secondary" />
     </Link>
   );
 
@@ -51,22 +73,39 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
           )}
           <ul className="space-y-0.5">
             {section.items.map((item) => {
-              const active =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+              const active = item.href === activeHref;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     onClick={onClose}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-button px-3 py-2 text-sm transition-colors",
+                      "group relative flex items-center gap-3 rounded-button py-1.5 pl-1.5 pr-3 text-sm transition-colors",
                       active
-                        ? "bg-lv-blue-soft text-lv-blue font-semibold"
-                        : "text-lv-text hover:bg-lv-surface"
+                        ? "bg-lv-blue-soft font-semibold text-lv-blue"
+                        : "font-medium text-lv-text hover:bg-lv-surface"
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    {active && (
+                      <span
+                        aria-hidden
+                        className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-lv-orange"
+                      />
+                    )}
+                    <span
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-button transition-colors",
+                        active
+                          ? "bg-white shadow-sm ring-1 ring-lv-blue/10"
+                          : "bg-lv-blue-soft/60 group-hover:bg-white"
+                      )}
+                    >
+                      {/* Two-tone "Sticker Pop" glyphs paint their own blue+coral,
+                          so the chip stays LIGHT in both states — a solid-blue
+                          active fill would hide the colourful icon. */}
+                      <LovedisIcon name={item.icon} className="h-4 w-4" />
+                    </span>
                     {item.label}
                   </Link>
                 </li>
@@ -107,7 +146,7 @@ export function Sidebar({ role, userName, mobileOpen, onClose }: SidebarProps) {
                 className="rounded-button p-2 hover:bg-lv-surface"
                 aria-label="Menü schließen"
               >
-                <X className="h-4 w-4" />
+                <LovedisIcon name="close" className="h-4 w-4" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto lv-scroll">{nav}</div>

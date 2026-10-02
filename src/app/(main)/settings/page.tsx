@@ -19,17 +19,23 @@ export default async function SettingsPage() {
     where: { id: session.user.id },
   });
   const isScout = VENTURE_SCOUT_ROLES.includes(session.user.role);
+  const isPartner = session.user.role === "BUSINESS_PARTNER";
+  const subtitle = isScout
+    ? "Dein Profil und dein Passwort und deine persönlichen Scoring-Präferenzen."
+    : isPartner
+      ? "Erstelle hier dein Profil und dein Passwort."
+      : "Dein Profil und dein Passwort";
 
   return (
     <>
       <HeroBanner
         kicker="Konto"
         title="Einstellungen"
-        subtitle="Dein Profil, dein Passwort und deine persönlichen Scoring-Präferenzen."
+        subtitle={subtitle}
       />
 
       <section className="space-y-4">
-        <SectionLabel number="01" label="Konto" title="Profil" />
+        <SectionLabel number="01" label="Konto" title="Dein Profil" />
         <Card className="p-6">
           <ProfileForm
             name={user?.name ?? ""}

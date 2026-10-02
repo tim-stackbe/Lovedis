@@ -5,11 +5,15 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ChallengeStatus } from "@/generated/prisma/enums";
 import { firstZodError, type ActionState } from "@/lib/action-state";
-import { requireAuth, requireRole } from "@/lib/auth-guards";
+import { requireAuth, requireRole, requireTeam } from "@/lib/auth-guards";
 import { CHALLENGE_STATUSES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 const challengeSchema = z.object({
+  // Owning partner (Use-Case-Inhaber). The Lovedis team creates/manages the
+  // challenge on the partner's behalf, so the owner is chosen explicitly rather
+  // than derived from the session. Persisted as Challenge.createdById.
+  partnerId: z.string().min(1, "Bitte einen Partner (Use-Case-Inhaber) auswählen"),
   title: z.string().min(4, "Titel muss mindestens 4 Zeichen lang sein").max(200),
   description: z
     .string()
@@ -22,12 +26,31 @@ const challengeSchema = z.object({
 
 function parseChallengeForm(formData: FormData) {
   return challengeSchema.safeParse({
+    partnerId: formData.get("partnerId"),
     title: formData.get("title"),
     description: formData.get("description"),
     status: formData.get("status") ?? "DRAFT",
     deadline: formData.get("deadline") || undefined,
     tags: formData.get("tags") || undefined,
   });
+}
+
+/**
+ * Verifies the chosen owner is an existing Business Partner user that is still
+ * active and approved — inactive or pending-approval partners must not be
+ * assignable as a use-case owner.
+ */
+async function assertPartner(partnerId: string): Promise<boolean> {
+  const partner = await prisma.user.findFirst({
+    where: {
+      id: partnerId,
+      role: "BUSINESS_PARTNER",
+      isActive: true,
+      approvedAt: { not: null },
+    },
+    select: { id: true },
+  });
+  return partner != null;
 }
 
 function toTags(raw: string | undefined): string[] {
@@ -43,9 +66,14 @@ export async function createChallenge(
   _prevState: ActionState | undefined,
   formData: FormData
 ): Promise<ActionState> {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER"]);
+  // Only the Lovedis team (ADMIN + MEMBER) creates challenges — on behalf of
+  // the owning partner, who is chosen explicitly in the form.
+  await requireTeam();
   const parsed = parseChallengeForm(formData);
   if (!parsed.success) return { error: firstZodError(parsed.error) };
+  if (!(await assertPartner(parsed.data.partnerId))) {
+    return { error: "Ungültiger Partner (Use-Case-Inhaber) ausgewählt." };
+  }
 
   const challenge = await prisma.challenge.create({
     data: {
@@ -54,27 +82,24 @@ export async function createChallenge(
       status: parsed.data.status,
       deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,
       tags: toTags(parsed.data.tags),
-      createdById: session.user.id,
+      createdById: parsed.data.partnerId,
     },
   });
   revalidatePath("/challenges");
   redirect(`/challenges/${challenge.id}`);
 }
 
-/** Loads a challenge and asserts the session user may manage it. */
+/**
+ * Loads a challenge for management. Management is a Lovedis-team affordance
+ * (ADMIN + MEMBER); business partners can no longer create/edit/delete their
+ * use-cases — the team does it on their behalf.
+ */
 async function getManagedChallenge(challengeId: string) {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER"]);
+  const session = await requireTeam();
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
     select: { id: true, createdById: true },
   });
-  if (!challenge) return { session, challenge: null };
-  if (
-    session.user.role !== "ADMIN" &&
-    challenge.createdById !== session.user.id
-  ) {
-    return { session, challenge: null };
-  }
   return { session, challenge };
 }
 
@@ -84,11 +109,13 @@ export async function updateChallenge(
   formData: FormData
 ): Promise<ActionState> {
   const { challenge } = await getManagedChallenge(challengeId);
-  if (!challenge)
-    return { error: "Challenge nicht gefunden oder nicht deine eigene." };
+  if (!challenge) return { error: "Challenge nicht gefunden." };
 
   const parsed = parseChallengeForm(formData);
   if (!parsed.success) return { error: firstZodError(parsed.error) };
+  if (!(await assertPartner(parsed.data.partnerId))) {
+    return { error: "Ungültiger Partner (Use-Case-Inhaber) ausgewählt." };
+  }
 
   await prisma.challenge.update({
     where: { id: challengeId },
@@ -98,6 +125,7 @@ export async function updateChallenge(
       status: parsed.data.status,
       deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,
       tags: toTags(parsed.data.tags),
+      createdById: parsed.data.partnerId,
     },
   });
   revalidatePath("/challenges");
@@ -110,8 +138,7 @@ export async function updateChallengeStatus(
   status: ChallengeStatus
 ): Promise<ActionState> {
   const { challenge } = await getManagedChallenge(challengeId);
-  if (!challenge)
-    return { error: "Challenge nicht gefunden oder nicht deine eigene." };
+  if (!challenge) return { error: "Challenge nicht gefunden." };
   const parsed = z
     .enum(CHALLENGE_STATUSES as [ChallengeStatus, ...ChallengeStatus[]])
     .safeParse(status);
@@ -208,47 +235,33 @@ export async function decideApplication(
   applicationId: string,
   decision: "ACCEPTED" | "REJECTED"
 ): Promise<ActionState> {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER"]);
+  // Accepting/rejecting an incoming challenge application is an ADMIN-only
+  // decision. Deliberately NOT `requireTeam()` (ADMIN + MEMBER) and NOT open to
+  // the owning BUSINESS_PARTNER: only Lovedis admins decide who advances to a
+  // PoC. Re-validated here server-side so the guard bites before any DB write,
+  // regardless of what the client renders.
+  await requireRole(["ADMIN"]);
   const parsed = z.enum(["ACCEPTED", "REJECTED"]).safeParse(decision);
   if (!parsed.success) return { error: "Ungültige Entscheidung." };
 
   const application = await prisma.challengeApplication.findUnique({
     where: { id: applicationId },
-    include: {
-      challenge: { select: { id: true, title: true, createdById: true } },
-      startup: { select: { name: true } },
-      poc: { select: { id: true } },
-    },
+    select: { id: true, challenge: { select: { id: true } } },
   });
   if (!application) return { error: "Bewerbung nicht gefunden." };
-  if (
-    session.user.role !== "ADMIN" &&
-    application.challenge.createdById !== session.user.id
-  ) {
-    return {
-      error:
-        "Du kannst nur über Bewerbungen auf deine eigenen Challenges entscheiden.",
-    };
-  }
 
+  // Deciding an application ONLY moves its status. Accepting must NOT spawn a
+  // PoC: per the business process the partner and startup first inform the
+  // team, and a PoC is created later as a separate, deliberate step. So there
+  // is intentionally no `poCPerformance.create` side effect here.
   await prisma.challengeApplication.update({
     where: { id: applicationId },
     data: { status: parsed.data },
   });
 
-  // Accepted applications spawn a PoC tracked by the challenge owner.
-  if (parsed.data === "ACCEPTED" && !application.poc) {
-    await prisma.poCPerformance.create({
-      data: {
-        applicationId,
-        title: `PoC — ${application.startup.name} × ${application.challenge.title}`,
-        trackedById: application.challenge.createdById,
-      },
-    });
-  }
-
   revalidatePath(`/challenges/${application.challenge.id}`);
   revalidatePath("/challenges");
+  revalidatePath("/challenge-applications");
   revalidatePath("/applications");
   revalidatePath("/pocs");
   return {};
