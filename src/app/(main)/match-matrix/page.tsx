@@ -15,6 +15,7 @@ import {
   type MatchRowView,
   type PartnerVoteBreakdown,
 } from "@/lib/match-matrix";
+import { getLogbookListMeta, logMetaRecord } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 import { MatchMatrixBoard, type PartnerColumn } from "./MatchMatrixBoard";
@@ -28,7 +29,8 @@ export default async function MatchMatrixPage({
 }) {
   // Team-only: this surface contains internal cross-partner data and must NOT
   // be exposed to partners/startups/investors.
-  await requireScoutModule();
+  const session = await requireScoutModule();
+  const isAdmin = session.user.role === "ADMIN";
 
   const { batch: batchParam } = await searchParams;
 
@@ -215,6 +217,12 @@ export default async function MatchMatrixPage({
 
   const rows = [...rowsByStartup.values()];
 
+  const logMeta = isAdmin
+    ? logMetaRecord(await getLogbookListMeta(rows.map((r) => r.startupId)))
+    : undefined;
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
+
   const pairings = matches.filter((m) =>
     cellHasData({
       id: m.id,
@@ -280,6 +288,9 @@ export default async function MatchMatrixPage({
         batchId={selected.id}
         partners={partners}
         rows={rows}
+        isAdmin={isAdmin}
+        logMeta={logMeta}
+        now={now}
       />
     </>
   );

@@ -2,6 +2,7 @@ import { Inbox, Store } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { BookingActions } from "@/components/marketplace/BookingActions";
+import { MarketplaceBookingLogTools } from "@/components/marketplace/MarketplaceBookingLogTools";
 import {
   BookingStatusBadge,
   OfferingTypeBadge,
@@ -12,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireTeam } from "@/lib/auth-guards";
+import { getLogbookListMeta, logMetaRecord } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 import { EDITOR_PATH } from "@/lib/venture-store-editor";
@@ -19,7 +21,7 @@ import { EDITOR_PATH } from "@/lib/venture-store-editor";
 export const metadata: Metadata = { title: "Venture-Store-Inbox" };
 
 const BOOKING_INCLUDE = {
-  startup: { select: { name: true } },
+  startup: { select: { id: true, name: true } },
   requestedBy: { select: { name: true } },
   handledBy: { select: { name: true } },
   program: { select: { title: true } },
@@ -61,6 +63,15 @@ export default async function MarketplaceInboxPage() {
   const inCoordination = bookings.filter(
     (b) => b.status === "IN_COORDINATION"
   ).length;
+
+  const logMetaMap =
+    isAdmin && active.length > 0
+      ? logMetaRecord(
+          await getLogbookListMeta([...new Set(active.map((b) => b.startup.id))])
+        )
+      : null;
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
 
   return (
     <>
@@ -122,7 +133,18 @@ export default async function MarketplaceInboxPage() {
                     {b.handledBy && ` · bearbeitet von ${b.handledBy.name}`}
                   </p>
                 </div>
-                <BookingActions bookingId={b.id} status={b.status} />
+                <div className="flex flex-col items-end gap-3">
+                  {isAdmin && logMetaMap && (
+                    <MarketplaceBookingLogTools
+                      startupId={b.startup.id}
+                      bookingId={b.id}
+                      meta={logMetaMap[b.startup.id] ?? null}
+                      now={now}
+                      contextName={targetName(b)}
+                    />
+                  )}
+                  <BookingActions bookingId={b.id} status={b.status} />
+                </div>
               </div>
             </Card>
           ))}

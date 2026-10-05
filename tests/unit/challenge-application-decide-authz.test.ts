@@ -365,26 +365,24 @@ describe("/challenges/[id] — the pitch review section decides ADMIN-only", () 
     return ChallengeDetailPage({ params: Promise.resolve({ id: "ch_1" }) });
   }
 
-  it("shows Annehmen/Ablehnen to an ADMIN", async () => {
+  it("mounts the ADMIN decision control for a pending application", async () => {
     signIn("ADMIN");
 
-    const text = textOf(await renderDetail()).join("");
+    const tree = await renderDetail();
+    const text = textOf(tree).join("");
 
     expect(text).toContain("EPINOIA");
-    expect(text).toContain("Annehmen");
-    expect(text).toContain("Ablehnen");
+    expect(decisionTargetsOf(tree)).toEqual(["app_1"]);
   });
 
-  it("shows the pitch to a MEMBER but no accept/reject buttons", async () => {
+  it("shows the pitch to a MEMBER but no decision control", async () => {
     signIn("MEMBER");
 
-    const text = textOf(await renderDetail()).join("");
+    const tree = await renderDetail();
+    const text = textOf(tree).join("");
 
-    // MEMBER may READ the confidential pitch…
     expect(text).toContain("Predictive Maintenance");
-    // …but the decision buttons are gone.
-    expect(text).not.toContain("Annehmen");
-    expect(text).not.toContain("Ablehnen");
+    expect(decisionTargetsOf(tree)).toHaveLength(0);
   });
 });
 

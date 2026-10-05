@@ -1,11 +1,9 @@
-import { Check, FlaskConical, Trash2, X } from "lucide-react";
+import { FlaskConical, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  decideApplication,
-  deleteChallenge,
-} from "@/app/actions/challenges";
+import { deleteChallenge } from "@/app/actions/challenges";
 import { ApplyForm } from "@/components/challenges/ApplyForm";
+import { ChallengeApplicationDecide } from "@/components/challenges/ChallengeApplicationDecide";
 import { ChallengeDescription } from "@/components/challenges/ChallengeDescription";
 import { ChallengeForm } from "@/components/challenges/ChallengeForm";
 import { ShareChallengeButton } from "@/components/challenges/ShareChallengeButton";
@@ -217,30 +215,7 @@ export default async function ChallengeDetailPage({
                       {a.pitch}
                     </p>
                     {isAdmin && a.status === "PENDING" && (
-                      <div className="mt-4 flex gap-2">
-                        <form
-                          action={async () => {
-                            "use server";
-                            await decideApplication(a.id, "ACCEPTED");
-                          }}
-                        >
-                          <Button type="submit" size="sm">
-                            <Check className="h-4 w-4" />
-                            Annehmen
-                          </Button>
-                        </form>
-                        <form
-                          action={async () => {
-                            "use server";
-                            await decideApplication(a.id, "REJECTED");
-                          }}
-                        >
-                          <Button type="submit" variant="danger" size="sm">
-                            <X className="h-4 w-4" />
-                            Ablehnen
-                          </Button>
-                        </form>
-                      </div>
+                      <ChallengeApplicationDecide applicationId={a.id} />
                     )}
                   </Card>
                 ))}

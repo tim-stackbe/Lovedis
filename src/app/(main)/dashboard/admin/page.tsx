@@ -18,8 +18,10 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { LinkButton } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
+import { LogDashboardSection } from "@/components/logbook/LogDashboardSection";
 import { requireRole } from "@/lib/auth-guards";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/constants";
+import { getLogDashboard } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
 
@@ -29,6 +31,8 @@ export default async function AdminDashboard() {
   const session = await requireRole(["ADMIN"]);
 
   const now = new Date();
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const nowMs = Date.now();
   const [
     userCount,
     startupCount,
@@ -45,6 +49,7 @@ export default async function AdminDashboard() {
     screenedForVerdicts,
     pendingPartners,
     openSupportTickets,
+    logDashboard,
   ] = await Promise.all([
     prisma.user.count({ where: { isActive: true } }),
     prisma.startup.count(),
@@ -89,6 +94,7 @@ export default async function AdminDashboard() {
         status: { in: ["OPEN", "IN_PROGRESS", "WAITING_ON_USER"] },
       },
     }),
+    getLogDashboard(),
   ]);
 
   const pendingPartnerVerdicts = screenedForVerdicts.filter(
@@ -129,6 +135,8 @@ export default async function AdminDashboard() {
           </Link>
         </div>
       </HeroBanner>
+
+      <LogDashboardSection data={logDashboard} now={nowMs} />
 
       <section className="space-y-4">
         <SectionLabel number="01" label="Puls" title="Braucht Aufmerksamkeit" />

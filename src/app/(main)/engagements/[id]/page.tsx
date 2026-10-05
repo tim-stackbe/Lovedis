@@ -3,11 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { EngagementStatusBadge } from "@/components/shared/badges";
 import { EngagementEditor } from "@/components/engagements/EngagementEditor";
+import { EngagementLogbookPanel } from "@/components/engagements/EngagementLogbookPanel";
 import { LinkButton } from "@/components/ui/Button";
 import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireRole } from "@/lib/auth-guards";
+import { getLogbookListMeta } from "@/lib/logbook";
 import { parseKpis, parseMilestones, pocProgress } from "@/lib/pocs";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
@@ -26,17 +28,28 @@ export default async function EngagementDetailPage({
     where: { id },
     include: {
       partner: { select: { name: true, company: true } },
-      startup: { select: { name: true } },
+      startup: { select: { id: true, name: true } },
       createdBy: { select: { name: true } },
     },
   });
   if (!engagement) notFound();
 
+  const isAdmin = session.user.role === "ADMIN";
   const isTeam =
     session.user.role === "ADMIN" || session.user.role === "MEMBER";
   if (!isTeam && engagement.partnerId !== session.user.id) {
     redirect("/engagements");
   }
+
+  const logMeta = isAdmin
+    ? (await getLogbookListMeta([engagement.startup.id])).get(
+        engagement.startup.id
+      ) ?? null
+    : null;
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
+  const partnerLabel =
+    engagement.partner.company ?? engagement.partner.name;
 
   const kpis = parseKpis(engagement.kpis);
   const milestones = parseMilestones(engagement.milestones);
@@ -69,6 +82,18 @@ export default async function EngagementDetailPage({
         title="Aktueller Stand"
         actions={<EngagementStatusBadge value={engagement.status} />}
       />
+
+      {isAdmin && (
+        <EngagementLogbookPanel
+          startupId={engagement.startup.id}
+          startupName={engagement.startup.name}
+          engagementId={engagement.id}
+          engagementTitle={engagement.title}
+          partnerLabel={partnerLabel}
+          meta={logMeta}
+          now={now}
+        />
+      )}
 
       <EngagementEditor
         engagementId={engagement.id}

@@ -19,6 +19,9 @@ import { Card } from "@/components/ui/Card";
 import { ErrorChip, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
+import { LogIndicator } from "@/components/logbook/LogIndicator";
+import { LogQuickAdd } from "@/components/logbook/LogQuickAdd";
+import type { LogListMeta } from "@/lib/logbook";
 import {
   MATCH_CONTACT_STATUSES,
   MATCH_CONTACT_STATUS_LABELS,
@@ -52,6 +55,10 @@ interface MatchMatrixBoardProps {
   batchId: string;
   partners: PartnerColumn[];
   rows: MatchRowView[];
+  /** Logbuch meta is loaded only for ADMIN sessions. */
+  isAdmin?: boolean;
+  logMeta?: Record<string, LogListMeta>;
+  now?: number;
 }
 
 // --- Heatmap encoding -------------------------------------------------------
@@ -409,10 +416,16 @@ function EditCellDialog({
   batchId,
   target,
   onClose,
+  isAdmin,
+  logMeta,
+  now,
 }: {
   batchId: string;
   target: EditTarget;
   onClose: () => void;
+  isAdmin: boolean;
+  logMeta?: Record<string, LogListMeta>;
+  now: number;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(upsertMatchCell, undefined);
@@ -441,6 +454,14 @@ function EditCellDialog({
   }, [pending, onClose]);
 
   const cell = target.cell;
+  const startupMeta = logMeta?.[target.startupId] ?? null;
+  const quickAdd = {
+    refType: "PartnerStartupMatch" as const,
+    refId: cell?.id ?? null,
+    partnerCompanyId: target.partner.id,
+    batchId,
+    contextName: target.partner.name,
+  };
 
   return (
     <div className="fixed inset-0 z-[70] flex justify-end">
@@ -455,9 +476,19 @@ function EditCellDialog({
             <p className="text-[11px] font-semibold uppercase tracking-wider text-lv-blue">
               {target.partner.name}
             </p>
-            <h2 className="mt-0.5 text-base font-bold text-lv-text">
-              {target.startupName}
-            </h2>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-lv-text">
+                {target.startupName}
+              </h2>
+              {isAdmin && (
+                <LogIndicator
+                  startupId={target.startupId}
+                  meta={startupMeta}
+                  now={now}
+                  quickAdd={quickAdd}
+                />
+              )}
+            </div>
           </div>
           <button
             type="button"
@@ -471,6 +502,18 @@ function EditCellDialog({
 
         <div className="space-y-5 px-6 py-5">
           <CellDetails cell={cell} />
+
+          {isAdmin && (
+            <LogQuickAdd
+              startupId={target.startupId}
+              refType="PartnerStartupMatch"
+              refId={cell?.id}
+              partnerCompanyId={target.partner.id}
+              batchId={batchId}
+              contextName={target.partner.name}
+              label="Match notieren"
+            />
+          )}
 
           <div className="space-y-2">
             <p className="lv-wordmark text-xs text-lv-blue">
@@ -614,6 +657,9 @@ export function MatchMatrixBoard({
   batchId,
   partners,
   rows,
+  isAdmin = false,
+  logMeta,
+  now = 0,
 }: MatchMatrixBoardProps) {
   const [partnerSlug, setPartnerSlug] = useState<string | null>(null);
   const [useCase, setUseCase] = useState<MatchUseCaseType | null>(null);
@@ -916,7 +962,7 @@ export function MatchMatrixBoard({
 
       <p className="flex items-center gap-2 text-xs text-lv-secondary">
         <LayoutGrid className="h-3.5 w-3.5" />
-        Interne Cross-Partner-Ansicht — nur fürs LOVEDIS-Team. Zelle anklicken,
+        Interne Cross-Partner-Ansicht, nur fürs LOVEDIS-Team. Zelle anklicken,
         um Details zu sehen und die Passung zu pflegen.
       </p>
 
@@ -926,6 +972,9 @@ export function MatchMatrixBoard({
           batchId={batchId}
           target={editTarget}
           onClose={() => setEditTarget(null)}
+          isAdmin={isAdmin}
+          logMeta={logMeta}
+          now={now}
         />
       )}
     </>

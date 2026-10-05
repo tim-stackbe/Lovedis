@@ -12,11 +12,14 @@ import {
   createCommentSchema,
   createEntrySchema,
   deriveSystemEvents,
+  describeLogContext,
   entryFormInput,
   filterTimeline,
   mergeTimeline,
   openFollowUps,
   parseLogFilters,
+  pickStaleStartups,
+  sortDashboardFollowUps,
   updateEntrySchema,
   type DerivedSource,
   type LogEntryView,
@@ -297,6 +300,71 @@ describe("derived system events", () => {
       "le_old",
       "startup-created:su_1",
     ]);
+  });
+});
+
+describe("context labels and dashboard helpers", () => {
+  it("builds refType labels for timeline entries", () => {
+    expect(
+      describeLogContext("PartnerStartupMatch", "m1", {
+        contextLabel: "Lupp",
+        batchId: "b1",
+      })
+    ).toEqual({
+      label: "aus Match-Matrix: Lupp",
+      href: "/match-matrix?batch=b1",
+    });
+    expect(
+      describeLogContext("MarketplaceBooking", "bk1", {
+        contextLabel: "Mentoring",
+      })
+    ).toMatchObject({ label: "aus Venture Store: Mentoring" });
+    expect(describeLogContext(null, null, {})).toBeNull();
+  });
+
+  it("sorts follow-ups mine first, then by due date", () => {
+    const sorted = sortDashboardFollowUps([
+      {
+        id: "b",
+        startupId: "s",
+        startupName: "B",
+        nextStep: "x",
+        followUpAt: d("2026-12-01"),
+        assignee: null,
+        mine: false,
+        overdue: false,
+      },
+      {
+        id: "a",
+        startupId: "s",
+        startupName: "A",
+        nextStep: "y",
+        followUpAt: d("2026-11-01"),
+        assignee: null,
+        mine: true,
+        overdue: false,
+      },
+    ]);
+    expect(sorted.map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("lists stale active startups without recent manual contact", () => {
+    const now = d("2026-10-05T12:00:00Z");
+    const last = new Map<string, Date>([
+      ["fresh", d("2026-10-01T12:00:00Z")],
+      ["old", d("2026-08-01T12:00:00Z")],
+    ]);
+    const stale = pickStaleStartups(
+      [
+        { id: "fresh", name: "Fresh", pipelineStage: "PILOT" },
+        { id: "old", name: "Old", pipelineStage: "SCREENING" },
+        { id: "never", name: "Never", pipelineStage: "IN_EVALUATION" },
+      ],
+      last,
+      now,
+      30
+    );
+    expect(stale.map((s) => s.id)).toEqual(["never", "old"]);
   });
 });
 
