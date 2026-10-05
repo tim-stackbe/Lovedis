@@ -233,22 +233,58 @@ export async function applyToChallenge(
 
 export async function decideApplication(
   applicationId: string,
-  decision: "ACCEPTED" | "REJECTED"
+  decision: "ACCEPTED" | "REJECTED",
+  note?: string
 ): Promise<ActionState> {
   // Accepting/rejecting an incoming challenge application is an ADMIN-only
   // decision. Deliberately NOT `requireTeam()` (ADMIN + MEMBER) and NOT open to
   // the owning BUSINESS_PARTNER: only Lovedis admins decide who advances to a
   // PoC. Re-validated here server-side so the guard bites before any DB write,
   // regardless of what the client renders.
-  await requireRole(["ADMIN"]);
+  const session = await requireRole(["ADMIN"]);
   const parsed = z.enum(["ACCEPTED", "REJECTED"]).safeParse(decision);
   if (!parsed.success) return { error: "Ungültige Entscheidung." };
+  const noteParsed = z
+    .string()
+    .trim()
+    .max(5000, "Die Notiz ist zu lang (max. 5.000 Zeichen).")
+    .optional()
+    .safeParse(note);
+  if (!noteParsed.success) return { error: firstZodError(noteParsed.error) };
 
   const application = await prisma.challengeApplication.findUnique({
     where: { id: applicationId },
-    select: { id: true, challenge: { select: { id: true } } },
+    select: {
+      id: true,
+      startupId: true,
+      challenge: { select: { id: true, title: true } },
+    },
   });
   if (!application) return { error: "Bewerbung nicht gefunden." };
+
+  // Optional internal note: lands in the startup's admin-only Logbuch as a
+  // DECISION entry, never on the application (which the startup can see).
+  if (noteParsed.data) {
+    await prisma.startupLogEntry.create({
+      data: {
+        startupId: application.startupId,
+        type: "DECISION",
+        source: "MANUAL",
+        authorId: session.user.id,
+        title: `${parsed.data === "ACCEPTED" ? "Angenommen" : "Abgelehnt"}: ${application.challenge.title}`,
+        body: noteParsed.data,
+        refType: "ChallengeApplication",
+        refId: application.id,
+        metadata: {
+          contextLabel: application.challenge.title,
+          challengeId: application.challenge.id,
+          decision: parsed.data,
+        },
+      },
+    });
+    revalidatePath(`/startups/${application.startupId}/logbuch`);
+    revalidatePath(`/startups/${application.startupId}`);
+  }
 
   // Deciding an application ONLY moves its status. Accepting must NOT spawn a
   // PoC: per the business process the partner and startup first inform the

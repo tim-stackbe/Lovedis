@@ -15,10 +15,12 @@ import {
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
 import { updatePipelineStage } from "@/app/actions/startups";
+import { LogIndicator } from "@/components/logbook/LogIndicator";
 import { ScorePill } from "@/components/shared/badges";
 import { Badge } from "@/components/ui/Badge";
 import type { PipelineStage } from "@/generated/prisma/enums";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/constants";
+import type { LogListMeta } from "@/lib/logbook";
 import { cn } from "@/lib/utils";
 
 export interface PipelineStartup {
@@ -28,6 +30,8 @@ export interface PipelineStartup {
   pipelineStage: PipelineStage;
   /** Team-consensus weighted total (0–5), null when not yet scored. */
   consensusScore: number | null;
+  /** Logbuch meta; only set (possibly null) for ADMIN sessions. */
+  logMeta?: LogListMeta | null;
 }
 
 const STAGE_ACCENTS: Record<PipelineStage, string> = {
@@ -42,9 +46,11 @@ const STAGE_ACCENTS: Record<PipelineStage, string> = {
 function StartupCard({
   startup,
   dragging,
+  now,
 }: {
   startup: PipelineStartup;
   dragging?: boolean;
+  now: number;
 }) {
   return (
     <div
@@ -62,9 +68,17 @@ function StartupCard({
         </Link>
         <ScorePill score={startup.consensusScore} />
       </div>
-      <Badge tone="pink" className="mt-2">
-        {startup.industry}
-      </Badge>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <Badge tone="pink">{startup.industry}</Badge>
+        {startup.logMeta !== undefined && !dragging && (
+          <LogIndicator
+            startupId={startup.id}
+            meta={startup.logMeta}
+            now={now}
+            mode="link"
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -72,9 +86,11 @@ function StartupCard({
 function DraggableCard({
   startup,
   onMove,
+  now,
 }: {
   startup: PipelineStartup;
   onMove: (id: string, stage: PipelineStage) => void;
+  now: number;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: startup.id,
@@ -87,7 +103,7 @@ function DraggableCard({
         {...attributes}
         className="cursor-grab touch-none active:cursor-grabbing"
       >
-        <StartupCard startup={startup} />
+        <StartupCard startup={startup} now={now} />
       </div>
       {/* Non-drag fallback for touch / small screens */}
       <label className="mt-1.5 block md:hidden">
@@ -112,10 +128,12 @@ function Column({
   stage,
   startups,
   onMove,
+  now,
 }: {
   stage: PipelineStage;
   startups: PipelineStartup[];
   onMove: (id: string, stage: PipelineStage) => void;
+  now: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
   return (
@@ -141,7 +159,7 @@ function Column({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-2 pt-0">
         {startups.map((s) => (
-          <DraggableCard key={s.id} startup={s} onMove={onMove} />
+          <DraggableCard key={s.id} startup={s} onMove={onMove} now={now} />
         ))}
         {startups.length === 0 && (
           <div className="rounded-button border border-dashed border-lv-border p-4 text-center text-xs text-lv-secondary">
@@ -153,7 +171,14 @@ function Column({
   );
 }
 
-export function PipelineBoard({ startups }: { startups: PipelineStartup[] }) {
+export function PipelineBoard({
+  startups,
+  now,
+}: {
+  startups: PipelineStartup[];
+  /** Server render time (ms) for the Logbuch indicator. */
+  now: number;
+}) {
   const [, startTransition] = useTransition();
   const [optimistic, applyOptimistic] = useOptimistic(
     startups,
@@ -204,11 +229,12 @@ export function PipelineBoard({ startups }: { startups: PipelineStartup[] }) {
             stage={stage}
             startups={optimistic.filter((s) => s.pipelineStage === stage)}
             onMove={moveStartup}
+            now={now}
           />
         ))}
       </div>
       <DragOverlay>
-        {active ? <StartupCard startup={active} dragging /> : null}
+        {active ? <StartupCard startup={active} dragging now={now} /> : null}
       </DragOverlay>
     </DndContext>
   );

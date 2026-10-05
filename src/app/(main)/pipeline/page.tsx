@@ -8,21 +8,25 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireScoutModule } from "@/lib/auth-guards";
 import { getConsensusByStartup } from "@/lib/consensus-data";
+import { getLogbookListMeta } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Pipeline" };
 
 export default async function PipelinePage() {
-  await requireScoutModule();
+  const session = await requireScoutModule();
+  const isAdmin = session.user.role === "ADMIN";
 
   const startups = await prisma.startup.findMany({
     select: { id: true, name: true, industry: true, pipelineStage: true },
     orderBy: { updatedAt: "desc" },
   });
 
-  const consensusByStartup = await getConsensusByStartup(
-    startups.map((s) => s.id)
-  );
+  const ids = startups.map((s) => s.id);
+  const [consensusByStartup, logMeta] = await Promise.all([
+    getConsensusByStartup(ids),
+    isAdmin ? getLogbookListMeta(ids) : null,
+  ]);
 
   const board: PipelineStartup[] = startups.map((s) => ({
     id: s.id,
@@ -30,7 +34,10 @@ export default async function PipelinePage() {
     industry: s.industry,
     pipelineStage: s.pipelineStage,
     consensusScore: consensusByStartup.get(s.id)?.weightedTotal ?? null,
+    logMeta: logMeta ? (logMeta.get(s.id) ?? null) : undefined,
   }));
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
 
   const inEvaluation = board.filter(
     (s) => s.pipelineStage === "IN_EVALUATION"
@@ -52,7 +59,7 @@ export default async function PipelinePage() {
       </HeroBanner>
 
       <SectionLabel number="04" label="Pipeline" title="Kanban-Board" />
-      <PipelineBoard startups={board} />
+      <PipelineBoard startups={board} now={now} />
     </>
   );
 }

@@ -9,6 +9,7 @@ import {
   RecommendationBadge,
   SourceTypeBadge,
 } from "@/components/shared/badges";
+import { LogIndicator } from "@/components/logbook/LogIndicator";
 import { LinkButton } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { BannerStat, Card } from "@/components/ui/Card";
@@ -18,6 +19,7 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireTeam } from "@/lib/auth-guards";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { getLogbookListMeta } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Longlist" };
@@ -56,7 +58,8 @@ export default async function LonglistPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requireTeam();
+  const session = await requireTeam();
+  const isAdmin = session.user.role === "ADMIN";
   const { campaign, stage } = await searchParams;
 
   const activeStage = PIPELINE_STAGES.includes(stage as PipelineStage)
@@ -91,6 +94,13 @@ export default async function LonglistPage({
       },
     },
   });
+
+  // Logbuch meta is ADMIN-only: members never trigger the query.
+  const logMeta = isAdmin
+    ? await getLogbookListMeta(startups.map((s) => s.id))
+    : null;
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
 
   const screened = startups.filter((s) => s.screenRecommendation).length;
   const buildHref = (next: Partial<SearchParams>) => {
@@ -198,6 +208,14 @@ export default async function LonglistPage({
                         {s.name}
                       </Link>
                       <p className="text-xs text-lv-secondary">{s.industry}</p>
+                      {logMeta && (
+                        <LogIndicator
+                          startupId={s.id}
+                          meta={logMeta.get(s.id)}
+                          now={now}
+                          className="mt-1.5"
+                        />
+                      )}
                     </div>
                     <PipelineStageBadge value={s.pipelineStage} />
                   </div>
@@ -283,6 +301,14 @@ export default async function LonglistPage({
                       {s.name}
                     </Link>
                     <p className="text-xs text-lv-secondary">{s.industry}</p>
+                    {logMeta && (
+                      <LogIndicator
+                        startupId={s.id}
+                        meta={logMeta.get(s.id)}
+                        now={now}
+                        className="mt-1.5"
+                      />
+                    )}
                   </Td>
                   <Td className="text-lv-secondary">{s.campaign?.name ?? "—"}</Td>
                   <Td>

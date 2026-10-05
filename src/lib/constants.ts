@@ -8,6 +8,8 @@ import type {
   EngagementStatus,
   IntroStatus,
   KnowledgeResourceType,
+  LogEntrySource,
+  LogEntryType,
   MarketplaceOfferingType,
   MatchContactStatus,
   MatchUseCaseType,
@@ -610,3 +612,76 @@ export const MATCH_CONTACT_STATUS_LABELS: Record<MatchContactStatus, string> = {
   FOLLOW_UP: "Folgetermin",
   PILOT_AGREED: "Pilot vereinbart",
 };
+
+// ---------------------------------------------------------------------------
+// Logbuch (admin-only interaction log per startup)
+// ---------------------------------------------------------------------------
+
+/** Types an admin can pick in the composer. SYSTEM is reserved for auto events. */
+export const LOG_ENTRY_MANUAL_TYPES = [
+  "NOTE",
+  "CALL",
+  "MEETING",
+  "EMAIL",
+  "EVENT",
+  "DECISION",
+] as const satisfies readonly LogEntryType[];
+
+export const LOG_ENTRY_TYPE_LABELS: Record<LogEntryType, string> = {
+  NOTE: "Notiz",
+  CALL: "Call",
+  MEETING: "Meeting",
+  EMAIL: "E-Mail",
+  EVENT: "Event",
+  DECISION: "Entscheidung",
+  SYSTEM: "System",
+};
+
+/** Badge / timeline-marker tone per type (same keys as `BadgeTone`). */
+export const LOG_ENTRY_TYPE_TONES: Record<
+  LogEntryType,
+  "mint" | "blue" | "orange" | "yellow" | "pink" | "muted"
+> = {
+  NOTE: "muted",
+  CALL: "blue",
+  MEETING: "mint",
+  EMAIL: "yellow",
+  EVENT: "pink",
+  DECISION: "orange",
+  SYSTEM: "muted",
+};
+
+export const LOG_ENTRY_SOURCE_LABELS: Record<LogEntrySource, string> = {
+  MANUAL: "Manuell",
+  SYSTEM: "System",
+};
+
+/** Max. pinned entries per startup, keeps the "Angepinnt" block scannable. */
+export const LOG_MAX_PINNED = 3;
+
+/** Platform objects an entry can be captured from ("aus Match-Matrix: …"). */
+export const LOG_REF_TYPES = [
+  "PartnerStartupMatch",
+  "MarketplaceBooking",
+  "ChallengeApplication",
+  "Engagement",
+] as const;
+export type LogRefType = (typeof LOG_REF_TYPES)[number];
+
+export const LOG_REF_TYPE_LABELS: Record<LogRefType, string> = {
+  PartnerStartupMatch: "Match-Matrix",
+  MarketplaceBooking: "Venture Store",
+  ChallengeApplication: "Challenge",
+  Engagement: "Engagement",
+};
+
+/** Pipeline stages where a startup is actively worked on (stale-contact widget). */
+export const LOG_ACTIVE_STAGES: PipelineStage[] = [
+  "SCREENING",
+  "IN_EVALUATION",
+  "PILOT",
+  "PARTNERED",
+];
+
+/** Days without a manual entry after which an active startup counts as stale. */
+export const LOG_STALE_DAYS = 30;

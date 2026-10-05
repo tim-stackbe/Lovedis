@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@/generated/prisma/client";
 import type { PipelineStage, StartupStage } from "@/generated/prisma/enums";
+import { LogIndicator } from "@/components/logbook/LogIndicator";
 import { PipelineStageBadge, ScorePill } from "@/components/shared/badges";
 import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
@@ -20,6 +21,7 @@ import {
   STARTUP_STAGES,
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
+import { getLogbookListMeta } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 import { formatMillions, truncate } from "@/lib/utils";
 
@@ -37,7 +39,8 @@ export default async function StartupsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requireScoutModule();
+  const session = await requireScoutModule();
+  const isAdmin = session.user.role === "ADMIN";
   const { q, industry, stage, pipeline } = await searchParams;
 
   const where: Prisma.StartupWhereInput = {};
@@ -75,10 +78,15 @@ export default async function StartupsPage({
     prisma.startup.count({ where: { pipelineStage: "PARTNERED" } }),
   ]);
 
-  // Team-consensus score per (filtered) startup for the Score column.
-  const consensusByStartup = await getConsensusByStartup(
-    startups.map((s) => s.id)
-  );
+  // Team-consensus score per (filtered) startup for the Score column. The
+  // Logbuch meta is ADMIN-only: members never trigger the query.
+  const ids = startups.map((s) => s.id);
+  const [consensusByStartup, logMeta] = await Promise.all([
+    getConsensusByStartup(ids),
+    isAdmin ? getLogbookListMeta(ids) : null,
+  ]);
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
 
   return (
     <>
@@ -186,6 +194,14 @@ export default async function StartupsPage({
                     <p className="mt-0.5 text-xs text-lv-secondary">
                       {truncate(s.description, 70)}
                     </p>
+                    {logMeta && (
+                      <LogIndicator
+                        startupId={s.id}
+                        meta={logMeta.get(s.id)}
+                        now={now}
+                        className="mt-1.5"
+                      />
+                    )}
                   </Td>
                   <Td>
                     <Badge tone="pink">{s.industry}</Badge>

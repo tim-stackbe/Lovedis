@@ -24,6 +24,7 @@ import {
   ScorePill,
   SourceTypeBadge,
 } from "@/components/shared/badges";
+import { LogbookTeaserCard } from "@/components/logbook/LogbookTeaserCard";
 import { InitialAssessmentForm } from "@/components/screening/InitialAssessmentForm";
 import { AttachmentForm } from "@/components/startups/AttachmentForm";
 import { ContactForm } from "@/components/startups/ContactForm";
@@ -42,6 +43,7 @@ import {
   RADAR_RING_LABELS,
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
+import { getLogbookTeaser } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 import { isChallengeFitGated, scoresToMap } from "@/lib/scoring";
 import { formatDate, formatMillions } from "@/lib/utils";
@@ -51,7 +53,8 @@ export default async function StartupDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireScoutModule();
+  const session = await requireScoutModule();
+  const isAdmin = session.user.role === "ADMIN";
   const { id } = await params;
 
   const startup = await prisma.startup.findUnique({
@@ -81,12 +84,14 @@ export default async function StartupDetailPage({
   // evaluator). This is the primary result; the per-evaluator table below shows
   // the individual breakdown for transparency. Fetched in parallel with the
   // (independent) campaign list to save a DB round-trip.
-  const [campaigns, consensus] = await Promise.all([
+  // The Logbuch is ADMIN-only: members never trigger its query.
+  const [campaigns, consensus, logbook] = await Promise.all([
     prisma.scoutingCampaign.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     getStartupConsensus(startup.id),
+    isAdmin ? getLogbookTeaser(startup.id) : null,
   ]);
   const hasConsensus = consensus.evaluatorCount > 0;
 
@@ -121,6 +126,8 @@ export default async function StartupDetailPage({
           <BannerStat label="Team" value={startup.teamSize ?? "—"} />
         </div>
       </HeroBanner>
+
+      {logbook && <LogbookTeaserCard startupId={startup.id} teaser={logbook} />}
 
       <section className="space-y-4">
         <SectionLabel number="01" label="Profil" title="Unternehmensdaten" />

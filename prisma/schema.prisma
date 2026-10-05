@@ -359,6 +359,11 @@ model User {
   supportTicketsHandled SupportTicket[]        @relation("SupportTicketHandler")
   supportTicketMessages SupportTicketMessage[] @relation("SupportTicketMessageAuthor")
 
+  // Logbuch (admin-only interaction log per startup)
+  logEntriesAuthored    StartupLogEntry[]   @relation("LogEntryAuthor")
+  logFollowUpsAssigned  StartupLogEntry[]   @relation("LogEntryFollowUpAssignee")
+  logCommentsAuthored   StartupLogComment[] @relation("LogCommentAuthor")
+
   @@index([role])
   @@index([isActive])
   @@index([companyId])
@@ -557,6 +562,9 @@ model Startup {
   matches        PartnerStartupMatch[]
   batchStartups  BatchStartup[]
   partnerVotes   PartnerVote[]
+
+  // Logbuch (admin-only). Never include this from storefront/partner reads.
+  logEntries     StartupLogEntry[] @relation("StartupLogEntries")
 
   @@index([name])
   @@index([industry])
@@ -1326,4 +1334,92 @@ model SupportTicketMessage {
   createdAt DateTime      @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Logbuch: admin-only, living interaction log per startup (calls, meetings,
+// notes, decisions). Strictly internal: only ADMIN may read or write
+// (requireAdmin), it is never part of storefront/partner/investor reads.
+// System events (screening, evaluations, bookings, …) are derived at read time
+// from existing tables (src/lib/logbook.ts); `source = SYSTEM` + `eventKey`
+// are reserved for a later write-time event log.
+// ---------------------------------------------------------------------------
+
+enum LogEntryType {
+  NOTE
+  CALL
+  MEETING
+  EMAIL
+  EVENT
+  DECISION
+  SYSTEM
+}
+
+enum LogEntrySource {
+  MANUAL
+  SYSTEM
+}
+
+model StartupLogEntry {
+  id         String         @id @default(cuid())
+  startupId  String
+  startup    Startup        @relation("StartupLogEntries", fields: [startupId], references: [id], onDelete: Cascade)
+  type       LogEntryType   @default(NOTE)
+  source     LogEntrySource @default(MANUAL)
+  // SetNull keeps the entry when the author is deleted ("Ehemaliges Teammitglied").
+  authorId   String?
+  author     User?          @relation("LogEntryAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  // When the interaction happened (may lie in the past), distinct from createdAt.
+  occurredAt DateTime       @default(now())
+  title      String?
+  body       String // Markdown (rendered by the tiny SSOT renderer)
+
+  // Participants: Contact ids of this startup, internal User ids, free text.
+  contactIds           String[] @default([])
+  teamParticipantIds   String[] @default([])
+  externalParticipants String?
+
+  // Next step / follow-up.
+  nextStep           String?
+  followUpAt         DateTime?
+  followUpAssigneeId String?
+  followUpAssignee   User?     @relation("LogEntryFollowUpAssignee", fields: [followUpAssigneeId], references: [id], onDelete: SetNull)
+  followUpDoneAt     DateTime?
+
+  pinnedAt   DateTime?
+  pinnedById String? // scalar audit; no back-relation
+
+  // Idempotency key + source reference for future SYSTEM rows.
+  eventKey String? @unique
+  refType  String?
+  refId    String?
+  metadata Json    @default("{}")
+
+  editedAt    DateTime?
+  deletedAt   DateTime? // soft delete
+  deletedById String? // scalar audit; no back-relation
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  comments StartupLogComment[]
+
+  @@index([startupId, occurredAt])
+  @@index([startupId, pinnedAt])
+  @@index([followUpAssigneeId, followUpAt])
+}
+
+model StartupLogComment {
+  id          String          @id @default(cuid())
+  entryId     String
+  entry       StartupLogEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  authorId    String?
+  author      User?           @relation("LogCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  parentId    String? // reserved for nested replies; the MVP renders a flat list
+  body        String
+  editedAt    DateTime?
+  deletedAt   DateTime?
+  deletedById String?
+  createdAt   DateTime        @default(now())
+
+  @@index([entryId, createdAt])
 }
