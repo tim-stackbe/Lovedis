@@ -3,15 +3,16 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
-## DRAFT: Logbuch MVP (Integration)
+## 2026-10-05: Logbuch MVP (Integration)
 
 | Feld | Wert |
 |------|------|
-| Status | **Nicht deployed** |
+| Status | **Deployed** |
 | Ziel | Alpha (`alpha.lovedis.de`) |
 | Branch | `Dedalus` |
-| Vorher live (Stand Abfrage 2026-10-05) | Version `58ad58f`, Branch `HEAD`, deployedAt `2026-10-05T13:37:06Z` |
-| Geplanter Commit | _(nach lokalem Commit eintragen)_ |
+| Vorher live | Version `58ad58f`, deployedAt `2026-10-05T13:37:06Z` |
+| Jetzt live | Version `95dcce2`, deployedAt `2026-10-05T13:43:15Z` |
+| Commits | `58ad58f` (Logbuch Kern) + `95dcce2` (Team-Integrationen) |
 
 ### Inhalt dieses Releases
 
@@ -31,18 +32,18 @@ Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy
 
 ### Rollback
 
-Vorherige Version erneut deployen (rsync vom letzten bekannten SHA):
+Vorherige Version `58ad58f` aus sauberem Worktree erneut deployen:
 
 ```bash
-git checkout <vorheriger-sha>
-./deploy/hetzner/deploy-platform.sh
-# Health prüfen:
+git worktree add /tmp/lovedis-rollback 58ad58f
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
 curl -s https://alpha.lovedis.de/api/health
+git worktree remove /tmp/lovedis-rollback
 ```
 
 ### Checkliste nach Deploy
 
-- [ ] `curl -s https://alpha.lovedis.de/api/health` zeigt neuen `version`-SHA
+- [x] `curl -s https://alpha.lovedis.de/api/health` zeigt `95dcce2`
 - [ ] Admin: Startup-Logbuch anlegen, Follow-up, Drawer auf Pipeline
 - [ ] Match-Matrix: Notiz aus Zelle
 - [ ] Venture Store: Koordinations-Notiz
