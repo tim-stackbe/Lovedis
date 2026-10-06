@@ -3,6 +3,40 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-06: Sales & Growth Coming-Soon-Sticker
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `95dcce2`, deployedAt `2026-10-05T13:43:15Z` |
+| Jetzt live | Version `47d4ce7`, deployedAt siehe `/api/health` |
+| Commit | `47d4ce7` |
+
+### Inhalt dieses Releases
+
+- Programm „Sales & Growth“: Sticker-Text „COMING SOON Januar 2027“ (Katalog + Karten/Detail-UI)
+- Keine DB-Migration nötig (UI liest `comingSoonLabel` aus `marketplace-catalog.ts` per Programmtitel)
+
+### Rollback
+
+Vorherige Version `95dcce2` aus sauberem Worktree erneut deployen:
+
+```bash
+git worktree add /tmp/lovedis-rollback 95dcce2
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+curl -s https://alpha.lovedis.de/api/health
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] `curl -s https://alpha.lovedis.de/api/health` zeigt `47d4ce7`
+- [ ] Venture Marketplace: Karte „Sales & Growth“ mit Sticker „COMING SOON Januar 2027“
+
+---
+
 ## 2026-10-05: Logbuch MVP (Integration)
 
 | Feld | Wert |
