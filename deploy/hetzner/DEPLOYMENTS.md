@@ -3,6 +3,39 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-06: Coming-Soon-Sticker Position Feature-Karte
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `47d4ce7`, deployedAt `2026-10-06T14:19:02Z` |
+| Jetzt live | Version `4b9b1cd`, deployedAt siehe `/api/health` |
+| Commit | `4b9b1cd` |
+
+### Inhalt dieses Releases
+
+- `ProgramFeatureCard`: orange Coming-Soon-Sticker von `top-4` auf `top-8` (Abstand zum oberen Kartenrand)
+
+### Rollback
+
+Vorherige Version `47d4ce7` aus sauberem Worktree erneut deployen:
+
+```bash
+git worktree add /tmp/lovedis-rollback 47d4ce7
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+curl -s https://alpha.lovedis.de/api/health
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] `curl -s https://alpha.lovedis.de/api/health` zeigt `4b9b1cd`
+- [ ] Venture Marketplace: Feature-Karte mit Sticker sitzt tiefer (`top-8`)
+
+---
+
 ## 2026-10-06: Sales & Growth Coming-Soon-Sticker
 
 | Feld | Wert |
