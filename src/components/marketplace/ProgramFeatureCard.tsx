@@ -49,7 +49,7 @@ export function ProgramFeatureCard({ program }: { program: ProgramCardData }) {
         </span>
         {comingSoonSticker && (
           <span
-            className={`absolute right-4 top-4 rotate-3 rounded-full bg-lv-orange px-3 py-1 text-xs font-bold tracking-wide text-white shadow-md${
+            className={`absolute right-4 top-8 rotate-3 rounded-full bg-lv-orange px-3 py-1 text-xs font-bold tracking-wide text-white shadow-md${
               comingSoonSticker === DEFAULT_COMING_SOON_LABEL
                 ? " uppercase"
                 : ""
