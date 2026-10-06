@@ -52,6 +52,8 @@ export interface ProgramSeed {
   workshops?: ProgramWorkshop[];
   /** Shows a "Coming Soon" sticker; enrolment stays possible. */
   comingSoon?: boolean;
+  /** Optional sticker copy (default: „Coming Soon“, rendered uppercase on the card). */
+  comingSoonLabel?: string;
   /** FIX credits an enrolment consumes (always 0 since programs are free). */
   fixCreditCost: number;
   sortOrder: number;
@@ -177,6 +179,7 @@ export const MARKETPLACE_PROGRAMS: ProgramSeed[] = [
     status: "OPEN",
     format: "4 Wochen · Online · Termine folgen",
     comingSoon: true,
+    comingSoonLabel: "COMING SOON Januar 2027",
     fixCreditCost: 0,
     sortOrder: 2,
   },
@@ -707,3 +710,16 @@ export const MARKETPLACE_OFFERINGS: OfferingSeed[] = [
     sortOrder: 33,
   },
 ];
+
+/** Default orange-sticker copy when `comingSoon` is set without a custom label. */
+export const DEFAULT_COMING_SOON_LABEL = "Coming Soon";
+
+/** Sticker text for a program card or detail hero (catalog is the UI source of truth). */
+export function programComingSoonLabel(
+  title: string,
+  comingSoon: boolean,
+): string | null {
+  if (!comingSoon) return null;
+  const fromCatalog = MARKETPLACE_PROGRAMS.find((p) => p.title === title);
+  return fromCatalog?.comingSoonLabel ?? DEFAULT_COMING_SOON_LABEL;
+}

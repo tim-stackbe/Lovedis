@@ -18,6 +18,10 @@ import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import type { OnBehalfStartup } from "@/lib/marketplace-view";
 import type { ProgramWorkshop } from "@/lib/program-workshops";
+import {
+  DEFAULT_COMING_SOON_LABEL,
+  programComingSoonLabel,
+} from "@/lib/marketplace-catalog";
 
 interface Props {
   offeringType: MarketplaceOfferingType;
@@ -107,6 +111,8 @@ export function OfferingDetail({
   viewOnly = false,
   startups = [],
 }: Props) {
+  const comingSoonSticker = programComingSoonLabel(title, comingSoon);
+
   const hasMeta = Boolean(
     providerCompany || contactPerson || website || sessionDate || format
   );
@@ -134,9 +140,15 @@ export function OfferingDetail({
         title={title}
         subtitle={subtitle}
         actions={
-          comingSoon ? (
-            <span className="rotate-3 rounded-full bg-lv-orange px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-white shadow-md">
-              Coming Soon
+          comingSoonSticker ? (
+            <span
+              className={`rotate-3 rounded-full bg-lv-orange px-4 py-1.5 text-sm font-bold tracking-wide text-white shadow-md${
+                comingSoonSticker === DEFAULT_COMING_SOON_LABEL
+                  ? " uppercase"
+                  : ""
+              }`}
+            >
+              {comingSoonSticker}
             </span>
           ) : undefined
         }
@@ -148,7 +160,9 @@ export function OfferingDetail({
           <Card className="space-y-4 p-6">
             <div className="flex flex-wrap items-center gap-2">
               <OfferingTypeBadge value={offeringType} />
-              {comingSoon && <Badge tone="orange">Coming Soon</Badge>}
+              {comingSoonSticker && (
+                <Badge tone="orange">{comingSoonSticker}</Badge>
+              )}
             </div>
             <p className="whitespace-pre-line text-sm leading-relaxed text-lv-text">
               {description}

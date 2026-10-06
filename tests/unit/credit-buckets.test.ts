@@ -145,6 +145,7 @@ describe("marketplace catalog — only real Notion entries", () => {
     expect(ki.comingSoon).toBeFalsy();
     const growth = open.find((p) => p.title === "Sales & Growth")!;
     expect(growth.comingSoon).toBe(true);
+    expect(growth.comingSoonLabel).toBe("COMING SOON Januar 2027");
     expect(growth.contactPerson).toBeUndefined();
     expect(growth.format).toBe("4 Wochen · Online · Termine folgen");
   });
