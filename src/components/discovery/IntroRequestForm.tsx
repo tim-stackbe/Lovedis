@@ -19,7 +19,7 @@ export function IntroRequestForm({ startupId }: { startupId: string }) {
       <Field
         label="Warum interessierst du dich?"
         htmlFor="message"
-        hint="Das Lovedis-Team prüft deine Anfrage und stellt bei Eignung den Kontakt her."
+        hint="Das LOVEDIS-Team prüft deine Anfrage und stellt bei Eignung den Kontakt her."
       >
         <Textarea
           id="message"

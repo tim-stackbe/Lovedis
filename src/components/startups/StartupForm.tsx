@@ -27,9 +27,10 @@ import {
 
 interface StartupFormProps {
   startup?: Startup;
+  campaigns?: { id: string; name: string }[];
 }
 
-export function StartupForm({ startup }: StartupFormProps) {
+export function StartupForm({ startup, campaigns = [] }: StartupFormProps) {
   const action = startup
     ? updateStartup.bind(null, startup.id)
     : createStartup;
@@ -161,7 +162,7 @@ export function StartupForm({ startup }: StartupFormProps) {
               ))}
             </Select>
           </Field>
-          <Field label="Radar-Quadrant" htmlFor="radarQuadrant">
+          <Field label="Radar-Feld" htmlFor="radarQuadrant">
             <Select
               id="radarQuadrant"
               name="radarQuadrant"
@@ -190,6 +191,43 @@ export function StartupForm({ startup }: StartupFormProps) {
             </Select>
           </Field>
         </div>
+
+        <Field label="Batch / Scouting-Kampagne" htmlFor="campaignId">
+          <Select
+            id="campaignId"
+            name="campaignId"
+            defaultValue={startup?.campaignId ?? ""}
+          >
+            <option value="">— Keinem Batch zugeordnet —</option>
+            {campaigns.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        {/* Team-side publish switch: ADMIN/MEMBER can put a storefront live on
+            Entdecke without waiting for the founder to do it in self-service. */}
+        <label className="flex cursor-pointer items-start gap-3 rounded-card border border-lv-border bg-lv-surface/50 p-4">
+          <input
+            id="isPublished"
+            type="checkbox"
+            name="isPublished"
+            defaultChecked={startup?.isPublished ?? false}
+            className="mt-0.5 h-4 w-4 accent-lv-blue"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-lv-text">
+              Im Ökosystem veröffentlichen (Entdecke)
+            </span>
+            <span className="mt-1 block text-xs text-lv-secondary">
+              Sichtbar für Investoren und Partner, sobald das Startup dem
+              aktuellen Batch zugeordnet ist. Das Datum der
+              Erstveröffentlichung bleibt beim Deaktivieren erhalten.
+            </span>
+          </span>
+        </label>
 
         {state?.error && <ErrorChip>{state.error}</ErrorChip>}
         {state?.success && <SuccessChip>{state.success}</SuccessChip>}

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LOVEDIS · IT-Fragenkatalog – Partner-Assessment AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Brand tokens */
+    --blue: #2926E5;
+    --blue-hover: #3330F0;
+    --blue-dark: #1F1CB8;
+    --blue-soft: #EEEDFF;
+    --orange: #FF5736;
+    --orange-soft: #FFE7E1;
+    --pink: #FFDBF5;
+    --lavender: #E0EDFF;
+    --mint: #C0FCD8;
+    --surface: #F4F4F8;
+    --border: #E5E5EE;
+    --text: #0A0A0F;
+    --text-2: #6B6B7B;
+    --white: #FFFFFF;
+
+    --r-btn: 12px;
+    --r-input: 12px;
+    --r-card-sm: 16px;
+    --r-card-lg: 28px;
+    --content: 820px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--white);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- Header ---------- */
+  header.site {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .wordmark {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    font-size: 21px;
+    color: var(--text);
+    display: inline-flex;
+    align-items: baseline;
+  }
+  .wordmark .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: var(--orange);
+    margin: 0 1px;
+    transform: translateY(-1px);
+  }
+  nav.top {
+    color: var(--text-2);
+    font-size: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  nav.top span.sep { color: var(--border); }
+  nav.top a:hover { color: var(--blue); }
+
+  /* ---------- Layout ---------- */
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+    margin-top: 40px;
+  }
+
+  .content { max-width: var(--content); }
+
+  /* ---------- Sticky section nav ---------- */
+  aside.sidenav {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+  .sidenav .eyebrow { margin-bottom: 14px; }
+  .sidenav ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sidenav a.navlink {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 12px;
+    border-radius: 9999px;
+    font-size: 14px;
+    color: var(--text-2);
+    transition: background .15s, color .15s;
+  }
+  .sidenav a.navlink .badge {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 9999px;
+    background: var(--surface);
+    color: var(--text-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background .15s, color .15s;
+  }
+  .sidenav a.navlink:hover { color: var(--text); background: var(--surface); }
+  .sidenav a.navlink.active { color: var(--blue); background: var(--blue-soft); }
+  .sidenav a.navlink.active .badge { background: var(--blue); color: #fff; }
+
+  /* ---------- Eyebrow ---------- */
+  .eyebrow {
+    text-transform: uppercase;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--blue);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-card-lg);
+    background: linear-gradient(135deg,#2926E5 0%,#4F46E5 55%,#FF5736 130%);
+    color: #fff;
+    padding: 56px 56px 52px;
+    margin-top: 40px;
+  }
+  .hero .orb {
+    position: absolute;
+    top: -120px;
+    right: -100px;
+    width: 380px;
+    height: 380px;
+    border-radius: 9999px;
+    background: radial-gradient(circle at center, rgba(255,87,54,0.55) 0%, rgba(255,87,54,0.0) 70%);
+    filter: blur(30px);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+  .hero .kicker {
+    text-transform: uppercase;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.75);
+  }
+  .hero h1 {
+    font-size: clamp(38px, 6vw, 60px);
+    line-height: 1.04;
+    font-weight: 500;
+    margin: 18px 0 20px;
+    letter-spacing: -0.01em;
+    position: relative;
+  }
+  .hero p.sub {
+    font-size: 18px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.82);
+    max-width: 660px;
+    margin: 0;
+    position: relative;
+  }
+  .hero .notepill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 26px;
+    padding: 9px 16px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.22);
+    font-size: 13.5px;
+    color: #fff;
+    position: relative;
+  }
+  .hero .notepill .lock { font-size: 13px; }
+
+  /* ---------- Sections ---------- */
+  section.block {
+    scroll-margin-top: 90px;
+    padding-top: 56px;
+  }
+  .section-head { margin-bottom: 28px; }
+  .section-head h2 {
+    font-size: clamp(26px, 3.4vw, 34px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin: 12px 0 8px;
+  }
+  .section-head .purpose {
+    color: var(--text-2);
+    font-size: 16.5px;
+    margin: 0;
+    max-width: 640px;
+  }
+  .accent-bar {
+    display: inline-block;
+    width: 40px;
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--orange);
+    margin-bottom: 16px;
+  }
+
+  /* ---------- Fields ---------- */
+  .field { margin-bottom: 26px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-bottom: 8px;
+  }
+  .field label .req { color: var(--orange); margin-left: 2px; }
+  .field .qtext {
+    display: block;
+    font-size: 16.5px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.45;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--r-input);
+    padding: 13px 15px;
+    font: inherit;
+    font-size: 15.5px;
+    color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+    resize: vertical;
+  }
+  input::placeholder, textarea::placeholder { color: #A6A6B5; }
+  textarea { min-height: 92px; line-height: 1.5; }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(41,38,229,0.16);
+  }
+  .hint {
+    display: block;
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  /* Contact grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+  }
+  .grid-2 .field { margin-bottom: 0; }
+  .grid-2 .span-2 { grid-column: 1 / -1; }
+
+  /* Contact card */
+  .contact-card {
+    background: var(--surface);
+    border-radius: var(--r-card-lg);
+    padding: 36px;
+  }
+
+  /* ---------- Consent + submit ---------- */
+  .submit-wrap {
+    margin-top: 64px;
+    background: var(--lavender);
+    border-radius: var(--r-card-lg);
+    padding: 40px;
+  }
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  .consent input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    margin-top: 1px;
+    accent-color: var(--blue);
+    cursor: pointer;
+  }
+  .consent label { font-size: 15px; color: var(--text); line-height: 1.5; }
+  .btn-primary {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    background: var(--text);
+    color: #fff;
+    height: 54px;
+    padding: 0 32px;
+    border-radius: var(--r-btn);
+    font-size: 18px;
+    font-weight: 600;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: background .18s, transform .05s;
+  }
+  .btn-primary:hover { background: var(--orange); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-primary .arrow { font-size: 18px; }
+
+  /* ---------- Footer ---------- */
+  footer.site {
+    border-top: 1px solid var(--border);
+    margin-top: 24px;
+  }
+  .footer-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px;
+    color: var(--text-2);
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .footer-inner .wm-small { font-weight: 800; letter-spacing: 0.14em; color: var(--text); }
+
+  /* ---------- Progress bar ---------- */
+  .progress-track {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: transparent;
+    z-index: 60;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--blue), var(--orange));
+    transition: width .1s linear;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; gap: 0; }
+    aside.sidenav { display: none; }
+  }
+  @media (max-width: 620px) {
+    .header-inner { padding: 14px 18px; }
+    nav.top { display: none; }
+    main { padding: 0 18px 72px; }
+    .hero { padding: 36px 24px 34px; margin-top: 24px; border-radius: 22px; }
+    .hero h1 { font-size: 34px; }
+    .hero p.sub { font-size: 16px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .contact-card { padding: 24px; }
+    .submit-wrap { padding: 28px 22px; }
+    section.block { padding-top: 44px; }
+    .btn-primary { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- Header -->
+  <header class="site">
+    <div class="header-inner">
+      <a class="wordmark" href="#top" aria-label="LOVEDIS">LOVED<span class="dot"></span>S</a>
+      <nav class="top">
+        <a href="#">Über uns</a><span class="sep">·</span>
+        <a href="#">Challenges</a><span class="sep">·</span>
+        <a href="#">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="orb"></div>
+      <div class="kicker">Partner-Assessment AI</div>
+      <h1>IT-Fragenkatalog</h1>
+      <p class="sub">Strukturierte Selbsteinschätzung rund um AI-Systeme und Tech Stack. Technologieneutral – kein Vorwissen über Ihren Tech Stack nötig. Ihre Angaben helfen uns, den passenden Challenge-Fit und Beratungsbedarf einzuschätzen.</p>
+      <span class="notepill"><span class="lock">🔒</span> Dauer ca. 15–20 Min · Ihre Daten werden vertraulich behandelt (NDA)</span>
+    </div>
+
+    <div class="shell">
+      <!-- Sticky section nav -->
+      <aside class="sidenav">
+        <div class="eyebrow">Abschnitte</div>
+        <ol id="navList"></ol>
+      </aside>
+
+      <!-- Form content -->
+      <div class="content">
+        <form id="assessmentForm" novalidate>
+
+          <!-- Section 0 — Kontakt & Kontext -->
+          <section class="block" id="sec-0">
+            <div class="section-head">
+              <span class="accent-bar"></span>
+              <div class="eyebrow">Abschnitt 0</div>
+              <h2>Kontakt &amp; Kontext</h2>
+              <p class="purpose">Ihre Ansprechpartner:innen und der Anlass dieser Selbsteinschätzung.</p>
+            </div>
+            <div class="contact-card">
+              <div class="grid-2">
+                <div class="field">
+                  <label>Partnerunternehmen<span class="req">*</span></label>
+                  <input type="text" placeholder="Firmenname" required />
+                </div>
+                <div class="field">
+                  <label>Ansprechpartner:in – Name<span class="req">*</span></label>
+                  <input type="text" placeholder="Vor- und Nachname" required />
+                </div>
+                <div class="field">
+                  <label>Rolle / Funktion</label>
+                  <input type="text" placeholder="z. B. CTO, Head of Data" />
+                </div>
+                <div class="field">
+                  <label>E-Mail<span class="req">*</span></label>
+                  <input type="email" placeholder="name@unternehmen.de" required />
+                </div>
+                <div class="field">
+                  <label>Telefon</label>
+                  <input type="tel" placeholder="+49 …" />
+                </div>
+                <div class="field">
+                  <label>Betrachtete Challenge (falls vorhanden)</label>
+                  <input type="text" placeholder="Titel oder Kurzbeschreibung" />
+                </div>
+                <div class="field span-2">
+                  <label>Anlass und Kontext</label>
+                  <textarea placeholder="Was ist der Auslöser für dieses Assessment? Worum geht es konkret?"></textarea>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Thematic sections rendered here -->
+          <div id="sections"></div>
+
+          <!-- Submit -->
+          <div class="submit-wrap">
+            <div class="consent">
+              <input type="checkbox" id="consent" />
+              <label for="consent">Ich stimme zu, dass meine Angaben zur Einschätzung des Challenge-Fits vertraulich verarbeitet werden.</label>
+            </div>
+            <button type="button" class="btn-primary" onclick="return false;">Assessment absenden <span class="arrow">→</span></button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site">
+    <div class="footer-inner">
+      <span class="wm-small">LOVEDIS</span> · IT-Fragenkatalog Partner-Assessment AI · StartMiUp Factory GmbH, Fronhausen
+    </div>
+  </footer>
+
+  <script>
+    // Data-driven rendering of the eleven thematic sections (A–K).
+    const sections = [
+      {
+        id: "A", title: "Unternehmens- und Geschäftskontext",
+        purpose: "Verständnis für Geschäftsmodell, Größe und Marktumfeld.",
+        questions: [
+          { q: "A1 · Wie würden Sie Ihr Geschäftsmodell und Ihre wichtigsten Wertschöpfungsprozesse in wenigen Sätzen beschreiben?" },
+          { q: "A2 · Wie ist das Unternehmen hinsichtlich Größe und Struktur aufgestellt?", hint: "Branche und Märkte · wichtigste Kundengruppen · Anzahl Mitarbeitende gesamt und im IT-Bereich · zentrale oder dezentrale IT-Organisation" },
+          { q: "A3 · Welche Rolle spielt Technologie heute für Ihren Geschäftserfolg?" },
+          { q: "A4 · Welche geschäftlichen Veränderungen oder Wachstumsziele stehen in den nächsten 12–24 Monaten an?", hint: "Ist IT eher Kostenfaktor oder strategischer Hebel?" }
+        ]
+      },
+      {
+        id: "B", title: "AI-Reifegrad und Strategie",
+        purpose: "Einordnung, wie weit Sie mit AI bereits sind.",
+        questions: [
+          { q: "B1 · Wo stehen Sie heute beim Thema Künstliche Intelligenz?", hint: "erste Experimente, einzelne Piloten, produktive Systeme oder skalierter Betrieb?" },
+          { q: "B2 · Existiert eine dokumentierte AI- oder Datenstrategie?", hint: "messbare Ergebnisse aus AI-Initiativen? · wer verantwortet sie organisatorisch? · Verknüpfung mit der Unternehmensstrategie?" },
+          { q: "B3 · Welche AI-Anwendungsfälle haben Sie bereits umgesetzt oder konkret geplant?", hint: "klassisches ML, generative AI, Automatisierung, Analytics?" },
+          { q: "B4 · Wie werden AI-Vorhaben heute finanziert und priorisiert?" },
+          { q: "B5 · Welche Erwartungen und welche Vorbehalte gibt es intern gegenüber AI?" }
+        ]
+      },
+      {
+        id: "C", title: "IT-Infrastruktur und Betrieb",
+        purpose: "Grundlage für Machbarkeit und Integrationsaufwand.",
+        questions: [
+          { q: "C1 · Wie ist Ihre IT-Infrastruktur grundsätzlich aufgebaut?", hint: "Cloud, On-Premises oder hybrid? · Anbieter wie AWS, Azure oder Google Cloud?" },
+          { q: "C2 · Welche Kernsysteme prägen Ihre Landschaft?", hint: "ERP, CRM, Data Warehouse, branchenspezifische Systeme? · Standardsoftware oder Eigenentwicklungen?" },
+          { q: "C3 · Wie werden Anwendungen heute bereitgestellt und betrieben?", hint: "Container und Orchestrierung (z. B. Kubernetes)? · Automatisierungsgrad im Betrieb?" },
+          { q: "C4 · Stehen Rechen- und Speicherressourcen für AI-Workloads zur Verfügung?", hint: "GPU-Kapazitäten vorhanden oder über Cloud beziehbar?" },
+          { q: "C5 · Wie hoch schätzen Sie die technische Verschuldung durch Legacy-Systeme ein?" }
+        ]
+      },
+      {
+        id: "D", title: "Datenlandschaft und Data Governance",
+        purpose: "Daten sind der entscheidende Erfolgsfaktor für AI.",
+        questions: [
+          { q: "D1 · Welche Datenquellen und Datenarten sind für Ihr Geschäft am wichtigsten?", hint: "strukturiert, unstrukturiert, Text, Bild, Sensordaten? · wo liegen die Daten physisch und logisch?" },
+          { q: "D2 · Wie beurteilen Sie die Qualität und Verfügbarkeit Ihrer Daten?", hint: "Vollständigkeit, Aktualität, Konsistenz? · Datensilos zwischen Abteilungen?" },
+          { q: "D3 · Wie sind Daten heute integriert und zugänglich?", hint: "Data Warehouse, Data Lake, Lakehouse, Schnittstellen? · Echtzeit- oder Batch-Verarbeitung?" },
+          { q: "D4 · Gibt es etablierte Data Governance und ein Rollenmodell für Daten?", hint: "wer besitzt und pflegt welche Daten? · Kataloge, Metadaten, Data Lineage vorhanden?" },
+          { q: "D5 · Welche rechtlichen oder vertraglichen Einschränkungen bestehen bei der Datennutzung?" }
+        ]
+      },
+      {
+        id: "E", title: "Vorhandene AI- und ML-Systeme",
+        purpose: "Bestandsaufnahme dessen, was bereits im Einsatz ist.",
+        questions: [
+          { q: "E1 · Welche AI- oder ML-Modelle sind heute produktiv im Einsatz?", hint: "eigenentwickelt, eingekauft oder über Anbieter-APIs bezogen?" },
+          { q: "E2 · Nutzen Sie generative AI oder große Sprachmodelle?", hint: "welche Modelle/Anbieter (OpenAI, Anthropic, Open-Source)? · Ansätze wie RAG, Fine-Tuning oder Agenten?" },
+          { q: "E3 · Wie werden Modelle heute überwacht und aktuell gehalten?", hint: "Monitoring von Qualität, Drift und Kosten? · wie oft neu trainiert oder ausgetauscht?" },
+          { q: "E4 · Wo sehen Sie bei bestehenden AI-Systemen die größten Schwachstellen?" }
+        ]
+      },
+      {
+        id: "F", title: "Tech Stack, Entwicklung und MLOps",
+        purpose: "Technische Tiefe und Professionalisierungsgrad.",
+        questions: [
+          { q: "F1 · Welche Programmiersprachen und Frameworks dominieren in der Entwicklung?", hint: "für Data Science und ML, etwa Python, PyTorch, TensorFlow oder scikit-learn?" },
+          { q: "F2 · Welche Plattformen oder Werkzeuge nutzen Sie für den ML-Lebenszyklus?", hint: "Experiment-Tracking, Feature Store, Model Registry, Pipelines? · Managed-Services oder eigener Stack?" },
+          { q: "F3 · Wie reif ist Ihr Entwicklungs- und Auslieferungsprozess?", hint: "Versionskontrolle, CI/CD, automatisierte Tests? · MLOps-Praktiken über einzelne Projekte hinaus?" },
+          { q: "F4 · Wie werden Daten- und Modell-Artefakte versioniert und reproduzierbar gehalten?" },
+          { q: "F5 · Setzen Sie auf Standardplattformen oder auf individuelle Eigenentwicklungen, und warum?" }
+        ]
+      },
+      {
+        id: "G", title: "Integration, Schnittstellen und Architektur",
+        purpose: "Voraussetzung für die Anbindung neuer AI-Komponenten.",
+        questions: [
+          { q: "G1 · Wie tauschen Ihre Systeme heute Daten und Funktionen aus?", hint: "APIs, Events, Messaging, Dateiaustausch? · übergreifende Integrationsschicht?" },
+          { q: "G2 · Wie gut sind Ihre Kernsysteme über Schnittstellen zugänglich?", hint: "dokumentierte und stabile APIs vorhanden?" },
+          { q: "G3 · Welche Architekturprinzipien verfolgen Sie?", hint: "monolithisch, Microservices, ereignisgetrieben?" },
+          { q: "G4 · Welche Anforderungen bestehen an Latenz, Verfügbarkeit und Skalierbarkeit?" }
+        ]
+      },
+      {
+        id: "H", title: "Sicherheit, Compliance und Regulatorik",
+        purpose: "In Europa oft entscheidend für die Umsetzbarkeit.",
+        questions: [
+          { q: "H1 · Welche regulatorischen Rahmenbedingungen betreffen Ihr Geschäft besonders?", hint: "DSGVO, branchenspezifische Vorgaben, EU AI Act?" },
+          { q: "H2 · Wie gehen Sie mit Datenschutz und personenbezogenen Daten in AI-Kontexten um?", hint: "Anonymisierung, Pseudonymisierung, Zweckbindung?" },
+          { q: "H3 · Welche Sicherheitsanforderungen bestehen an neue Systeme?", hint: "Zugriffs- und Rollenkonzepte, Verschlüsselung, Audit? · Zertifizierungen wie ISO 27001?" },
+          { q: "H4 · Wie ist die Verantwortung für Governance und Risikobewertung von AI geregelt?", hint: "Prozesse für Modellfreigabe, Erklärbarkeit und Nachvollziehbarkeit?" },
+          { q: "H5 · Gibt es Vorbehalte gegenüber externen oder cloudbasierten AI-Diensten?" }
+        ]
+      },
+      {
+        id: "I", title: "Team, Skills und Ressourcen",
+        purpose: "Umsetzungsfähigkeit auf Personenebene.",
+        questions: [
+          { q: "I1 · Wie ist Ihr Team im Bereich Daten und AI aufgestellt?", hint: "Data Scientists, ML Engineers, Data Engineers, Analyst:innen? · interne Fähigkeiten oder Zukauf über Dienstleister?" },
+          { q: "I2 · Wie werden AI-Projekte organisatorisch verankert?", hint: "zentrales Team, dezentrale Einheiten, Kompetenzzentrum?" },
+          { q: "I3 · Wo sehen Sie die größten Lücken bei Fähigkeiten und Kapazitäten?" },
+          { q: "I4 · Wie ausgeprägt ist die Zusammenarbeit zwischen Fachbereich und IT?" }
+        ]
+      },
+      {
+        id: "J", title: "Challenges und Ziele",
+        purpose: "Kern für die Passung zu Challenge und Beratung.",
+        questions: [
+          { q: "J1 · Welche konkreten Herausforderungen möchten Sie mit Technologie oder AI lösen?", hint: "welcher Prozess verursacht heute die größten Reibungsverluste?" },
+          { q: "J2 · Woran würden Sie den Erfolg einer Lösung messen?", hint: "konkrete Kennzahlen, Zeit- oder Kostenziele?" },
+          { q: "J3 · Was haben Sie in diese Richtung bereits versucht, und woran ist es gescheitert?" },
+          { q: "J4 · Welche Anwendungsfälle hätten aus Ihrer Sicht den größten Hebel?" },
+          { q: "J5 · Welchen Zeithorizont haben Sie für eine Umsetzung im Blick?" }
+        ]
+      },
+      {
+        id: "K", title: "Budget, Governance und Entscheidungswege",
+        purpose: "Realistische Einschätzung von Umsetzbarkeit und Ernsthaftigkeit.",
+        questions: [
+          { q: "K1 · Wie werden Investitionen in Technologie und AI grundsätzlich freigegeben?", hint: "wer ist an der Entscheidung beteiligt?" },
+          { q: "K2 · Gibt es für die betrachteten Vorhaben ein Budget oder einen Budgetrahmen?" },
+          { q: "K3 · Wer wäre auf Ihrer Seite Sponsor:in und Ansprechpartner:in für ein gemeinsames Vorhaben?" },
+          { q: "K4 · Welche Faktoren würden ein Projekt aus Ihrer Sicht am ehesten beschleunigen oder blockieren?" },
+          { q: "K5 · Wie sehen die nächsten sinnvollen Schritte aus Ihrer Perspektive aus?" }
+        ]
+      }
+    ];
+
+    const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+    const sectionsEl = document.getElementById("sections");
+    const navListEl = document.getElementById("navList");
+
+    // Nav item for section 0
+    navListEl.insertAdjacentHTML("beforeend",
+      `<li><a class="navlink" href="#sec-0" data-target="sec-0"><span class="badge">0</span> Kontakt</a></li>`);
+
+    sections.forEach((sec) => {
+      // nav link
+      navListEl.insertAdjacentHTML("beforeend",
+        `<li><a class="navlink" href="#sec-${sec.id}" data-target="sec-${sec.id}"><span class="badge">${sec.id}</span> ${esc(sec.title.split(",")[0].split(" und ")[0])}</a></li>`);
+
+      const fields = sec.questions.map((item) => {
+        const hint = item.hint ? `<span class="hint">${esc(item.hint)}</span>` : "";
+        return `
+          <div class="field">
+            <span class="qtext">${esc(item.q)}</span>
+            <textarea placeholder="Ihre Antwort …"></textarea>
+            ${hint}
+          </div>`;
+      }).join("");
+
+      sectionsEl.insertAdjacentHTML("beforeend", `
+        <section class="block" id="sec-${sec.id}">
+          <div class="section-head">
+            <span class="accent-bar"></span>
+            <div class="eyebrow">Block ${sec.id}</div>
+            <h2>${esc(sec.title)}</h2>
+            <p class="purpose">${esc(sec.purpose)}</p>
+          </div>
+          ${fields}
+        </section>`);
+    });
+
+    // Cosmetic scroll-spy + progress bar
+    const navLinks = Array.from(document.querySelectorAll(".navlink"));
+    const blocks = Array.from(document.querySelectorAll("section.block"));
+    const progressFill = document.getElementById("progressFill");
+
+    function onScroll() {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      progressFill.style.width = (docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0) + "%";
+
+      let currentId = blocks.length ? blocks[0].id : null;
+      const mid = scrollTop + window.innerHeight * 0.28;
+      for (const b of blocks) {
+        if (b.offsetTop <= mid) currentId = b.id;
+      }
+      navLinks.forEach((a) => a.classList.toggle("active", a.dataset.target === currentId));
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
+  </script>
+</body>
+</html>

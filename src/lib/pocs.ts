@@ -10,6 +10,33 @@ export const kpiSchema = z.object({
 
 export type Kpi = z.infer<typeof kpiSchema>;
 
+/**
+ * Editable KPI used by the client editors. The numeric fields may be an empty
+ * string while the user is typing (e.g. after deleting the last digit), which
+ * lets the input show empty instead of snapping back to `0`. Coerce with
+ * {@link normalizeKpi} before persisting.
+ */
+export type KpiDraft = Omit<Kpi, "current" | "target"> & {
+  current: number | "";
+  target: number | "";
+};
+
+/** Turns an empty numeric field into `0` so the draft is a valid {@link Kpi}. */
+export function normalizeKpi(draft: KpiDraft): Kpi {
+  return {
+    ...draft,
+    current: draft.current === "" ? 0 : draft.current,
+    target: draft.target === "" ? 0 : draft.target,
+  };
+}
+
+/** Parses a numeric `<input>` value, keeping empty as `""` (not `0`). */
+export function parseNumberInput(raw: string): number | "" {
+  if (raw === "") return "";
+  const n = Number(raw);
+  return Number.isNaN(n) ? "" : n;
+}
+
 /** Milestone entry stored in PoCPerformance.milestones (JSON column). */
 export const milestoneSchema = z.object({
   title: z.string().min(1).max(200),

@@ -1,4 +1,4 @@
-import { Info, MessagesSquare, UserCircle2 } from "lucide-react";
+import { MessagesSquare } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Avatar } from "@/components/messages/Avatar";
@@ -74,20 +74,30 @@ export default async function MessagesPage({
     orderBy: { conversation: { lastMessageAt: "desc" } },
   });
 
-  const unreadCounts = await Promise.all(
-    links.map((l) =>
-      prisma.message.count({
+  // Single grouped query for unread counts across all conversations (avoids an
+  // N+1 of one message.count per conversation). Each conversation keeps its own
+  // `lastReadAt` threshold via a per-conversation OR branch, ANDed with the
+  // "not my own message" filter; conversations with no unread simply don't
+  // appear in the result and default to 0.
+  const grouped = links.length
+    ? await prisma.message.groupBy({
+        by: ["conversationId"],
         where: {
-          conversationId: l.conversation.id,
           senderId: { not: meId },
-          createdAt: { gt: l.lastReadAt ?? new Date(0) },
+          OR: links.map((l) => ({
+            conversationId: l.conversation.id,
+            createdAt: { gt: l.lastReadAt ?? new Date(0) },
+          })),
         },
+        _count: { _all: true },
       })
-    )
+    : [];
+  const unreadByConversation = new Map(
+    grouped.map((g) => [g.conversationId, g._count._all])
   );
 
   const items: ConversationItem[] = [];
-  links.forEach((l, i) => {
+  links.forEach((l) => {
     const other = l.conversation.participants[0]?.user;
     if (!other) return;
     const last = l.conversation.messages[0];
@@ -99,7 +109,7 @@ export default async function MessagesPage({
       lastBody: last?.body ?? null,
       lastFromMe: last?.senderId === meId,
       lastAt: l.conversation.lastMessageAt.toISOString(),
-      unread: unreadCounts[i],
+      unread: unreadByConversation.get(l.conversation.id) ?? 0,
     });
   });
 
@@ -142,7 +152,7 @@ export default async function MessagesPage({
   return (
     <>
       <PollRefresher />
-      <div className="h-[calc(100vh-8rem)] min-h-[520px]">
+      <div className="h-[calc(100dvh-8rem)] min-h-[520px]">
         <Card className="flex h-full overflow-hidden p-0">
           {/* Conversation list */}
           <aside
@@ -185,20 +195,6 @@ export default async function MessagesPage({
                       {otherUser.company ? ` · ${otherUser.company}` : ""}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    title="Profil"
-                    className="rounded-button p-2 text-lv-secondary hover:bg-lv-surface"
-                  >
-                    <UserCircle2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    title="Info"
-                    className="rounded-button p-2 text-lv-secondary hover:bg-lv-surface"
-                  >
-                    <Info className="h-4 w-4" />
-                  </button>
                 </header>
 
                 <div className="flex-1 space-y-1 overflow-y-auto lv-scroll bg-lv-surface/40 px-4 py-4">
