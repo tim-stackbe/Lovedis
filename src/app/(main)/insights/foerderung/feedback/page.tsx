@@ -6,7 +6,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import { isSurveyOpen, summarizeFeedback, surveyEligibleStartupIds } from "@/lib/insights/funding";
 import { loadFundingDataset } from "@/lib/insights/funding-data";
@@ -20,8 +20,7 @@ function decimal(n: number | null): string {
 }
 
 export default async function FundingFeedbackPage() {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const [ds, fd, texts] = await Promise.all([
     loadInsightsDataset(),
     loadFundingDataset(),
@@ -57,14 +56,10 @@ export default async function FundingFeedbackPage() {
         }
       />
 
-      {canEdit && (
-        <>
-          <SectionLabel number="01" label="Neu" title="Umfrage öffnen" />
-          <FeedbackSurveyCreateForm scopes={scopes} />
-        </>
-      )}
+      <SectionLabel number="01" label="Neu" title="Umfrage öffnen" />
+      <FeedbackSurveyCreateForm scopes={scopes} />
 
-      <SectionLabel number={canEdit ? "02" : "01"} label="Umfragen" title="Rücklauf und Ergebnis" />
+      <SectionLabel number="02" label="Umfragen" title="Rücklauf und Ergebnis" />
       {fd.surveys.length === 0 ? (
         <p className="text-sm text-lv-secondary">Noch keine Umfrage geöffnet.</p>
       ) : (
@@ -90,7 +85,7 @@ export default async function FundingFeedbackPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone={open ? "mint" : "muted"}>{open ? "offen" : "geschlossen"}</Badge>
                   <CopyLinkButton path={`/feedback/${s.id}`} />
-                  {canEdit && <FeedbackSurveyToggle id={s.id} open={open} />}
+                  <FeedbackSurveyToggle id={s.id} open={open} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">

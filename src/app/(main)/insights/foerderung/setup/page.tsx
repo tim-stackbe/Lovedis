@@ -5,7 +5,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { BATCH_TYPE_LABELS, PROGRAM_STATUS_LABELS } from "@/lib/constants";
 import type { ProgramStatus } from "@/generated/prisma/enums";
 import { loadInsightsDataset } from "@/lib/insights/data";
@@ -16,8 +16,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Insights · Förder-Formate" };
 
 export default async function FundingSetupPage() {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const [ds, fd] = await Promise.all([loadInsightsDataset(), loadFundingDataset()]);
   const formatOf = new Map(fd.scope.map((s) => [`${s.kind}:${s.refId}`, s.format]));
   const startupsByBatch = new Map<string, number>();
@@ -78,7 +77,7 @@ export default async function FundingSetupPage() {
                   kind="BATCH"
                   refId={b.id}
                   format={formatOf.get(`BATCH:${b.id}`) ?? null}
-                  canEdit={canEdit}
+                  canEdit
                 />
               </Td>
             </Tr>
@@ -111,7 +110,7 @@ export default async function FundingSetupPage() {
                     kind="PROGRAM"
                     refId={p.id}
                     format={formatOf.get(`PROGRAM:${p.id}`) ?? null}
-                    canEdit={canEdit}
+                    canEdit
                   />
                 </Td>
               </Tr>
@@ -122,7 +121,6 @@ export default async function FundingSetupPage() {
       <p className="text-xs text-lv-secondary">
         Teilnehmende zählen ab einer bestätigten oder abgeschlossenen Buchung. Geplante Formate:{" "}
         {FUNDING_FORMATS.map((f) => `${FUNDING_FORMAT_CONFIG[f].label} (${FUNDING_FORMAT_CONFIG[f].plannedPeriod})`).join(", ")}.
-        {!canEdit && " Nur Admins können die Zuordnung ändern."}
       </p>
     </>
   );

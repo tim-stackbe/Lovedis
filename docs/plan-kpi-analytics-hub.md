@@ -95,7 +95,7 @@ Jede Definition wird **eine** Funktion in der Metrik-Registry mit Unit-Tests. UI
 - Bezug: `startupId`, `partnerCompanyId`, optional `batchId`, `challengeId`, `engagementId` (unique), `pocId` (unique), `matchId`.
 - Felder: Stufe (Match, Intro, Pilot, LOI, Vertrag, Umsatz), Intro durch LOVEDIS (Datum), Form der Zusammenarbeit, Betreuungsintensität, Verträge (NDA, IP, Co-Innovation, Datum), Use Case, Ziel, Laufzeit, Ressourcen Partner, Kosten (Partner, LOVEDIS, Startup), Outcome (MVP zu Marktreife, Funding-ready).
 - Ist ein Engagement verknüpft, zeigt die Maske dessen Titel, Status, KPIs und Meilensteine **read-only** an. Gepflegt werden nur die Zusatzfelder.
-- Pflege: alle ADMINs (entschieden). MEMBER sehen die Daten nur.
+- Pflege und Einsicht: nur ADMINs (entschieden am 2026-10-13). MEMBER haben keinen Zugriff auf `/insights`.
 - Einmal-Import aus Notion „1:1 Acceleration 2026“ und Excel-Pilottracking.
 
 ### 4.4 `BatchChallengeLink`

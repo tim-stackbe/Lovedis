@@ -2,23 +2,20 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { dayString } from "@/components/insights/format";
 import { DeleteFundingEventButton, FundingEventForm } from "@/components/insights/FundingForms";
-import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsDataset } from "@/lib/insights/data";
-import { buildFundingReport, EVENT_SOURCE_LABELS, type EventSource } from "@/lib/insights/funding";
+import { buildFundingReport } from "@/lib/insights/funding";
 import { loadFundingDataset } from "@/lib/insights/funding-data";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Insights · Veranstaltungen" };
 
 export default async function FundingEventsPage() {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const [ds, fd, notes] = await Promise.all([
     loadInsightsDataset(),
     loadFundingDataset(),
@@ -41,16 +38,12 @@ export default async function FundingEventsPage() {
         }
       />
 
-      {canEdit && (
-        <>
-          <SectionLabel number="01" label="Neu" title="Veranstaltung eintragen" />
-          <Card className="p-5">
-            <FundingEventForm canEdit />
-          </Card>
-        </>
-      )}
+      <SectionLabel number="01" label="Neu" title="Veranstaltung eintragen" />
+      <Card className="p-5">
+        <FundingEventForm canEdit />
+      </Card>
 
-      <SectionLabel number={canEdit ? "02" : "01"} label="Erfasst" title="Veranstaltungen nach Art" />
+      <SectionLabel number="02" label="Erfasst" title="Veranstaltungen nach Art" />
       {report.events.map((g) => (
         <Card key={g.kind} className="space-y-3 p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -65,39 +58,26 @@ export default async function FundingEventsPage() {
             <p className="text-sm text-lv-secondary">Noch nichts eingetragen.</p>
           ) : (
             <div className="divide-y divide-lv-border">
-              {g.events.map((e) =>
-                canEdit ? (
-                  <div key={e.id} className="space-y-2 py-3">
-                    <FundingEventForm
-                      key={`${e.id}:${e.attendees}:${e.heldOn.toISOString()}:${e.title}`}
-                      canEdit
-                      event={{
-                        id: e.id,
-                        kind: e.kind,
-                        title: e.title,
-                        heldOn: dayString(e.heldOn) ?? "",
-                        attendees: e.attendees,
-                        source: e.source,
-                        note: noteById.get(e.id) ?? null,
-                      }}
-                    />
-                    <div className="flex justify-end">
-                      <DeleteFundingEventButton id={e.id} />
-                    </div>
+              {g.events.map((e) => (
+                <div key={e.id} className="space-y-2 py-3">
+                  <FundingEventForm
+                    key={`${e.id}:${e.attendees}:${e.heldOn.toISOString()}:${e.title}`}
+                    canEdit
+                    event={{
+                      id: e.id,
+                      kind: e.kind,
+                      title: e.title,
+                      heldOn: dayString(e.heldOn) ?? "",
+                      attendees: e.attendees,
+                      source: e.source,
+                      note: noteById.get(e.id) ?? null,
+                    }}
+                  />
+                  <div className="flex justify-end">
+                    <DeleteFundingEventButton id={e.id} />
                   </div>
-                ) : (
-                  <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                    <span>
-                      <span className="font-semibold">{e.title}</span>
-                      <span className="ml-2 text-xs text-lv-secondary">{formatDate(e.heldOn)}</span>
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="tabular-nums font-semibold">{e.attendees}</span>
-                      <Badge>{EVENT_SOURCE_LABELS[e.source as EventSource] ?? e.source}</Badge>
-                    </span>
-                  </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           )}
         </Card>

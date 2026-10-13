@@ -1,10 +1,9 @@
 import { ArrowLeft } from "lucide-react";
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { TrackingForm, type TrackingValues } from "@/components/insights/TrackingForm";
 import { LinkButton } from "@/components/ui/Button";
 import { HeroBanner } from "@/components/ui/HeroBanner";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsFormOptions } from "@/lib/insights/data";
 import { TRACKS } from "@/lib/insights/stages";
 
@@ -15,8 +14,7 @@ export default async function NewTrackingPage({
 }: {
   searchParams: Promise<{ startup?: string; partner?: string; batch?: string; track?: string }>;
 }) {
-  const session = await requireScoutModule();
-  if (session.user.role !== "ADMIN") redirect("/insights/tracking");
+  await requireAdmin();
   const params = await searchParams;
   const options = await loadInsightsFormOptions();
 

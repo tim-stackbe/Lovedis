@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/lib/action-state";
-import { requireAdmin, requireTeam } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { takeInsightsSnapshot } from "@/lib/insights/snapshot";
 import { parseReportingMetaForm, parseTrackingForm, type TrackingInput } from "@/lib/insights/tracking";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 
 /** Manual trigger for the KPI-Insights snapshot (same job the cron runs). */
 export async function runInsightsSnapshot(): Promise<ActionState> {
-  await requireTeam();
+  await requireAdmin();
   const result = await takeInsightsSnapshot();
   revalidatePath("/insights");
   return {

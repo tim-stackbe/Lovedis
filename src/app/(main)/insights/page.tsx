@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { BATCH_TYPE_LABELS } from "@/lib/constants";
 import { loadInsightsDataset, loadSnapshotStatus } from "@/lib/insights/data";
 import { buildExportSheets } from "@/lib/insights/export";
@@ -33,7 +33,7 @@ export default async function InsightsPage({
   searchParams: Promise<{ batch?: string }>;
 }) {
   // Same audience as the Match-Matrix: internal cross-partner data.
-  await requireScoutModule();
+  await requireAdmin();
   const { batch: batchParam } = await searchParams;
 
   const [ds, snapshot] = await Promise.all([loadInsightsDataset(), loadSnapshotStatus()]);

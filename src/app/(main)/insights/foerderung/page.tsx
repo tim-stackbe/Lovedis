@@ -9,7 +9,7 @@ import { BannerStat, Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import { buildExportSheets, buildFundingSheets } from "@/lib/insights/export";
 import { buildFundingReport, FUNDING_PERIOD, KPI_STATUS_LABELS, type KpiStatus } from "@/lib/insights/funding";
@@ -32,7 +32,7 @@ function daysText(days: number): string {
 }
 
 export default async function FundingPage() {
-  await requireScoutModule();
+  await requireAdmin();
   const [ds, fd] = await Promise.all([loadInsightsDataset(), loadFundingDataset()]);
   const report = buildFundingReport(ds, fd);
   const features = buildExportSheets(ds).find((s) => s.name === "Förder-Merkmale");

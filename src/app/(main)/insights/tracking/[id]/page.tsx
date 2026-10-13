@@ -9,7 +9,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsFormOptions, loadLinkedEngagement, loadTrackingEntry } from "@/lib/insights/data";
 import { effectiveStage, STAGE_LABELS } from "@/lib/insights/stages";
 import { formatDate } from "@/lib/utils";
@@ -17,8 +17,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Insights · Tracking-Eintrag" };
 
 export default async function TrackingEntryPage({ params }: { params: Promise<{ id: string }> }) {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const { id } = await params;
 
   const [entry, options] = await Promise.all([loadTrackingEntry(id), loadInsightsFormOptions()]);
@@ -90,7 +89,7 @@ export default async function TrackingEntryPage({ params }: { params: Promise<{ 
       <SectionLabel number={engagement ? "02" : "01"} label="Tracking" title="Angaben" />
       <TrackingForm
         key={entry.updatedAt.toISOString()}
-        canEdit={canEdit}
+        canEdit
         options={options}
         values={{
           ...entry,

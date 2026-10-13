@@ -438,6 +438,14 @@ const TRACKING_SECTION: NavSection = {
   items: [
     { label: "Pipeline", href: "/pipeline", icon: "pipeline" },
     { label: "Berichte", href: "/reports", icon: "reports" },
+  ],
+};
+
+/** KPI-Insights (/insights) are ADMIN-only. */
+const TRACKING_SECTION_ADMIN: NavSection = {
+  ...TRACKING_SECTION,
+  items: [
+    ...TRACKING_SECTION.items,
     { label: "Insights & KPIs", href: "/insights", icon: "reports" },
   ],
 };
@@ -582,7 +590,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     COLLAB_SECTION_ADMIN,
     SPACE_SECTION_ADMIN,
     MARKET_SECTION_ADMIN,
-    TRACKING_SECTION,
+    TRACKING_SECTION_ADMIN,
     MARKETPLACE_SECTION,
     PLATFORM_SECTION_ADMIN,
     SETTINGS_SECTION,

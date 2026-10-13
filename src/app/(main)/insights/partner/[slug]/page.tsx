@@ -12,7 +12,7 @@ import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { CHALLENGE_STATUS_LABELS } from "@/lib/constants";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import { PILOT_SOURCE_LABELS, partnerDetail } from "@/lib/insights/metrics";
@@ -25,7 +25,7 @@ export default async function InsightsPartnerPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireScoutModule();
+  await requireAdmin();
   const { slug } = await params;
 
   const ds = await loadInsightsDataset();

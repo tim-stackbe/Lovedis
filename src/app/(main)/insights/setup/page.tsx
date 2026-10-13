@@ -5,7 +5,7 @@ import { BatchChallengeForm } from "@/components/insights/BatchChallengeForm";
 import { LinkButton } from "@/components/ui/Button";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { BATCH_TYPE_LABELS } from "@/lib/constants";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import { cn } from "@/lib/utils";
@@ -17,8 +17,7 @@ export default async function InsightsSetupPage({
 }: {
   searchParams: Promise<{ batch?: string }>;
 }) {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const { batch: batchParam } = await searchParams;
 
   const ds = await loadInsightsDataset();
@@ -72,7 +71,7 @@ export default async function InsightsSetupPage({
           <BatchChallengeForm
             key={`${selected.id}:${[...linked].sort().join(",")}`}
             batchId={selected.id}
-            canEdit={canEdit}
+            canEdit
             challenges={ds.challenges
               .map((c) => ({
                 id: c.id,

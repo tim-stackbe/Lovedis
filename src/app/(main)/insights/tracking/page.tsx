@@ -8,7 +8,7 @@ import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import {
   effectiveStage,
@@ -29,8 +29,7 @@ export default async function TrackingListPage({
 }: {
   searchParams: Promise<{ track?: string }>;
 }) {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const { track } = await searchParams;
   const filter = (TRACKS as readonly string[]).includes(track ?? "") ? track! : null;
 
@@ -52,12 +51,10 @@ export default async function TrackingListPage({
         subtitle="Zusätzliche Angaben zu Kooperationen: Stufe bis Vertrag und Umsatz, Intro durch LOVEDIS und die Felder des 1:1 Accelerators. Matrix und Engagements bleiben unverändert."
         actions={
           <div className="flex flex-wrap gap-2">
-            {canEdit && (
-              <LinkButton href="/insights/tracking/new" variant="white">
-                <Plus className="h-4 w-4" />
-                Neuer Eintrag
-              </LinkButton>
-            )}
+            <LinkButton href="/insights/tracking/new" variant="white">
+              <Plus className="h-4 w-4" />
+              Neuer Eintrag
+            </LinkButton>
             <LinkButton href="/insights" variant="white">
               <ArrowLeft className="h-4 w-4" />
               Insights

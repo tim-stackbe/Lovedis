@@ -15,7 +15,7 @@ import { BannerStat } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { requireScoutModule } from "@/lib/auth-guards";
+import { requireAdmin } from "@/lib/auth-guards";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import { PILOT_SOURCE_LABELS, startupDetail } from "@/lib/insights/metrics";
 import { effectiveStage, labelOf, STAGE_LABELS, TRACK_LABELS } from "@/lib/insights/stages";
@@ -30,8 +30,7 @@ export default async function InsightsStartupPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireScoutModule();
-  const canEdit = session.user.role === "ADMIN";
+  await requireAdmin();
   const { id } = await params;
 
   const ds = await loadInsightsDataset();
@@ -185,7 +184,7 @@ export default async function InsightsStartupPage({
         city={startup.city}
         hessenSuggestion={suggestHessen(startup.city)}
         profileTeamSize={startup.teamSize}
-        canEdit={canEdit}
+        canEdit
         meta={
           meta
             ? {
@@ -203,12 +202,10 @@ export default async function InsightsStartupPage({
         label="Tracking"
         title="Pipeline-Tracking"
         actions={
-          canEdit ? (
-            <LinkButton href={`/insights/tracking/new?startup=${startup.id}`} variant="secondary" size="sm">
-              <Plus className="h-4 w-4" />
-              Eintrag anlegen
-            </LinkButton>
-          ) : undefined
+          <LinkButton href={`/insights/tracking/new?startup=${startup.id}`} variant="secondary" size="sm">
+            <Plus className="h-4 w-4" />
+            Eintrag anlegen
+          </LinkButton>
         }
       />
       {tracking.length === 0 ? (
