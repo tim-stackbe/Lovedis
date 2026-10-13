@@ -1,17 +1,31 @@
 import { z } from "zod";
 import {
+  checkbox,
+  emptyToUndefined,
+  firstIssue,
+  formObject,
+  optionalDate,
+  optionalEnum,
+  optionalId,
+  optionalInt,
+  optionalText,
+  toDate,
+  type ParseResult,
+} from "@/lib/insights/form-schema";
+import {
   pairKey,
   rate,
   type DataQualityItem,
   type InsightsDataset,
   type InsightsReportingMeta,
-  type InsightsStartup,
   type InsightsTracking,
   type PilotSource,
 } from "@/lib/insights/metrics";
 import {
   effectiveStage,
   EVIDENCE_LEVELS,
+  FOLLOW_ON_ROUNDS,
+  MATURITY_LEVELS,
   OUTCOMES,
   STAGES,
   stageRank,
@@ -101,17 +115,12 @@ export function isFemaleFounder(meta: InsightsReportingMeta | undefined): boolea
 }
 
 /**
- * Jobs created since the program-start baseline. Current team size is the
- * reported team size, else the startup profile's teamSize.
+ * New full-time equivalents since the program-start baseline (Antrag: Job
+ * Creation Multiplier in VZÄ). Head counts are not mixed in.
  */
-export function jobsCreated(
-  meta: InsightsReportingMeta | undefined,
-  startup: InsightsStartup | undefined
-): number | null {
-  const current = meta?.teamTotal ?? startup?.teamSize ?? null;
-  const baseline = meta?.fteBaseline ?? null;
-  if (current === null || baseline === null) return null;
-  return current - baseline;
+export function jobsCreated(meta: InsightsReportingMeta | undefined): number | null {
+  if (meta?.fteCurrent == null || meta.fteBaseline == null) return null;
+  return meta.fteCurrent - meta.fteBaseline;
 }
 
 // --- Batch scope ------------------------------------------------------------
@@ -202,7 +211,7 @@ export function summarizeBatchReporting(
       teamTotal += meta.teamTotal;
       teamFemale += meta.teamFemale;
     }
-    const created = jobsCreated(meta, startup);
+    const created = jobsCreated(meta);
     if (created !== null) {
       startupsWithJobData += 1;
       jobs += created;
@@ -327,11 +336,11 @@ export function trackingDataQuality(ds: InsightsDataset): DataQualityItem[] {
     },
     {
       key: "startup-fte-baseline",
-      label: "Batch-Startups ohne FTE-Baseline",
-      count: [...batchStartupIds].filter((id) => metaByStartup.get(id)?.fteBaseline == null)
+      label: "Batch-Startups ohne VZÄ bei Start und heute",
+      count: [...batchStartupIds].filter((id) => jobsCreated(metaByStartup.get(id)) === null)
         .length,
       total: batchStartupIds.size,
-      hint: "Teamgröße bei Programmstart; ohne sie gibt es keinen Job Creation Multiplier.",
+      hint: "Vollzeitstellen bei Programmstart und heute; ohne beide gibt es keinen Job Creation Multiplier.",
     },
     {
       key: "batch-challenges",
@@ -352,57 +361,6 @@ export function trackingDataQuality(ds: InsightsDataset): DataQualityItem[] {
 
 // --- Form parsing -----------------------------------------------------------
 
-const emptyToUndefined = (v: unknown) =>
-  v === null || v === undefined || (typeof v === "string" && v.trim() === "") ? undefined : v;
-
-const optionalInt = (max: number) =>
-  z.preprocess(
-    emptyToUndefined,
-    z.coerce
-      .number({ message: "Bitte eine Zahl eingeben." })
-      .int("Bitte eine ganze Zahl eingeben.")
-      .min(0, "Werte dürfen nicht negativ sein.")
-      .max(max, `Höchstens ${max.toLocaleString("de-DE")}.`)
-      .optional()
-  );
-
-const optionalDate = z.preprocess(
-  emptyToUndefined,
-  z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum im Format JJJJ-MM-TT angeben.")
-    .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Ungültiges Datum.")
-    .optional()
-);
-
-const optionalText = (max: number) =>
-  z.preprocess(emptyToUndefined, z.string().trim().max(max, `Höchstens ${max} Zeichen.`).optional());
-
-const optionalId = z.preprocess(emptyToUndefined, z.string().min(1).max(64).optional());
-
-const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) =>
-  z.preprocess(emptyToUndefined, z.enum(values).optional());
-
-const checkbox = z.preprocess((v) => v === "on" || v === "true", z.boolean());
-
-function toDate(s: string | undefined): Date | null {
-  return s ? new Date(`${s}T00:00:00.000Z`) : null;
-}
-
-function formObject(fd: FormData): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [key, value] of fd.entries()) {
-    if (typeof value === "string") out[key] = value;
-  }
-  return out;
-}
-
-type ParseResult<T> = { data: T; error?: undefined } | { data?: undefined; error: string };
-
-function firstIssue(error: z.ZodError): string {
-  return error.issues[0]?.message ?? "Ungültige Eingabe.";
-}
-
 const reportingMetaSchema = z
   .object({
     startupId: z.string().min(1, "Startup fehlt."),
@@ -413,6 +371,13 @@ const reportingMetaSchema = z
     teamFemale: optionalInt(100_000),
     fteBaseline: optionalInt(100_000),
     fteBaselineOn: optionalDate,
+    fteCurrent: optionalInt(100_000),
+    fteCurrentOn: optionalDate,
+    maturityStart: optionalEnum(MATURITY_LEVELS),
+    maturityCurrent: optionalEnum(MATURITY_LEVELS),
+    preFounding: z.preprocess(emptyToUndefined, z.enum(["yes", "no"]).optional()),
+    followOnRound: optionalEnum(FOLLOW_ON_ROUNDS),
+    followOnRoundOn: optionalDate,
     evidence: optionalEnum(EVIDENCE_LEVELS),
   })
   .refine(
@@ -426,6 +391,10 @@ const reportingMetaSchema = z
   .refine(
     (v) => v.teamFemale === undefined || v.teamTotal === undefined || v.teamFemale <= v.teamTotal,
     "Frauen im Team können nicht mehr sein als das Team gesamt."
+  )
+  .refine(
+    (v) => v.followOnRoundOn === undefined || v.followOnRound !== undefined,
+    "Bitte zum Datum auch die Art der Finanzierungsrunde wählen."
   );
 
 export interface ReportingMetaInput {
@@ -437,6 +406,13 @@ export interface ReportingMetaInput {
   teamFemale: number | null;
   fteBaseline: number | null;
   fteBaselineOn: Date | null;
+  fteCurrent: number | null;
+  fteCurrentOn: Date | null;
+  maturityStart: string | null;
+  maturityCurrent: string | null;
+  preFounding: boolean | null;
+  followOnRound: string | null;
+  followOnRoundOn: Date | null;
   evidence: string | null;
 }
 
@@ -454,6 +430,13 @@ export function parseReportingMetaForm(fd: FormData): ParseResult<ReportingMetaI
       teamFemale: v.teamFemale ?? null,
       fteBaseline: v.fteBaseline ?? null,
       fteBaselineOn: toDate(v.fteBaselineOn),
+      fteCurrent: v.fteCurrent ?? null,
+      fteCurrentOn: toDate(v.fteCurrentOn),
+      maturityStart: v.maturityStart ?? null,
+      maturityCurrent: v.maturityCurrent ?? null,
+      preFounding: v.preFounding === undefined ? null : v.preFounding === "yes",
+      followOnRound: v.followOnRound ?? null,
+      followOnRoundOn: toDate(v.followOnRoundOn),
       evidence: v.evidence ?? null,
     },
   };

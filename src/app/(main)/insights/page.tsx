@@ -1,4 +1,4 @@
-import { BarChart3, Link2, Route } from "lucide-react";
+import { BarChart3, Landmark, Link2, Route } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InsightsExportButton, SnapshotNowButton } from "@/components/insights/InsightsActions";
@@ -62,6 +62,10 @@ export default async function InsightsPage({
         subtitle="Kennzahlen aus Match-Matrix, Engagements, Challenges und Venture Store. Nur lesend: die Werkzeuge selbst bleiben unverändert."
         actions={
           <div className="flex flex-wrap gap-2">
+            <LinkButton href="/insights/foerderung" variant="white" size="sm">
+              <Landmark className="h-4 w-4" />
+              Verwendungsnachweis
+            </LinkButton>
             <LinkButton href="/insights/tracking" variant="white" size="sm">
               <Route className="h-4 w-4" />
               Pipeline-Tracking

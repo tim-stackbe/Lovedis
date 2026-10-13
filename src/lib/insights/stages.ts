@@ -46,6 +46,31 @@ export const EVIDENCE_LABELS: Record<EvidenceLevel, string> = {
   VERIFIED: "Belegt",
 };
 
+/** Product maturity, ordered; the index is the "MVP zu Marktreife" score (1..5). */
+export const MATURITY_LEVELS = ["IDEA", "PROTOTYPE", "MVP", "PILOT", "MARKET_READY"] as const;
+export type MaturityLevel = (typeof MATURITY_LEVELS)[number];
+export const MATURITY_LABELS: Record<MaturityLevel, string> = {
+  IDEA: "1 Idee",
+  PROTOTYPE: "2 Prototyp",
+  MVP: "3 MVP",
+  PILOT: "4 Pilot im Einsatz",
+  MARKET_READY: "5 Marktreife",
+};
+
+/** 1..5, or null for empty or unknown values. */
+export function maturityScore(level: string | null): number | null {
+  const index = (MATURITY_LEVELS as readonly string[]).indexOf(level ?? "");
+  return index < 0 ? null : index + 1;
+}
+
+export const FOLLOW_ON_ROUNDS = ["SEED", "SERIES_A", "OTHER"] as const;
+export type FollowOnRound = (typeof FOLLOW_ON_ROUNDS)[number];
+export const FOLLOW_ON_ROUND_LABELS: Record<FollowOnRound, string> = {
+  SEED: "Seed",
+  SERIES_A: "Series A",
+  OTHER: "Andere Runde",
+};
+
 /** Label lookup that tolerates unknown stored strings. */
 export function labelOf<T extends string>(labels: Record<T, string>, value: string | null): string {
   if (!value) return "";

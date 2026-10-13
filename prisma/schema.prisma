@@ -1469,6 +1469,17 @@ model StartupReportingMeta {
   // Team size (FTE) at program start, baseline for the Job Creation Multiplier.
   fteBaseline    Int?
   fteBaselineOn  DateTime? @db.Date
+  // Current FTE; Job Creation Multiplier = fteCurrent - fteBaseline (both VZÄ).
+  fteCurrent     Int?
+  fteCurrentOn   DateTime? @db.Date
+  // IDEA | PROTOTYPE | MVP | PILOT | MARKET_READY (see src/lib/insights/stages.ts)
+  maturityStart   String?
+  maturityCurrent String?
+  // Team not yet incorporated (Antrag: max. 10 % of the participants).
+  preFounding     Boolean?
+  // SEED | SERIES_A | OTHER, for the Follow-on Funding Rate.
+  followOnRound   String?
+  followOnRoundOn DateTime? @db.Date
   // SELF_REPORTED | VERIFIED (see src/lib/insights/tracking.ts)
   evidence       String?
   updatedById    String?
@@ -1532,4 +1543,77 @@ model BatchChallengeLink {
 
   @@unique([batchId, challengeId])
   @@index([challengeId])
+}
+
+// ---------------------------------------------------------------------------
+// KPI-Insights Phase 3: Verwendungsnachweis (Antrag StuP, Abschnitt 3.1).
+// Same rules as Phase 2: plain ids, no relations, existing tables untouched.
+// ---------------------------------------------------------------------------
+
+/// Which batch or Venture-Store program counts as which funded format.
+model FundingScopeItem {
+  id          String   @id @default(cuid())
+  // BATCH (ScoutingCampaign.id) | PROGRAM (Program.id)
+  kind        String
+  refId       String
+  // CONSTRUCTION | INDUSTRY | HEALTH_TECH | PROGRAM_1 | PROGRAM_2 | PROGRAM_3
+  format      String
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([kind, refId])
+}
+
+/// Attendance of a funded event; participants are tracked in Luma/Attio.
+model FundingEventCount {
+  id          String   @id @default(cuid())
+  // DEMO_DAY | FLAGSHIP | CXO_DINNER | PITCH_MATCHMAKING | OTHER
+  kind        String
+  title       String
+  heldOn      DateTime @db.Date
+  attendees   Int
+  // LUMA | ATTIO | OTHER
+  source      String
+  note        String?
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([heldOn])
+}
+
+/// Feedback survey for the startups of one batch or program (NPS, rating).
+model FeedbackSurvey {
+  id          String    @id @default(cuid())
+  title       String
+  // BATCH | PROGRAM
+  scopeKind   String
+  refId       String
+  closesOn    DateTime? @db.Date
+  closedAt    DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([refId])
+}
+
+/// One answer per startup and survey, submitted by the startup owner.
+model FeedbackResponse {
+  id          String   @id @default(cuid())
+  surveyId    String
+  startupId   String
+  userId      String
+  // Weiterempfehlung 0..10 (NPS question)
+  recommend   Int
+  // Gesamtbewertung 1..5
+  overall     Int
+  goodText    String?
+  improveText String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([surveyId, startupId])
+  @@index([startupId])
 }

@@ -41,7 +41,7 @@ export default async function InsightsStartupPage({
   const pilots = detail.matchRows.filter((r) => r.pilotSources.length > 0).length;
   const meta = ds.reportingMeta.find((m) => m.startupId === startup.id);
   const femaleFounder = isFemaleFounder(meta);
-  const jobs = jobsCreated(meta, startup);
+  const jobs = jobsCreated(meta);
   const tracking = ds.tracking.filter((t) => t.startupId === startup.id);
   const partnerName = (pid: string) => ds.partners.find((p) => p.id === pid)?.name ?? "?";
 
@@ -177,7 +177,7 @@ export default async function InsightsStartupPage({
       <SectionLabel number="05" label="Förderung" title="Förder-Merkmale" />
       <p className="text-sm text-lv-secondary">
         Female Founder: {femaleFounder === null ? "noch nicht erfasst" : femaleFounder ? "ja" : "nein"}.
-        {jobs !== null && ` Jobs seit Baseline: ${jobs > 0 ? "+" : ""}${jobs}.`}
+        {jobs !== null && ` Neue VZÄ seit Baseline: ${jobs > 0 ? "+" : ""}${jobs}.`}
       </p>
       <ReportingMetaForm
         key={JSON.stringify(meta)}
@@ -186,7 +186,16 @@ export default async function InsightsStartupPage({
         hessenSuggestion={suggestHessen(startup.city)}
         profileTeamSize={startup.teamSize}
         canEdit={canEdit}
-        meta={meta ? { ...meta, fteBaselineOn: dayString(meta.fteBaselineOn) } : null}
+        meta={
+          meta
+            ? {
+                ...meta,
+                fteBaselineOn: dayString(meta.fteBaselineOn),
+                fteCurrentOn: dayString(meta.fteCurrentOn),
+                followOnRoundOn: dayString(meta.followOnRoundOn),
+              }
+            : null
+        }
       />
 
       <SectionLabel

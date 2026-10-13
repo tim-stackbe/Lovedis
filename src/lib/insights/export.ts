@@ -19,13 +19,21 @@ import {
 import {
   effectiveStage,
   EVIDENCE_LABELS,
+  FOLLOW_ON_ROUND_LABELS,
   labelOf,
+  MATURITY_LABELS,
   OUTCOME_LABELS,
   STAGE_LABELS,
   SUPPORT_INTENSITY_LABELS,
   TRACK_LABELS,
 } from "@/lib/insights/stages";
 import { isFemaleFounder, jobsCreated, summarizeBatchReporting } from "@/lib/insights/tracking";
+import {
+  EVENT_SOURCE_LABELS,
+  KPI_STATUS_LABELS,
+  type FundingDataset,
+  type FundingReport,
+} from "@/lib/insights/funding";
 
 // ---------------------------------------------------------------------------
 // Flat "fact" sheets for the XLSX export, meant to be pivoted in Excel. Only
@@ -100,7 +108,7 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
     .map((s) => {
       const meta = metaByStartup.get(s.id);
       const female = isFemaleFounder(meta);
-      const jobs = jobsCreated(meta, s);
+      const jobs = jobsCreated(meta);
       return {
         Startup: s.name,
         Batches: ds.batchStartups
@@ -114,9 +122,16 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
         "Female Founder": female === null ? "" : female ? 1 : 0,
         "Team gesamt": meta?.teamTotal ?? "",
         "Team Frauen": meta?.teamFemale ?? "",
-        "FTE Baseline": meta?.fteBaseline ?? "",
+        "Vor-Gründung": meta?.preFounding === true ? "ja" : meta?.preFounding === false ? "nein" : "",
+        "VZÄ Baseline": meta?.fteBaseline ?? "",
         "Baseline am": day(meta?.fteBaselineOn ?? null),
-        "Jobs seit Baseline": jobs ?? "",
+        "VZÄ heute": meta?.fteCurrent ?? "",
+        "VZÄ heute am": day(meta?.fteCurrentOn ?? null),
+        "Neue VZÄ": jobs ?? "",
+        "Reifegrad Start": labelOf(MATURITY_LABELS, meta?.maturityStart ?? null),
+        "Reifegrad heute": labelOf(MATURITY_LABELS, meta?.maturityCurrent ?? null),
+        Folgefinanzierung: labelOf(FOLLOW_ON_ROUND_LABELS, meta?.followOnRound ?? null),
+        "Runde am": day(meta?.followOnRoundOn ?? null),
         Nachweis: labelOf(EVIDENCE_LABELS, meta?.evidence ?? null),
       };
     });
@@ -209,5 +224,74 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
     { name: "Buchungen", rows: bookingRows },
     { name: "Pipeline-Tracking", rows: trackingRows },
     { name: "Förder-Merkmale", rows: featureRows },
+  ];
+}
+
+/** Workbook for the Verwendungsnachweis (Phase 3), next to the Förder-Merkmale. */
+export function buildFundingSheets(ds: InsightsDataset, fd: FundingDataset, report: FundingReport): ExportSheet[] {
+  const metaByStartup = new Map(ds.reportingMeta.map((m) => [m.startupId, m]));
+  const foundedYear = new Map(fd.foundedYears.map((f) => [f.startupId, f.foundedYear]));
+  const yesNo = (v: boolean | null | undefined) => (v === true ? "ja" : v === false ? "nein" : "");
+
+  return [
+    {
+      name: "Verwendungsnachweis",
+      rows: report.kpis.map((k) => ({
+        KPI: k.label,
+        Soll: k.target,
+        Ist: k.actual,
+        Status: KPI_STATUS_LABELS[k.status],
+        Quelle: k.source,
+        Hinweis: k.note,
+      })),
+    },
+    {
+      name: "Formate",
+      rows: report.formats.map((f) => ({
+        Format: f.label,
+        Zugeordnet: f.refs.map((r) => r.name).join(", "),
+        Teilnehmende: f.participants,
+        Soll: f.target,
+        "Beihilfewert je Startup (EUR)": f.aidEur,
+        "Beihilfe gesamt (EUR)": f.aidTotalEur,
+      })),
+    },
+    {
+      name: "Begünstigte",
+      rows: report.beneficiaries.map((b) => {
+        const meta = metaByStartup.get(b.startupId);
+        return {
+          Startup: b.startupName,
+          Format: b.formatLabel,
+          "Beihilfewert (EUR)": b.aidEur,
+          Gründungsjahr: foundedYear.get(b.startupId) ?? "",
+          Hessen: yesNo(meta?.hessenBased),
+          "Vor-Gründung": yesNo(meta?.preFounding),
+        };
+      }),
+    },
+    {
+      name: "Veranstaltungen",
+      rows: report.events.flatMap((g) =>
+        g.events.map((e) => ({
+          Art: g.label,
+          Titel: e.title,
+          Datum: day(e.heldOn),
+          Teilnehmende: e.attendees,
+          "Soll je Veranstaltung": g.min === null ? "" : g.max === null ? `${g.min}` : `${g.min} bis ${g.max}`,
+          Quelle: labelOf(EVENT_SOURCE_LABELS, e.source),
+        }))
+      ),
+    },
+    {
+      name: "Prüfpunkte",
+      rows: report.checks.map((c) => ({
+        Prüfung: c.label,
+        Betroffen: c.count,
+        Gesamt: c.total,
+        Art: c.severity === "error" ? "Regel aus dem Antrag" : "Datenpflege",
+        Hinweis: c.hint,
+      })),
+    },
   ];
 }

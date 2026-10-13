@@ -107,6 +107,13 @@ export interface InsightsReportingMeta {
   teamFemale: number | null;
   fteBaseline: number | null;
   fteBaselineOn: Date | null;
+  fteCurrent: number | null;
+  fteCurrentOn: Date | null;
+  maturityStart: string | null;
+  maturityCurrent: string | null;
+  preFounding: boolean | null;
+  followOnRound: string | null;
+  followOnRoundOn: Date | null;
   evidence: string | null;
 }
 

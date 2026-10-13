@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDashed, Clock, Coins, Store } from "lucide-react";
+import { CircleCheck, CircleDashed, Clock, Coins, MessageSquareHeart, Store } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ApplicationStatusBadge } from "@/components/shared/badges";
@@ -10,6 +10,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireRole } from "@/lib/auth-guards";
 import { deriveCreditBudget } from "@/lib/credit-buckets";
+import { surveysForStartup } from "@/lib/insights/funding-data";
 import { prisma } from "@/lib/prisma";
 import {
   isStartupMarketplaceHiddenForAlpha,
@@ -45,6 +46,10 @@ export default async function StartupDashboard() {
       take: 4,
     }),
   ]);
+
+  const openSurveys = startup
+    ? (await surveysForStartup(startup.id)).filter((s) => s.open && !s.answered)
+    : [];
 
   const applications = startup?.applications ?? [];
   const accepted = applications.filter((a) => a.status === "ACCEPTED").length;
@@ -115,6 +120,25 @@ export default async function StartupDashboard() {
           <BannerStat label="Offene Challenges" value={openChallenges.length} />
         </div>
       </HeroBanner>
+
+      {openSurveys.length > 0 && (
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-lv-blue-soft bg-lv-blue-soft/60 p-4">
+          <div className="flex items-start gap-3">
+            <MessageSquareHeart className="mt-0.5 h-5 w-5 shrink-0 text-lv-blue" />
+            <div>
+              <p className="text-sm font-semibold text-lv-text">
+                {openSurveys.length === 1 ? "Eine Feedback-Umfrage wartet auf dich" : `${openSurveys.length} Feedback-Umfragen warten auf dich`}
+              </p>
+              <p className="text-xs text-lv-secondary">
+                {openSurveys.map((s) => s.scopeName).join(", ")}. Dauert etwa zwei Minuten.
+              </p>
+            </div>
+          </div>
+          <LinkButton href={`/feedback/${openSurveys[0].id}`} size="sm">
+            Feedback geben
+          </LinkButton>
+        </Card>
+      )}
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">

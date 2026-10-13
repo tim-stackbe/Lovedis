@@ -64,7 +64,7 @@ Metrik-Registry (Code, getestet)  ──  eine Definition pro KPI
 |---------|----------------------------------|
 | **Match** | **Entschieden:** Matrix-Zelle im Batch, in der Startup **und** Partner die Relevanz mit „Hoch“ bewertet haben (identisch mit dem Top-Match der Matrix). Kontakt oder Folgegespräch-Wunsch allein zählen nicht. „Intro durch LOVEDIS“ (Datum) wird zusätzlich im Tracking erfasst, ändert die Match-Zählung aber nicht. |
 | **Female Founder** | **Entschieden:** mindestens die Hälfte der Gründer:innen sind Frauen (50/50-Teams zählen mit). Zusätzlich berichtet: Frauenanteil im gesamten Team in %. |
-| **Förder-Abgabe** | **Entschieden:** Bericht fällig 1 Monat nach Ende des Batches bzw. Programms (`endDate` + 1 Monat). |
+| **Förder-Abgabe** | **Entschieden:** Verwendungsnachweis inkl. KPIs bis 30.04.2027 (Förderzeitraum 15.04.2026 bis 28.02.2027). Siehe Abschnitt 12. |
 | **Pilot / Testphase** | Engagement oder PoC zum Paar (Startup, Partner) mit Status aktiv/abgeschlossen, **oder** Matrix `PILOT_AGREED`, **oder** Tracking-Stufe ≥ PILOT. |
 | **LOI / Vertrag / Umsatz** | Nur im neuen Tracking (gibt es heute nirgends). |
 | **Conversion** | **Kohorte pro Batch:** Von allen Matches aus Batch X, wie viele erreichten jemals Pilot? Von diesen, wie viele LOI/Vertrag? (Nicht „Ereignisse im Quartal“, das kommt erst mit Snapshot-Historie.) |
@@ -104,8 +104,8 @@ Jede Definition wird **eine** Funktion in der Metrik-Registry mit Unit-Tests. UI
 
 ### 4.5 Förder-Bausteine
 
-- `ReportingPeriod` (Programm, Zeitraum, Fälligkeit = Ende + 1 Monat, Status Entwurf/Freigegeben). Dashboard zeigt die nächste Fälligkeit.
-- `ProgramEvent` + `ProgramEventParticipant` (vorgezogen, entschieden): Veranstaltungen selbst anlegen (Titel, Datum, Format, Programm/Batch, Teilnehmerzahl) und Startups zuordnen. Fließt in den Förderbericht.
+- `ReportingPeriod` (Förderzeitraum 15.04.2026 bis 28.02.2027, Fälligkeit 30.04.2027, Status Entwurf/Freigegeben). Dashboard zeigt die verbleibende Zeit.
+- Kein `ProgramEvent`: Veranstaltungen laufen über Luma und Attio (siehe Entscheidung 3).
 - `MetricTarget` (Soll je KPI und Periode), `MetricManualValue` (Ist für nicht automatisierbare KPIs, mit Kommentar und Nachweis-Link).
 - Bei Freigabe: eingefrorener Snapshot; Export aus dem Snapshot, nicht aus Live-Daten (Nachvollziehbarkeit gegenüber Förderstelle).
 
@@ -190,7 +190,7 @@ Alle Felder aus den Needs über `PipelineTracking` 🆕; Conversion Basis zu 1:1
 ### Phase 3: Förderung, Board, Claude (ca. 2 Wochen)
 
 - `ReportingPeriod` mit Fälligkeit, Soll/Manuell, Freigabe-Snapshot, Landes-Excel-Export (Mock wird echt).
-- Veranstaltungen: anlegen und Startups zuordnen (`ProgramEvent`).
+- Soll/Ist-Blatt exakt nach Antrag Abschnitt 3.1 (siehe Abschnitt 12), Event-Zahlen als manuelle Werte mit Quelle Luma/Attio.
 - Board-PDF.
 - Read-only API für Claude (vorgezogen, da die Registry dann existiert).
 
@@ -249,14 +249,37 @@ Match-Matrix (UI, Schema, Sheet-Import) · Engagements · PoCs · Challenges · 
 
 ## 10. Entscheidungen (2026-10-13)
 
-1. **Förder-Abgabefrist:** 1 Monat nach Ende des Batches bzw. Programms.
+1. **Förder-Abgabefrist (aktualisiert 2026-10-13 nach Antrag):** Förderzeitraum 15.04.2026 bis 28.02.2027, Verwendungsnachweis inkl. KPIs bis 30.04.2027. Das ist die verbindliche Frist; „1 Monat nach Batch-Ende“ bleibt nur als interne Zwischenstand-Erinnerung.
 2. **Match:** beide Seiten „Hoch“. Umgesetzt in `isQualifiedMatch`.
-3. **Veranstaltungen:** werden berichtet. Selbst eintragbar, Startups zuordenbar (`ProgramEvent`, Phase 3).
+3. **Veranstaltungen (aktualisiert):** Demo Days, LOVE DISRUPTION (Flagship) und DISRUPT FROM THE CORE zählen für die Förderung, laufen aber nicht über die Plattform. Teilnehmende werden in Luma und Attio getrackt. Kein `ProgramEvent` auf der Plattform. Ausnahme: Partner-Bewertungen auf der Plattform beim Demo Day zählen als Bewertungen und Aktivität, nicht als Event-KPI.
 4. **Female Founder:** mindestens 50 % der Gründer:innen sind Frauen, plus Frauenanteil im Team in %.
 6. **Bestandsdaten:** Phase 2 und folgende ändern keine bestehenden Daten oder Tabellen. Nur neue Tabellen; bestehende Daten werden ausschließlich gelesen.
 5. **Pflege `PipelineTracking`:** alle ADMINs.
 
 ---
+
+## 12. Abgleich mit dem Förderantrag (StuP, Abschnitt 3.1)
+
+Quelle: `260528_StuP_Antrag_final.pdf`, Hessen Agentur, Zuschuss 798.100 €, Förderzeitraum 15.04.2026 bis 28.02.2027, Verwendungsnachweis bis 30.04.2027.
+
+| KPI laut Antrag | Soll | Quelle | Stand |
+|-----------------|------|--------|-------|
+| Start-ups in den Basis-Akzeleratoren | 36 (3 × 12) | `BatchStartup` | Läuft. Auf Alpha existiert nur der Industry-Batch (11 Startups, ohne Datum). Construction und Health Tech fehlen als Batches. |
+| Start-ups im 1:1-Akzelerator | bis 6 | `PipelineTracking` (Track 1:1) | Läuft |
+| Weitere Start-up Programme | 45 (3 × 15) | Venture-Store-Programme (`Program` + Buchungen CONFIRMED/COMPLETED) | Neue Kennzahl nötig: Teilnehmende je Programm. Externe Teilnehmende zählen nur, wenn sie als Startup angelegt sind. |
+| Mentor:innen & Expert:innen | 21 bis 60 Personen | `MentorProfile` aktiv | Kennzahl nötig; auf Alpha 0 Profile |
+| Teilnehmende Demo Days | 50 bis 70 je Demo Day | Luma/Attio | Manueller Wert |
+| Teilnehmende Flagship (LOVE DISRUPTION) | 275 | Luma/Attio | Manueller Wert |
+| CxO-Dinner / Pitching & Matchmaking (DISRUPT FROM THE CORE) | 40 bis 50 / 20 bis 30 | Luma/Attio | Manueller Wert |
+| Pilotierungen / Co-Entwicklungen nach Basis-Akzelerator | ≥ 3 | Pilot-Index (Matrix, Engagement, PoC, Tracking) | Läuft |
+| Net Promoter Score | ≥ 7 (Skala 0 bis 10) | Umfrage | Fehlt |
+| Bewertung des Programms | Fragebogen & Interviews | Umfrage | Fehlt |
+| Technologischer Erfolg MVP zu Marktreife | Index-Score | Reifegrad je Startup bei Start und Ende | Bisher nur `outcome` je Tracking-Eintrag; Reifegrad je Startup fehlt |
+| Pilot-to-Contract-Ratio | Erhebung 12 Monate nach Programmende | `PipelineTracking` | Läuft; zum 30.04.2027 nur Zwischenstand möglich |
+| Follow-on Funding Rate | Seed/Series A binnen 12 Monaten | Finanzierungsrunde je Startup | Fehlt |
+| Job Creation Multiplier | neue VZÄ pro Start-up binnen 2 Jahren | `StartupReportingMeta` | Korrektur nötig: aktuell Köpfe heute minus VZÄ-Baseline; braucht „VZÄ heute“ und Wert pro Start-up |
+
+Zusätzliche Prüfpunkte aus Antrag und Richtlinie: Start-ups max. 5 Jahre alt (`foundedYear`), Vor-Gründungsteams max. 10 % der Teilnehmenden, Ansiedlung in Hessen als Kriterium für 1:1, 5.000 € Venture Credits je 1:1-Startup, Beihilfewert je Format (Construction 2.979 €, Industry 2.910 €, Health Tech 3.007 €, 1:1 9.243 €, Programm 1: 301 €, Programme 2 und 3: je 842 €).
 
 ## 11. Freigabe-Checkliste
 

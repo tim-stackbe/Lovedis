@@ -65,6 +65,13 @@ function meta(overrides: Partial<InsightsReportingMeta> & Pick<InsightsReporting
     teamFemale: null,
     fteBaseline: null,
     fteBaselineOn: null,
+    fteCurrent: null,
+    fteCurrentOn: null,
+    maturityStart: null,
+    maturityCurrent: null,
+    preFounding: null,
+    followOnRound: null,
+    followOnRoundOn: null,
     evidence: null,
     ...overrides,
   };
@@ -113,7 +120,7 @@ function fixture(): InsightsDataset {
     bookings: [],
     reportingMeta: [
       // Alpha: confirmed Hessen, 1 of 2 founders female (50 %) → Female Founder.
-      meta({ startupId: "a", hessenBased: true, foundersTotal: 2, foundersFemale: 1, teamTotal: 8, teamFemale: 3, fteBaseline: 5 }),
+      meta({ startupId: "a", hessenBased: true, foundersTotal: 2, foundersFemale: 1, teamTotal: 8, teamFemale: 3, fteBaseline: 5, fteCurrent: 8 }),
       // Beta: not Hessen, 1 of 3 founders female → no Female Founder.
       meta({ startupId: "b", hessenBased: false, foundersTotal: 3, foundersFemale: 1, teamTotal: 4, teamFemale: 1 }),
       // Gamma has no meta: Hessen only suggested from "Gießen".
@@ -181,12 +188,12 @@ describe("isFemaleFounder", () => {
 });
 
 describe("jobsCreated", () => {
-  it("compares the current team with the baseline, falling back to the profile team size", () => {
-    const startup = fixture().startups[0];
-    expect(jobsCreated(meta({ startupId: "a", teamTotal: 8, fteBaseline: 5 }), startup)).toBe(3);
-    expect(jobsCreated(meta({ startupId: "a", fteBaseline: 4 }), startup)).toBe(2);
-    expect(jobsCreated(meta({ startupId: "a", teamTotal: 8 }), startup)).toBeNull();
-    expect(jobsCreated(undefined, startup)).toBeNull();
+  it("compares current FTE with the baseline FTE, never with head counts", () => {
+    expect(jobsCreated(meta({ startupId: "a", fteCurrent: 8, fteBaseline: 5 }))).toBe(3);
+    expect(jobsCreated(meta({ startupId: "a", fteCurrent: 2, fteBaseline: 4 }))).toBe(-2);
+    expect(jobsCreated(meta({ startupId: "a", teamTotal: 8, fteBaseline: 5 }))).toBeNull();
+    expect(jobsCreated(meta({ startupId: "a", fteCurrent: 8 }))).toBeNull();
+    expect(jobsCreated(undefined)).toBeNull();
   });
 });
 
@@ -319,9 +326,44 @@ describe("parseReportingMetaForm", () => {
       teamFemale: null,
       fteBaseline: null,
       fteBaselineOn: d("2026-03-01"),
+      fteCurrent: null,
+      fteCurrentOn: null,
+      maturityStart: null,
+      maturityCurrent: null,
+      preFounding: null,
+      followOnRound: null,
+      followOnRoundOn: null,
       evidence: null,
     });
     expect(parseReportingMetaForm(form({ startupId: "s", hessenBased: "" })).data?.hessenBased).toBeNull();
+  });
+
+  it("parses the Verwendungsnachweis fields", () => {
+    const res = parseReportingMetaForm(
+      form({
+        startupId: "s",
+        fteBaseline: "2",
+        fteCurrent: "5",
+        fteCurrentOn: "2027-01-31",
+        maturityStart: "MVP",
+        maturityCurrent: "MARKET_READY",
+        preFounding: "no",
+        followOnRound: "SEED",
+        followOnRoundOn: "2026-12-01",
+      })
+    );
+    expect(res.data).toMatchObject({
+      fteBaseline: 2,
+      fteCurrent: 5,
+      fteCurrentOn: d("2027-01-31"),
+      maturityStart: "MVP",
+      maturityCurrent: "MARKET_READY",
+      preFounding: false,
+      followOnRound: "SEED",
+      followOnRoundOn: d("2026-12-01"),
+    });
+    expect(parseReportingMetaForm(form({ startupId: "s", maturityStart: "GROSS" })).error).toBeDefined();
+    expect(parseReportingMetaForm(form({ startupId: "s", followOnRoundOn: "2026-12-01" })).error).toMatch(/Finanzierungsrunde/);
   });
 
   it("rejects inconsistent counts", () => {

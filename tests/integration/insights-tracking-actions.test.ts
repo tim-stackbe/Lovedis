@@ -89,7 +89,17 @@ describe("saveReportingMeta", () => {
     expect(created.success).toBeDefined();
     const updated = await saveReportingMeta(
       undefined,
-      form({ startupId: startup.id, hessenBased: "", foundersTotal: "2", foundersFemale: "2" })
+      form({
+        startupId: startup.id,
+        hessenBased: "",
+        foundersTotal: "2",
+        foundersFemale: "2",
+        fteCurrent: "6",
+        maturityCurrent: "PILOT",
+        preFounding: "no",
+        followOnRound: "SERIES_A",
+        followOnRoundOn: "2026-11-15",
+      })
     );
     expect(updated.success).toBeDefined();
 
@@ -100,8 +110,13 @@ describe("saveReportingMeta", () => {
       hessenBased: null,
       foundersFemale: 2,
       fteBaseline: null,
+      fteCurrent: 6,
+      maturityCurrent: "PILOT",
+      preFounding: false,
+      followOnRound: "SERIES_A",
       updatedById: adminId,
     });
+    expect(rows[0].followOnRoundOn?.toISOString()).toBe("2026-11-15T00:00:00.000Z");
     expect(await existingState()).toBe(before);
   });
 
