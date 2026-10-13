@@ -159,8 +159,8 @@ export interface NavSection {
 //   [untitled]     Einstellungen          /settings
 //
 // During Alpha the Partner nav is reduced to a strict KEEP-list (allowlist):
-// only the six hrefs in ALPHA_VISIBLE_PARTNER_HREFS stay visible. Everything
-// else above — Dashboard (/dashboard/partner), Feed (/feed), Longlist-Screening
+// only the hrefs in ALPHA_VISIBLE_PARTNER_HREFS stay visible. Everything
+// else above — Dashboard (/dashboard/partner), Longlist-Screening
 // (/screening), Use-Case-Bewertung (/use-cases), Check-ins (/check-ins),
 // Engagements (/engagements), PoC-Tracking (/pocs), Geteilte Scorings
 // (/scorings) and Nachrichten (/messages) — is hidden from the Partner nav.
@@ -177,6 +177,7 @@ export const ALPHA_HIDE_PARTNER_SECTIONS = true;
  */
 const ALPHA_VISIBLE_PARTNER_HREFS = [
   "/discover", // Entdecken
+  "/feed", // Feed
   "/matrix", // Startup-Partner Matchmaking
   "/challenges", // Challenges
   "/partner-hub", // Partner-Hub
