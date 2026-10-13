@@ -1,55 +1,67 @@
 import { Share2 } from "lucide-react";
 import type { Metadata } from "next";
-import {
-  ReportsView,
-  type ReportRow,
-} from "@/components/reports/ReportsView";
+import { ReportsViewLazy as ReportsView } from "@/components/reports/ReportsViewLazy";
+import type { ReportRow } from "@/components/reports/ReportsView";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import {
   PIPELINE_STAGE_LABELS,
+  SCORE_DIMENSIONS,
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { scoresToMap } from "@/lib/scoring";
-import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Berichte" };
 
 export default async function ReportsPage() {
   await requireScoutModule();
 
-  const evaluations = await prisma.evaluation.findMany({
-    include: {
-      scores: true,
-      startup: true,
-      evaluator: { select: { name: true } },
+  // Portfolio report = one row per startup, using the aggregated team consensus
+  // (mean per criterion + consensus total/status + evaluator count).
+  const consensusByStartup = await getConsensusByStartup();
+  const startupIds = [...consensusByStartup.keys()];
+
+  const startups = await prisma.startup.findMany({
+    where: { id: { in: startupIds } },
+    select: {
+      id: true,
+      name: true,
+      industry: true,
+      stage: true,
+      pipelineStage: true,
     },
-    orderBy: { overallScore: "desc" },
   });
 
-  const rows: ReportRow[] = evaluations.map((e) => ({
-    startup: e.startup.name,
-    industry: e.startup.industry,
-    stage: STARTUP_STAGE_LABELS[e.startup.stage],
-    pipeline: PIPELINE_STAGE_LABELS[e.startup.pipelineStage],
-    evaluator: e.evaluator.name,
-    date: formatDate(e.updatedAt),
-    scores: scoresToMap(e.scores) as Record<string, number>,
-    potential: e.potential,
-    feasibility: e.feasibility,
-    overall: e.overallScore,
-    recommendation: e.recommendation,
-  }));
+  const rows: ReportRow[] = startups
+    .map((s) => {
+      const consensus = consensusByStartup.get(s.id)!;
+      return {
+        startup: s.name,
+        industry: s.industry,
+        stage: STARTUP_STAGE_LABELS[s.stage],
+        pipeline: PIPELINE_STAGE_LABELS[s.pipelineStage],
+        evaluatorCount: consensus.evaluatorCount,
+        scores: Object.fromEntries(
+          SCORE_DIMENSIONS.map((d) => [d, consensus.perCriterionMean[d] ?? 0])
+        ) as Record<string, number>,
+        overall: consensus.weightedTotal,
+        recommendation: consensus.recommendation,
+        gated: consensus.gated,
+        minTotal: consensus.minTotal,
+        maxTotal: consensus.maxTotal,
+      };
+    })
+    .sort((a, b) => b.overall - a.overall);
 
   return (
     <>
       <HeroBanner
         kicker="Venture Scout"
         title="Berichte & Exporte"
-        subtitle="Nimm das Portfolio mit — PDF fürs Board, Excel und CSV für die Analysten."
+        subtitle="Nimm das Portfolio mit — PDF fürs Board, Excel und CSV für die Analysten. Werte sind der Team-Konsens je Startup."
       />
       <SectionLabel number="06" label="Bericht" title="Portfolio-Bericht" />
       {rows.length === 0 ? (

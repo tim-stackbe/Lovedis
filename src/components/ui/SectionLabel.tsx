@@ -16,7 +16,7 @@ export function SectionLabel({
     <div className="space-y-2">
       <div className="flex items-center gap-3">
         <span className="lv-wordmark text-xs text-lv-blue shrink-0">
-          Section {number} — {label}
+          Section {number} · {label}
         </span>
         <span className="h-px flex-1 bg-lv-border" />
       </div>

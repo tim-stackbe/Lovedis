@@ -45,7 +45,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
               formRef.current?.requestSubmit();
             }
           }}
-          className="max-h-32 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm text-lv-text placeholder:text-lv-secondary/60 outline-none"
+          className="max-h-32 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-base sm:text-sm text-lv-text placeholder:text-lv-secondary/60 outline-none"
         />
         <button
           type="button"

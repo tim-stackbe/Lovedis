@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/Field";
 import type { PoCStatus } from "@/generated/prisma/enums";
 import { POC_STATUSES, POC_STATUS_LABELS } from "@/lib/constants";
-import { kpiProgress, type Kpi, type Milestone } from "@/lib/pocs";
+import {
+  kpiProgress,
+  type Kpi,
+  type KpiDraft,
+  type Milestone,
+  normalizeKpi,
+  parseNumberInput,
+} from "@/lib/pocs";
 import { cn } from "@/lib/utils";
 
 interface PoCEditorProps {
@@ -36,10 +43,10 @@ interface PoCEditorProps {
 export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
   const action = updatePoC.bind(null, pocId);
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [kpis, setKpis] = useState<Kpi[]>(initial.kpis);
+  const [kpis, setKpis] = useState<KpiDraft[]>(initial.kpis);
   const [milestones, setMilestones] = useState<Milestone[]>(initial.milestones);
 
-  const setKpi = (i: number, patch: Partial<Kpi>) =>
+  const setKpi = (i: number, patch: Partial<KpiDraft>) =>
     setKpis((ks) => ks.map((k, idx) => (idx === i ? { ...k, ...patch } : k)));
   const setMilestone = (i: number, patch: Partial<Milestone>) =>
     setMilestones((ms) =>
@@ -48,7 +55,11 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      <input type="hidden" name="kpis" value={JSON.stringify(kpis)} />
+      <input
+        type="hidden"
+        name="kpis"
+        value={JSON.stringify(kpis.map(normalizeKpi))}
+      />
       <input
         type="hidden"
         name="milestones"
@@ -136,7 +147,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
             <p className="text-sm text-lv-secondary">Noch keine KPIs definiert.</p>
           )}
           {kpis.map((kpi, i) => {
-            const progress = kpiProgress(kpi);
+            const progress = kpiProgress(normalizeKpi(kpi));
             return (
               <div
                 key={i}
@@ -153,7 +164,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                     type="number"
                     value={kpi.current}
                     onChange={(e) =>
-                      setKpi(i, { current: Number(e.target.value) })
+                      setKpi(i, { current: parseNumberInput(e.target.value) })
                     }
                     placeholder="Aktuell"
                     disabled={readOnly}
@@ -162,7 +173,7 @@ export function PoCEditor({ pocId, initial, readOnly }: PoCEditorProps) {
                     type="number"
                     value={kpi.target}
                     onChange={(e) =>
-                      setKpi(i, { target: Number(e.target.value) })
+                      setKpi(i, { target: parseNumberInput(e.target.value) })
                     }
                     placeholder="Ziel"
                     disabled={readOnly}

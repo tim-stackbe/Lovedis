@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // ISOLATED staging worker. Deploys to the *.workers.dev subdomain only.
+  // INTENTIONALLY no `route`/`routes` and no custom domain so it never
+  // touches the live lovedis.de zone or its DNS.
+  // account_id points at the SEPARATE, dedicated staging account
+  // (NOT the homepage account 9337dd36...).
+  "name": "lovedis-platform-staging",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-06-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "e29e8d605f10dc5e6748aa6966033539",
+  "workers_dev": true,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  }
+}

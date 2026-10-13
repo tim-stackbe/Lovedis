@@ -1,23 +1,54 @@
 import type {
   ApplicationStatus,
+  BookingStatus,
   ChallengeStatus,
+  ContentAudience,
+  CreditTxType,
+  EngagementStatus,
   IntroStatus,
+  MarketplaceOfferingType,
+  MatchContactStatus,
+  MatchUseCaseType,
+  PartnerVerdict,
   PipelineStage,
+  RelevanceLevel,
   PoCStatus,
+  ProgramStatus,
   Recommendation,
+  ReminderStatus,
+  RoadmapStatus,
+  SourceType,
+  SupportCategory,
+  SupportTicketCategory,
+  SupportTicketStatus,
   UpdateCategory,
 } from "@/generated/prisma/enums";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import {
   APPLICATION_STATUS_LABELS,
+  BOOKING_STATUS_LABELS,
   CHALLENGE_STATUS_LABELS,
+  CONTENT_AUDIENCE_LABELS,
+  CREDIT_TX_TYPE_LABELS,
+  ENGAGEMENT_STATUS_LABELS,
   INTRO_STATUS_LABELS,
+  MARKETPLACE_OFFERING_TYPE_LABELS,
+  MATCH_CONTACT_STATUS_LABELS,
+  MATCH_USE_CASE_LABELS,
+  PARTNER_VERDICT_LABELS,
   PIPELINE_STAGE_LABELS,
+  RELEVANCE_LABELS,
   POC_STATUS_LABELS,
-  QUADRANT_LABELS,
+  PROGRAM_STATUS_LABELS,
+  GATE_STATUS_LABEL,
   RECOMMENDATION_LABELS,
+  REMINDER_STATUS_LABELS,
+  ROADMAP_STATUS_LABELS,
+  SOURCE_TYPE_LABELS,
+  SUPPORT_CATEGORY_LABELS,
+  SUPPORT_TICKET_CATEGORY_LABELS,
+  SUPPORT_TICKET_STATUS_LABELS,
   UPDATE_CATEGORY_LABELS,
-  type Quadrant,
 } from "@/lib/constants";
 import { cn, formatScore } from "@/lib/utils";
 
@@ -34,6 +65,29 @@ export function RecommendationBadge({ value }: { value: Recommendation }) {
     <Badge tone={RECOMMENDATION_TONES[value]}>
       {RECOMMENDATION_LABELS[value]}
     </Badge>
+  );
+}
+
+/** Status badge shown when the Challenge-Fit hard gate is triggered. */
+export function GateStatusBadge() {
+  return <Badge tone="orange">{GATE_STATUS_LABEL}</Badge>;
+}
+
+/**
+ * Surfaces the evaluation status wherever a recommendation is shown: the
+ * "Kein Fit (Gate)" gate label takes precedence over the recommendation.
+ */
+export function EvaluationStatusBadge({
+  recommendation,
+  gated,
+}: {
+  recommendation: Recommendation;
+  gated: boolean;
+}) {
+  return gated ? (
+    <GateStatusBadge />
+  ) : (
+    <RecommendationBadge value={recommendation} />
   );
 }
 
@@ -94,17 +148,6 @@ export function PoCStatusBadge({ value }: { value: PoCStatus }) {
   return <Badge tone={POC_TONES[value]}>{POC_STATUS_LABELS[value]}</Badge>;
 }
 
-export const QUADRANT_TONES: Record<Quadrant, BadgeTone> = {
-  MONEY_MAKER: "mint",
-  DREAMER: "pink",
-  SOLID_BET: "blue",
-  PASS: "orange",
-};
-
-export function QuadrantBadge({ value }: { value: Quadrant }) {
-  return <Badge tone={QUADRANT_TONES[value]}>{QUADRANT_LABELS[value]}</Badge>;
-}
-
 export const UPDATE_CATEGORY_TONES: Record<UpdateCategory, BadgeTone> = {
   MILESTONE: "mint",
   FUNDING: "blue",
@@ -132,6 +175,268 @@ const INTRO_STATUS_TONES: Record<IntroStatus, BadgeTone> = {
 export function IntroStatusBadge({ value }: { value: IntroStatus }) {
   return (
     <Badge tone={INTRO_STATUS_TONES[value]}>{INTRO_STATUS_LABELS[value]}</Badge>
+  );
+}
+
+const PARTNER_VERDICT_TONES: Record<PartnerVerdict, BadgeTone> = {
+  PENDING: "muted",
+  CONTINUE: "mint",
+  PASS: "orange",
+};
+
+export function PartnerVerdictBadge({ value }: { value: PartnerVerdict }) {
+  return (
+    <Badge tone={PARTNER_VERDICT_TONES[value]}>
+      {PARTNER_VERDICT_LABELS[value]}
+    </Badge>
+  );
+}
+
+const SOURCE_TYPE_TONES: Record<SourceType, BadgeTone> = {
+  INBOUND: "blue",
+  OUTBOUND: "pink",
+};
+
+export function SourceTypeBadge({ value }: { value: SourceType }) {
+  return (
+    <Badge tone={SOURCE_TYPE_TONES[value]}>{SOURCE_TYPE_LABELS[value]}</Badge>
+  );
+}
+
+const REMINDER_STATUS_TONES: Record<ReminderStatus, BadgeTone> = {
+  SCHEDULED: "yellow",
+  SENT: "blue",
+  DONE: "mint",
+  CANCELLED: "muted",
+};
+
+export function ReminderStatusBadge({ value }: { value: ReminderStatus }) {
+  return (
+    <Badge tone={REMINDER_STATUS_TONES[value]}>
+      {REMINDER_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const ENGAGEMENT_STATUS_TONES: Record<EngagementStatus, BadgeTone> = {
+  ACTIVE: "mint",
+  PAUSED: "yellow",
+  COMPLETED: "blue",
+  CANCELLED: "orange",
+};
+
+export function EngagementStatusBadge({ value }: { value: EngagementStatus }) {
+  return (
+    <Badge tone={ENGAGEMENT_STATUS_TONES[value]}>
+      {ENGAGEMENT_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const ROADMAP_STATUS_TONES: Record<RoadmapStatus, BadgeTone> = {
+  PLANNED: "muted",
+  IN_PROGRESS: "yellow",
+  DONE: "mint",
+};
+
+export function RoadmapStatusBadge({ value }: { value: RoadmapStatus }) {
+  return (
+    <Badge tone={ROADMAP_STATUS_TONES[value]}>
+      {ROADMAP_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const CONTENT_AUDIENCE_TONES: Record<ContentAudience, BadgeTone> = {
+  PARTNER: "blue",
+  STARTUP: "pink",
+  BOTH: "mint",
+};
+
+export function ContentAudienceBadge({ value }: { value: ContentAudience }) {
+  return (
+    <Badge tone={CONTENT_AUDIENCE_TONES[value]}>
+      {CONTENT_AUDIENCE_LABELS[value]}
+    </Badge>
+  );
+}
+
+const CREDIT_TX_TYPE_TONES: Record<CreditTxType, BadgeTone> = {
+  GRANT: "mint",
+  SPEND: "orange",
+  ADJUSTMENT: "yellow",
+};
+
+export function CreditTxTypeBadge({ value }: { value: CreditTxType }) {
+  return (
+    <Badge tone={CREDIT_TX_TYPE_TONES[value]}>
+      {CREDIT_TX_TYPE_LABELS[value]}
+    </Badge>
+  );
+}
+
+const BOOKING_STATUS_TONES: Record<BookingStatus, BadgeTone> = {
+  REQUESTED: "yellow",
+  IN_COORDINATION: "blue",
+  CONFIRMED: "mint",
+  COMPLETED: "mint",
+  DECLINED: "orange",
+  CANCELLED: "muted",
+};
+
+export function BookingStatusBadge({ value }: { value: BookingStatus }) {
+  return (
+    <Badge tone={BOOKING_STATUS_TONES[value]}>
+      {BOOKING_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const OFFERING_TYPE_TONES: Record<MarketplaceOfferingType, BadgeTone> = {
+  PROGRAM: "pink",
+  MENTOR_SESSION: "blue",
+  SUPPORT: "mint",
+};
+
+export function OfferingTypeBadge({
+  value,
+}: {
+  value: MarketplaceOfferingType;
+}) {
+  return (
+    <Badge tone={OFFERING_TYPE_TONES[value]}>
+      {MARKETPLACE_OFFERING_TYPE_LABELS[value]}
+    </Badge>
+  );
+}
+
+export function SupportCategoryBadge({ value }: { value: SupportCategory }) {
+  return <Badge tone="blue">{SUPPORT_CATEGORY_LABELS[value]}</Badge>;
+}
+
+const SUPPORT_TICKET_STATUS_TONES: Record<SupportTicketStatus, BadgeTone> = {
+  OPEN: "orange",
+  IN_PROGRESS: "blue",
+  WAITING_ON_USER: "yellow",
+  RESOLVED: "muted",
+};
+
+export function SupportTicketStatusBadge({
+  value,
+}: {
+  value: SupportTicketStatus;
+}) {
+  return (
+    <Badge tone={SUPPORT_TICKET_STATUS_TONES[value]}>
+      {SUPPORT_TICKET_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+const SUPPORT_TICKET_CATEGORY_TONES: Record<
+  SupportTicketCategory,
+  BadgeTone
+> = {
+  ACCOUNT: "blue",
+  PLATFORM: "pink",
+  MARKETPLACE: "mint",
+  CREDITS: "yellow",
+  OTHER: "muted",
+};
+
+export function SupportTicketCategoryBadge({
+  value,
+}: {
+  value: SupportTicketCategory;
+}) {
+  return (
+    <Badge tone={SUPPORT_TICKET_CATEGORY_TONES[value]}>
+      {SUPPORT_TICKET_CATEGORY_LABELS[value]}
+    </Badge>
+  );
+}
+
+/**
+ * Credit-cost badge for marketplace cards. Cost 0 renders the mint "Inklusive"
+ * chip; any positive cost renders an orange "N Credit(s)" chip. The number is
+ * always derived from the offering data (never hardcoded).
+ */
+export function CreditCostBadge({
+  cost,
+  className,
+}: {
+  cost: number;
+  className?: string;
+}) {
+  if (cost <= 0) {
+    return (
+      <Badge tone="mint" className={className}>
+        Inklusive
+      </Badge>
+    );
+  }
+  return (
+    <Badge tone="orange" className={className}>
+      {cost} {cost === 1 ? "Credit" : "Credits"}
+    </Badge>
+  );
+}
+
+const PROGRAM_STATUS_TONES: Record<ProgramStatus, BadgeTone> = {
+  DRAFT: "muted",
+  OPEN: "mint",
+  CLOSED: "orange",
+};
+
+export function ProgramStatusBadge({ value }: { value: ProgramStatus }) {
+  return (
+    <Badge tone={PROGRAM_STATUS_TONES[value]}>
+      {PROGRAM_STATUS_LABELS[value]}
+    </Badge>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Match-Matrix badges
+// ---------------------------------------------------------------------------
+
+// Relevance colour scale mirrors the Match-Matrix legend: Hoch = mint,
+// Mittel = yellow, Niedrig = neutral surface.
+const RELEVANCE_TONES: Record<RelevanceLevel, BadgeTone> = {
+  HIGH: "mint",
+  MEDIUM: "yellow",
+  LOW: "muted",
+};
+
+export function RelevanceBadge({ value }: { value: RelevanceLevel }) {
+  return <Badge tone={RELEVANCE_TONES[value]}>{RELEVANCE_LABELS[value]}</Badge>;
+}
+
+/** Use-case chip — matches the blue Badge look used across the app. */
+export function MatchUseCaseBadge({ value }: { value: MatchUseCaseType }) {
+  return (
+    <Badge tone="blue" className="px-2 py-0 text-[11px]">
+      {MATCH_USE_CASE_LABELS[value]}
+    </Badge>
+  );
+}
+
+const MATCH_CONTACT_STATUS_TONES: Record<MatchContactStatus, BadgeTone> = {
+  NONE: "muted",
+  IN_CONTACT: "blue",
+  FOLLOW_UP: "yellow",
+  PILOT_AGREED: "mint",
+};
+
+export function MatchContactStatusBadge({
+  value,
+}: {
+  value: MatchContactStatus;
+}) {
+  return (
+    <Badge tone={MATCH_CONTACT_STATUS_TONES[value]}>
+      {MATCH_CONTACT_STATUS_LABELS[value]}
+    </Badge>
   );
 }
 

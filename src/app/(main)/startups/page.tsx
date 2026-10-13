@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@/generated/prisma/client";
 import type { PipelineStage, StartupStage } from "@/generated/prisma/enums";
+import { LogIndicator } from "@/components/logbook/LogIndicator";
 import { PipelineStageBadge, ScorePill } from "@/components/shared/badges";
 import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
@@ -13,12 +14,14 @@ import { BannerStat } from "@/components/ui/Card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireScoutModule } from "@/lib/auth-guards";
+import { getConsensusByStartup } from "@/lib/consensus-data";
 import {
   PIPELINE_STAGES,
   PIPELINE_STAGE_LABELS,
   STARTUP_STAGES,
   STARTUP_STAGE_LABELS,
 } from "@/lib/constants";
+import { getLogbookListMeta } from "@/lib/logbook";
 import { prisma } from "@/lib/prisma";
 import { formatMillions, truncate } from "@/lib/utils";
 
@@ -36,7 +39,8 @@ export default async function StartupsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requireScoutModule();
+  const session = await requireScoutModule();
+  const isAdmin = session.user.role === "ADMIN";
   const { q, industry, stage, pipeline } = await searchParams;
 
   const where: Prisma.StartupWhereInput = {};
@@ -54,26 +58,35 @@ export default async function StartupsPage({
     where.pipelineStage = pipeline as PipelineStage;
   }
 
-  const [startups, total, industries] = await Promise.all([
+  const [startups, total, industries, partnered] = await Promise.all([
     prisma.startup.findMany({
       where,
-      include: {
-        evaluations: {
-          orderBy: { updatedAt: "desc" },
-          take: 1,
-          select: { overallScore: true },
-        },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        industry: true,
+        stage: true,
+        pipelineStage: true,
+        fundingRaised: true,
         _count: { select: { evaluations: true } },
       },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.startup.count(),
     prisma.startup.groupBy({ by: ["industry"], orderBy: { industry: "asc" } }),
+    prisma.startup.count({ where: { pipelineStage: "PARTNERED" } }),
   ]);
 
-  const partnered = await prisma.startup.count({
-    where: { pipelineStage: "PARTNERED" },
-  });
+  // Team-consensus score per (filtered) startup for the Score column. The
+  // Logbuch meta is ADMIN-only: members never trigger the query.
+  const ids = startups.map((s) => s.id);
+  const [consensusByStartup, logMeta] = await Promise.all([
+    getConsensusByStartup(ids),
+    isAdmin ? getLogbookListMeta(ids) : null,
+  ]);
+  // eslint-disable-next-line react-hooks/purity -- per-request server render time
+  const now = Date.now();
 
   return (
     <>
@@ -181,6 +194,14 @@ export default async function StartupsPage({
                     <p className="mt-0.5 text-xs text-lv-secondary">
                       {truncate(s.description, 70)}
                     </p>
+                    {logMeta && (
+                      <LogIndicator
+                        startupId={s.id}
+                        meta={logMeta.get(s.id)}
+                        now={now}
+                        className="mt-1.5"
+                      />
+                    )}
                   </Td>
                   <Td>
                     <Badge tone="pink">{s.industry}</Badge>
@@ -198,7 +219,9 @@ export default async function StartupsPage({
                     {s._count.evaluations}
                   </Td>
                   <Td className="text-right">
-                    <ScorePill score={s.evaluations[0]?.overallScore ?? null} />
+                    <ScorePill
+                      score={consensusByStartup.get(s.id)?.weightedTotal ?? null}
+                    />
                   </Td>
                 </Tr>
               ))}

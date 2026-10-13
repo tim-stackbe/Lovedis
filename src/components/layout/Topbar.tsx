@@ -1,8 +1,8 @@
 "use client";
 
-import { LogOut, Menu, Search } from "lucide-react";
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
+import { LovedisIcon } from "@/components/icons/lovedis";
 import { Badge } from "@/components/ui/Badge";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { UserRole } from "@/generated/prisma/enums";
@@ -23,6 +23,9 @@ export function Topbar({
 }: TopbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const FAQ_URL =
+    "https://app.notion.com/p/startmiup-factory1/Eine-Plattform-f-r-die-Darstellung-unseres-Programm-Portfolios-ist-etabliert-Startups-nutzen-das-V-358e06d44d1b80a28aebf902c547f220";
+
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-lv-border bg-white px-4 sm:px-6">
       <button
@@ -30,21 +33,36 @@ export function Topbar({
         className="rounded-button p-2 hover:bg-lv-surface lg:hidden"
         aria-label="Menü öffnen"
       >
-        <Menu className="h-5 w-5" />
+        <LovedisIcon name="menu" className="h-5 w-5" />
       </button>
 
       <button
         onClick={onOpenPalette}
-        className="flex flex-1 max-w-md items-center gap-2 rounded-button border border-lv-border px-3.5 py-2 text-sm text-lv-secondary hover:bg-lv-surface transition-colors"
+        className="group flex flex-1 max-w-md items-center gap-2 rounded-button border border-lv-border px-3.5 py-2 text-sm text-lv-secondary transition-colors hover:border-lv-blue-soft hover:bg-lv-surface"
       >
-        <Search className="h-4 w-4" />
+        <LovedisIcon name="search" className="h-4 w-4 text-lv-secondary transition-colors group-hover:text-lv-blue" />
         <span className="flex-1 text-left">Suchen & Navigieren…</span>
         <kbd className="hidden rounded bg-lv-surface px-1.5 py-0.5 text-[10px] font-semibold text-lv-secondary sm:inline">
           ⌘K
         </kbd>
       </button>
 
-      <div className="ml-auto relative">
+      <div className="relative ml-auto flex items-center gap-1">
+        {role === "ADMIN" && (
+          <a
+            href={FAQ_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium text-lv-text hover:bg-lv-surface transition-colors"
+            aria-label="Hilfe"
+            title="Hilfe"
+          >
+            <LovedisIcon name="help" className="h-5 w-5 shrink-0 text-lv-secondary transition-colors group-hover:text-lv-blue" />
+            <span className="hidden sm:inline">Hilfe</span>
+          </a>
+        )}
+
+        <div className="relative">
         <button
           onClick={() => setMenuOpen((o) => !o)}
           className="flex items-center gap-3 rounded-button px-2 py-1.5 hover:bg-lv-surface transition-colors"
@@ -82,13 +100,14 @@ export function Topbar({
                   type="submit"
                   className="flex w-full items-center gap-2 rounded-button px-3 py-2 text-sm text-lv-text hover:bg-lv-surface transition-colors"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LovedisIcon name="logout" className="h-4 w-4" />
                   Abmelden
                 </button>
               </form>
             </div>
           </>
         )}
+        </div>
       </div>
     </header>
   );

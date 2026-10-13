@@ -1,0 +1,19 @@
+---
+description: Niemals Gedankenstriche verwenden
+alwaysApply: true
+---
+
+# Keine Gedankenstriche
+
+Verwende niemals Gedankenstriche (– Halbgeviertstrich, — Geviertstrich), weder in
+Texten für die Plattform (UI, Katalog, E-Mails, Seed-Daten) noch in Antworten an
+den User.
+
+Stattdessen Komma, Punkt, Doppelpunkt oder Klammern verwenden, oder den Satz
+umformulieren. Bindestriche in zusammengesetzten Wörtern (z. B. „KI-Security“,
+„Online-Sessions“) sind erlaubt.
+
+```
+❌ Q&A mit einem Founder — vom ersten Raise bis zum Exit.
+✅ Q&A mit einem Founder: vom ersten Raise bis zum Exit.
+```

@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PictogramChip } from "@/components/ui/PictogramChip";
 
 export function Card({
   className,
@@ -51,6 +52,8 @@ interface ToneCardProps {
   label: string;
   value: React.ReactNode;
   sub?: string;
+  /** Optional lucide icon rendered as a brand-tinted pictogram chip. */
+  icon?: LucideIcon;
   className?: string;
 }
 
@@ -60,6 +63,7 @@ export function ToneCard({
   label,
   value,
   sub,
+  icon,
   className,
 }: ToneCardProps) {
   const t = TONES[tone];
@@ -67,14 +71,17 @@ export function ToneCard({
     <div
       className={cn("rounded-card border p-5 shadow-card", t.card, className)}
     >
-      <p
-        className={cn(
-          "text-xs font-semibold uppercase tracking-wider",
-          t.label
-        )}
-      >
-        {label}
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <p
+          className={cn(
+            "text-xs font-semibold uppercase tracking-wider",
+            t.label
+          )}
+        >
+          {label}
+        </p>
+        {icon && <PictogramChip icon={icon} tone={tone} size="sm" />}
+      </div>
       <p className={cn("mt-2 text-3xl font-bold tracking-tight", t.value)}>
         {value}
       </p>

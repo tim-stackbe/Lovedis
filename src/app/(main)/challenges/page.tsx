@@ -13,36 +13,49 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { partnerChallengeWhere } from "@/lib/challenges";
+import { extractChallengeTeaser } from "@/lib/challenge-description";
 import { requireRole } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { formatDate, truncate } from "@/lib/utils";
+import { isTeamRole } from "@/lib/roles";
+import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Challenges" };
 
 const COPY = {
   ADMIN: {
-    title: "Alle Challenges",
-    subtitle: "Plattformweiter Überblick über jede Partner-Challenge.",
+    title: "Challenges (Use-Cases)",
+    subtitle:
+      "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
+  },
+  MEMBER: {
+    title: "Challenges (Use-Cases)",
+    subtitle:
+      "Erstelle und verwalte Partner-Use-Cases im Namen der Business Partner.",
   },
   BUSINESS_PARTNER: {
-    title: "Meine Challenges",
+    title: "Challenges",
     subtitle:
-      "Stelle Innovations-Challenges und prüfe die Startups, die sich bewerben.",
+      "Hier findest du die identifizierten und ausgeschriebenen Challenges.",
   },
   STARTUP: {
     title: "Offene Challenges",
-    subtitle:
-      "Entdecke Corporate-Innovations-Challenges und pitche deine Lösung.",
+    subtitle: "Entdecke die Challenges der Unternehmenspartner.",
   },
 } as const;
 
 export default async function ChallengesPage() {
-  const session = await requireRole(["ADMIN", "BUSINESS_PARTNER", "STARTUP"]);
+  const session = await requireRole([
+    "ADMIN",
+    "MEMBER",
+    "BUSINESS_PARTNER",
+    "STARTUP",
+  ]);
   const role = session.user.role as keyof typeof COPY;
 
   const where: Prisma.ChallengeWhereInput =
     role === "BUSINESS_PARTNER"
-      ? { createdById: session.user.id }
+      ? partnerChallengeWhere(session.user.id)
       : role === "STARTUP"
         ? { status: { in: ["OPEN", "IN_REVIEW", "CLOSED"] } }
         : {};
@@ -70,7 +83,8 @@ export default async function ChallengesPage() {
     );
   }
 
-  const canCreate = role === "ADMIN" || role === "BUSINESS_PARTNER";
+  // Only the Lovedis team creates/manages challenges (on behalf of partners).
+  const canCreate = isTeamRole(session.user.role);
 
   return (
     <>
@@ -80,9 +94,9 @@ export default async function ChallengesPage() {
         subtitle={COPY[role].subtitle}
         actions={
           canCreate ? (
-            <LinkButton href="/challenges/new" variant="white">
+            <LinkButton href="/challenges/new" variant="white" size="lg">
               <Plus className="h-4 w-4" />
-              Neue Challenge
+              Challenge erstellen
             </LinkButton>
           ) : undefined
         }
@@ -91,7 +105,11 @@ export default async function ChallengesPage() {
       <SectionLabel
         number="01"
         label="Challenges"
-        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}`}
+        title={`${challenges.length} Challenge${challenges.length === 1 ? "" : "s"}${
+          role === "STARTUP" || role === "BUSINESS_PARTNER"
+            ? " – Wissensmanagement"
+            : ""
+        }`}
       />
 
       {challenges.length === 0 ? (
@@ -107,7 +125,7 @@ export default async function ChallengesPage() {
             canCreate ? (
               <LinkButton href="/challenges/new">
                 <Plus className="h-4 w-4" />
-                Neue Challenge
+                Challenge erstellen
               </LinkButton>
             ) : undefined
           }
@@ -137,8 +155,11 @@ export default async function ChallengesPage() {
                     />
                   </div>
                 </div>
-                <p className="mt-2 flex-1 text-sm text-lv-secondary">
-                  {truncate(c.description, 160)}
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-lv-secondary">
+                  {role === "STARTUP" || role === "BUSINESS_PARTNER"
+                    ? extractChallengeTeaser(c.description)
+                    : c.description.slice(0, 160) +
+                      (c.description.length > 160 ? "…" : "")}
                 </p>
                 {c.tags.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -159,11 +180,14 @@ export default async function ChallengesPage() {
                       <ApplicationStatusBadge
                         value={applied as "PENDING" | "ACCEPTED" | "REJECTED"}
                       />
-                    ) : (
-                      <span className="font-semibold text-lv-blue">
-                        {c.status === "OPEN" ? "Bewirb dich jetzt →" : ""}
-                      </span>
-                    )
+                    ) : c.status === "OPEN" ? (
+                      <Link
+                        href={`/challenges/${c.id}#bewerben`}
+                        className="font-semibold text-lv-blue hover:underline"
+                      >
+                        Bewirb dich jetzt →
+                      </Link>
+                    ) : null
                   ) : (
                     <span>
                       {c._count.applications} Bewerbung
