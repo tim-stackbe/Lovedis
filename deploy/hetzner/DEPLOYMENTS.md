@@ -3,6 +3,40 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-13: KPI-Insights nur für ADMIN, Feed für Partner
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `b1b144b` (Phase 3) |
+| Jetzt live | Version `eb5fb0b` |
+| Commits | `90fee08`, `eb5fb0b` |
+| Backup vor Deploy | `lovedis-20261013T123210Z.dump` |
+
+### Inhalt dieses Releases
+
+- Alle Seiten unter `/insights` und der Snapshot-Button sind nur noch für ADMIN. MEMBER werden auf ihr Dashboard umgeleitet, der Navigationseintrag „Insights & KPIs“ fehlt für MEMBER.
+- Partner sehen unter „Ökosystem“ jetzt Entdecken und Feed.
+- Keine Schema-Änderung. Zählung nach Deploy: 11 Startups, 43 Paarungen, 0 Engagements wie vorher.
+
+### Rollback
+
+Version `b1b144b` aus sauberem Worktree erneut deployen.
+
+```bash
+git worktree add --detach /tmp/lovedis-rollback b1b144b
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] Live-Version `eb5fb0b` laut Deploy-Skript
+- [x] Smoke-Test 8/8 OK
+- [x] Bestandsdaten unverändert
+
 ## 2026-10-13: KPI-Insights-Hub Phase 3 (Verwendungsnachweis)
 
 | Feld | Wert |
