@@ -3,6 +3,48 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-13: KPI-Insights-Hub Phase 2
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `e48fb76` (Match-Definition: beide Seiten „Hoch“) |
+| Jetzt live | Version `00f8dc4`, deployedAt siehe `/api/health` |
+| Commit | `00f8dc4` |
+| Backup vor Deploy | `lovedis-20261013T111841Z.dump` |
+
+### Inhalt dieses Releases
+
+- Förder-Merkmale je Startup (Hessen, Gründer:innen und Team nach Geschlecht, FTE-Baseline, Nachweis) auf `/insights/startup/[id]`. Female Founder ab 50 % Gründerinnen.
+- Pipeline-Tracking `/insights/tracking` für Basis- und 1:1 Accelerator: Stufe bis Vertrag und Umsatz, Intro durch LOVEDIS, Kosten, Outcome. Engagements werden nur angezeigt, nicht verändert.
+- Challenges je Batch `/insights/setup`.
+- Neue Batch-KPIs (Hessen, Female Founder, Frauenanteil, Jobs, Challenges, Pilot zu LOI/Vertrag, Umsatz, Marktreife) und zwei neue Excel-Blätter. Freitext wird nicht exportiert.
+- Drei neue Tabellen `StartupReportingMeta`, `PipelineTracking`, `BatchChallengeLink` (rein additiv, per `db push`). Bestehende Tabellen und Daten unverändert, Zählung nach Deploy: 11 Startups, 43 Paarungen, 0 Engagements wie vorher.
+- Pflege nur durch ADMIN, Lesen durch ADMIN und MEMBER.
+
+### Rollback
+
+Version `e48fb76` aus sauberem Worktree erneut deployen. Die drei neuen Tabellen bleiben bestehen und stören nicht.
+
+```bash
+git worktree add /tmp/lovedis-rollback e48fb76
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+curl -s https://alpha.lovedis.de/api/health
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] Live-Version `00f8dc4` laut Deploy-Skript
+- [x] Smoke-Test 8/8 grün
+- [x] Neue Tabellen angelegt und leer, Bestandszahlen unverändert
+- [x] `/insights/tracking` ohne Login leitet auf Login um (307)
+- [ ] Neue Seiten als Admin im Browser prüfen
+
+---
+
 ## 2026-10-13: KPI-Insights-Hub Phase 1
 
 | Feld | Wert |
