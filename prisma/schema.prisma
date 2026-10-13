@@ -1423,3 +1423,28 @@ model StartupLogComment {
 
   @@index([entryId, createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// KPI-Insights (Plan: plan-kpi-analytics-hub). Read-only history of existing
+// tables: the matrix, bookings and engagements overwrite their state in place,
+// so a daily job (/api/cron/insights-snapshot) copies the KPI-relevant fields
+// here whenever they changed. Period reports ("Matches in Q3") and baselines
+// (teamSize at program start) can only be derived from this table. Rows are
+// keyed by plain ids without relations so the source tools stay untouched.
+// ---------------------------------------------------------------------------
+
+model MetricSnapshot {
+  id         String   @id @default(cuid())
+  // Calendar day (UTC) the state was observed. One row per entity and day.
+  takenOn    DateTime @db.Date
+  // MATCH | STARTUP | BOOKING | ENGAGEMENT | POC (see src/lib/insights/snapshot.ts)
+  entityType String
+  entityId   String
+  state      Json
+  // Stable hash of `state`; a new row is only written when it changes.
+  stateHash  String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId, takenOn])
+  @@index([entityType, takenOn])
+}

@@ -437,6 +437,7 @@ const TRACKING_SECTION: NavSection = {
   items: [
     { label: "Pipeline", href: "/pipeline", icon: "pipeline" },
     { label: "Berichte", href: "/reports", icon: "reports" },
+    { label: "Insights & KPIs", href: "/insights", icon: "reports" },
   ],
 };
 
