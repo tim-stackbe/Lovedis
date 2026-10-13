@@ -63,7 +63,7 @@ Metrik-Registry (Code, getestet)  ──  eine Definition pro KPI
 | Begriff | Definition auf bestehenden Daten |
 |---------|----------------------------------|
 | **Match** | **Entschieden:** Matrix-Zelle im Batch, in der Startup **und** Partner die Relevanz mit „Hoch“ bewertet haben (identisch mit dem Top-Match der Matrix). Kontakt oder Folgegespräch-Wunsch allein zählen nicht. „Intro durch LOVEDIS“ (Datum) wird zusätzlich im Tracking erfasst, ändert die Match-Zählung aber nicht. |
-| **Female Founder** | **Entschieden:** Gründungsteam mehrheitlich weiblich (mehr als die Hälfte der Gründer:innen sind Frauen). Zusätzlich berichtet: Frauenanteil im gesamten Team in %. |
+| **Female Founder** | **Entschieden:** mindestens die Hälfte der Gründer:innen sind Frauen (50/50-Teams zählen mit). Zusätzlich berichtet: Frauenanteil im gesamten Team in %. |
 | **Förder-Abgabe** | **Entschieden:** Bericht fällig 1 Monat nach Ende des Batches bzw. Programms (`endDate` + 1 Monat). |
 | **Pilot / Testphase** | Engagement oder PoC zum Paar (Startup, Partner) mit Status aktiv/abgeschlossen, **oder** Matrix `PILOT_AGREED`, **oder** Tracking-Stufe ≥ PILOT. |
 | **LOI / Vertrag / Umsatz** | Nur im neuen Tracking (gibt es heute nirgends). |
@@ -87,7 +87,7 @@ Jede Definition wird **eine** Funktion in der Metrik-Registry mit Unit-Tests. UI
 
 ### 4.2 `StartupReportingMeta` (1:1 zum Startup)
 
-- `isHessenBased` (Vorschlag aus `city`), `foundersTotal`, `foundersFemale` (daraus „Female Founder“ = mehrheitlich weiblich), `teamTotal`, `teamFemale` (daraus Frauenanteil im Team), `fteBaseline` + Datum, `fteCurrent` + Datum, Evidenz-Stufe.
+- `isHessenBased` (Vorschlag aus `city`), `foundersTotal`, `foundersFemale` (daraus „Female Founder“ = mindestens 50 % weiblich), `teamTotal`, `teamFemale` (daraus Frauenanteil im Team), `fteBaseline` + Datum, `fteCurrent` + Datum, Evidenz-Stufe.
 - Datenschutz: Zweck „Förder-Reporting“ dokumentieren, nur Team sichtbar, nur aggregiert exportiert.
 
 ### 4.3 `PipelineTracking` (1:1-Accelerator und Pipeline-Lücken)
@@ -252,7 +252,8 @@ Match-Matrix (UI, Schema, Sheet-Import) · Engagements · PoCs · Challenges · 
 1. **Förder-Abgabefrist:** 1 Monat nach Ende des Batches bzw. Programms.
 2. **Match:** beide Seiten „Hoch“. Umgesetzt in `isQualifiedMatch`.
 3. **Veranstaltungen:** werden berichtet. Selbst eintragbar, Startups zuordenbar (`ProgramEvent`, Phase 3).
-4. **Female Founder:** Gründungsteam mehrheitlich weiblich, plus Frauenanteil im Team in %.
+4. **Female Founder:** mindestens 50 % der Gründer:innen sind Frauen, plus Frauenanteil im Team in %.
+6. **Bestandsdaten:** Phase 2 und folgende ändern keine bestehenden Daten oder Tabellen. Nur neue Tabellen; bestehende Daten werden ausschließlich gelesen.
 5. **Pflege `PipelineTracking`:** alle ADMINs.
 
 ---
