@@ -3,6 +3,49 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-13: KPI-Insights-Hub Phase 3 (Verwendungsnachweis)
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `00f8dc4` (Phase 2) |
+| Jetzt live | Version `b1b144b`, deployedAt `2026-10-13T11:57:31Z` |
+| Commit | `b1b144b` |
+| Backup vor Deploy | `lovedis-20261013T115722Z.dump` |
+
+### Inhalt dieses Releases
+
+- Verwendungsnachweis `/insights/foerderung` mit Soll/Ist der Antrags-KPIs, Formaten, Begünstigten, Veranstaltungen und Prüfpunkten, dazu Excel-Export mit fünf neuen Blättern.
+- Zuordnung von Batches und Programmen zum Förderzeitraum `/insights/foerderung/setup`.
+- Manuelle Teilnehmendenzahlen aus Luma und Attio `/insights/foerderung/events`.
+- Feedback-Umfragen (NPS) `/insights/foerderung/feedback`, Beantwortung durch Startups unter `/feedback/[surveyId]`, Hinweis im Startup-Dashboard.
+- Neue Förder-Merkmale (aktuelle VZÄ, Marktreife Start und aktuell, Pre-Founding, Anschlussfinanzierung).
+- Vier neue Tabellen `FundingScopeItem`, `FundingEventCount`, `FeedbackSurvey`, `FeedbackResponse` und sieben neue, optionale Spalten an `StartupReportingMeta` (rein additiv, per `db push`). Zählung nach Deploy: 11 Startups, 43 Paarungen, 0 Engagements wie vorher.
+
+### Vorfall beim Deploy
+
+Der Deploy-Befehl wurde versehentlich zweimal gestartet. Der zweite Lauf hat den lokalen Worktree gelöscht, während der erste lief. Der lokale Prozess wurde abgebrochen, nachdem Sync und Container-Start bereits durch waren. `migrate-db-push.sh` lief auf dem Server weiter und ist fertig geworden. Danach manuell geprüft: Manifest `b1b144b` mit dirty=no, neue Tabellen und Spalten vorhanden, Smoke-Test 8/8 OK, Bestandsdaten unverändert.
+
+### Rollback
+
+Version `00f8dc4` aus sauberem Worktree erneut deployen. Die neuen Tabellen und Spalten bleiben bestehen und stören nicht.
+
+```bash
+git worktree add --detach /tmp/lovedis-rollback 00f8dc4
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+curl -s https://alpha.lovedis.de/api/health
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] `/api/health` zeigt `b1b144b`, Datenbank up
+- [x] Smoke-Test 8/8 OK
+- [x] Neue Routen leiten ohne Login auf `/login` um
+- [x] Bestandsdaten unverändert
+
 ## 2026-10-13: KPI-Insights-Hub Phase 2
 
 | Feld | Wert |
