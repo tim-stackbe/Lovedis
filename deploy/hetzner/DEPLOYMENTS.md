@@ -3,6 +3,51 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-13: KPI-Insights-Hub Phase 1
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `1714c2c` |
+| Jetzt live | Version `7fb9273`, deployedAt siehe `/api/health` |
+| Commit | `7fb9273` |
+| Backup vor Deploy | `lovedis-20261013T103857Z.dump`, `platform.env.bak.20261013T103858Z` |
+
+### Inhalt dieses Releases
+
+- Neue Seite `/insights` (ADMIN, MEMBER) mit Batch-KPIs, Partner- und Startup-Drill-downs, Excel-Export. Liest Match-Matrix, Engagements, Challenges und Venture Store nur, ändert sie nicht.
+- Neue Tabelle `MetricSnapshot` (rein additiv, per `db push`).
+- Neuer Cron-Endpunkt `POST /api/cron/insights-snapshot` (Bearer `CRON_SECRET`).
+
+### Server-Änderungen
+
+- `CRON_SECRET` in `/opt/lovedis/platform.env` ergänzt (vorher nicht gesetzt).
+- `/opt/lovedis/scripts/insights-snapshot.sh` und Crontab-Eintrag `40 2 * * *` (Serverzeit Europe/Berlin) für den User `deploy`, Log in `/opt/lovedis/logs/insights-snapshot.log`.
+- Erster Snapshot: 63 Zustände am 2026-10-13.
+
+### Rollback
+
+Vorherige Version `1714c2c` aus sauberem Worktree erneut deployen. Die Tabelle `MetricSnapshot` bleibt dabei bestehen und stört nicht. Crontab-Eintrag `# lovedis-insights-snapshot` entfernen.
+
+```bash
+git worktree add /tmp/lovedis-rollback 1714c2c
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+curl -s https://alpha.lovedis.de/api/health
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] `curl -s https://alpha.lovedis.de/api/health` zeigt `7fb9273`
+- [x] Smoke-Test 8/8 grün
+- [x] Cron-Endpunkt: ohne Token 401, GET 405, mit Token 200
+- [x] `/insights` ohne Login leitet auf Login um (307)
+- [ ] `/insights` als Admin im Browser prüfen
+
+---
+
 ## 2026-10-08: Coming-Soon-Sticker unten am Cover (Feature-Karte)
 
 | Feld | Wert |
