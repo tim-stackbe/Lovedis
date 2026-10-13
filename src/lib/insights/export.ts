@@ -16,6 +16,16 @@ import {
   summarizeBatch,
   type InsightsDataset,
 } from "@/lib/insights/metrics";
+import {
+  effectiveStage,
+  EVIDENCE_LABELS,
+  labelOf,
+  OUTCOME_LABELS,
+  STAGE_LABELS,
+  SUPPORT_INTENSITY_LABELS,
+  TRACK_LABELS,
+} from "@/lib/insights/stages";
+import { isFemaleFounder, jobsCreated, summarizeBatchReporting } from "@/lib/insights/tracking";
 
 // ---------------------------------------------------------------------------
 // Flat "fact" sheets for the XLSX export, meant to be pivoted in Excel. Only
@@ -47,6 +57,7 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
   const batchRows = ds.batches.flatMap((b) => {
     const s = summarizeBatch(ds, b.id, pilots);
     if (!s) return [];
+    const r = summarizeBatchReporting(ds, b.id, pilots);
     return [
       {
         Batch: b.name,
@@ -67,9 +78,73 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
         "Credits eingelöst": s.creditsRedeemed,
         "Partner-Retention (%)": percent(s.retention?.rate ?? null),
         "Retention ggü. Batch": s.retention?.previousBatchName ?? "",
+        "Hessen (bestätigt)": r.hessenConfirmed,
+        "Female Founder": r.femaleFounders,
+        "Frauenanteil Team (%)": percent(r.femaleTeamShare),
+        "Jobs seit Baseline": r.jobsCreated,
+        Challenges: r.challenges,
+        "Challenges abgedeckt": r.challengesCovered,
+        "Pilot-Paare mit LOI/Vertrag": r.dealPairs,
+        "Pilot-Paare mit Vertrag": r.contractPairs,
+        "Pilot zu LOI/Vertrag (%)": percent(r.pilotToDealRate),
+        "Umsatz mit Partnern (EUR)": r.revenueEur,
+        "Startups Marktreife": r.marketReadyStartups,
       },
     ];
   });
+
+  const metaByStartup = new Map(ds.reportingMeta.map((m) => [m.startupId, m]));
+  const batchStartupIds = new Set(ds.batchStartups.map((bs) => bs.startupId));
+  const featureRows = ds.startups
+    .filter((s) => batchStartupIds.has(s.id) || metaByStartup.has(s.id))
+    .map((s) => {
+      const meta = metaByStartup.get(s.id);
+      const female = isFemaleFounder(meta);
+      const jobs = jobsCreated(meta, s);
+      return {
+        Startup: s.name,
+        Batches: ds.batchStartups
+          .filter((bs) => bs.startupId === s.id)
+          .map((bs) => batchById.get(bs.batchId)?.name ?? "")
+          .join(", "),
+        Stadt: s.city ?? "",
+        Hessen: meta?.hessenBased === true ? "ja" : meta?.hessenBased === false ? "nein" : "offen",
+        "Gründer:innen": meta?.foundersTotal ?? "",
+        "davon Frauen": meta?.foundersFemale ?? "",
+        "Female Founder": female === null ? "" : female ? 1 : 0,
+        "Team gesamt": meta?.teamTotal ?? "",
+        "Team Frauen": meta?.teamFemale ?? "",
+        "FTE Baseline": meta?.fteBaseline ?? "",
+        "Baseline am": day(meta?.fteBaselineOn ?? null),
+        "Jobs seit Baseline": jobs ?? "",
+        Nachweis: labelOf(EVIDENCE_LABELS, meta?.evidence ?? null),
+      };
+    });
+
+  const trackingRows = ds.tracking.map((t) => ({
+    Programm: labelOf(TRACK_LABELS, t.track),
+    Batch: t.batchId ? batchById.get(t.batchId)?.name ?? "" : "",
+    Startup: startupById.get(t.startupId)?.name ?? "",
+    Partner: t.partnerCompanyId ? partnerById.get(t.partnerCompanyId)?.name ?? "" : "",
+    Challenge: t.challengeId ? challengeById.get(t.challengeId)?.title ?? "" : "",
+    "Stufe (erreicht)": STAGE_LABELS[effectiveStage(t)],
+    "Intro durch LOVEDIS": day(t.introByLovedisOn),
+    "Pilot ab": day(t.pilotStartOn),
+    LOI: day(t.loiOn),
+    Vertrag: day(t.contractOn),
+    "Erster Umsatz": day(t.firstRevenueOn),
+    "Umsatz (EUR)": t.revenueEur ?? "",
+    Betreuungsintensität: labelOf(SUPPORT_INTENSITY_LABELS, t.supportIntensity),
+    NDA: t.ndaSigned ? 1 : 0,
+    "IP-Vereinbarung": t.ipAgreement ? 1 : 0,
+    "Co-Innovation": t.coInnovationAgreement ? 1 : 0,
+    Start: day(t.startOn),
+    Ende: day(t.endOn),
+    "Kosten Partner (EUR)": t.costPartnerEur ?? "",
+    "Kosten LOVEDIS (EUR)": t.costLovedisEur ?? "",
+    "Kosten Startup (EUR)": t.costStartupEur ?? "",
+    Outcome: labelOf(OUTCOME_LABELS, t.outcome),
+  }));
 
   const matchRows = ds.matches.flatMap((m) => {
     const batch = batchById.get(m.batchId);
@@ -132,5 +207,7 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
     { name: "Matches", rows: matchRows },
     { name: "Kooperationen", rows: collaborationRows },
     { name: "Buchungen", rows: bookingRows },
+    { name: "Pipeline-Tracking", rows: trackingRows },
+    { name: "Förder-Merkmale", rows: featureRows },
   ];
 }

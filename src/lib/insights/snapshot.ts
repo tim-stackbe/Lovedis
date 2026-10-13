@@ -1,3 +1,4 @@
+import { TRACKING_STRUCTURED_SELECT } from "@/lib/insights/data";
 import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
@@ -15,6 +16,8 @@ export const SNAPSHOT_ENTITY_TYPES = [
   "BOOKING",
   "ENGAGEMENT",
   "POC",
+  "TRACKING",
+  "REPORTING_META",
 ] as const;
 export type SnapshotEntityType = (typeof SNAPSHOT_ENTITY_TYPES)[number];
 
@@ -50,13 +53,22 @@ export function utcDay(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
+/** Date columns as YYYY-MM-DD so the state is plain, stably hashable JSON. */
+function jsonDates(row: Record<string, string | number | boolean | Date | null>): {
+  [key: string]: JsonPrimitive;
+} {
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, v instanceof Date ? v.toISOString().slice(0, 10) : v])
+  );
+}
+
 function snapshotKey(entityType: string, entityId: string): string {
   return `${entityType}:${entityId}`;
 }
 
 /** Reads the KPI-relevant state of every tracked entity (read-only). */
 export async function collectSnapshotRecords(): Promise<SnapshotRecord[]> {
-  const [matches, startups, bookings, engagements, pocs] = await Promise.all([
+  const [matches, startups, bookings, engagements, pocs, tracking, reportingMeta] = await Promise.all([
     prisma.partnerStartupMatch.findMany({
       select: {
         id: true,
@@ -101,6 +113,21 @@ export async function collectSnapshotRecords(): Promise<SnapshotRecord[]> {
     prisma.poCPerformance.findMany({
       select: { id: true, applicationId: true, status: true },
     }),
+    prisma.pipelineTracking.findMany({ select: TRACKING_STRUCTURED_SELECT }),
+    prisma.startupReportingMeta.findMany({
+      select: {
+        id: true,
+        startupId: true,
+        hessenBased: true,
+        foundersTotal: true,
+        foundersFemale: true,
+        teamTotal: true,
+        teamFemale: true,
+        fteBaseline: true,
+        fteBaselineOn: true,
+        evidence: true,
+      },
+    }),
   ]);
 
   const records: SnapshotRecord[] = [];
@@ -122,6 +149,12 @@ export async function collectSnapshotRecords(): Promise<SnapshotRecord[]> {
   }
   for (const { id, ...p } of pocs) {
     records.push({ entityType: "POC", entityId: id, state: p });
+  }
+  for (const { id, ...t } of tracking) {
+    records.push({ entityType: "TRACKING", entityId: id, state: jsonDates(t) });
+  }
+  for (const { id, ...m } of reportingMeta) {
+    records.push({ entityType: "REPORTING_META", entityId: id, state: jsonDates(m) });
   }
   return records;
 }

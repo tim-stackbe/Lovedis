@@ -12,6 +12,7 @@ import type {
   SourceType,
 } from "@/generated/prisma/enums";
 import { isTopMatch } from "@/lib/match-matrix";
+import { effectiveStage, stageRank } from "@/lib/insights/stages";
 
 // ---------------------------------------------------------------------------
 // KPI-Insights metric registry (Plan: plan-kpi-analytics-hub, Abschnitt 3).
@@ -96,6 +97,47 @@ export interface InsightsBooking {
   createdAt: Date;
 }
 
+/** Phase 2: Förder facts per startup (StartupReportingMeta). */
+export interface InsightsReportingMeta {
+  startupId: string;
+  hessenBased: boolean | null;
+  foundersTotal: number | null;
+  foundersFemale: number | null;
+  teamTotal: number | null;
+  teamFemale: number | null;
+  fteBaseline: number | null;
+  fteBaselineOn: Date | null;
+  evidence: string | null;
+}
+
+/** Phase 2: structured part of a PipelineTracking row (no free text). */
+export interface InsightsTracking {
+  id: string;
+  track: string;
+  startupId: string;
+  partnerCompanyId: string | null;
+  batchId: string | null;
+  challengeId: string | null;
+  engagementId: string | null;
+  stage: string;
+  introByLovedisOn: Date | null;
+  pilotStartOn: Date | null;
+  loiOn: Date | null;
+  contractOn: Date | null;
+  firstRevenueOn: Date | null;
+  revenueEur: number | null;
+  supportIntensity: string | null;
+  ndaSigned: boolean;
+  ipAgreement: boolean;
+  coInnovationAgreement: boolean;
+  startOn: Date | null;
+  endOn: Date | null;
+  costPartnerEur: number | null;
+  costLovedisEur: number | null;
+  costStartupEur: number | null;
+  outcome: string | null;
+}
+
 export interface InsightsDataset {
   batches: InsightsBatch[];
   batchStartups: { batchId: string; startupId: string }[];
@@ -107,6 +149,9 @@ export interface InsightsDataset {
   challenges: InsightsChallenge[];
   applications: InsightsApplication[];
   bookings: InsightsBooking[];
+  reportingMeta: InsightsReportingMeta[];
+  tracking: InsightsTracking[];
+  batchChallenges: { batchId: string; challengeId: string }[];
 }
 
 // --- Partner attribution ----------------------------------------------------
@@ -170,12 +215,13 @@ export function isRatedPairing(
   return m.startupRelevance !== null || m.partnerRelevance !== null;
 }
 
-export type PilotSource = "MATRIX" | "ENGAGEMENT" | "POC";
+export type PilotSource = "MATRIX" | "ENGAGEMENT" | "POC" | "TRACKING";
 
 export const PILOT_SOURCE_LABELS: Record<PilotSource, string> = {
   MATRIX: "Matrix: Pilot vereinbart",
   ENGAGEMENT: "Engagement",
   POC: "Challenge-PoC",
+  TRACKING: "Pipeline-Tracking",
 };
 
 /** Booking states that count as "gebucht" (excludes declined/cancelled). */
@@ -195,8 +241,8 @@ export function pairKey(startupId: string, partnerId: string): string {
 /**
  * Every (startup, partner company) pair with a pilot / test phase, and where
  * that signal comes from: matrix "Pilot vereinbart", a non-cancelled
- * engagement attributed to the partner, or a non-cancelled PoC on one of the
- * partner's challenges.
+ * engagement attributed to the partner, a non-cancelled PoC on one of the
+ * partner's challenges, or a pipeline-tracking entry at stage PILOT or later.
  */
 export function buildPilotIndex(ds: InsightsDataset): Map<string, PilotSource[]> {
   const index = new Map<string, PilotSource[]>();
@@ -223,6 +269,11 @@ export function buildPilotIndex(ds: InsightsDataset): Map<string, PilotSource[]>
     const partnerId = challengePartner.get(a.challengeId);
     if (partnerId && a.pocStatus && a.pocStatus !== "CANCELLED") {
       add(pairKey(a.startupId, partnerId), "POC");
+    }
+  }
+  for (const t of ds.tracking) {
+    if (t.partnerCompanyId && stageRank(effectiveStage(t)) >= stageRank("PILOT")) {
+      add(pairKey(t.startupId, t.partnerCompanyId), "TRACKING");
     }
   }
   return index;

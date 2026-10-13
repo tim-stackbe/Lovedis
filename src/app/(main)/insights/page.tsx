@@ -1,8 +1,9 @@
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Link2, Route } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InsightsExportButton, SnapshotNowButton } from "@/components/insights/InsightsActions";
-import { formatRate } from "@/components/insights/format";
+import { countLabel, formatEur, formatRate } from "@/components/insights/format";
+import { LinkButton } from "@/components/ui/Button";
 import { BannerStat, Card, ToneCard } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HeroBanner } from "@/components/ui/HeroBanner";
@@ -21,6 +22,7 @@ import {
   summarizeBatch,
   summarizePortfolio,
 } from "@/lib/insights/metrics";
+import { summarizeBatchReporting, trackingDataQuality } from "@/lib/insights/tracking";
 import { cn, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Insights" };
@@ -49,7 +51,8 @@ export default async function InsightsPage({
   const partnerRows = selected ? partnersInBatch(ds, selected.id, pilots) : [];
   const startupRows = selected ? startupsInBatch(ds, selected.id, pilots) : [];
   const industries = selected ? industryBreakdown(ds, selected.id, pilots) : [];
-  const quality = dataQuality(ds);
+  const reporting = selected ? summarizeBatchReporting(ds, selected.id, pilots) : null;
+  const quality = [...dataQuality(ds), ...trackingDataQuality(ds)];
 
   return (
     <>
@@ -57,7 +60,19 @@ export default async function InsightsPage({
         kicker="Tracking (intern)"
         title="Insights & KPIs"
         subtitle="Kennzahlen aus Match-Matrix, Engagements, Challenges und Venture Store. Nur lesend: die Werkzeuge selbst bleiben unverändert."
-        actions={<InsightsExportButton sheets={sheets} />}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <LinkButton href="/insights/tracking" variant="white" size="sm">
+              <Route className="h-4 w-4" />
+              Pipeline-Tracking
+            </LinkButton>
+            <LinkButton href="/insights/setup" variant="white" size="sm">
+              <Link2 className="h-4 w-4" />
+              Challenges je Batch
+            </LinkButton>
+            <InsightsExportButton sheets={sheets} />
+          </div>
+        }
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <BannerStat label="Startups in Batches" value={portfolio.startupsInBatches} />
@@ -149,14 +164,70 @@ export default async function InsightsPage({
               }
             />
           </div>
+          {reporting && (
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <ToneCard
+                tone="info"
+                label="Hessen"
+                value={reporting.hessenConfirmed}
+                sub={`bestätigt${reporting.hessenSuggested > 0 ? `, ${reporting.hessenSuggested} weitere laut Stadt` : ""}`}
+              />
+              <ToneCard
+                tone="info"
+                label="Female Founder"
+                value={reporting.femaleFounders}
+                sub={`von ${countLabel(reporting.startupsWithFounderData, "Startup", "Startups")} mit Gründer-Angaben`}
+              />
+              <ToneCard
+                tone="info"
+                label="Frauenanteil Team"
+                value={formatRate(reporting.femaleTeamShare)}
+                sub="über alle Teams mit Angaben"
+              />
+              <ToneCard
+                tone="info"
+                label="Jobs geschaffen"
+                value={reporting.jobsCreated}
+                sub={`seit Baseline, ${countLabel(reporting.startupsWithJobData, "Startup", "Startups")} mit Daten`}
+              />
+              <ToneCard
+                tone="muted"
+                label="Challenges"
+                value={reporting.challenges}
+                sub={`${reporting.challengesCovered} abgedeckt (angenommen oder PoC)`}
+              />
+              <ToneCard
+                tone="success"
+                label="Pilot zu LOI/Vertrag"
+                value={formatRate(reporting.pilotToDealRate)}
+                sub={`${reporting.dealPairs} von ${reporting.pilotPairs} Pilot-Paaren, ${reporting.contractPairs} mit Vertrag`}
+              />
+              <ToneCard
+                tone="success"
+                label="Umsatz mit Partnern"
+                value={formatEur(reporting.revenueEur)}
+                sub={`${countLabel(reporting.revenuePairs, "Paar", "Paare")} mit Umsatz`}
+              />
+              <ToneCard
+                tone="success"
+                label="Marktreife"
+                value={reporting.marketReadyStartups}
+                sub={`Startups, ${countLabel(reporting.trackingEntries, "Tracking-Eintrag", "Tracking-Einträge")} im Batch`}
+              />
+            </div>
+          )}
           <Card className="p-4 text-xs leading-relaxed text-lv-secondary">
             <p>
               <strong className="text-lv-text">Match</strong>: Matrix-Zelle, in der Startup
               und Partner die Relevanz beide mit „Hoch“ bewertet haben.{" "}
               <strong className="text-lv-text">Pilot</strong>: Matrix „Pilot vereinbart“,
-              ein nicht abgebrochenes Engagement mit dem Partner oder ein PoC auf einer
-              Partner-Challenge. <strong className="text-lv-text">Match zu Pilot</strong>:
-              Anteil der Matches dieses Batches, deren Paar einen Pilot hat.
+              ein nicht abgebrochenes Engagement mit dem Partner, ein PoC auf einer
+              Partner-Challenge oder ein Tracking-Eintrag ab Stufe Pilot.{" "}
+              <strong className="text-lv-text">Match zu Pilot</strong>: Anteil der Matches
+              dieses Batches, deren Paar einen Pilot hat.{" "}
+              <strong className="text-lv-text">Female Founder</strong>: mindestens 50 % der
+              Gründer:innen sind Frauen. <strong className="text-lv-text">LOI, Vertrag, Umsatz</strong>:
+              aus dem Pipeline-Tracking.
             </p>
           </Card>
 

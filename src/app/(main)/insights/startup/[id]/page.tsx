@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -18,6 +18,10 @@ import { TableCard, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { requireScoutModule } from "@/lib/auth-guards";
 import { loadInsightsDataset } from "@/lib/insights/data";
 import { PILOT_SOURCE_LABELS, startupDetail } from "@/lib/insights/metrics";
+import { effectiveStage, labelOf, STAGE_LABELS, TRACK_LABELS } from "@/lib/insights/stages";
+import { isFemaleFounder, jobsCreated, suggestHessen } from "@/lib/insights/tracking";
+import { dayString, formatEur } from "@/components/insights/format";
+import { ReportingMetaForm } from "@/components/insights/ReportingMetaForm";
 
 export const metadata: Metadata = { title: "Insights · Startup" };
 
@@ -26,7 +30,8 @@ export default async function InsightsStartupPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireScoutModule();
+  const session = await requireScoutModule();
+  const canEdit = session.user.role === "ADMIN";
   const { id } = await params;
 
   const ds = await loadInsightsDataset();
@@ -34,6 +39,11 @@ export default async function InsightsStartupPage({
   if (!detail) notFound();
   const { startup } = detail;
   const pilots = detail.matchRows.filter((r) => r.pilotSources.length > 0).length;
+  const meta = ds.reportingMeta.find((m) => m.startupId === startup.id);
+  const femaleFounder = isFemaleFounder(meta);
+  const jobs = jobsCreated(meta, startup);
+  const tracking = ds.tracking.filter((t) => t.startupId === startup.id);
+  const partnerName = (pid: string) => ds.partners.find((p) => p.id === pid)?.name ?? "?";
 
   return (
     <>
@@ -163,6 +173,65 @@ export default async function InsightsStartupPage({
         {detail.sessionsBooked} Buchungen, davon {detail.sessionsCompleted} abgeschlossen.{" "}
         {detail.creditsRedeemed} Credits eingelöst.
       </p>
+
+      <SectionLabel number="05" label="Förderung" title="Förder-Merkmale" />
+      <p className="text-sm text-lv-secondary">
+        Female Founder: {femaleFounder === null ? "noch nicht erfasst" : femaleFounder ? "ja" : "nein"}.
+        {jobs !== null && ` Jobs seit Baseline: ${jobs > 0 ? "+" : ""}${jobs}.`}
+      </p>
+      <ReportingMetaForm
+        key={JSON.stringify(meta)}
+        startupId={startup.id}
+        city={startup.city}
+        hessenSuggestion={suggestHessen(startup.city)}
+        profileTeamSize={startup.teamSize}
+        canEdit={canEdit}
+        meta={meta ? { ...meta, fteBaselineOn: dayString(meta.fteBaselineOn) } : null}
+      />
+
+      <SectionLabel
+        number="06"
+        label="Tracking"
+        title="Pipeline-Tracking"
+        actions={
+          canEdit ? (
+            <LinkButton href={`/insights/tracking/new?startup=${startup.id}`} variant="secondary" size="sm">
+              <Plus className="h-4 w-4" />
+              Eintrag anlegen
+            </LinkButton>
+          ) : undefined
+        }
+      />
+      {tracking.length === 0 ? (
+        <p className="text-sm text-lv-secondary">Noch keine Tracking-Einträge für dieses Startup.</p>
+      ) : (
+        <TableCard>
+          <THead>
+            <tr>
+              <Th>Partner</Th>
+              <Th>Programm</Th>
+              <Th>Stufe</Th>
+              <Th className="text-right">Umsatz</Th>
+            </tr>
+          </THead>
+          <tbody>
+            {tracking.map((t) => (
+              <Tr key={t.id}>
+                <Td>
+                  <Link href={`/insights/tracking/${t.id}`} className="font-semibold text-lv-blue hover:underline">
+                    {t.partnerCompanyId ? partnerName(t.partnerCompanyId) : "Ohne Partner"}
+                  </Link>
+                </Td>
+                <Td className="text-lv-secondary">{labelOf(TRACK_LABELS, t.track)}</Td>
+                <Td>
+                  <Badge tone="blue">{STAGE_LABELS[effectiveStage(t)]}</Badge>
+                </Td>
+                <Td className="text-right tabular-nums">{t.revenueEur ? formatEur(t.revenueEur) : ""}</Td>
+              </Tr>
+            ))}
+          </tbody>
+        </TableCard>
+      )}
     </>
   );
 }

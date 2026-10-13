@@ -108,6 +108,9 @@ function fixture(): InsightsDataset {
       { startupId: "beta", status: "COMPLETED", offeringType: "PROGRAM", credits: 6, createdAt: d("2026-07-01") },
       { startupId: "gamma", status: "REQUESTED", offeringType: "MENTOR_SESSION", credits: 1, createdAt: d("2026-03-15") },
     ],
+    reportingMeta: [],
+    tracking: [],
+    batchChallenges: [],
   };
 }
 
@@ -308,9 +311,16 @@ describe("rate", () => {
 });
 
 describe("buildExportSheets", () => {
-  it("produces the four fact sheets with KPI flags per match row", () => {
+  it("produces the fact sheets with KPI flags per match row", () => {
     const sheets = buildExportSheets(fixture());
-    expect(sheets.map((s) => s.name)).toEqual(["Batch-KPIs", "Matches", "Kooperationen", "Buchungen"]);
+    expect(sheets.map((s) => s.name)).toEqual([
+      "Batch-KPIs",
+      "Matches",
+      "Kooperationen",
+      "Buchungen",
+      "Pipeline-Tracking",
+      "Förder-Merkmale",
+    ]);
 
     const batchRow = sheets[0].rows.find((r) => r.Batch === "LD 2026")!;
     expect(batchRow).toMatchObject({ Matches: 3, "Match zu Pilot (%)": 66.7, "Partner-Retention (%)": 50 });

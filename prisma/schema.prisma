@@ -1448,3 +1448,88 @@ model MetricSnapshot {
   @@unique([entityType, entityId, takenOn])
   @@index([entityType, takenOn])
 }
+
+// ---------------------------------------------------------------------------
+// KPI-Insights Phase 2: additive tracking (Plan: plan-kpi-analytics-hub 4.2 to
+// 4.4). Like MetricSnapshot these tables reference existing rows by plain id
+// without relations, so no existing model or table changes. Maintained by
+// ADMINs under /insights; the source tools never read or write them.
+// ---------------------------------------------------------------------------
+
+/// Förder-relevant facts per startup (1:1 to Startup.id).
+model StartupReportingMeta {
+  id             String    @id @default(cuid())
+  startupId      String    @unique
+  // null = not yet confirmed by the team (the UI suggests a value from Startup.city).
+  hessenBased    Boolean?
+  foundersTotal  Int?
+  foundersFemale Int?
+  teamTotal      Int?
+  teamFemale     Int?
+  // Team size (FTE) at program start, baseline for the Job Creation Multiplier.
+  fteBaseline    Int?
+  fteBaselineOn  DateTime? @db.Date
+  // SELF_REPORTED | VERIFIED (see src/lib/insights/tracking.ts)
+  evidence       String?
+  updatedById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+/// Startup × partner collaboration beyond what the matrix and engagements hold:
+/// stage up to contract/revenue plus the 1:1-Accelerator fields.
+model PipelineTracking {
+  id                    String    @id @default(cuid())
+  // BASIS | ONE_ON_ONE
+  track                 String
+  startupId             String
+  partnerCompanyId      String?
+  batchId               String?
+  challengeId           String?
+  engagementId          String?   @unique
+  // MATCH | INTRO | PILOT | LOI | CONTRACT | REVENUE
+  stage                 String
+  introByLovedisOn      DateTime? @db.Date
+  pilotStartOn          DateTime? @db.Date
+  loiOn                 DateTime? @db.Date
+  contractOn            DateTime? @db.Date
+  firstRevenueOn        DateTime? @db.Date
+  revenueEur            Int?
+  collaborationForm     String?
+  // LOW | MEDIUM | HIGH
+  supportIntensity      String?
+  ndaSigned             Boolean   @default(false)
+  ipAgreement           Boolean   @default(false)
+  coInnovationAgreement Boolean   @default(false)
+  useCase               String?
+  goal                  String?
+  kpis                  String?
+  startOn               DateTime? @db.Date
+  endOn                 DateTime? @db.Date
+  resourcesPartner      String?
+  costPartnerEur        Int?
+  costLovedisEur        Int?
+  costStartupEur        Int?
+  // MVP | MARKET_READY | FUNDING_READY
+  outcome               String?
+  createdById           String?
+  updatedById           String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([startupId])
+  @@index([partnerCompanyId])
+  @@index([batchId])
+}
+
+/// Assigns existing challenges to a batch (Basis-Accelerator) for reporting.
+model BatchChallengeLink {
+  id          String   @id @default(cuid())
+  batchId     String
+  challengeId String
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@unique([batchId, challengeId])
+  @@index([challengeId])
+}
