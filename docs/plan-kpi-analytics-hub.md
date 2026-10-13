@@ -58,11 +58,13 @@ Metrik-Registry (Code, getestet)  ──  eine Definition pro KPI
 
 ---
 
-## 3. KPI-Definitionen (Vorschlag, in Phase 0 bestätigen)
+## 3. KPI-Definitionen (Match, Female Founder und Abgabefrist am 2026-10-13 entschieden)
 
 | Begriff | Definition auf bestehenden Daten |
 |---------|----------------------------------|
-| **Match** | Matrix-Zelle im Batch mit `contactStatus ≠ NONE` **oder** `startupFollowUp = true` **oder** `partnerFollowUp = true`. Zusätzlich im Tracking: „Intro durch LOVEDIS“ (Datum). |
+| **Match** | **Entschieden:** Matrix-Zelle im Batch, in der Startup **und** Partner die Relevanz mit „Hoch“ bewertet haben (identisch mit dem Top-Match der Matrix). Kontakt oder Folgegespräch-Wunsch allein zählen nicht. „Intro durch LOVEDIS“ (Datum) wird zusätzlich im Tracking erfasst, ändert die Match-Zählung aber nicht. |
+| **Female Founder** | **Entschieden:** Gründungsteam mehrheitlich weiblich (mehr als die Hälfte der Gründer:innen sind Frauen). Zusätzlich berichtet: Frauenanteil im gesamten Team in %. |
+| **Förder-Abgabe** | **Entschieden:** Bericht fällig 1 Monat nach Ende des Batches bzw. Programms (`endDate` + 1 Monat). |
 | **Pilot / Testphase** | Engagement oder PoC zum Paar (Startup, Partner) mit Status aktiv/abgeschlossen, **oder** Matrix `PILOT_AGREED`, **oder** Tracking-Stufe ≥ PILOT. |
 | **LOI / Vertrag / Umsatz** | Nur im neuen Tracking (gibt es heute nirgends). |
 | **Conversion** | **Kohorte pro Batch:** Von allen Matches aus Batch X, wie viele erreichten jemals Pilot? Von diesen, wie viele LOI/Vertrag? (Nicht „Ereignisse im Quartal“, das kommt erst mit Snapshot-Historie.) |
@@ -85,7 +87,7 @@ Jede Definition wird **eine** Funktion in der Metrik-Registry mit Unit-Tests. UI
 
 ### 4.2 `StartupReportingMeta` (1:1 zum Startup)
 
-- `isHessenBased` (Vorschlag aus `city`), `hasFemaleFounder`, `fteBaseline` + Datum, `fteCurrent` + Datum, Evidenz-Stufe.
+- `isHessenBased` (Vorschlag aus `city`), `foundersTotal`, `foundersFemale` (daraus „Female Founder“ = mehrheitlich weiblich), `teamTotal`, `teamFemale` (daraus Frauenanteil im Team), `fteBaseline` + Datum, `fteCurrent` + Datum, Evidenz-Stufe.
 - Datenschutz: Zweck „Förder-Reporting“ dokumentieren, nur Team sichtbar, nur aggregiert exportiert.
 
 ### 4.3 `PipelineTracking` (1:1-Accelerator und Pipeline-Lücken)
@@ -93,6 +95,7 @@ Jede Definition wird **eine** Funktion in der Metrik-Registry mit Unit-Tests. UI
 - Bezug: `startupId`, `partnerCompanyId`, optional `batchId`, `challengeId`, `engagementId` (unique), `pocId` (unique), `matchId`.
 - Felder: Stufe (Match, Intro, Pilot, LOI, Vertrag, Umsatz), Intro durch LOVEDIS (Datum), Form der Zusammenarbeit, Betreuungsintensität, Verträge (NDA, IP, Co-Innovation, Datum), Use Case, Ziel, Laufzeit, Ressourcen Partner, Kosten (Partner, LOVEDIS, Startup), Outcome (MVP zu Marktreife, Funding-ready).
 - Ist ein Engagement verknüpft, zeigt die Maske dessen Titel, Status, KPIs und Meilensteine **read-only** an. Gepflegt werden nur die Zusatzfelder.
+- Pflege: alle ADMINs (entschieden). MEMBER sehen die Daten nur.
 - Einmal-Import aus Notion „1:1 Acceleration 2026“ und Excel-Pilottracking.
 
 ### 4.4 `BatchChallengeLink`
@@ -101,11 +104,12 @@ Jede Definition wird **eine** Funktion in der Metrik-Registry mit Unit-Tests. UI
 
 ### 4.5 Förder-Bausteine
 
-- `ReportingPeriod` (Programm, Zeitraum, Status Entwurf/Freigegeben).
+- `ReportingPeriod` (Programm, Zeitraum, Fälligkeit = Ende + 1 Monat, Status Entwurf/Freigegeben). Dashboard zeigt die nächste Fälligkeit.
+- `ProgramEvent` + `ProgramEventParticipant` (vorgezogen, entschieden): Veranstaltungen selbst anlegen (Titel, Datum, Format, Programm/Batch, Teilnehmerzahl) und Startups zuordnen. Fließt in den Förderbericht.
 - `MetricTarget` (Soll je KPI und Periode), `MetricManualValue` (Ist für nicht automatisierbare KPIs, mit Kommentar und Nachweis-Link).
 - Bei Freigabe: eingefrorener Snapshot; Export aus dem Snapshot, nicht aus Live-Daten (Nachvollziehbarkeit gegenüber Förderstelle).
 
-### 4.6 Später: `ProgramEvent` + Teilnahme, `FeedbackResponse` (Session, Programm, NPS), `FundingRound` + Attribution (Credits, Workshop, Investor-Intro), Review-Queue für externe Deal-Meldungen.
+### 4.6 Später: `FeedbackResponse` (Session, Programm, NPS), `FundingRound` + Attribution (Credits, Workshop, Investor-Intro), Review-Queue für externe Deal-Meldungen.
 
 ---
 
@@ -185,14 +189,14 @@ Alle Felder aus den Needs über `PipelineTracking` 🆕; Conversion Basis zu 1:1
 
 ### Phase 3: Förderung, Board, Claude (ca. 2 Wochen)
 
-- `ReportingPeriod`, Soll/Manuell, Freigabe-Snapshot, Landes-Excel-Export (Mock wird echt).
+- `ReportingPeriod` mit Fälligkeit, Soll/Manuell, Freigabe-Snapshot, Landes-Excel-Export (Mock wird echt).
+- Veranstaltungen: anlegen und Startups zuordnen (`ProgramEvent`).
 - Board-PDF.
 - Read-only API für Claude (vorgezogen, da die Registry dann existiert).
 
 ### Phase 4: Feedback und Veranstaltungen (ca. 2 Wochen)
 
 - Cron-Feedback nach Sessions und Programmende, NPS.
-- `ProgramEvent` + Teilnahme, falls Förderung Veranstaltungen verlangt.
 
 ### Phase 5: Finanzierung und externe Quellen (ca. 2 bis 3 Wochen)
 
@@ -243,13 +247,13 @@ Match-Matrix (UI, Schema, Sheet-Import) · Engagements · PoCs · Challenges · 
 
 ---
 
-## 10. Offene Fragen an euch
+## 10. Entscheidungen (2026-10-13)
 
-1. Gibt es eine **konkrete Förder-Abgabefrist**? (Bestimmt, ob Phase 3 vorgezogen wird.)
-2. Ist die **Match-Definition** aus Abschnitt 3 so richtig, oder zählt nur „Intro durch LOVEDIS“?
-3. Verlangt die Förderung **Veranstaltungen/Teilnehmerzahlen**? (Sonst entfällt `ProgramEvent`.)
-4. Wie wird **Female Founder** definiert (mind. eine Gründerin im Gründungsteam)?
-5. Wer pflegt `PipelineTracking` im Alltag (eine Person oder alle Programm-Manager)?
+1. **Förder-Abgabefrist:** 1 Monat nach Ende des Batches bzw. Programms.
+2. **Match:** beide Seiten „Hoch“. Umgesetzt in `isQualifiedMatch`.
+3. **Veranstaltungen:** werden berichtet. Selbst eintragbar, Startups zuordenbar (`ProgramEvent`, Phase 3).
+4. **Female Founder:** Gründungsteam mehrheitlich weiblich, plus Frauenanteil im Team in %.
+5. **Pflege `PipelineTracking`:** alle ADMINs.
 
 ---
 

@@ -154,17 +154,13 @@ export function resolvePartnerCompany(
 // --- Core definitions -------------------------------------------------------
 
 /**
- * A "Match" (KPI): the pairing got past rating, i.e. there is contact or at
- * least one side asked for a follow-up conversation.
+ * A "Match" (KPI, decided 2026-10-13): both sides rated the pairing "Hoch".
+ * Identical to the matrix top-match marker, so both views always agree.
  */
 export function isQualifiedMatch(
-  m: Pick<InsightsMatch, "contactStatus" | "startupFollowUp" | "partnerFollowUp">
+  m: Pick<InsightsMatch, "startupRelevance" | "partnerRelevance">
 ): boolean {
-  return (
-    m.contactStatus !== "NONE" ||
-    m.startupFollowUp === true ||
-    m.partnerFollowUp === true
-  );
+  return isTopMatch(m.startupRelevance, m.partnerRelevance);
 }
 
 /** A matrix cell that at least one side has rated. */
@@ -265,7 +261,6 @@ export interface BatchSummary {
   startups: number;
   partners: number;
   ratedPairings: number;
-  topMatches: number;
   matches: number;
   /** Cohort conversion: qualified matches of this batch that reached a pilot. */
   matchesWithPilot: number;
@@ -361,8 +356,6 @@ export function summarizeBatch(
     startups: startupIds.size,
     partners: partnerIds.size,
     ratedPairings: cells.filter(isRatedPairing).length,
-    topMatches: cells.filter((m) => isTopMatch(m.startupRelevance, m.partnerRelevance))
-      .length,
     matches: qualified.length,
     matchesWithPilot,
     matchToPilotRate: rate(matchesWithPilot, qualified.length),
@@ -384,7 +377,6 @@ export function summarizeBatch(
 export interface PartnerInBatchRow {
   partner: InsightsPartner;
   ratedPairings: number;
-  topMatches: number;
   matches: number;
   pilots: number;
 }
@@ -416,9 +408,6 @@ export function partnersInBatch(
       return {
         partner,
         ratedPairings: cells.filter(isRatedPairing).length,
-        topMatches: cells.filter((m) =>
-          isTopMatch(m.startupRelevance, m.partnerRelevance)
-        ).length,
         matches: cells.filter(isQualifiedMatch).length,
         pilots: pilotCount,
       };

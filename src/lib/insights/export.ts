@@ -56,7 +56,6 @@ export function buildExportSheets(ds: InsightsDataset): ExportSheet[] {
         Startups: s.startups,
         Partner: s.partners,
         "Bewertete Paarungen": s.ratedPairings,
-        "Top-Matches": s.topMatches,
         Matches: s.matches,
         "Matches mit Pilot": s.matchesWithPilot,
         "Match zu Pilot (%)": percent(s.matchToPilotRate),

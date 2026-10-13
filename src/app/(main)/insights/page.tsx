@@ -116,7 +116,7 @@ export default async function InsightsPage({
               tone="info"
               label="Matches"
               value={summary.matches}
-              sub={`${summary.ratedPairings} bewertete Paarungen, ${summary.topMatches} Top-Matches`}
+              sub={`von ${summary.ratedPairings} bewerteten Paarungen`}
             />
             <ToneCard
               tone="success"
@@ -151,8 +151,8 @@ export default async function InsightsPage({
           </div>
           <Card className="p-4 text-xs leading-relaxed text-lv-secondary">
             <p>
-              <strong className="text-lv-text">Match</strong>: Matrix-Zelle mit Kontaktstatus
-              oder Folgegespräch-Wunsch einer Seite.{" "}
+              <strong className="text-lv-text">Match</strong>: Matrix-Zelle, in der Startup
+              und Partner die Relevanz beide mit „Hoch“ bewertet haben.{" "}
               <strong className="text-lv-text">Pilot</strong>: Matrix „Pilot vereinbart“,
               ein nicht abgebrochenes Engagement mit dem Partner oder ein PoC auf einer
               Partner-Challenge. <strong className="text-lv-text">Match zu Pilot</strong>:
@@ -169,7 +169,6 @@ export default async function InsightsPage({
                 <tr>
                   <Th>Partner</Th>
                   <Th className="text-right">Bewertet</Th>
-                  <Th className="text-right">Top-Matches</Th>
                   <Th className="text-right">Matches</Th>
                   <Th className="text-right">Piloten</Th>
                 </tr>
@@ -183,7 +182,6 @@ export default async function InsightsPage({
                       </Link>
                     </Td>
                     <Td className="text-right tabular-nums">{r.ratedPairings}</Td>
-                    <Td className="text-right tabular-nums">{r.topMatches}</Td>
                     <Td className="text-right tabular-nums">{r.matches}</Td>
                     <Td className="text-right tabular-nums">{r.pilots}</Td>
                   </Tr>

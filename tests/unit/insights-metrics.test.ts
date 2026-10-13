@@ -77,14 +77,14 @@ function fixture(): InsightsDataset {
     matches: [
       // Alpha × FingerHaus: top match, pilot agreed in the matrix.
       match({ batchId: "b26", partnerId: "fh", startupId: "alpha", startupRelevance: "HIGH", partnerRelevance: "HIGH", contactStatus: "PILOT_AGREED" }),
-      // Alpha × Weimer: rated only, no contact, no follow-up → not a match.
-      match({ batchId: "b26", partnerId: "weimer", startupId: "alpha", startupRelevance: "MEDIUM" }),
-      // Beta × FingerHaus: follow-up wanted by the partner → match; pilot via engagement.
-      match({ batchId: "b26", partnerId: "fh", startupId: "beta", partnerRelevance: "MEDIUM", partnerFollowUp: true }),
-      // Gamma × Weimer: in contact → match, no pilot.
-      match({ batchId: "b26", partnerId: "weimer", startupId: "gamma", startupRelevance: "LOW", partnerRelevance: "LOW", contactStatus: "IN_CONTACT" }),
+      // Alpha × Weimer: only one side HIGH, contact and follow-up alone → not a match.
+      match({ batchId: "b26", partnerId: "weimer", startupId: "alpha", startupRelevance: "HIGH", partnerRelevance: "MEDIUM", contactStatus: "IN_CONTACT", partnerFollowUp: true }),
+      // Beta × FingerHaus: both HIGH → match; pilot via engagement.
+      match({ batchId: "b26", partnerId: "fh", startupId: "beta", startupRelevance: "HIGH", partnerRelevance: "HIGH" }),
+      // Gamma × Weimer: both HIGH → match, no pilot.
+      match({ batchId: "b26", partnerId: "weimer", startupId: "gamma", startupRelevance: "HIGH", partnerRelevance: "HIGH", contactStatus: "IN_CONTACT" }),
       // Previous batch cell, must not count for 2026.
-      match({ batchId: "b25", partnerId: "lupp", startupId: "gamma", contactStatus: "FOLLOW_UP" }),
+      match({ batchId: "b25", partnerId: "lupp", startupId: "gamma", startupRelevance: "HIGH", partnerRelevance: "HIGH", contactStatus: "FOLLOW_UP" }),
     ],
     engagements: [
       { id: "e1", title: "Pilot Beta", startupId: "beta", status: "ACTIVE", partnerCompanyId: "fh", partnerResolution: "company", startDate: d("2026-04-01"), createdAt: d("2026-04-01") },
@@ -112,13 +112,11 @@ function fixture(): InsightsDataset {
 }
 
 describe("isQualifiedMatch", () => {
-  it("counts contact or a follow-up wish of either side, not a mere rating", () => {
-    const base = { contactStatus: "NONE" as const, startupFollowUp: null, partnerFollowUp: null };
-    expect(isQualifiedMatch(base)).toBe(false);
-    expect(isQualifiedMatch({ ...base, contactStatus: "IN_CONTACT" })).toBe(true);
-    expect(isQualifiedMatch({ ...base, startupFollowUp: true })).toBe(true);
-    expect(isQualifiedMatch({ ...base, partnerFollowUp: true })).toBe(true);
-    expect(isQualifiedMatch({ ...base, partnerFollowUp: false })).toBe(false);
+  it("counts only pairings both sides rated HIGH", () => {
+    expect(isQualifiedMatch({ startupRelevance: "HIGH", partnerRelevance: "HIGH" })).toBe(true);
+    expect(isQualifiedMatch({ startupRelevance: "HIGH", partnerRelevance: "MEDIUM" })).toBe(false);
+    expect(isQualifiedMatch({ startupRelevance: "HIGH", partnerRelevance: null })).toBe(false);
+    expect(isQualifiedMatch({ startupRelevance: null, partnerRelevance: null })).toBe(false);
   });
 });
 
@@ -141,7 +139,6 @@ describe("summarizeBatch", () => {
       startups: 3,
       partners: 2,
       ratedPairings: 4,
-      topMatches: 1,
       matches: 3,
       matchesWithPilot: 2,
       pilotPairs: 3, // alpha×fh, beta×fh, alpha×weimer (PoC)
