@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -33,14 +34,13 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
 
-    // Remember the opener so focus can be restored on close, and lock the
-    // background scroll while the modal is up.
+    // Remember the opener so focus can be restored on close.
     const opener = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
 
     const focusables = () =>
       Array.from(
@@ -80,7 +80,6 @@ export function ConfirmDialog({
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
       opener?.focus?.();
     };
   }, [open, pending, onCancel]);

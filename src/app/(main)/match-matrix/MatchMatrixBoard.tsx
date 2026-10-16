@@ -42,6 +42,7 @@ import {
   type PartnerTally,
   type PartnerVoteBreakdown,
 } from "@/lib/match-matrix";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 import { toast } from "@/stores/useToast";
 
@@ -440,17 +441,14 @@ function EditCellDialog({
     }
   }, [state, router, onClose]);
 
+  useBodyScrollLock();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !pending) onClose();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [pending, onClose]);
 
   const cell = target.cell;

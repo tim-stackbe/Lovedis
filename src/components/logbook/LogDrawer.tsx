@@ -15,6 +15,7 @@ import {
   formatLogDateTime,
   formatRelative,
 } from "@/lib/logbook-format";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { cn, truncate } from "@/lib/utils";
 import { LogQuickAdd } from "./LogQuickAdd";
 import type { LogQuickAddContext } from "./types";
@@ -80,18 +81,15 @@ export function LogDrawer({ startupId, quickAdd, trigger }: LogDrawerProps) {
     load();
   };
 
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
   const href = `/startups/${startupId}/logbuch`;
