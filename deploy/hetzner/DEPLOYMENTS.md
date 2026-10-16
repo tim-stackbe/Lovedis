@@ -3,6 +3,40 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-16: Logbuch-Seite wieder scrollbar
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `eb5fb0b` |
+| Jetzt live | Version `0712c3f`, deployedAt `2026-10-16T14:00:37Z` |
+| Commit | `0712c3f` |
+| Backup vor Deploy | `lovedis-20261016T140031Z.dump` |
+
+### Inhalt dieses Releases
+
+- Fehler behoben: Wer in der Match-Matrix das Logbuch eines Zellen-Panels öffnete und dann auf eine Notiz klickte, landete auf einer Logbuch-Seite, die sich nicht mehr scrollen ließ. Beide Panels sperrten das Seiten-Scrollen und gaben die Sperre beim Seitenwechsel in falscher Reihenfolge frei. Die Sperre ist jetzt gezählt (`src/lib/use-body-scroll-lock.ts`) und wird von Logbuch-Schnellansicht, Match-Matrix-Panels und Bestätigungsdialogen gemeinsam genutzt.
+- Keine Schema-Änderung. Zählung nach Deploy: 11 Startups, 43 Paarungen, 38 Support-Angebote wie vorher.
+- Deploy aus sauberem Worktree von `0712c3f`, weil der Haupt-Checkout nicht committete, nicht zugehörige Dateien enthält.
+
+### Rollback
+
+Version `eb5fb0b` aus sauberem Worktree erneut deployen.
+
+```bash
+git worktree add --detach /tmp/lovedis-rollback eb5fb0b
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] Live-Version `0712c3f` laut Deploy-Skript und `alpha.lovedis.de/api/health`
+- [x] Smoke-Test 8/8 OK
+- [x] Bestandsdaten unverändert
+
 ## 2026-10-13: KPI-Insights nur für ADMIN, Feed für Partner
 
 | Feld | Wert |
