@@ -7,13 +7,13 @@ Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy
 
 | Feld | Wert |
 |------|------|
-| Status | **Geplant** |
+| Status | **Deployed** |
 | Ziel | Alpha (`alpha.lovedis.de`) |
 | Branch | `Dedalus` |
 | Vorher live | Version `0712c3f` |
-| Jetzt live | offen |
-| Commit | offen |
-| Backup vor Deploy | offen |
+| Jetzt live | Version `b6f31e0`, deployedAt `2026-10-19T12:09:44Z` |
+| Commit | `b6f31e0` |
+| Backup vor Deploy | `lovedis-20261019T120936Z.dump` |
 
 ### Inhalt dieses Releases
 
@@ -27,7 +27,8 @@ Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy
 
 ### Server-Änderungen
 
-- In `/opt/lovedis/.env` setzen: `MCP_PUBLIC_URL=https://alpha.lovedis.de` (sonst wird `NEXTAUTH_URL` verwendet; der Wert muss die URL sein, die im Claude-Konnektor eingetragen wird).
+- Keine. `AUTH_URL` in `/opt/lovedis/platform.env` ist bereits `https://alpha.lovedis.de` und wird als öffentliche Konnektor-URL verwendet. `MCP_PUBLIC_URL` nur setzen, falls die Konnektor-URL davon abweichen soll.
+- Deploy aus sauberem Worktree von `b6f31e0`, weil der Haupt-Checkout nicht committete, nicht zugehörige Dateien enthält.
 
 ### Rollback
 
@@ -41,12 +42,14 @@ git worktree remove /tmp/lovedis-rollback
 
 ### Checkliste nach Deploy
 
-- [ ] `curl https://alpha.lovedis.de/.well-known/oauth-protected-resource/api/mcp` liefert `resource: https://alpha.lovedis.de/api/mcp`
-- [ ] `POST /api/mcp` ohne Token liefert 401 mit `WWW-Authenticate: Bearer resource_metadata=…`
+- [x] Live-Version `b6f31e0` laut Deploy-Skript und `alpha.lovedis.de/api/health`
+- [x] `curl https://alpha.lovedis.de/.well-known/oauth-protected-resource/api/mcp` liefert `resource: https://alpha.lovedis.de/api/mcp`
+- [x] `POST /api/mcp` ohne Token liefert 401 mit `WWW-Authenticate: Bearer resource_metadata=…`
+- [x] Fremde Redirect-URI bei der Registrierung abgewiesen, `/oauth/authorize` ohne Login leitet mit vollständiger Query auf `/login`
 - [ ] Claude.ai: Konnektor `https://alpha.lovedis.de/api/mcp` hinzufügen, Login, Freigabe, Werkzeuge erscheinen
 - [ ] MEMBER-Konto sieht keine Insights- und Logbuch-Werkzeuge
 - [ ] Verbindung unter Einstellungen, Verbundene Apps trennen, danach 401
-- [ ] Smoke-Test OK, Bestandsdaten unverändert
+- [x] Smoke-Test 8/8 OK, Schema per `db push` angewendet
 
 ## 2026-10-16: Logbuch-Seite wieder scrollbar
 
