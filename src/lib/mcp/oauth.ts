@@ -79,6 +79,8 @@ const DEFAULT_REDIRECT_URIS = [
   "https://claude.ai/api/mcp/auth_callback",
   "https://claude.com/api/mcp/auth_callback",
   "cursor://anysphere.cursor-mcp/oauth/callback",
+  "https://www.cursor.com/agents/mcp/oauth/callback",
+  "https://cursor.com/agents/mcp/oauth/callback",
 ];
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);

@@ -54,6 +54,9 @@ describe("redirect URI allowlist", () => {
     expect(isAllowedRedirectUri("https://claude.ai/api/mcp/auth_callback")).toBe(true);
     expect(isAllowedRedirectUri("https://claude.com/api/mcp/auth_callback")).toBe(true);
     expect(isAllowedRedirectUri("cursor://anysphere.cursor-mcp/oauth/callback")).toBe(true);
+    expect(
+      isAllowedRedirectUri("https://www.cursor.com/agents/mcp/oauth/callback")
+    ).toBe(true);
   });
 
   it("allows loopback callbacks on any port (native clients)", () => {
