@@ -5,6 +5,8 @@ import { ROLE_HOMES } from "@/lib/roles";
 
 const { auth } = NextAuth(authConfig);
 
+const MCP_PUBLIC_PATHS = ["/.well-known", "/api/oauth", "/api/mcp"];
+
 const PUBLIC_PATHS = [
   "/login",
   "/auth",
@@ -21,6 +23,10 @@ const PUBLIC_PATHS = [
   // Cron endpoints are reached by external schedulers without a session; the
   // route's own Bearer (CRON_SECRET) check governs access.
   "/api/cron",
+  // MCP connector: OAuth discovery, client registration and token endpoints
+  // plus the MCP endpoint itself, which checks its own Bearer token. The
+  // consent page /oauth/authorize stays behind the normal login.
+  ...MCP_PUBLIC_PATHS,
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -36,6 +42,7 @@ const PASSWORD_CHANGE_EXEMPT = [
   "/change-password",
   "/api/auth",
   "/api/session-clear",
+  ...MCP_PUBLIC_PATHS,
 ];
 
 function isPasswordChangeExempt(pathname: string): boolean {
@@ -52,7 +59,8 @@ export default auth((req) => {
     if (isPublicPath(nextUrl.pathname)) return NextResponse.next();
     const loginUrl = new URL("/login", nextUrl);
     if (nextUrl.pathname !== "/") {
-      loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
+      // Keep the query: /oauth/authorize carries the whole OAuth request in it.
+      loginUrl.searchParams.set("callbackUrl", nextUrl.pathname + nextUrl.search);
     }
     return NextResponse.redirect(loginUrl);
   }

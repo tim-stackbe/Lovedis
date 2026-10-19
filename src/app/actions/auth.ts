@@ -83,6 +83,8 @@ export async function login(
   const safeCallback =
     typeof callbackUrl === "string" &&
     callbackUrl.startsWith("/") &&
+    !callbackUrl.startsWith("//") &&
+    !callbackUrl.startsWith("/\\") &&
     callbackUrl !== "/"
       ? callbackUrl
       : null;

@@ -3,6 +3,51 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-19: MCP-Konnektor für Claude (nur lesen)
+
+| Feld | Wert |
+|------|------|
+| Status | **Geplant** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `0712c3f` |
+| Jetzt live | offen |
+| Commit | offen |
+| Backup vor Deploy | offen |
+
+### Inhalt dieses Releases
+
+- Neuer MCP-Server unter `/api/mcp` (Streamable HTTP, zustandslos). Claude.ai, Claude Desktop, Claude Code und Cursor können sich als Konnektor verbinden. Anmeldung per OAuth 2.1 mit PKCE und dynamischer Client-Registrierung; die Freigabe läuft über den normalen LOVEDIS-Login und die Seite `/oauth/authorize`.
+- Nur ADMIN und MEMBER. Rolle und `isActive` werden bei jedem Aufruf frisch aus der DB geprüft. MEMBER sehen 13 Werkzeuge (Startups, Batches, Match-Matrix, Challenges, PoCs, Engagements, Venture Store, Buchungen, Credits, Updates), ADMIN zusätzlich 7 (Insights-KPIs, Pilot-Diagnose, Pipeline-Tracking, Logbuch).
+- Alle Werkzeuge nur lesend. Keine E-Mail-Adressen oder Telefonnummern von Kontakten, keine Kontaktdaten aus Buchungen.
+- Jeder Werkzeug-Aufruf wird in `McpAuditLog` protokolliert. Tokens und Codes liegen nur als SHA-256-Hash in der DB. Access-Token 1 h, Refresh-Token 30 Tage, rotierend.
+- Einstellungen: neuer Abschnitt „Verbundene Apps“ (Konnektor-URL, Verbindungen trennen).
+- Login-Weiterleitung behält jetzt die Query (`callbackUrl` inkl. `?…`), damit die OAuth-Anfrage den Login übersteht. `callbackUrl` mit `//` wird abgewiesen.
+- Schema: additiv, 4 neue Tabellen (`OAuthClient`, `OAuthAuthorizationCode`, `OAuthGrant`, `McpAuditLog`) ohne Relationen zu bestehenden Tabellen. `db push` im Deploy-Skript legt sie an.
+
+### Server-Änderungen
+
+- In `/opt/lovedis/.env` setzen: `MCP_PUBLIC_URL=https://alpha.lovedis.de` (sonst wird `NEXTAUTH_URL` verwendet; der Wert muss die URL sein, die im Claude-Konnektor eingetragen wird).
+
+### Rollback
+
+Version `0712c3f` aus sauberem Worktree erneut deployen. Die neuen Tabellen können stehen bleiben (werden von der alten Version nicht genutzt).
+
+```bash
+git worktree add --detach /tmp/lovedis-rollback 0712c3f
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [ ] `curl https://alpha.lovedis.de/.well-known/oauth-protected-resource/api/mcp` liefert `resource: https://alpha.lovedis.de/api/mcp`
+- [ ] `POST /api/mcp` ohne Token liefert 401 mit `WWW-Authenticate: Bearer resource_metadata=…`
+- [ ] Claude.ai: Konnektor `https://alpha.lovedis.de/api/mcp` hinzufügen, Login, Freigabe, Werkzeuge erscheinen
+- [ ] MEMBER-Konto sieht keine Insights- und Logbuch-Werkzeuge
+- [ ] Verbindung unter Einstellungen, Verbundene Apps trennen, danach 401
+- [ ] Smoke-Test OK, Bestandsdaten unverändert
+
 ## 2026-10-16: Logbuch-Seite wieder scrollbar
 
 | Feld | Wert |

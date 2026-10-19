@@ -3,6 +3,7 @@ import {
   PasswordForm,
   ProfileForm,
 } from "@/components/settings/SettingsForms";
+import { McpConnections } from "@/components/settings/McpConnections";
 import { WeightsEditor } from "@/components/settings/WeightsEditor";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
@@ -61,6 +62,15 @@ export default async function SettingsPage() {
           />
           <Card className="p-6">
             <WeightsEditor />
+          </Card>
+        </section>
+      )}
+
+      {isScout && (
+        <section className="space-y-4">
+          <SectionLabel number="04" label="KI-Zugang" title="Verbundene Apps" />
+          <Card className="p-6">
+            <McpConnections userId={session.user.id} />
           </Card>
         </section>
       )}

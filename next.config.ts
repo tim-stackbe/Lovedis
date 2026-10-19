@@ -21,6 +21,31 @@ const nextConfig: NextConfig = {
       "./src/generated/prisma/**",
     ],
   },
+  // OAuth discovery for the MCP connector (src/lib/mcp). Clients probe both
+  // the bare path and the path-suffixed variant (".../api/mcp").
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/oauth-protected-resource/:path*",
+        destination: "/api/oauth/metadata/protected-resource",
+      },
+      {
+        source: "/.well-known/oauth-authorization-server/:path*",
+        destination: "/api/oauth/metadata/authorization-server",
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/oauth/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
