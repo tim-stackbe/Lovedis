@@ -559,6 +559,12 @@ const SETTINGS_SECTION: NavSection = {
   items: [{ label: "Einstellungen", href: "/settings", icon: "settings" }],
 };
 
+/** Marketing Dashboard (/marketing) is ADMIN-only, see docs/plan-marketing-modul.md. */
+const MARKETING_SECTION_ADMIN: NavSection = {
+  title: "Marketing",
+  items: [{ label: "Marketing Dashboard", href: "/marketing", icon: "megaphone" }],
+};
+
 /** Settings + Support for external roles (Startup, Partner, Investor). */
 const EXTERNAL_ACCOUNT_SECTION: NavSection = {
   items: [SUPPORT_ITEM, { label: "Einstellungen", href: "/settings", icon: "settings" }],
@@ -585,6 +591,7 @@ export const ROLE_NAV: Record<UserRole, NavSection[]> = {
     {
       items: [{ label: "Dashboard", href: "/dashboard/admin", icon: "dashboard" }],
     },
+    MARKETING_SECTION_ADMIN,
     SOURCING_SECTION,
     MATCHMAKING_SECTION_ADMIN,
     COLLAB_SECTION_ADMIN,

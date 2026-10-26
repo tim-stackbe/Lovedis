@@ -1690,3 +1690,98 @@ model McpAuditLog {
   @@index([userId, createdAt])
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// Marketing Dashboard (Plan: docs/plan-marketing-modul.md). ADMIN-only under
+// /marketing. Additive tables without relations to existing models; synced
+// from Resend and LinkedIn exports, the Redaktionsplan is maintained by hand.
+// ---------------------------------------------------------------------------
+
+/// Sync state per external tool (RESEND | LINKEDIN | UMAMI | LUMA).
+model MarketingIntegration {
+  provider      String    @id
+  lastSyncAt    DateTime?
+  lastError     String?
+  lastWebhookAt DateTime?
+  // Provider snapshot, e.g. Resend suppressions and broadcasts, LinkedIn follower total.
+  meta          Json?
+  updatedAt     DateTime  @updatedAt
+}
+
+/// One sent email as reported by Resend (id = Resend email id).
+model MarketingEmail {
+  id          String    @id
+  subject     String
+  // INVITE | PASSWORD | CONTACT | SUPPORT | REMINDER | NEWSLETTER | OTHER
+  category    String
+  toDomain    String?
+  // Full address only for failed deliveries (bounced, suppressed, complained, failed).
+  recipient   String?
+  lastEvent   String
+  broadcastId String?
+  sentAt      DateTime
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  problem     String?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([sentAt])
+  @@index([category])
+  @@index([broadcastId])
+}
+
+/// LinkedIn company page post, imported from the Page Analytics export.
+model LinkedInPost {
+  id             String   @id @default(cuid())
+  // Stable key: activity/share id from the post URL, else the normalized URL.
+  postKey        String   @unique
+  url            String
+  title          String
+  postType       String?
+  postedBy       String?
+  publishedAt    DateTime
+  impressions    Int      @default(0)
+  clicks         Int      @default(0)
+  reactions      Int      @default(0)
+  comments       Int      @default(0)
+  reposts        Int      @default(0)
+  follows        Int      @default(0)
+  engagementRate Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([publishedAt])
+}
+
+/// New LinkedIn followers per day, imported from the Page Analytics export.
+model LinkedInFollowerDay {
+  day       DateTime @id @db.Date
+  organic   Int      @default(0)
+  sponsored Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+/// Redaktionsplan entry. Status IDEA | DRAFT | IN_REVIEW | SCHEDULED | PUBLISHED.
+model ContentItem {
+  id           String    @id @default(cuid())
+  title        String
+  body         String?
+  // LINKEDIN | NEWSLETTER | WEBSITE | EVENT | OTHER
+  channel      String
+  // TEXT | IMAGE | CAROUSEL | VIDEO | ARTICLE | EVENT
+  format       String?
+  status       String    @default("IDEA")
+  plannedFor   DateTime?
+  assigneeId   String?
+  campaign     String?
+  publishedUrl String?
+  reviewNote   String?
+  approvedById String?
+  approvedAt   DateTime?
+  createdById  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([plannedFor])
+  @@index([status])
+}

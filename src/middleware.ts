@@ -23,6 +23,8 @@ const PUBLIC_PATHS = [
   // Cron endpoints are reached by external schedulers without a session; the
   // route's own Bearer (CRON_SECRET) check governs access.
   "/api/cron",
+  // Provider webhooks verify their own signature (e.g. Resend via Svix).
+  "/api/webhooks",
   // MCP connector: OAuth discovery, client registration and token endpoints
   // plus the MCP endpoint itself, which checks its own Bearer token. The
   // consent page /oauth/authorize stays behind the normal login.

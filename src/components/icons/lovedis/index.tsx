@@ -72,6 +72,7 @@ export const LOVEDIS_ICONS = {
   calendar: G.CalendarIcon,
   calendarClock: G.CalendarClockIcon,
   globe: G.GlobeIcon,
+  megaphone: G.MegaphoneIcon,
   check: G.CheckIcon,
   checkCheck: G.CheckCheckIcon,
   send: G.PushesIcon,

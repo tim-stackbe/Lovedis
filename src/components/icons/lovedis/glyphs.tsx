@@ -940,6 +940,17 @@ export function GlobeIcon(props: LovedisIconProps) {
   );
 }
 
+export function MegaphoneIcon(props: LovedisIconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 9.6C4 9 4.4 8.6 5 8.6H8.4L17.6 4.2V19.8L8.4 15.4H5C4.4 15.4 4 15 4 14.4Z" fill={PAPER} {...edge} />
+      <path d="M8.4 15.4 9.8 20" {...edge} strokeLinecap="round" />
+      <path d="M17.6 4.2V19.8L8.4 15.4V8.6Z" fill={CORAL} {...edge} />
+      <path d="M20.4 10V14" stroke={BLUE} strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function CheckIcon(props: LovedisIconProps) {
   return (
     <Svg {...props}>

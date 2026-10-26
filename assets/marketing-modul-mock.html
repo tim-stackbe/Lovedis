@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>Marketing Space · Mockup</title>
+  <style>
+    :root {
+      --blue: #2926e5; --blue-dark: #1f1cb8; --blue-soft: #eeedff;
+      --orange: #ff5736; --orange-soft: #ffe7e1;
+      --mint: #c0fcd8; --mint-deep: #0e7c4a;
+      --yellow: #ffe9a8; --yellow-deep: #7a5a00;
+      --surface: #f5f6fb; --border: #e6e7f0; --text: #0a0a0f; --secondary: #6b6b7b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--text); background: #fff; -webkit-font-smoothing: antialiased; font-size: 14px; }
+    .app { display: grid; grid-template-columns: 264px 1fr; min-height: 100vh; }
+
+    /* Sidebar */
+    aside { border-right: 1px solid var(--border); background: #fff; display: flex; flex-direction: column; }
+    .brand { padding: 22px 20px 10px; display: flex; align-items: center; gap: 10px; }
+    .brand img { height: 26px; }
+    .space-chip { margin: 6px 16px 4px; font-size: 11px; font-weight: 700; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 5px 10px; display: inline-block; width: fit-content; }
+    nav { padding: 12px; display: flex; flex-direction: column; gap: 22px; flex: 1; }
+    .sec-title { font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--secondary); padding: 0 12px 8px; }
+    .item { position: relative; display: flex; align-items: center; gap: 12px; padding: 6px 12px 6px 6px; border-radius: 12px; font-weight: 500; color: var(--text); }
+    .item .ic { width: 28px; height: 28px; border-radius: 10px; background: rgba(238,237,255,.6); display: grid; place-items: center; }
+    .item .ic svg { width: 16px; height: 16px; stroke: var(--blue); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+    .item.active { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
+    .item.active::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 20px; border-radius: 4px; background: var(--orange); }
+    .item.active .ic { background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    .item .count { margin-left: auto; font-size: 11px; font-weight: 700; color: #b8371f; background: var(--orange-soft); border-radius: 999px; padding: 1px 7px; }
+    .user { margin: 12px; border: 1px solid var(--border); border-radius: 16px; padding: 10px 12px; display: flex; gap: 12px; align-items: center; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+    .user b { display: block; font-size: 14px; } .user span { font-size: 12px; color: var(--secondary); }
+
+    /* Main */
+    main { background: #fff; padding: 22px 32px 40px; display: flex; flex-direction: column; gap: 22px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; }
+    .search { width: 380px; border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px; color: var(--secondary); font-size: 13px; display: flex; justify-content: space-between; }
+    .mock-note { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--yellow-deep); background: #fff8e6; border: 1px dashed #e6c200; border-radius: 10px; padding: 7px 12px; }
+
+    .hero { position: relative; overflow: hidden; border-radius: 16px; color: #fff; padding: 30px 32px; background: linear-gradient(135deg, #2926e5 0%, #4f46e5 55%, #ff5736 130%); box-shadow: 0 8px 24px rgba(41,38,229,.08); }
+    .hero .orb1 { position: absolute; right: -80px; top: -96px; width: 288px; height: 288px; border-radius: 50%; background: rgba(255,87,54,.4); filter: blur(60px); }
+    .hero .orb2 { position: absolute; left: -64px; bottom: -96px; width: 256px; height: 256px; border-radius: 50%; background: rgba(31,28,184,.4); filter: blur(60px); }
+    .hero > * { position: relative; }
+    .kicker { font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.75); }
+    .hero-row { margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+    .hero h1 { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
+    .hero p.sub { margin-top: 8px; font-size: 14px; line-height: 1.55; color: rgba(255,255,255,.82); max-width: 680px; }
+    .btns { display: flex; gap: 10px; }
+    .btn { font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 12px; background: #fff; color: var(--blue); border: none; white-space: nowrap; }
+    .btn.ghost { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+    .stats { margin-top: 24px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .stat { background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 12px 14px; }
+    .stat .l { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.75); display: flex; justify-content: space-between; }
+    .stat .v { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .stat .d { font-size: 12px; margin-top: 2px; color: rgba(255,255,255,.85); }
+    .stat .d.up { color: #c0fcd8; } .stat .d.down { color: #ffd2c7; }
+    .tag-sample { font-size: 9px; font-weight: 700; letter-spacing: .04em; background: rgba(255,233,168,.9); color: var(--yellow-deep); border-radius: 999px; padding: 1px 6px; text-transform: none; }
+    .tag-real { font-size: 9px; font-weight: 700; background: rgba(192,252,216,.95); color: var(--mint-deep); border-radius: 999px; padding: 1px 6px; text-transform: none; letter-spacing: .02em; }
+
+    .seclabel { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+    .seclabel .n { font-size: 11px; font-weight: 800; letter-spacing: .18em; color: var(--blue); text-transform: uppercase; }
+    .seclabel .t { font-size: 18px; font-weight: 700; }
+    .seclabel .line { flex: 1; height: 1px; background: var(--border); }
+
+    .grid { display: grid; gap: 16px; }
+    .g-3-2 { grid-template-columns: 3fr 2fr; } .g-2 { grid-template-columns: 1fr 1fr; } .g-3 { grid-template-columns: 1.2fr 1fr 1fr; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; box-shadow: 0 1px 2px rgba(10,10,15,.04), 0 8px 24px rgba(41,38,229,.04); }
+    .card h3 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .card .hint { font-size: 12px; color: var(--secondary); margin-top: 3px; }
+    .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 10px; }
+    .seg { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 12px; }
+    .seg span { padding: 5px 10px; color: var(--secondary); } .seg span.on { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
+
+    .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .b-blue { background: var(--blue-soft); color: var(--blue); } .b-orange { background: var(--orange-soft); color: #b8371f; }
+    .b-mint { background: var(--mint); color: var(--mint-deep); } .b-yellow { background: var(--yellow); color: var(--yellow-deep); }
+    .b-grey { background: var(--surface); color: var(--secondary); border: 1px solid var(--border); }
+
+    /* Alerts */
+    .alerts { display: flex; flex-direction: column; gap: 10px; }
+    .alert { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: start; border-radius: 12px; padding: 12px 14px; }
+    .alert.crit { background: var(--orange-soft); border-left: 4px solid var(--orange); }
+    .alert.warn { background: #fff8e6; border-left: 4px solid #e6c200; }
+    .alert.info { background: var(--blue-soft); border-left: 4px solid var(--blue); }
+    .alert .ai { width: 30px; height: 30px; border-radius: 10px; background: #fff; display: grid; place-items: center; font-weight: 800; }
+    .alert.crit .ai { color: var(--orange); } .alert.warn .ai { color: var(--yellow-deep); } .alert.info .ai { color: var(--blue); }
+    .alert b { font-size: 13.5px; } .alert p { font-size: 12.5px; color: #3b3b48; margin-top: 3px; line-height: 1.45; }
+    .alert .act { font-size: 12px; font-weight: 700; color: var(--blue); white-space: nowrap; padding-top: 2px; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--secondary); padding: 0 8px 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .post-title { font-weight: 600; } .post-meta { font-size: 11.5px; color: var(--secondary); margin-top: 2px; }
+
+    /* Email card */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+    .kpi { background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+    .kpi .l { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--secondary); }
+    .kpi .v { font-size: 20px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .bar { height: 8px; border-radius: 999px; background: var(--surface); overflow: hidden; display: flex; }
+    .bar i { display: block; height: 100%; }
+
+    /* Calendar */
+    .cal { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .day { background: var(--surface); border-radius: 12px; padding: 10px; min-height: 170px; }
+    .day .dh { font-size: 11px; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .day.today { background: var(--blue-soft); } .day.today .dh { color: var(--blue); }
+    .ci { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 8px 9px; margin-bottom: 8px; font-size: 12px; }
+    .ci b { display: block; font-size: 12.5px; margin: 4px 0 5px; line-height: 1.3; }
+    .ci .ch { font-size: 11px; color: var(--secondary); }
+
+    /* Integrations */
+    .integ { display: flex; flex-direction: column; }
+    .ig { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .ig:last-child { border-bottom: none; }
+    .logo { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+    .ig b { font-size: 13.5px; } .ig p { font-size: 12px; color: var(--secondary); margin-top: 1px; }
+
+    .camp { display: flex; flex-direction: column; gap: 12px; }
+    .camp-row b { font-size: 13.5px; } .camp-row p { font-size: 12px; color: var(--secondary); margin: 2px 0 6px; }
+    .funnel { display: flex; gap: 6px; font-size: 11.5px; }
+    .funnel span { background: var(--surface); border-radius: 8px; padding: 4px 8px; } .funnel span b { font-size: 12px; }
+    .legend { display: flex; gap: 14px; font-size: 12px; color: var(--secondary); margin-top: 8px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    footer { font-size: 11.5px; color: var(--secondary); border-top: 1px solid var(--border); padding-top: 12px; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><img src="../public/brand/lovedis-logo.png" alt="LOVEDIS" /></div>
+    <span class="space-chip">Marketing Space</span>
+    <nav>
+      <div>
+        <div class="sec-title">Auswertung</div>
+        <div class="item active"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>Übersicht<span class="count">3</span></div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></span>LinkedIn</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>E-Mail-Zustellung</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>Website</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></span>Events</div>
+      </div>
+      <div>
+        <div class="sec-title">Planung</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Redaktionsplan</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span>Kampagnen</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>UTM-Links</div>
+      </div>
+      <div>
+        <div class="sec-title">Verwaltung</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/></svg></span>Integrationen<span class="count">2</span></div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg></span>Berichte</div>
+      </div>
+      <div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></span>Support</div>
+        <div class="item"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>Einstellungen</div>
+      </div>
+    </nav>
+    <div class="user"><span class="avatar">MT</span><div><b>Marketing Team</b><span>Marketing</span></div></div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div class="search"><span>Suchen &amp; Navigieren…</span><span>⌘K</span></div>
+      <span class="mock-note">Mockup · LinkedIn- und Website-Zahlen sind Beispieldaten</span>
+    </div>
+
+    <section class="hero">
+      <div class="orb1"></div><div class="orb2"></div>
+      <div class="kicker">Marketing Space · Übersicht</div>
+      <div class="hero-row">
+        <div>
+          <h1>Reichweite &amp; Engagement</h1>
+          <p class="sub">Alle Kanäle der letzten 30 Tage an einem Ort: LinkedIn, E-Mail, Website und Events. Vergleich zum Vormonat, Warnungen aus allen angebundenen Tools.</p>
+        </div>
+        <div class="btns"><button class="btn ghost">Letzte 30 Tage</button><button class="btn ghost">LinkedIn-Export hochladen</button><button class="btn">Monatsbericht</button></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="l">LinkedIn-Follower <span class="tag-sample">Beispiel</span></div><div class="v">2.418</div><div class="d up">+142 (+6,2 %)</div></div>
+        <div class="stat"><div class="l">Impressionen <span class="tag-sample">Beispiel</span></div><div class="v">41.300</div><div class="d up">+18 % zum Vormonat</div></div>
+        <div class="stat"><div class="l">Engagement-Rate <span class="tag-sample">Beispiel</span></div><div class="v">4,1 %</div><div class="d down">-0,3 Punkte</div></div>
+        <div class="stat"><div class="l">E-Mail-Zustellung <span class="tag-real">echt</span></div><div class="v">87 %</div><div class="d down">20 von 23 zugestellt</div></div>
+        <div class="stat"><div class="l">Website-Besuche</div><div class="v">n. v.</div><div class="d">Umami noch nicht verbunden</div></div>
+      </div>
+    </section>
+
+    <div class="seclabel"><span class="n">01 · Handlungsbedarf</span><span class="line"></span></div>
+    <div class="card">
+      <div class="card-head"><div><h3>Warnungen <span class="badge b-orange">3 offen</span></h3><div class="hint">Automatisch aus Resend, LinkedIn und dem Integrations-Monitor</div></div></div>
+      <div class="alerts">
+        <div class="alert crit"><span class="ai">!</span><div><b>Kontaktformular: 3 Anfragen nicht zugestellt</b><p>Seit 22.10. erreichen Kontaktanfragen der Homepage ein Empfängerkonto nicht mehr (Google: „account inactive“). Resend sperrt die Adresse seitdem. Betroffen: Alex Trampisch (22.10.), Andreas Reeh (23.10.), Frank Schmidt (26.10.).</p></div><span class="act">Empfänger prüfen →</span></div>
+        <div class="alert warn"><span class="ai">!</span><div><b>Resend-Webhook fehlt</b><p>Zustellstatus wird nur einmal täglich abgefragt. Mit Webhook kommen Bounces und Sperren in Echtzeit an.</p></div><span class="act">Einrichten →</span></div>
+        <div class="alert info"><span class="ai">i</span><div><b>LinkedIn-Daten sind 9 Tage alt</b><p>Letzter Export-Upload am 17.10. Bis die API freigegeben ist, bitte wöchentlich den Export aus LinkedIn Page Analytics hochladen.</p></div><span class="act">Export hochladen →</span></div>
+      </div>
+    </div>
+
+    <div class="seclabel"><span class="n">02 · LinkedIn</span><span class="line"></span></div>
+    <div class="grid g-3-2">
+      <div class="card">
+        <div class="card-head"><div><h3>Follower &amp; Impressionen <span class="badge b-yellow">Beispiel</span></h3><div class="hint">Unternehmensseite LOVEDIS, wöchentlich</div></div><div class="seg"><span>7 T</span><span class="on">12 Wo</span><span>12 Mon</span></div></div>
+        <svg viewBox="0 0 640 220" width="100%" height="220">
+          <g stroke="#e6e7f0" stroke-width="1">
+            <line x1="40" y1="20" x2="630" y2="20"/><line x1="40" y1="70" x2="630" y2="70"/><line x1="40" y1="120" x2="630" y2="120"/><line x1="40" y1="170" x2="630" y2="170"/>
+          </g>
+          <g font-size="10" fill="#6b6b7b">
+            <text x="0" y="24">2.450</text><text x="0" y="74">2.350</text><text x="0" y="124">2.250</text><text x="0" y="174">2.150</text>
+            <text x="40" y="200">KW 32</text><text x="194" y="200">KW 35</text><text x="348" y="200">KW 38</text><text x="502" y="200">KW 41</text><text x="596" y="200">KW 43</text>
+          </g>
+          <g fill="#eeedff">
+            <rect x="48" y="140" width="30" height="30" rx="4"/><rect x="99" y="132" width="30" height="38" rx="4"/><rect x="150" y="146" width="30" height="24" rx="4"/><rect x="201" y="120" width="30" height="50" rx="4"/>
+            <rect x="252" y="128" width="30" height="42" rx="4"/><rect x="303" y="104" width="30" height="66" rx="4"/><rect x="354" y="136" width="30" height="34" rx="4"/><rect x="405" y="96" width="30" height="74" rx="4"/>
+            <rect x="456" y="112" width="30" height="58" rx="4"/><rect x="507" y="88" width="30" height="82" rx="4"/><rect x="558" y="100" width="30" height="70" rx="4"/><rect x="600" y="78" width="26" height="92" rx="4"/>
+          </g>
+          <polyline fill="none" stroke="#2926e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+            points="63,160 114,154 165,151 216,140 267,134 318,120 369,116 420,100 471,92 522,74 573,62 613,46"/>
+          <circle cx="613" cy="46" r="5" fill="#ff5736" stroke="#fff" stroke-width="2"/>
+        </svg>
+        <div class="legend"><span><i style="background:#2926e5"></i>Follower</span><span><i style="background:#eeedff;border:1px solid #c9c7ff"></i>Impressionen je Woche</span></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Engagement nach Format <span class="badge b-yellow">Beispiel</span></h3><div class="hint">Ø Engagement-Rate, letzte 90 Tage</div></div></div>
+        <table>
+          <tr><th>Format</th><th></th><th class="num">Rate</th><th class="num">Posts</th></tr>
+          <tr><td>Dokument / Karussell</td><td style="width:45%"><div class="bar"><i style="width:92%;background:#2926e5"></i></div></td><td class="num"><b>6,8 %</b></td><td class="num">4</td></tr>
+          <tr><td>Event-Ankündigung</td><td><div class="bar"><i style="width:74%;background:#2926e5"></i></div></td><td class="num">5,4 %</td><td class="num">6</td></tr>
+          <tr><td>Bild + Text</td><td><div class="bar"><i style="width:55%;background:#4f46e5"></i></div></td><td class="num">4,0 %</td><td class="num">11</td></tr>
+          <tr><td>Video</td><td><div class="bar"><i style="width:44%;background:#4f46e5"></i></div></td><td class="num">3,2 %</td><td class="num">3</td></tr>
+          <tr><td>Nur Text / Link</td><td><div class="bar"><i style="width:28%;background:#ff5736"></i></div></td><td class="num">2,1 %</td><td class="num">7</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h3>Top-Beiträge <span class="badge b-yellow">Beispiel</span></h3><div class="hint">Verknüpft mit dem Redaktionsplan, sortiert nach Engagement</div></div><div class="seg"><span class="on">Unternehmensseite</span><span>Team-Profile</span></div></div>
+      <table>
+        <tr><th>Beitrag</th><th>Kampagne</th><th class="num">Impressionen</th><th class="num">Klicks</th><th class="num">Reaktionen</th><th class="num">Kommentare</th><th class="num">Rate</th></tr>
+        <tr><td><div class="post-title">KI Resilience Day am 23.11.: Programm &amp; Anmeldung</div><div class="post-meta">20.10. · Dokument · Hannah</div></td><td><span class="badge b-blue">KI Resilience Day</span></td><td class="num">6.920</td><td class="num">312</td><td class="num">148</td><td class="num">21</td><td class="num"><b>7,0 %</b></td></tr>
+        <tr><td><div class="post-title">Challenge „Wartungsunterstützung“: Startups gesucht</div><div class="post-meta">14.10. · Bild + Text · Tim</div></td><td><span class="badge b-blue">Challenges Q4</span></td><td class="num">5.410</td><td class="num">266</td><td class="num">97</td><td class="num">14</td><td class="num">6,9 %</td></tr>
+        <tr><td><div class="post-title">Rückblick: KI-Workshop Modelllandschaft &amp; On-Premise</div><div class="post-meta">09.10. · Karussell · Hannah</div></td><td><span class="badge b-grey">ohne</span></td><td class="num">4.880</td><td class="num">141</td><td class="num">120</td><td class="num">9</td><td class="num">5,6 %</td></tr>
+        <tr><td><div class="post-title">Neu im Venture Store: Ask Me Anything mit Dr. Mario Schmitt</div><div class="post-meta">17.10. · Bild + Text · Polina</div></td><td><span class="badge b-blue">Venture Store</span></td><td class="num">3.150</td><td class="num">88</td><td class="num">61</td><td class="num">6</td><td class="num">4,9 %</td></tr>
+      </table>
+    </div>
+
+    <div class="seclabel"><span class="n">03 · E-Mail &amp; Planung</span><span class="line"></span></div>
+    <div class="grid g-2">
+      <div class="card">
+        <div class="card-head"><div><h3>E-Mail-Zustellung <span class="badge b-mint">echte Daten</span></h3><div class="hint">Resend · Domain lovedis.de verifiziert · alle bisher versendeten Mails, Stand 26.10.</div></div></div>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Versendet</div><div class="v">23</div></div>
+          <div class="kpi"><div class="l">Zugestellt</div><div class="v" style="color:var(--mint-deep)">20</div></div>
+          <div class="kpi"><div class="l">Bounce</div><div class="v" style="color:#b8371f">1</div></div>
+          <div class="kpi"><div class="l">Gesperrt</div><div class="v" style="color:#b8371f">2</div></div>
+        </div>
+        <table>
+          <tr><th>Kategorie</th><th style="width:42%">Zustellung</th><th class="num">Mails</th><th class="num">Quote</th></tr>
+          <tr><td>Einladungen (Partner, Admin)</td><td><div class="bar"><i style="width:100%;background:#0e7c4a"></i></div></td><td class="num">14</td><td class="num">100 %</td></tr>
+          <tr><td>Passwort zurücksetzen</td><td><div class="bar"><i style="width:100%;background:#0e7c4a"></i></div></td><td class="num">3</td><td class="num">100 %</td></tr>
+          <tr><td>Kontaktformular Homepage</td><td><div class="bar"><i style="width:50%;background:#0e7c4a"></i><i style="width:17%;background:#ff5736"></i><i style="width:33%;background:#ffb4a3"></i></div></td><td class="num">6</td><td class="num"><b style="color:#b8371f">50 %</b></td></tr>
+        </table>
+        <div class="legend"><span><i style="background:#0e7c4a"></i>zugestellt</span><span><i style="background:#ff5736"></i>Bounce</span><span><i style="background:#ffb4a3"></i>gesperrt</span><span>Öffnungsraten erst mit HTML-Newsletter</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div><h3>Kampagnen</h3><div class="hint">Vom Beitrag bis zur Anmeldung, über UTM-Links</div></div><span class="badge b-yellow">Beispiel</span></div>
+        <div class="camp">
+          <div class="camp-row"><b>KI Resilience Day · 23.11., Lokschuppen Marburg</b><p>3 Beiträge · 2 Newsletter-Erwähnungen geplant · Ziel: 60 Anmeldungen</p>
+            <div class="funnel"><span>Impressionen <b>11.240</b></span><span>Klicks <b>486</b></span><span>Website <b>312</b></span><span>Luma-Anmeldungen <b>41</b></span></div></div>
+          <div class="camp-row"><b>Challenges Q4 · Wissens- und Wartungs-Challenges</b><p>4 Beiträge · läuft bis 30.11. · Ziel: 25 Bewerbungen</p>
+            <div class="funnel"><span>Impressionen <b>9.870</b></span><span>Klicks <b>402</b></span><span>Plattform-Registrierungen <b>9</b></span><span>Bewerbungen <b>6</b></span></div></div>
+          <div class="camp-row"><b>Venture Store · neue Angebote</b><p>2 Beiträge · fortlaufend</p>
+            <div class="funnel"><span>Impressionen <b>5.020</b></span><span>Klicks <b>131</b></span><span>Store-Aufrufe <b>74</b></span><span>Anfragen <b>5</b></span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h3>Redaktionsplan · KW 44</h3><div class="hint">26. bis 30. Oktober · Freigabe durch Admin vor Veröffentlichung</div></div><div class="seg"><span class="on">Woche</span><span>Monat</span><span>Liste</span></div></div>
+      <div class="cal">
+        <div class="day today"><div class="dh"><span>Mo 26.</span><span>heute</span></div>
+          <div class="ci"><span class="badge b-mint">Veröffentlicht</span><b>Speaker-Teaser KI Resilience Day</b><span class="ch">LinkedIn · Bild · Hannah</span></div></div>
+        <div class="day"><div class="dh"><span>Di 27.</span></div>
+          <div class="ci"><span class="badge b-blue">Geplant</span><b>Startup-Spotlight Batch 3</b><span class="ch">LinkedIn · Karussell · Hannah</span></div></div>
+        <div class="day"><div class="dh"><span>Mi 28.</span></div>
+          <div class="ci"><span class="badge b-yellow">In Freigabe</span><b>Challenge-Aufruf „Erfahrungswissen sichern“</b><span class="ch">LinkedIn · Bild · wartet auf Tim</span></div>
+          <div class="ci"><span class="badge b-grey">Entwurf</span><b>Newsletter Oktober</b><span class="ch">E-Mail · Hannah</span></div></div>
+        <div class="day"><div class="dh"><span>Do 29.</span></div>
+          <div class="ci"><span class="badge b-grey">Idee</span><b>Recap KI Skalieren (Teaser 01.12.)</b><span class="ch">LinkedIn · Video</span></div></div>
+        <div class="day"><div class="dh"><span>Fr 30.</span></div>
+          <div class="ci"><span class="badge b-blue">Geplant</span><b>Venture Store: Angebot der Woche</b><span class="ch">LinkedIn · Bild · Polina</span></div></div>
+      </div>
+    </div>
+
+    <div class="seclabel"><span class="n">04 · Tools</span><span class="line"></span></div>
+    <div class="card">
+      <div class="card-head"><div><h3>Integrationen</h3><div class="hint">Status aller angebundenen Tools, geprüft bei jeder Synchronisierung</div></div></div>
+      <div class="grid g-2" style="gap:0 32px">
+        <div class="integ">
+          <div class="ig"><span class="logo" style="background:#0a0a0f">R</span><div><b>Resend · E-Mail</b><p>Domain verifiziert · letzter Abruf heute 11:00 · Webhook fehlt</p></div><span class="badge b-yellow">Teilweise</span></div>
+          <div class="ig"><span class="logo" style="background:#0a66c2">in</span><div><b>LinkedIn · Unternehmensseite</b><p>CSV-Import · letzter Upload 17.10. · API-Zugang beantragt</p></div><span class="badge b-yellow">Manuell</span></div>
+          <div class="ig"><span class="logo" style="background:#2926e5">L</span><div><b>LOVEDIS Plattform</b><p>Registrierungen, Bewerbungen, Store-Anfragen · live</p></div><span class="badge b-mint">Verbunden</span></div>
+        </div>
+        <div class="integ">
+          <div class="ig"><span class="logo" style="background:#ff5736">U</span><div><b>Umami · Website-Analyse</b><p>Noch nicht eingerichtet · selbst gehostet auf Hetzner geplant</p></div><span class="badge b-grey">Offen</span></div>
+          <div class="ig"><span class="logo" style="background:#7a5a00">lu</span><div><b>Luma · Events</b><p>Zahlen werden manuell unter Insights › Förderung gepflegt</p></div><span class="badge b-yellow">Manuell</span></div>
+          <div class="ig"><span class="logo" style="background:#4a154b">S</span><div><b>Slack · Warnungen</b><p>Optional: kritische Warnungen in #marketing</p></div><span class="badge b-grey">Optional</span></div>
+        </div>
+      </div>
+    </div>
+
+    <footer><span>LOVEDIS · Marketing Space · Mockup, Stand 26.10.2026</span><span>E-Mail-Zahlen echt (Resend) · LinkedIn, Website, Kampagnen: Beispieldaten</span></footer>
+  </main>
+</div>
+</body>
+</html>
