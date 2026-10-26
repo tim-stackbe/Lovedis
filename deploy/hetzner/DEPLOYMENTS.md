@@ -3,6 +3,52 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-26: Marketing Dashboard (Phase 1)
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `533c06f` |
+| Jetzt live | Version `064f5b4`, deployedAt `2026-10-26T13:33:28Z` |
+| Commit | `064f5b4` |
+| Backup vor Deploy | `lovedis-20261026T133323Z.dump` |
+
+### Inhalt dieses Releases
+
+- Neuer Menüpunkt „Marketing Dashboard“ (`/marketing`, nur ADMIN) mit Übersicht, LinkedIn, E-Mail, Redaktionsplan und Integrationen. Details in `docs/plan-marketing-modul.md`.
+- E-Mail: Resend-Sync (Zustellung, Bounces, Suppressions, Broadcasts) mit Warnung bei fehlgeschlagenen Kontakt- und Support-Mails. Webhook-Endpunkt `/api/webhooks/resend` (Svix-Signatur), antwortet ohne `RESEND_WEBHOOK_SECRET` mit 503.
+- LinkedIn: Import der Analytics-Exporte (XLSX/CSV) der Company Page, Follower-Verlauf, Post-Kennzahlen.
+- Redaktionsplan mit Freigabe durch Admins (Idee, Entwurf, Review, Geplant, Veröffentlicht).
+- Schema: additiv, 5 neue Tabellen (`MarketingIntegration`, `MarketingEmail`, `LinkedInPost`, `LinkedInFollowerDay`, `ContentItem`) ohne Relationen zu bestehenden Tabellen.
+
+### Server-Änderungen
+
+- Neues Skript `/opt/lovedis/scripts/marketing-sync.sh` (liest `CRON_SECRET` aus `platform.env`) und Crontab-Eintrag `10 6 * * *` für `deploy`, Log in `/opt/lovedis/logs/marketing-sync.log`. Erster Lauf von Hand: 23 Mails übernommen.
+- Offen: Resend-Webhook anlegen und `RESEND_WEBHOOK_SECRET` in `platform.env` setzen (Öffnungen und Klicks in Echtzeit). Ohne Webhook laufen Zustelldaten über den täglichen Sync.
+- Deploy aus sauberem Worktree von `064f5b4`, weil der Haupt-Checkout nicht committete, nicht zugehörige Dateien enthält.
+
+### Rollback
+
+Version `533c06f` aus sauberem Worktree erneut deployen. Die neuen Tabellen können stehen bleiben. Crontab-Eintrag `marketing-sync` entfernen.
+
+```bash
+git worktree add --detach /tmp/lovedis-rollback 533c06f
+cd /tmp/lovedis-rollback && ./deploy/hetzner/deploy-platform.sh
+git worktree remove /tmp/lovedis-rollback
+```
+
+### Checkliste nach Deploy
+
+- [x] Live-Version `064f5b4` laut Deploy-Skript und `alpha.lovedis.de/api/health`
+- [x] Smoke-Test 8/8 OK, Schema per `db push` angewendet
+- [x] `/marketing` ohne Login leitet auf `/login?callbackUrl=%2Fmarketing`
+- [x] `POST /api/webhooks/resend` ohne Secret liefert 503, `POST /api/cron/marketing-sync` ohne Token 401
+- [x] Cron-Skript von Hand: `{"ok":true,"resend":{"ok":true,"emails":23,"created":23}}`
+- [ ] Admin: Marketing Dashboard im Menü, Tabs öffnen, LinkedIn-Export importieren
+- [ ] Resend-Webhook einrichten
+
 ## 2026-10-19: MCP-Konnektor für Claude (nur lesen)
 
 | Feld | Wert |
