@@ -44,7 +44,7 @@ export function WeeklyChart({ data }: { data: WeekPoint[] }) {
             formatter={(value, name) => [fmt(Number(value)), name]}
             contentStyle={{ borderRadius: 12, borderColor: "#E6E7F0", fontSize: 12 }}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend wrapperStyle={{ fontSize: 12 }} formatter={(value) => <span style={{ color: "#3D3D4D" }}>{value}</span>} />
           <Bar yAxisId="imp" dataKey="impressions" name="Impressionen" fill="#EEEDFF" stroke="#C9C7FF" radius={[4, 4, 0, 0]} />
           <Line
             yAxisId="fol"

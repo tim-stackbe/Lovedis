@@ -3,6 +3,7 @@ import { buildMarketingAlerts } from "./alerts";
 import { isFailedEvent } from "./email";
 import type { ResendMeta } from "./resend-sync";
 import { resendApiKey, resendWebhookSecret } from "./resend-sync";
+import { umamiConfig, type UmamiMeta } from "./umami";
 
 export interface LinkedInMeta {
   followerTotal?: number;
@@ -14,6 +15,8 @@ export async function loadIntegrations() {
   const byProvider = new Map(rows.map((r) => [r.provider, r]));
   const resend = byProvider.get("RESEND") ?? null;
   const linkedin = byProvider.get("LINKEDIN") ?? null;
+  const umami = byProvider.get("UMAMI") ?? null;
+  const alerts = byProvider.get("ALERTS") ?? null;
   return {
     resend,
     resendMeta: (resend?.meta as ResendMeta | null) ?? null,
@@ -21,6 +24,10 @@ export async function loadIntegrations() {
     webhookConfigured: resendWebhookSecret() !== null,
     linkedin,
     linkedinMeta: (linkedin?.meta as LinkedInMeta | null) ?? null,
+    umami,
+    umamiMeta: (umami?.meta as UmamiMeta | null) ?? null,
+    umamiConfig: umamiConfig(),
+    alertState: alerts,
   };
 }
 
@@ -34,6 +41,10 @@ export async function loadLinkedIn() {
     prisma.linkedInFollowerDay.findMany({ orderBy: { day: "asc" } }),
   ]);
   return { posts, followers };
+}
+
+export async function loadWebTraffic() {
+  return prisma.webTrafficDay.findMany({ orderBy: { day: "asc" } });
 }
 
 export async function loadContent() {
@@ -66,5 +77,11 @@ export function alertsFor(now: Date, integrations: Integrations, emails: Emails,
     overdue: content.items.filter(
       (i) => i.status !== "PUBLISHED" && i.plannedFor && i.plannedFor.getTime() < today.getTime()
     ).length,
+    umami: {
+      configured: integrations.umamiConfig !== null,
+      lastSyncAt: integrations.umami?.lastSyncAt ?? null,
+      lastError: integrations.umami?.lastError ?? null,
+      pageviews30: integrations.umamiMeta?.stats.pageviews ?? 0,
+    },
   });
 }

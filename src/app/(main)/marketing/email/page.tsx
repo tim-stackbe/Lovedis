@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { formatRate } from "@/components/insights/format";
 import { fmtDateTime, fmtInt } from "@/components/marketing/format";
-import { ResendSyncButton } from "@/components/marketing/MarketingActions";
+import { SyncButton } from "@/components/marketing/MarketingActions";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Card, ToneCard } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
@@ -42,7 +42,7 @@ export default async function MarketingEmailPage() {
         kicker="Marketing · E-Mail"
         title="E-Mail & Newsletter"
         subtitle="Alle Mails, die über unser Resend-Konto rausgehen: Plattform-Mails, Kontaktformular der Homepage und Newsletter (Resend Broadcasts)."
-        actions={<ResendSyncButton variant="white" />}
+        actions={<SyncButton variant="white" />}
       />
 
       {!integrations.resendConfigured && (

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { fmtDateTime } from "@/components/marketing/format";
-import { ResendSyncButton } from "@/components/marketing/MarketingActions";
+import { SyncButton } from "@/components/marketing/MarketingActions";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { loadIntegrations } from "@/lib/marketing/data";
+import { alertRecipients } from "@/lib/marketing/notify";
 
 export const metadata: Metadata = { title: "Marketing · Integrationen" };
 
@@ -64,6 +65,15 @@ export default async function MarketingIntegrationsPage() {
         ? { label: "Verbunden", tone: "mint" as const }
         : { label: "Teilweise", tone: "yellow" as const };
   const domain = i.resendMeta?.domains[0];
+  const recipients = await alertRecipients();
+  const webPageviews = i.umamiMeta?.stats.pageviews ?? 0;
+  const umamiStatus = !i.umamiConfig
+    ? { label: "Nicht verbunden", tone: "muted" as const }
+    : i.umami?.lastError
+      ? { label: "Fehler", tone: "orange" as const }
+      : webPageviews > 0
+        ? { label: "Verbunden", tone: "mint" as const }
+        : { label: "Wartet auf Skript", tone: "yellow" as const };
 
   return (
     <>
@@ -106,7 +116,7 @@ export default async function MarketingIntegrationsPage() {
             </div>
           )}
           <div className="pt-1">
-            <ResendSyncButton />
+            <SyncButton />
           </div>
         </Tool>
 
@@ -128,14 +138,41 @@ export default async function MarketingIntegrationsPage() {
         </Tool>
       </div>
 
-      <SectionLabel number="02" label="Geplant" title="Kommt als Nächstes" />
       <div className="grid gap-4 lg:grid-cols-2">
-        <Tool name="Umami · Website-Analyse" mark="U" color="#FF5736" status="Geplant" tone="muted">
-          <p className="text-xs text-lv-secondary">
-            Entschieden: selbst gehostet auf dem Hetzner-Server, ohne Cookies und ohne Cookie-Banner. Liefert Besuche, Quellen,
-            Top-Seiten und UTM-Kampagnen für lovedis.de.
+        <Tool name="Umami · Website-Analyse" mark="U" color="#FF5736" status={umamiStatus.label} tone={umamiStatus.tone}>
+          <Row label="Server">{i.umamiConfig ? i.umamiConfig.publicUrl.replace(/^https?:\/\//, "") : "nicht konfiguriert (UMAMI_*)"}</Row>
+          <Row label="Letzter Abruf">{fmtDateTime(i.umami?.lastSyncAt ?? null)}</Row>
+          {i.umami?.lastError && <Row label="Letzter Fehler">{i.umami.lastError}</Row>}
+          <Row label="Tracking auf lovedis.de">
+            {webPageviews > 0 ? `aktiv, ${webPageviews.toLocaleString("de-DE")} Seitenaufrufe in 30 Tagen` : "noch keine Besuche gemessen"}
+          </Row>
+          <p className="pt-1 text-xs">
+            <Link href="/marketing/website" className="font-semibold text-lv-blue hover:underline">
+              Website-Zahlen und Tracking-Skript →
+            </Link>
           </p>
         </Tool>
+
+        <Tool
+          name="Benachrichtigungen per E-Mail"
+          mark="@"
+          color="#2926E5"
+          status={recipients.length > 0 ? "Aktiv" : "Keine Empfänger"}
+          tone={recipients.length > 0 ? "mint" : "orange"}
+        >
+          <Row label="Empfänger">
+            {recipients.length > 0 ? recipients.join(", ") : "keine"}
+            {process.env.MARKETING_ALERT_TO?.trim() ? "" : " (alle aktiven Admins)"}
+          </Row>
+          <Row label="Sofort">nicht zugestellte Kontaktanfrage oder Support-Mail</Row>
+          <Row label="Wöchentlich">Wochenübersicht jeden Montag um 07:30 Uhr</Row>
+          <Row label="Letzte Warnung">{fmtDateTime(i.alertState?.lastSyncAt ?? null)}</Row>
+          {i.alertState?.lastError && <Row label="Letzter Fehler">{i.alertState.lastError}</Row>}
+        </Tool>
+      </div>
+
+      <SectionLabel number="02" label="Geplant" title="Kommt als Nächstes" />
+      <div className="grid gap-4 lg:grid-cols-2">
         <Tool name="Luma · Events" mark="lu" color="#7A5A00" status="Manuell" tone="yellow">
           <p className="text-xs text-lv-secondary">
             Teilnehmerzahlen werden heute unter{" "}
@@ -148,7 +185,8 @@ export default async function MarketingIntegrationsPage() {
       </div>
 
       <Card className="p-4 text-xs leading-relaxed text-lv-secondary">
-        Täglicher Abruf: <code className="text-lv-text">POST /api/cron/marketing-sync</code> mit{" "}
+        Täglicher Abruf (Resend, Umami, Warnungen) um 06:10 Uhr: <code className="text-lv-text">POST /api/cron/marketing-sync</code>.
+        Wochenübersicht montags: <code className="text-lv-text">POST /api/cron/marketing-digest</code>. Beide mit{" "}
         <code className="text-lv-text">Authorization: Bearer CRON_SECRET</code>, wie der Insights-Snapshot.
       </Card>
     </>

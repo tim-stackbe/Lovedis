@@ -1761,6 +1761,14 @@ model LinkedInFollowerDay {
   updatedAt DateTime @updatedAt
 }
 
+/// Website traffic per day (lovedis.de), synced from the self-hosted Umami.
+model WebTrafficDay {
+  day       DateTime @id @db.Date
+  pageviews Int      @default(0)
+  visitors  Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
 /// Redaktionsplan entry. Status IDEA | DRAFT | IN_REVIEW | SCHEDULED | PUBLISHED.
 model ContentItem {
   id           String    @id @default(cuid())

@@ -1,21 +1,21 @@
 "use client";
 
-import { RefreshCw, Upload } from "lucide-react";
+import { Copy, RefreshCw, Upload } from "lucide-react";
 import { useActionState, useEffect, useRef, useTransition } from "react";
-import { importLinkedInExport, runResendSync, saveFollowerTotal } from "@/app/actions/marketing";
+import { importLinkedInExport, runMarketingSync, saveFollowerTotal } from "@/app/actions/marketing";
 import { useActionFeedback } from "@/components/insights/useActionFeedback";
 import { Button } from "@/components/ui/Button";
 import { ErrorChip, Field, Input } from "@/components/ui/Field";
 import { toast } from "@/stores/useToast";
 import { useRouter } from "next/navigation";
 
-/** Pulls emails, suppressions and broadcasts from Resend now. */
-export function ResendSyncButton({ variant = "secondary" }: { variant?: "secondary" | "white" }) {
+/** Pulls Resend (emails, suppressions, broadcasts) and Umami (website traffic) now. */
+export function SyncButton({ variant = "secondary" }: { variant?: "secondary" | "white" }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const onClick = () =>
     startTransition(async () => {
-      const result = await runResendSync();
+      const result = await runMarketingSync();
       if (result.error) toast.error(result.error);
       else if (result.success) {
         toast.success(result.success);
@@ -26,6 +26,24 @@ export function ResendSyncButton({ variant = "secondary" }: { variant?: "seconda
     <Button onClick={onClick} disabled={pending} variant={variant} size="sm">
       <RefreshCw className={pending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
       {pending ? "Wird abgerufen…" : "Jetzt abrufen"}
+    </Button>
+  );
+}
+
+/** Copies a snippet (e.g. the Umami tracking script) to the clipboard. */
+export function CopySnippetButton({ text, label = "Kopieren" }: { text: string; label?: string }) {
+  const onClick = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("In die Zwischenablage kopiert.");
+    } catch {
+      toast.error("Kopieren nicht möglich, bitte den Text markieren und kopieren.");
+    }
+  };
+  return (
+    <Button onClick={onClick} variant="secondary" size="sm">
+      <Copy className="h-4 w-4" />
+      {label}
     </Button>
   );
 }

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/marketing", label: "Übersicht" },
   { href: "/marketing/linkedin", label: "LinkedIn" },
+  { href: "/marketing/website", label: "Website" },
   { href: "/marketing/email", label: "E-Mail & Newsletter" },
   { href: "/marketing/redaktionsplan", label: "Redaktionsplan" },
   { href: "/marketing/integrationen", label: "Integrationen" },

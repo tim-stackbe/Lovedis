@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { notifyCriticalFailures } from "@/lib/marketing/notify";
 import { applyResendWebhook, resendWebhookSecret, verifyResendWebhook } from "@/lib/marketing/resend-sync";
 
 // ---------------------------------------------------------------------------
@@ -21,6 +22,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
   const applied = await applyResendWebhook(event);
+  if (applied) {
+    // The event is stored; a failed alert mail must not make Resend redeliver it.
+    await notifyCriticalFailures().catch((err) => console.error("[marketing] alert failed:", err));
+  }
   return NextResponse.json({ ok: true, applied });
 }
 

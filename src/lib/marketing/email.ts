@@ -26,6 +26,8 @@ export function classifyEmail(
   if (tag && (EMAIL_CATEGORIES as readonly string[]).includes(tag)) return tag as EmailCategory;
   if (opts.broadcastId) return "NEWSLETTER";
   const s = subject.toLowerCase();
+  // Our own marketing alerts (notify.ts) mention "Kontakt" and "Support" in the subject.
+  if (s.startsWith("[lovedis marketing]")) return "OTHER";
   if (s.includes("kontaktanfrage")) return "CONTACT";
   if (s.includes("passwort")) return "PASSWORD";
   if (s.includes("support")) return "SUPPORT";

@@ -6,11 +6,13 @@ import type { ActionState } from "@/lib/action-state";
 import { requireAdmin } from "@/lib/auth-guards";
 import { CONTENT_ACTIONS, nextStatus, parseContentForm, type ContentAction } from "@/lib/marketing/content";
 import { parseLinkedInSheets, type SheetRows } from "@/lib/marketing/linkedin-import";
+import { notifyCriticalFailures } from "@/lib/marketing/notify";
 import { syncResend } from "@/lib/marketing/resend-sync";
+import { syncUmami, umamiConfig } from "@/lib/marketing/umami";
 import { prisma } from "@/lib/prisma";
 
 // Writes go ONLY to the Marketing tables (MarketingIntegration, MarketingEmail,
-// LinkedInPost, LinkedInFollowerDay, ContentItem).
+// LinkedInPost, LinkedInFollowerDay, WebTrafficDay, ContentItem).
 
 const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
 
@@ -18,13 +20,18 @@ function revalidateMarketing() {
   revalidatePath("/marketing", "layout");
 }
 
-export async function runResendSync(): Promise<ActionState> {
+export async function runMarketingSync(): Promise<ActionState> {
   await requireAdmin();
-  const result = await syncResend();
+  const resend = await syncResend();
+  const umami = umamiConfig() ? await syncUmami() : null;
+  if (resend.ok) await notifyCriticalFailures();
   revalidateMarketing();
-  if (!result.ok) return { error: `Abruf fehlgeschlagen: ${result.error}` };
+  if (!resend.ok) return { error: `Resend-Abruf fehlgeschlagen: ${resend.error}` };
+  if (umami && !umami.ok) return { error: `Umami-Abruf fehlgeschlagen: ${umami.error}` };
   return {
-    success: `Resend abgerufen: ${result.emails} Mails, davon ${result.created} neu.`,
+    success:
+      `Abgerufen: ${resend.emails} Mails aus Resend, davon ${resend.created} neu` +
+      (umami ? `, ${umami.visitors30.toLocaleString("de-DE")} Website-Besucher in 30 Tagen.` : "."),
   };
 }
 

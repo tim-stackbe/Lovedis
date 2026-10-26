@@ -29,6 +29,13 @@ export interface AlertInput {
   inReview: number;
   /** Content items planned in the past but not marked published. */
   overdue: number;
+  umami?: {
+    configured: boolean;
+    lastSyncAt: Date | null;
+    lastError: string | null;
+    /** Pageviews of the last 30 days according to the last sync. */
+    pageviews30: number;
+  };
 }
 
 const DAY = 86_400_000;
@@ -107,6 +114,36 @@ export function buildMarketingAlerts(input: AlertInput): MarketingAlert[] {
       detail: "Ohne Webhook kommen Bounces erst mit dem nächsten Abruf an, Newsletter-Öffnungen und Klicks gar nicht.",
       href: "/marketing/integrationen",
       action: "Einrichten",
+    });
+  }
+
+  const umami = input.umami;
+  if (umami && !umami.configured) {
+    alerts.push({
+      key: "umami-missing",
+      level: "info",
+      title: "Website-Analyse nicht verbunden",
+      detail: "Umami-Zugangsdaten (UMAMI_*) fehlen in dieser Umgebung, es werden keine Website-Zahlen abgerufen.",
+      href: "/marketing/integrationen",
+      action: "Integrationen",
+    });
+  } else if (umami?.lastError) {
+    alerts.push({
+      key: "umami-error",
+      level: "warning",
+      title: "Umami-Abruf fehlgeschlagen",
+      detail: umami.lastError,
+      href: "/marketing/integrationen",
+      action: "Integrationen",
+    });
+  } else if (umami?.lastSyncAt && umami.pageviews30 === 0) {
+    alerts.push({
+      key: "umami-no-traffic",
+      level: "warning",
+      title: "Keine Website-Besuche gemessen",
+      detail: "Umami läuft, hat aber in 30 Tagen keinen Besuch auf lovedis.de gezählt. Ist das Tracking-Skript auf der Homepage eingebaut?",
+      href: "/marketing/website",
+      action: "Skript anzeigen",
     });
   }
 

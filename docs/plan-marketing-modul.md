@@ -143,3 +143,13 @@ Umgesetzt, lokal getestet, noch nicht deployt:
 - Warnungen (u. a. nicht zugestellte Kontaktanfragen), Tabellen `MarketingIntegration`, `MarketingEmail`, `LinkedInPost`, `LinkedInFollowerDay`, `ContentItem` (rein additiv).
 
 Für Live nötig: Deploy, Crontab-Eintrag für `marketing-sync`, Webhook in Resend anlegen und Secret auf dem Server setzen.
+
+**Deployt am 26.10.** (`064f5b4`), täglicher Sync um 06:10 Uhr.
+
+## 11. Automatisierung (26.10.)
+
+- **Resend-Webhook** in Echtzeit (`/api/webhooks/resend`).
+- **Warnungen per E-Mail:** Scheitert eine Kontakt- oder Support-Mail, geht sofort eine Warnung raus (Webhook) und spätestens beim täglichen Sync. Jede Mail wird nur einmal gemeldet; beim ersten Lauf werden bestehende Fehler nur vorgemerkt. Empfänger: `MARKETING_ALERT_TO` (kommagetrennt), sonst alle aktiven Admins.
+- **Wochenübersicht** montags 07:30 Uhr (`POST /api/cron/marketing-digest`): Warnungen, Plattform, Website, LinkedIn, E-Mail, Redaktionsplan.
+- **Plattform-Kennzahlen** auf der Übersicht: neue Konten, aktive Nutzer, neue Startups, Challenge-Bewerbungen, Venture-Store-Anfragen, Startup-Updates (30 Tage mit Vorperiode).
+- **Umami** 3.4.1 auf Hetzner (`stats.49.13.222.76.nip.io`, eigene DB `umami` in der bestehenden Postgres-Instanz, Zugangsdaten in `/opt/lovedis/umami.env`). Neuer Reiter „Website“, Tabelle `WebTrafficDay`. Offen: Tracking-Skript in die Homepage (Repo der Agentur) einbauen, später Subdomain `stats.lovedis.de` (ein A-Record in Cloudflare auf `49.13.222.76`, dann Caddy-Eintrag umstellen).
