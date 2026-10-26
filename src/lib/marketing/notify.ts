@@ -4,8 +4,6 @@ import { prisma } from "@/lib/prisma";
 import type { MarketingAlert } from "./alerts";
 import { CRITICAL_EMAIL_CATEGORIES, EMAIL_CATEGORY_LABELS, EMAIL_EVENT_LABELS, type EmailCategory } from "./constants";
 import { FAILED_EVENTS, type DeliveryStats } from "./email";
-import { PLATFORM_KPI_LABELS, type PlatformKpi } from "./platform";
-
 // ---------------------------------------------------------------------------
 // Marketing notifications by email: an immediate alert when a contact-form or
 // support mail was not delivered, and a weekly summary on Mondays.
@@ -170,7 +168,6 @@ export interface DigestInput {
   now: Date;
   baseUrl: string;
   mail: DeliveryStats;
-  platform: PlatformKpi[];
   web: { pageviews: number; visits: number; previousVisits: number } | null;
   linkedin: { posts: number; impressions: number; newFollowers: number } | null;
   content: {
@@ -201,11 +198,6 @@ export function weeklyDigestMail(input: DigestInput): { subject: string; text: s
     urgent.length > 0
       ? `HANDLUNGSBEDARF\n${urgent.map((a) => `• ${a.title}`).join("\n")}`
       : "HANDLUNGSBEDARF\nKeine offenen Warnungen."
-  );
-
-  sections.push(
-    "PLATTFORM (letzte 7 Tage)\n" +
-      input.platform.map((k) => `• ${PLATFORM_KPI_LABELS[k.key].label}: ${n(k.current)}${trend(k.current, k.previous)}`).join("\n")
   );
 
   sections.push(

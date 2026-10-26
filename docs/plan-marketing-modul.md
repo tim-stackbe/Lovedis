@@ -34,7 +34,7 @@ Die Empfänger kommen aus der Umgebungsvariable `CONTACT_EMAIL_TO` der Live-Home
 ## 4. Bausteine
 
 ### 4.1 Übersicht (Startseite)
-Kennzahlen der letzten 30 Tage mit Vergleich zum Vormonat: LinkedIn-Follower und Impressionen, Engagement-Rate, Website-Besuche, Zustellrate E-Mail, neue Plattform-Anmeldungen. Darunter Warnungen (Bounce, ablaufendes Token, fehlgeschlagene Synchronisierung) und die nächsten geplanten Beiträge.
+Kennzahlen der letzten 30 Tage mit Vergleich zum Vormonat: LinkedIn-Follower und Impressionen, Engagement-Rate, Website-Besuche, Zustellrate E-Mail. Plattform-Zahlen (Anmeldungen, Bewerbungen) bleiben im Admin-Bereich unter Insights. Darunter Warnungen (Bounce, ablaufendes Token, fehlgeschlagene Synchronisierung) und die nächsten geplanten Beiträge.
 
 ### 4.2 LinkedIn
 - Unternehmensseite: Follower-Verlauf, Impressionen, Klicks, Reaktionen, Kommentare, Shares, Engagement-Rate je Beitrag.
@@ -150,6 +150,5 @@ Für Live nötig: Deploy, Crontab-Eintrag für `marketing-sync`, Webhook in Rese
 
 - **Resend-Webhook** in Echtzeit (`/api/webhooks/resend`).
 - **Warnungen per E-Mail:** Scheitert eine Kontakt- oder Support-Mail, geht sofort eine Warnung raus (Webhook) und spätestens beim täglichen Sync. Jede Mail wird nur einmal gemeldet; beim ersten Lauf werden bestehende Fehler nur vorgemerkt. Empfänger: `MARKETING_ALERT_TO` (kommagetrennt), sonst alle aktiven Admins.
-- **Wochenübersicht** montags 07:30 Uhr (`POST /api/cron/marketing-digest`): Warnungen, Plattform, Website, LinkedIn, E-Mail, Redaktionsplan.
-- **Plattform-Kennzahlen** auf der Übersicht: neue Konten, aktive Nutzer, neue Startups, Challenge-Bewerbungen, Venture-Store-Anfragen, Startup-Updates (30 Tage mit Vorperiode).
+- **Wochenübersicht** montags 07:30 Uhr (`POST /api/cron/marketing-digest`): Warnungen, Website, LinkedIn, E-Mail, Redaktionsplan.
 - **Umami** 3.4.1 auf Hetzner (`stats.49.13.222.76.nip.io`, eigene DB `umami` in der bestehenden Postgres-Instanz, Zugangsdaten in `/opt/lovedis/umami.env`). Neuer Reiter „Website“, Tabelle `WebTrafficDay`. Offen: Tracking-Skript in die Homepage (Repo der Agentur) einbauen, später Subdomain `stats.lovedis.de` (ein A-Record in Cloudflare auf `49.13.222.76`, dann Caddy-Eintrag umstellen).

@@ -8,7 +8,7 @@ import { WeeklyChart } from "@/components/marketing/WeeklyChart";
 import { formatRate } from "@/components/insights/format";
 import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
-import { BannerStat, Card, ToneCard } from "@/components/ui/Card";
+import { BannerStat, Card } from "@/components/ui/Card";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
@@ -21,7 +21,6 @@ import {
 import { alertsFor, loadContent, loadEmails, loadIntegrations, loadLinkedIn } from "@/lib/marketing/data";
 import { deliveryStats, statsByCategory } from "@/lib/marketing/email";
 import { change, engagementRate, inWindow, newFollowers, weeklySeries, windows } from "@/lib/marketing/metrics";
-import { loadPlatformKpis, PLATFORM_KPI_LABELS } from "@/lib/marketing/platform";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Marketing Dashboard" };
@@ -29,12 +28,11 @@ export const metadata: Metadata = { title: "Marketing Dashboard" };
 export default async function MarketingOverviewPage() {
   const now = new Date();
   const { current, previous } = windows(now, 30);
-  const [integrations, emails, linkedin, content, platform] = await Promise.all([
+  const [integrations, emails, linkedin, content] = await Promise.all([
     loadIntegrations(),
     loadEmails(),
     loadLinkedIn(),
     loadContent(),
-    loadPlatformKpis(current, previous),
   ]);
   const web = integrations.umamiMeta;
   const alerts = alertsFor(now, integrations, emails, content);
@@ -63,7 +61,7 @@ export default async function MarketingOverviewPage() {
       <HeroBanner
         kicker="Marketing"
         title="Marketing Dashboard"
-        subtitle="Reichweite, Engagement und Zustellung der letzten 30 Tage an einem Ort: LinkedIn, Website, E-Mail und Newsletter über Resend, die Plattform selbst und der Redaktionsplan."
+        subtitle="Reichweite, Engagement und Zustellung der letzten 30 Tage an einem Ort: LinkedIn, Website, E-Mail und Newsletter über Resend, dazu der Redaktionsplan."
         actions={
           <>
             <SyncButton variant="white" />
@@ -96,28 +94,7 @@ export default async function MarketingOverviewPage() {
       <SectionLabel number="01" label="Handlungsbedarf" title="Warnungen" />
       <AlertList alerts={alerts} />
 
-      <SectionLabel number="02" label="Plattform" title="Was auf der Plattform ankommt (30 Tage)" />
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-        {platform.map((k) => (
-          <ToneCard
-            key={k.key}
-            tone={k.key === "accounts" || k.key === "applications" ? "info" : "muted"}
-            label={PLATFORM_KPI_LABELS[k.key].label}
-            value={fmtInt(k.current)}
-            sub={
-              k.previous === null
-                ? PLATFORM_KPI_LABELS[k.key].hint
-                : k.previous === 0
-                  ? k.current > 0
-                    ? "neu, in den 30 Tagen davor 0"
-                    : "auch in den 30 Tagen davor 0"
-                  : `${fmtChange(change(k.current, k.previous))} (davor ${fmtInt(k.previous)})`
-            }
-          />
-        ))}
-      </div>
-
-      <SectionLabel number="03" label="LinkedIn" title="Reichweite der letzten 12 Wochen" />
+      <SectionLabel number="02" label="LinkedIn" title="Reichweite der letzten 12 Wochen" />
       {hasLinkedIn ? (
         <div className="grid gap-4 lg:grid-cols-5">
           <Card className="p-5 lg:col-span-3">
@@ -160,7 +137,7 @@ export default async function MarketingOverviewPage() {
         </Card>
       )}
 
-      <SectionLabel number="04" label="E-Mail & Planung" title="Zustellung und nächste Beiträge" />
+      <SectionLabel number="03" label="E-Mail & Planung" title="Zustellung und nächste Beiträge" />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <div className="mb-3 flex items-center justify-between">

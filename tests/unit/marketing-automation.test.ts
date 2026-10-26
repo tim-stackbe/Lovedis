@@ -82,10 +82,6 @@ function digestInput(over: Partial<Parameters<typeof weeklyDigestMail>[0]> = {})
       { category: "INVITE", lastEvent: "delivered", sentAt: NOW },
       { category: "CONTACT", lastEvent: "bounced", sentAt: NOW },
     ]),
-    platform: [
-      { key: "accounts" as const, current: 6, previous: 4 },
-      { key: "activeUsers" as const, current: 20, previous: null },
-    ],
     web: { pageviews: 900, visits: 300, previousVisits: 200 },
     linkedin: null,
     content: { inReview: 1, published: 2, upcoming: [{ title: "Startup-Spotlight", plannedFor: NOW, status: "Geplant" }] },
@@ -103,8 +99,7 @@ describe("weeklyDigestMail", () => {
     expect(subject).toContain("1 offene Warnungen");
     expect(text).toContain("• Kontaktformular: 1 Mail nicht zugestellt");
     expect(text).not.toContain("Nur Info");
-    expect(text).toContain("Neue Konten: 6 (+50 % zur Vorwoche)");
-    expect(text).toContain("Aktive Nutzer: 20\n");
+    expect(text).not.toContain("PLATTFORM");
     expect(text).toContain("Besuche: 300 (+50 % zur Vorwoche)");
     expect(text).toContain("Bitte den Export aus LinkedIn Page Analytics hochladen");
     expect(text).toContain("Zustellrate: 50 %");

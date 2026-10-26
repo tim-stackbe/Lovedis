@@ -4,19 +4,16 @@ import { alertsFor, loadContent, loadEmails, loadIntegrations, loadLinkedIn, loa
 import { deliveryStats } from "./email";
 import { inWindow, newFollowers, windows } from "./metrics";
 import { alertRecipients, appBaseUrl, weeklyDigestMail } from "./notify";
-import { loadPlatformKpis } from "./platform";
-
 const DAY = 86_400_000;
 
 export async function buildWeeklyDigest(now = new Date()) {
   const { current, previous } = windows(now, 7);
-  const [integrations, emails, linkedin, content, traffic, platform] = await Promise.all([
+  const [integrations, emails, linkedin, content, traffic] = await Promise.all([
     loadIntegrations(),
     loadEmails(),
     loadLinkedIn(),
     loadContent(),
     loadWebTraffic(),
-    loadPlatformKpis(current, previous),
   ]);
 
   const posts = linkedin.posts.filter((p) => inWindow(p.publishedAt, current));
@@ -43,7 +40,6 @@ export async function buildWeeklyDigest(now = new Date()) {
     now,
     baseUrl: appBaseUrl(),
     mail: deliveryStats(emails.filter((e) => inWindow(e.sentAt, current))),
-    platform,
     web,
     linkedin: hasLinkedIn
       ? { posts: posts.length, impressions: posts.reduce((s, p) => s + p.impressions, 0), newFollowers: followers }
