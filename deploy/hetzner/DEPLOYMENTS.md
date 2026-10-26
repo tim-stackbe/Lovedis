@@ -3,6 +3,20 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-26: Plattform-Kennzahlen aus dem Marketing Dashboard entfernt
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Vorher live | Version `59748fe` |
+| Jetzt live | Version `cb9440d` |
+| Backup vor Deploy | `lovedis-20261026T141935Z.dump` |
+
+- Abschnitt „Plattform“ auf der Marketing-Übersicht und in der Wochenübersicht entfernt; diese Zahlen stehen im Admin-Bereich unter Insights. Keine Schema-Änderung.
+- Geprüft: Live-Version `cb9440d`, `/marketing` ohne Login 307, Sync auf Alpha ok, keine Fehler im Log.
+- Rollback: `59748fe` aus sauberem Worktree deployen.
+
 ## 2026-10-26: Marketing-Automatisierung und Umami
 
 | Feld | Wert |
