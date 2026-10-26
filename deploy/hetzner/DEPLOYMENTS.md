@@ -3,6 +3,45 @@
 Jeder Eintrag dokumentiert einen geplanten oder durchgeführten Release auf Alpha/Produktion.
 Vor dem Deploy: lokal committen, `npm test` grün, dann `./deploy/hetzner/deploy-platform.sh`.
 
+## 2026-10-26: Marketing-Automatisierung und Umami
+
+| Feld | Wert |
+|------|------|
+| Status | **Deployed** |
+| Ziel | Alpha (`alpha.lovedis.de`) |
+| Branch | `Dedalus` |
+| Vorher live | Version `064f5b4` |
+| Jetzt live | Version `59748fe` |
+| Commit | `59748fe` |
+| Backup vor Deploy | `lovedis-20261026T135658Z.dump`, `platform.env.bak.20261026T135659Z` |
+
+### Inhalt dieses Releases
+
+- Warnung per E-Mail, sobald eine Kontakt- oder Support-Mail nicht zugestellt wird (sofort per Webhook, spätestens beim täglichen Sync). Jede Mail wird nur einmal gemeldet. Erster Lauf hat die drei bekannten Kontaktformular-Fehler nur vorgemerkt.
+- Wochenübersicht per E-Mail (`POST /api/cron/marketing-digest`).
+- Plattform-Kennzahlen auf der Übersicht, neuer Reiter „Website“ mit Umami-Daten.
+- Schema: additiv, Tabelle `WebTrafficDay`.
+
+### Server-Änderungen
+
+- **Umami 3.4.1** als neuer Dienst `umami` in `/opt/lovedis/docker-compose.yml`, eigene Datenbank `umami` (Rolle `umami`) in der bestehenden Postgres-Instanz, Zugangsdaten in `/opt/lovedis/umami.env` (600, enthält auch das Admin-Passwort). Caddy-Eintrag `stats.49.13.222.76.nip.io`. Backups der Konfiguration: `docker-compose.yml.bak.20261026T134415Z`, `Caddyfile.bak.20261026T134415Z`. Standard-Login `admin`/`umami` ist abgeschaltet.
+- **Resend-Webhook** `https://alpha.lovedis.de/api/webhooks/resend` (ID `89e48d77-ffe1-4ce2-bbb5-4ebf84bc9360`), Secret als `RESEND_WEBHOOK_SECRET` in `platform.env`.
+- `platform.env` ergänzt: `UMAMI_API_URL=http://umami:3000`, `UMAMI_PUBLIC_URL`, `UMAMI_API_KEY`, `UMAMI_WEBSITE_ID`, `MARKETING_ALERT_TO=tim.meggert@lovedis.de`.
+- Neues Skript `/opt/lovedis/scripts/marketing-digest.sh`, Crontab `30 7 * * 1`. Der tägliche Sync (`10 6 * * *`) ruft jetzt auch Umami ab und verschickt Warnungen.
+- Offen: Tracking-Skript und CSP-Eintrag in `nuxt.config.ts` der Homepage (Repo der Agentur), optional Subdomain `stats.lovedis.de`.
+
+### Rollback
+
+Version `064f5b4` aus sauberem Worktree erneut deployen. Umami läuft unabhängig weiter; zum Entfernen `docker compose stop umami` und Caddy-Eintrag löschen. Neue Variablen in `platform.env` stören die alte Version nicht.
+
+### Checkliste nach Deploy
+
+- [x] Live-Version `59748fe`, Smoke-Test 8/8 OK
+- [x] Sync auf Alpha: `{"ok":true,"resend":{…"emails":25},"umami":{"ok":true},"alerts":{"seeded":3}}`
+- [x] Webhook: Testmail an `delivered@resend.dev`, Ereignis 2 s später in `MarketingEmail`, `lastWebhookAt` gesetzt
+- [x] Wochenübersicht an `tim.meggert@lovedis.de` laut Resend zugestellt, Inhalt mit Alpha-Zahlen geprüft
+- [ ] Tracking auf lovedis.de aktiv (wartet auf Agentur)
+
 ## 2026-10-26: Marketing Dashboard (Phase 1)
 
 | Feld | Wert |
